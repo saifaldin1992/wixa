@@ -68,7 +68,7 @@
 
     $$(".brand__mark").forEach((m) => {
       if (s.brand.logo_url) { m.classList.add("has-logo"); m.innerHTML = `<img src="${esc(safeUrl(s.brand.logo_url))}" alt="">`; }
-      else { m.classList.remove("has-logo"); m.innerHTML = '<svg viewBox="0 0 64 40"><path d="M4 6l10 28 14-22 14 22 10-28"/></svg>'; }
+      else { m.classList.remove("has-logo"); m.innerHTML = '<svg viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg>'; }
     });
 
     // sections visibility

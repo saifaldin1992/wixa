@@ -15,14 +15,14 @@
 
   const DEFAULTS = {
     theme: {
-      primary: "#1F5BFF",
+      primary: "#570622",
       primaryInk: "#FFFFFF",
-      accent: "#FFC83D",
-      bg: "#F5F7FB",
+      accent: "#D9A441",
+      bg: "#FAF7F6",
       surface: "#FFFFFF",
-      text: "#0B1220",
-      muted: "#5E6878",
-      dark: "#0B1220",
+      text: "#1A0E12",
+      muted: "#6E5F64",
+      dark: "#2A0711",
       radius: 22,
     },
     font: { family: "Alexandria", scale: 1, headingWeight: 800 },

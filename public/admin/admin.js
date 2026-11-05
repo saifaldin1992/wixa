@@ -275,7 +275,7 @@ function drawChart(el, rows) {
   const every = Math.ceil(rows.length / 8);
   const day = (d) => new Date(d).toLocaleDateString("ar", { day: "numeric", month: "short" });
   el.innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="direction:ltr">
-    <defs><linearGradient id="gArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#1F5BFF" stop-opacity=".22"/><stop offset="1" stop-color="#1F5BFF" stop-opacity="0"/></linearGradient></defs>
+    <defs><linearGradient id="gArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#570622" stop-opacity=".2"/><stop offset="1" stop-color="#570622" stop-opacity="0"/></linearGradient></defs>
     <g class="grid">${ticks.map((t) => `<line x1="${P.l}" x2="${W - P.r}" y1="${y(t)}" y2="${y(t)}"/>`).join("")}</g>
     <g class="axis">${ticks.map((t) => `<text x="${P.l - 8}" y="${y(t) + 4}" text-anchor="end">${fmt(t)}</text>`).join("")}
       ${rows.map((r, i) => (i % every === 0 ? `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${day(r.day)}</text>` : "")).join("")}</g>
@@ -292,6 +292,7 @@ function drawChart(el, rows) {
 
 // ---------------- view: appearance ----------------
 const PRESETS = [
+  { name: "هوية ويكسا", theme: { primary: "#570622", primaryInk: "#FFFFFF", accent: "#D9A441", bg: "#FAF7F6", surface: "#FFFFFF", text: "#1A0E12", muted: "#6E5F64", dark: "#2A0711" } },
   { name: "أزرق", theme: { primary: "#1F5BFF", primaryInk: "#FFFFFF", accent: "#FFC83D", bg: "#F5F7FB", surface: "#FFFFFF", text: "#0B1220", muted: "#5E6878", dark: "#0B1220" } },
   { name: "زمردي", theme: { primary: "#0E9F6E", primaryInk: "#FFFFFF", accent: "#F5B83D", bg: "#F4F8F6", surface: "#FFFFFF", text: "#0C1A14", muted: "#5B6B63", dark: "#0C1A14" } },
   { name: "بنفسجي", theme: { primary: "#6D4AFF", primaryInk: "#FFFFFF", accent: "#FF8AB3", bg: "#F7F6FC", surface: "#FFFFFF", text: "#141127", muted: "#655F7A", dark: "#141127" } },
