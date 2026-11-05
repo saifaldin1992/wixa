@@ -2,6 +2,13 @@ name = "wixa"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
 
+# Company domain (registered on Cloudflare). Deploying attaches both automatically.
+workers_dev = true
+routes = [
+  { pattern = "wixa.dev", custom_domain = true },
+  { pattern = "www.wixa.dev", custom_domain = true },
+]
+
 # Static site (public/) is served first; anything else (e.g. /api/*) goes to the Worker.
 [assets]
 directory = "./public"
