@@ -98,8 +98,10 @@
           ${stats.length ? `<div class="project__stats">${stats.map((st) => `<div><b>${esc(st.value)}</b><span>${esc(st[`label_${lang}`] || st.label_ar || "")}</span></div>`).join("")}</div>` : ""}
         </div>
         <div class="project__media">
-          <div class="screen"><div class="screen__bar"><i></i><i></i><i></i></div>${p.image_url ? `<img src="${esc(safeUrl(p.image_url))}" alt="" loading="lazy">` : mockUI()}</div>
-          <div class="phone">${p.mobile_image_url ? `<img src="${esc(safeUrl(p.mobile_image_url))}" alt="" loading="lazy">` : mockUI()}</div>
+          <div class="stage">
+            <div class="layer layer--screen"><div class="screen"><div class="screen__bar"><i></i><i></i><i></i></div>${p.image_url ? `<img src="${esc(safeUrl(p.image_url))}" alt="" loading="lazy">` : mockUI()}</div></div>
+            <div class="layer layer--phone"><div class="phone">${p.mobile_image_url ? `<img src="${esc(safeUrl(p.mobile_image_url))}" alt="" loading="lazy">` : mockUI()}</div></div>
+          </div>
         </div>
       </article>`;
     }).join("") : `<p class="empty">${ui.no_projects}</p>`;
@@ -110,6 +112,18 @@
     $$(".svc").forEach((el) => el.addEventListener("pointermove", (e) => {
       const r = el.getBoundingClientRect(); el.style.setProperty("--mx", `${e.clientX - r.left}px`); el.style.setProperty("--my", `${e.clientY - r.top}px`);
     }));
+
+    // 3D tilt that follows the pointer
+    if (matchMedia("(hover: hover)").matches) $$(".project__media").forEach((m) => {
+      m.addEventListener("pointermove", (e) => {
+        if (!anim) return;
+        const r = m.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+        m.style.setProperty("--tilt-y", `${x * 16}deg`);
+        m.style.setProperty("--tilt-x", `${-y * 10}deg`);
+      });
+      m.addEventListener("pointerleave", () => { m.style.removeProperty("--tilt-y"); m.style.removeProperty("--tilt-x"); });
+    });
 
     // stats
     $("#statsGrid").innerHTML = (s.stats || []).map((st) => `
