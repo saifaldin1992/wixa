@@ -23,3 +23,17 @@ Local stack (requires Docker): `npx supabase start`.
 
 Dashboard → Project Settings → Integrations → GitHub → connect `saifaldin1992/wixa`
 and set the Supabase directory to `supabase`.
+
+## Cloudflare Worker
+
+`src/index.js` is a Cloudflare Worker that talks to Supabase. `GET /health` reports
+whether the Worker can reach the Supabase project.
+
+```bash
+npm install
+npm run dev      # local at http://localhost:8787
+npm run deploy   # deploy with wrangler (needs `npx wrangler login`)
+```
+
+To deploy automatically from GitHub: Cloudflare dashboard → Workers & Pages → Create →
+Import a repository → `saifaldin1992/wixa`. Every push then builds and deploys the Worker.

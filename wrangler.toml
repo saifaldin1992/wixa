@@ -1,0 +1,9 @@
+name = "wixa"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+# Public values only. The publishable key is safe to expose to clients.
+# Put secret keys in Cloudflare with: npx wrangler secret put SUPABASE_SECRET_KEY
+[vars]
+SUPABASE_URL = "https://oswetqychjhfrwulzkjy.supabase.co"
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_m6oe17fpFQvF1huyQ_8U_g_4NLmHiAm"
