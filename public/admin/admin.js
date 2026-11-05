@@ -295,6 +295,7 @@ function drawChart(el, rows) {
 
 // ---------------- view: appearance ----------------
 const PRESETS = [
+  { name: "ويكسا تقني", theme: { primary: "#570622", primaryInk: "#FFFFFF", accent: "#1FC8E3", bg: "#F7F6F8", surface: "#FFFFFF", text: "#140C12", muted: "#665C64", dark: "#12070C" }, mode: "dark" },
   { name: "هوية ويكسا", theme: { primary: "#570622", primaryInk: "#FFFFFF", accent: "#D9A441", bg: "#FAF7F6", surface: "#FFFFFF", text: "#1A0E12", muted: "#6E5F64", dark: "#2A0711" } },
   { name: "أزرق", theme: { primary: "#1F5BFF", primaryInk: "#FFFFFF", accent: "#FFC83D", bg: "#F5F7FB", surface: "#FFFFFF", text: "#0B1220", muted: "#5E6878", dark: "#0B1220" } },
   { name: "زمردي", theme: { primary: "#0E9F6E", primaryInk: "#FFFFFF", accent: "#F5B83D", bg: "#F4F8F6", surface: "#FFFFFF", text: "#0C1A14", muted: "#5B6B63", dark: "#0C1A14" } },
@@ -327,6 +328,8 @@ async function viewAppearance(view) {
           <label class="f"><span>سماكة العناوين</span><div class="range-row"><input type="range" min="400" max="800" step="100" id="hw" value="${f.headingWeight}"><output id="hwOut">${f.headingWeight}</output></div></label>
           <label class="f"><span>استدارة الزوايا</span><div class="range-row"><input type="range" min="0" max="36" step="2" id="radius" value="${t.radius}"><output id="radiusOut">${t.radius}px</output></div></label>
           <label class="switch"><input type="checkbox" id="anim" ${settings.animations !== false ? "checked" : ""}><i></i>تفعيل الحركات والتأثيرات</label>
+          <label class="f"><span>الوضع الافتراضي للزائر الجديد (يستطيع الزائر تغييره من زر 🌙)</span>
+            <div class="seg" id="modeSeg">${[["auto", "حسب جهاز الزائر"], ["light", "فاتح"], ["dark", "ليلي"]].map(([v, l]) => `<button type="button" data-v="${v}" class="${(settings.mode || "auto") === v ? "on" : ""}">${l}</button>`).join("")}</div></label>
         </div></div>
       <div class="card"><div class="card__head"><div><h3>إعادة الضبط</h3><p>استرجاع الألوان والخط الافتراضية</p></div><button class="b b--danger b--sm" id="resetTheme">${I.reset}إعادة الافتراضي</button></div></div>
     </div>
@@ -342,7 +345,11 @@ async function viewAppearance(view) {
   };
   $$("[data-color]").forEach((i) => (i.oninput = () => setColor(i.dataset.color, i.value)));
   $$("[data-hex]").forEach((i) => (i.oninput = () => setColor(i.dataset.hex, i.value.startsWith("#") ? i.value : `#${i.value}`)));
-  $$("[data-p]").forEach((b) => (b.onclick = () => { Object.entries(PRESETS[b.dataset.p].theme).forEach(([k, v]) => setColor(k, v)); }));
+  $$("[data-p]").forEach((b) => (b.onclick = () => {
+    const pr = PRESETS[b.dataset.p];
+    Object.entries(pr.theme).forEach(([k, v]) => setColor(k, v));
+    if (pr.mode) { settings.mode = pr.mode; $$("#modeSeg button").forEach((x) => x.classList.toggle("on", x.dataset.v === pr.mode)); changed(); }
+  }));
   $$("[data-font]").forEach((b) => {
     window.WIXA.loadFont && loadPreviewFont(b.dataset.font);
     b.onclick = () => { settings.font.family = b.dataset.font; $$("[data-font]").forEach((x) => x.classList.toggle("on", x === b)); changed(); };
@@ -352,6 +359,7 @@ async function viewAppearance(view) {
   range("hw", (v) => (settings.font.headingWeight = v), (v) => v);
   range("radius", (v) => (settings.theme.radius = v), (v) => `${v}px`);
   $("#anim").onchange = (e) => { settings.animations = e.target.checked; changed(); };
+  $$("#modeSeg button").forEach((b) => (b.onclick = () => { settings.mode = b.dataset.v; $$("#modeSeg button").forEach((x) => x.classList.toggle("on", x === b)); changed(); }));
   $("#resetTheme").onclick = async () => {
     if (!(await confirmBox("إعادة الافتراضي", "سيتم استرجاع الألوان والخط الافتراضية (لن يُحفظ حتى تضغط حفظ).", "استرجاع", false))) return;
     settings.theme = clone(DEFAULTS.theme); settings.font = clone(DEFAULTS.font); settings.animations = true; route();

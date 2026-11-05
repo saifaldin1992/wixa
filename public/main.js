@@ -57,6 +57,7 @@
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
     applyTheme(s);
+    applyDefaultMode();
     const brand = lang === "ar" ? s.brand.name_ar : s.brand.name_en;
     document.title = `${brand} — ${c.hero_title}`;
 
@@ -255,6 +256,13 @@
   }
 
   // ---------- dark mode ----------
+  function applyDefaultMode() {
+    let saved = null; try { saved = localStorage.getItem("wixa-theme"); } catch {}
+    if (saved === "light" || saved === "dark") return;
+    const m = state.settings.mode;
+    const t = m === "light" || m === "dark" ? m : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", t);
+  }
   function setupTheme() {
     const btn = $("#themeBtn");
     if (!btn) return;

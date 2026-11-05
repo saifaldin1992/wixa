@@ -53,6 +53,7 @@
       rush: 1.3,
     },
     animations: true,
+    mode: "auto", // default colour mode for first-time visitors: auto | light | dark
     stats: [
       { value: 120, suffix: "+", label_ar: "مشروع منجز", label_en: "Projects delivered" },
       { value: 40, suffix: "+", label_ar: "عميل وشريك", label_en: "Clients & partners" },

@@ -386,7 +386,7 @@ html[dir="rtl"] .tst__track { animation-name: tstScrollRtl; }
 @keyframes tstScrollRtl { to { transform: translateX(50%); } }
 .tcard { width: 360px; flex: none; background: var(--surface); border: 1px solid var(--line); border-radius: calc(var(--radius) + 2px); padding: 26px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 16px; transition: transform .5s var(--ease-out), border-color .4s; }
 .tcard:hover { transform: translateY(-6px); border-color: rgba(var(--fg-rgb), .35); }
-.tcard__stars { color: var(--accent); letter-spacing: 3px; font-size: 1rem; }
+.tcard__stars { color: #E2B04A; letter-spacing: 3px; font-size: 1rem; }
 .tcard__quote { margin: 0; font-size: 1rem; line-height: 1.8; flex: 1; position: relative; }
 .tcard__quote::before { content: "”"; position: absolute; inset-inline-end: -6px; top: -34px; font-size: 5rem; line-height: 1; color: rgba(var(--fg-rgb), .12); font-family: Georgia, serif; }
 .tcard__who { display: flex; align-items: center; gap: 12px; padding-top: 16px; border-top: 1px dashed var(--line-2); }
