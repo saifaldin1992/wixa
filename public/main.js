@@ -77,6 +77,7 @@
       $$(`[data-sec="${k}"]`).forEach((el) => (el.hidden = !on));
     }
     if (!state.partners.length) { $$('[data-section="partners"], [data-sec="partners"]').forEach((el) => (el.hidden = true)); }
+    if (!(state.testimonials || []).length) $$('[data-section="testimonials"]').forEach((el) => (el.hidden = true));
 
     // story
     $("#storyList").innerHTML = (c.story || []).map((it, i) => `
@@ -86,7 +87,7 @@
       </article>`).join("");
 
     // projects
-    $("#projectsList").innerHTML = state.projects.length ? state.projects.map((p) => {
+    $("#projectsList").innerHTML = state.projects.length ? state.projects.map((p, i) => {
       const link = safeUrl(p.link);
       const stats = Array.isArray(p.stats) ? p.stats : [];
       return `<article class="project">
@@ -95,9 +96,10 @@
           <h3>${esc(L(p, "title"))}</h3>
           <p>${esc(L(p, "summary"))}</p>
           ${link ? `<a class="project__link" href="${esc(link)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg>${esc(link.replace(/^https?:\/\//, "").replace(/\/$/, ""))}</a>` : ""}
+          <button type="button" class="project__more" data-open="${i}">${esc(C().details || "")}<svg viewBox="0 0 24 24"><path d="M19 12H5m0 0l6-6m-6 6l6 6"/></svg></button>
           ${stats.length ? `<div class="project__stats">${stats.map((st) => `<div><b>${esc(st.value)}</b><span>${esc(st[`label_${lang}`] || st.label_ar || "")}</span></div>`).join("")}</div>` : ""}
         </div>
-        <div class="project__media">
+        <div class="project__media" data-open="${i}">
           <div class="stage">
             <div class="layer layer--screen"><div class="screen"><div class="screen__bar"><i></i><i></i><i></i></div>${p.image_url ? `<img src="${esc(safeUrl(p.image_url))}" alt="" loading="lazy">` : mockUI()}</div></div>
             <div class="layer layer--phone"><div class="phone">${p.mobile_image_url ? `<img src="${esc(safeUrl(p.mobile_image_url))}" alt="" loading="lazy">` : mockUI()}</div></div>
@@ -152,6 +154,9 @@
     $("#year").textContent = new Date().getFullYear();
 
     buildHeroLogo();
+    renderProcess();
+    renderTestimonials();
+    renderCalc();
     observe();
     if (window.ScrollTrigger) ScrollTrigger.refresh();
   }
@@ -264,6 +269,165 @@
     btn.addEventListener("click", () => set(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark"));
   }
 
+  // ---------- process (steps light up with scroll) ----------
+  function renderProcess() {
+    const c = C();
+    $("#processSteps").innerHTML = (c.process || []).map((st, i) => `
+      <li class="pstep"><div class="pstep__num">${String(i + 1).padStart(2, "0")}</div><div><h3>${esc(st.title)}</h3><p>${esc(st.text)}</p></div></li>`).join("");
+    updateProcess();
+  }
+  function updateProcess() {
+    const track = $("#processTrack"); if (!track) return;
+    const r = track.getBoundingClientRect(), vh = innerHeight;
+    const p = anim ? Math.min(1, Math.max(0, (vh * 0.75 - r.top) / (r.height * 0.9))) : 1;
+    track.style.setProperty("--p", p.toFixed(3));
+    const steps = $$(".pstep", track);
+    steps.forEach((s, i) => s.classList.toggle("on", p >= (i / Math.max(1, steps.length - 1)) * 0.92 || p === 1));
+  }
+
+  // ---------- testimonials (infinite marquee) ----------
+  function renderTestimonials() {
+    const list = state.testimonials || [];
+    const card = (t) => {
+      const av = t.avatar_url ? `<img src="${esc(safeUrl(t.avatar_url))}" alt="" loading="lazy">` : esc((t.name || "?").trim()[0] || "?");
+      const stars = "★".repeat(Math.max(1, Math.min(5, t.rating || 5)));
+      return `<figure class="tcard"><div class="tcard__stars" aria-label="${t.rating || 5}/5">${stars}</div>
+        <blockquote class="tcard__quote">${esc(L(t, "quote"))}</blockquote>
+        <figcaption class="tcard__who"><span class="tcard__av">${av}</span><span><b>${esc(t.name)}</b><span>${esc(L(t, "role"))}</span></span></figcaption></figure>`;
+    };
+    // repeat so one half always fills the screen, then duplicate for a seamless loop
+    let base = list.slice(); while (base.length && base.length < 6) base = base.concat(list);
+    const half = base.map(card).join("");
+    $("#tstTrack").innerHTML = half + half;
+    $("#tstTrack").style.setProperty("--dur", `${Math.max(30, base.length * 7)}s`);
+  }
+
+  // ---------- cost calculator ----------
+  const calc = { type: 0, feats: new Set(), rush: false };
+  function renderCalc() {
+    const cfg = state.settings.calculator || {};
+    const types = cfg.types || [];
+    if (calc.type >= types.length) calc.type = 0;
+    $("#calcTypes").innerHTML = types.map((t, i) => `<button type="button" class="ctype" role="radio" data-i="${i}" aria-checked="${i === calc.type}"><i>${ICONS[t.icon] || ICONS.code}</i><b>${esc(t[`label_${lang}`] || t.label_ar)}</b></button>`).join("");
+    $("#calcFeats").innerHTML = (cfg.features || []).map((f, i) => `<button type="button" class="cfeat" data-i="${i}" aria-pressed="${calc.feats.has(i)}">${esc(f[`label_${lang}`] || f.label_ar)}</button>`).join("");
+    $$("#calcSpeed button").forEach((b) => b.classList.toggle("on", (b.dataset.rush === "1") === calc.rush));
+    updateCalc(false);
+  }
+  let calcShown = [0, 0];
+  function calcRange() {
+    const cfg = state.settings.calculator || {};
+    const t = (cfg.types || [])[calc.type]; if (!t) return null;
+    let min = Number(t.min) || 0, max = Number(t.max) || 0;
+    calc.feats.forEach((i) => { const f = (cfg.features || [])[i]; if (f) { min += Number(f.min) || 0; max += Number(f.max) || 0; } });
+    if (calc.rush) { const k = Number(cfg.rush) || 1.3; min *= k; max *= k; }
+    const r = (v) => Math.round(v / 50) * 50;
+    return [r(min), r(max)];
+  }
+  function updateCalc(animate = true) {
+    const range = calcRange(), el = $("#calcPrice");
+    if (!range) { el.textContent = "—"; return; }
+    const cur = (state.settings.calculator || {}).currency || "$";
+    const fmt = (v) => Math.round(v).toLocaleString("en");
+    const draw = (a, b) => { el.innerHTML = `${fmt(a)} – ${fmt(b)} <small>${esc(cur)}</small>`; };
+    const maxAll = Math.max(...((state.settings.calculator || {}).types || []).map((t) => Number(t.max) || 0), 1) * 1.6;
+    $("#calcBar").style.width = `${Math.min(100, (range[1] / maxAll) * 100)}%`;
+    if (!animate || !anim) { calcShown = range; draw(...range); return; }
+    const from = calcShown.slice(), t0 = performance.now();
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / 700), e = 1 - Math.pow(1 - k, 3);
+      draw(from[0] + (range[0] - from[0]) * e, from[1] + (range[1] - from[1]) * e);
+      if (k < 1) requestAnimationFrame(step); else calcShown = range;
+    };
+    requestAnimationFrame(step);
+  }
+  function setupCalc() {
+    $("#calcTypes").addEventListener("click", (e) => { const b = e.target.closest(".ctype"); if (!b) return; calc.type = +b.dataset.i; $$(".ctype").forEach((x) => x.setAttribute("aria-checked", x === b)); updateCalc(); });
+    $("#calcFeats").addEventListener("click", (e) => { const b = e.target.closest(".cfeat"); if (!b) return; const i = +b.dataset.i; calc.feats.has(i) ? calc.feats.delete(i) : calc.feats.add(i); b.setAttribute("aria-pressed", calc.feats.has(i)); updateCalc(); });
+    $("#calcSpeed").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; calc.rush = b.dataset.rush === "1"; $$("#calcSpeed button").forEach((x) => x.classList.toggle("on", x === b)); updateCalc(); });
+    $("#calcCta").addEventListener("click", () => {
+      const cfg = state.settings.calculator || {}, t = (cfg.types || [])[calc.type], r = calcRange();
+      if (!t || !r) return;
+      const feats = [...calc.feats].map((i) => (cfg.features || [])[i]).filter(Boolean).map((f) => f[`label_${lang}`] || f.label_ar);
+      const ar = lang === "ar";
+      const msg = (ar ? `أرغب بعرض سعر لـ: ${t.label_ar}` : `I'd like a quote for: ${t.label_en || t.label_ar}`)
+        + (feats.length ? (ar ? `\nالميزات: ${feats.join("، ")}` : `\nFeatures: ${feats.join(", ")}`) : "")
+        + (calc.rush ? (ar ? "\nالتنفيذ: مستعجل" : "\nTimeline: rush") : "")
+        + (ar ? `\nالتقدير المبدئي: ${r[0].toLocaleString("en")} – ${r[1].toLocaleString("en")} ${cfg.currency || "$"}` : `\nEstimate: ${r[0].toLocaleString("en")} – ${r[1].toLocaleString("en")} ${cfg.currency || "$"}`);
+      openContact(msg);
+    });
+  }
+
+  // ---------- contact form helper ----------
+  function openContact(message = "") {
+    const f = $("#contactForm");
+    f.classList.add("open");
+    if (message) f.elements.message.value = message;
+    const target = $("#contact");
+    if (window.__lenis) window.__lenis.scrollTo(target, { offset: -80 }); else target.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => { f.elements.name.focus({ preventScroll: true }); window.ScrollTrigger && ScrollTrigger.refresh(); }, 900);
+  }
+
+  // ---------- project details modal ----------
+  function openProject(i) {
+    const p = state.projects[i]; if (!p) return;
+    const m = $("#pmodal");
+    const imgs = [];
+    if (p.image_url) imgs.push(`<div class="gimg"><img src="${esc(safeUrl(p.image_url))}" alt=""></div>`);
+    (Array.isArray(p.gallery) ? p.gallery : []).forEach((u) => { const s = safeUrl(u); if (s) imgs.push(`<div class="gimg"><img src="${esc(s)}" alt="" loading="lazy"></div>`); });
+    if (p.mobile_image_url) imgs.push(`<div class="gimg mob"><img src="${esc(safeUrl(p.mobile_image_url))}" alt=""></div>`);
+    $("#pmGallery").innerHTML = imgs.join("") || `<div class="gimg">${mockUI()}</div>`;
+    $("#pmCat").textContent = L(p, "category"); $("#pmCat").hidden = !L(p, "category");
+    $("#pmTitle").textContent = L(p, "title");
+    // details: blank-line separated blocks; a short first line becomes a heading, "•" lines become a list
+    const raw = L(p, "details") || L(p, "summary");
+    $("#pmText").innerHTML = raw.split(/\n\s*\n/).map((block) => {
+      const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
+      let html = "";
+      if (lines.length > 1 && lines[0].length < 40 && !lines[0].startsWith("•")) html += `<h4>${esc(lines.shift())}</h4>`;
+      const bullets = lines.filter((l) => /^[•\-–]/.test(l)), text = lines.filter((l) => !/^[•\-–]/.test(l));
+      if (text.length) html += `<p>${text.map(esc).join("<br>")}</p>`;
+      if (bullets.length) html += `<ul>${bullets.map((l) => `<li>${esc(l.replace(/^[•\-–]\s*/, ""))}</li>`).join("")}</ul>`;
+      return html;
+    }).join("");
+    const stats = Array.isArray(p.stats) ? p.stats : [];
+    $("#pmStats").innerHTML = stats.map((st) => `<div><b>${esc(st.value)}</b><span>${esc(st[`label_${lang}`] || st.label_ar || "")}</span></div>`).join("");
+    $("#pmStats").hidden = !stats.length;
+    $("#pmCta").onclick = () => { closeProject(); openContact(lang === "ar" ? `أرغب بمشروع مشابه لـ: ${L(p, "title")}` : `I'd like a project similar to: ${L(p, "title")}`); };
+    m.hidden = false; document.body.style.overflow = "hidden"; window.__lenis?.stop();
+    $(".pmodal__x", m).focus();
+  }
+  function closeProject() {
+    $("#pmodal").hidden = true; document.body.style.overflow = ""; window.__lenis?.start();
+  }
+  function setupProjectModal() {
+    $("#projectsList").addEventListener("click", (e) => { const b = e.target.closest("[data-open]"); if (b) openProject(+b.dataset.open); });
+    $("#pmodal").addEventListener("click", (e) => { if (e.target.closest("[data-close]")) closeProject(); });
+    addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#pmodal").hidden) closeProject(); });
+  }
+
+  // ---------- scroll progress + custom cursor ----------
+  function setupProgress() {
+    const bar = $("#progressBar");
+    const upd = () => { const h = document.documentElement.scrollHeight - innerHeight; bar.style.transform = `scaleX(${h > 0 ? Math.min(1, scrollY / h) : 0})`; updateProcess(); };
+    addEventListener("scroll", upd, { passive: true }); addEventListener("resize", upd); upd();
+  }
+  function setupCursor() {
+    if (!anim || !matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    document.documentElement.classList.add("has-cursor");
+    const cur = $(".cursor"), dot = $(".cursor__dot"), ring = $(".cursor__ring");
+    let x = -100, y = -100, rx = -100, ry = -100;
+    addEventListener("pointermove", (e) => { x = e.clientX; y = e.clientY; dot.style.transform = `translate(${x}px, ${y}px)`; }, { passive: true });
+    const loop = () => { rx += (x - rx) * 0.18; ry += (y - ry) * 0.18; ring.style.transform = `translate(${rx}px, ${ry}px)`; requestAnimationFrame(loop); };
+    loop();
+    document.addEventListener("pointerover", (e) => {
+      const view = e.target.closest(".project__media, [data-open]");
+      const hov = e.target.closest("a, button, .ctype, .cfeat, input, select, textarea");
+      cur.classList.toggle("view", !!view); cur.classList.toggle("hover", !view && !!hov);
+      ring.textContent = view ? (lang === "ar" ? "عرض" : "View") : "";
+    });
+    document.addEventListener("pointerleave", () => { x = y = -100; });
+  }
+
   // ---------- reveal / counters ----------
   let io, cio;
   function observe() {
@@ -350,6 +514,7 @@
     gsap.registerPlugin(ScrollTrigger);
     if (window.Lenis) {
       const lenis = new Lenis({ duration: 1.1, smoothWheel: true });
+      window.__lenis = lenis;
       lenis.on("scroll", ScrollTrigger.update);
       gsap.ticker.add((t) => lenis.raf(t * 1000)); gsap.ticker.lagSmoothing(0);
       document.addEventListener("click", (e) => {
@@ -387,7 +552,7 @@
     window.WIXA.markEnv(d.env);
     state = {
       settings: merge(DEFAULTS, d.settings || {}),
-      projects: d.projects || [], services: d.services || [], partners: d.partners || [],
+      projects: d.projects || [], services: d.services || [], partners: d.partners || [], testimonials: d.testimonials || [],
     };
   }
 
@@ -402,7 +567,7 @@
     if (e.origin !== location.origin || e.data?.type !== "wixa-preview") return;
     const d = e.data.payload;
     if (d.settings) state.settings = merge(DEFAULTS, d.settings);
-    for (const k of ["projects", "services", "partners"]) if (d[k]) state[k] = d[k];
+    for (const k of ["projects", "services", "partners", "testimonials"]) if (d[k]) state[k] = d[k];
     if (d.lang && UI[d.lang]) lang = d.lang;
     render(); $(".hero").classList.add("in", "in-hero");
   });
@@ -416,6 +581,10 @@
     setupTheme();
     setupParticles();
     setupLogoTilt();
+    setupCalc();
+    setupProjectModal();
+    setupProgress();
+    setupCursor();
     const start = () => {
       $(".loader").classList.add("done");
       document.body.classList.remove("is-loading");

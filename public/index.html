@@ -4,7 +4,37 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>WIXA — ويكسا</title>
-  <meta name="description" content="ويكسا: نصمم ونطور منصات وتطبيقات وأنظمة رقمية من الفكرة حتى التشغيل.">
+  <meta name="description" content="ويكسا شركة تقنية تصمم وتطور المواقع والمنصات الإلكترونية وتطبيقات الجوال والأنظمة الإدارية المخصصة في العراق — من الفكرة حتى التشغيل.">
+  <meta name="keywords" content="ويكسا, WIXA, تصميم مواقع, تطوير تطبيقات, برمجة أنظمة, شركة برمجة في العراق, ERP, منصات إلكترونية">
+  <link rel="canonical" href="https://wixa.dev/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="WIXA — ويكسا">
+  <meta property="og:title" content="ويكسا — نبني المستقبل الرقمي">
+  <meta property="og:description" content="منصات وتطبيقات وأنظمة رقمية تختصر الوقت وتخدم الملايين — من الفكرة حتى التشغيل.">
+  <meta property="og:url" content="https://wixa.dev/">
+  <meta property="og:image" content="https://wixa.dev/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="ar_IQ">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ويكسا — نبني المستقبل الرقمي">
+  <meta name="twitter:description" content="منصات وتطبيقات وأنظمة رقمية — من الفكرة حتى التشغيل.">
+  <meta name="twitter:image" content="https://wixa.dev/og.jpg">
+  <link rel="apple-touch-icon" href="/favicon.svg">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "WIXA",
+    "alternateName": "ويكسا",
+    "url": "https://wixa.dev/",
+    "logo": "https://wixa.dev/logo-maroon.svg",
+    "description": "شركة تقنية تصمم وتطور المواقع والتطبيقات والأنظمة الرقمية.",
+    "areaServed": "IQ",
+    "contactPoint": { "@type": "ContactPoint", "telephone": "+964-782-255-8252", "contactType": "customer service", "availableLanguage": ["Arabic", "English"] }
+  }
+  </script>
   <meta name="theme-color" content="#570622">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -103,11 +133,60 @@
       <div class="services__grid" id="servicesGrid"></div>
     </section>
 
+    <!-- Process -->
+    <section class="process" id="process" data-section="process">
+      <div class="head head--center">
+        <h2 class="head__title reveal-up" data-c="process_title"></h2>
+        <p class="head__sub reveal-up" data-c="process_sub"></p>
+      </div>
+      <div class="process__track" id="processTrack">
+        <div class="process__line" aria-hidden="true"><span></span></div>
+        <ol class="process__steps" id="processSteps"></ol>
+      </div>
+    </section>
+
     <!-- Stats -->
     <section class="stats" data-section="stats">
       <div class="stats__inner">
         <h2 class="stats__title reveal-up" data-c="stats_title"></h2>
         <div class="stats__grid" id="statsGrid"></div>
+      </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials" id="testimonials" data-section="testimonials">
+      <div class="head head--center">
+        <h2 class="head__title reveal-up" data-c="testimonials_title"></h2>
+        <p class="head__sub reveal-up" data-c="testimonials_sub"></p>
+      </div>
+      <div class="tst" id="tst"><div class="tst__track" id="tstTrack"></div></div>
+    </section>
+
+    <!-- Calculator -->
+    <section class="calc" id="calculator" data-section="calculator">
+      <div class="head head--center">
+        <h2 class="head__title reveal-up" data-c="calc_title"></h2>
+        <p class="head__sub reveal-up" data-c="calc_sub"></p>
+      </div>
+      <div class="calc__box reveal-up">
+        <div class="calc__opts">
+          <h3 class="calc__h" data-c="calc_type"></h3>
+          <div class="calc__types" id="calcTypes" role="radiogroup"></div>
+          <h3 class="calc__h" data-c="calc_features"></h3>
+          <div class="calc__feats" id="calcFeats"></div>
+          <h3 class="calc__h" data-c="calc_speed"></h3>
+          <div class="calc__speed" id="calcSpeed">
+            <button type="button" data-rush="0" class="on" data-c="calc_normal"></button>
+            <button type="button" data-rush="1" data-c="calc_rush"></button>
+          </div>
+        </div>
+        <div class="calc__result">
+          <span class="calc__label" data-c="calc_result"></span>
+          <div class="calc__price" id="calcPrice" dir="ltr">—</div>
+          <div class="calc__bar"><span id="calcBar"></span></div>
+          <p class="calc__note" data-c="calc_note"></p>
+          <button type="button" class="btn btn--primary" id="calcCta"><span data-c="calc_cta"></span><svg class="arr" viewBox="0 0 24 24"><path d="M19 12H5m0 0l6-6m-6 6l6 6"/></svg></button>
+        </div>
       </div>
     </section>
 
@@ -169,6 +248,25 @@
   <a class="wa" id="wa" href="#" target="_blank" rel="noopener" aria-label="WhatsApp" hidden>
     <svg viewBox="0 0 32 32"><path fill="currentColor" d="M16 3a13 13 0 00-11.2 19.6L3 29l6.6-1.7A13 13 0 1016 3zm0 23.6a10.6 10.6 0 01-5.4-1.5l-.4-.2-3.9 1 1-3.8-.2-.4A10.6 10.6 0 1116 26.6zm5.8-7.9c-.3-.2-1.9-.9-2.2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7 0a8.7 8.7 0 01-4.3-3.8c-.3-.6.3-.5.9-1.7.1-.2 0-.4 0-.6l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6a1.2 1.2 0 00-.9.4 3.7 3.7 0 00-1.2 2.8 6.5 6.5 0 001.4 3.4 14.8 14.8 0 005.7 5c2.1.9 2.9 1 4 .8a3.4 3.4 0 002.2-1.6 2.8 2.8 0 00.2-1.6c-.1-.1-.3-.2-.6-.4z"/></svg>
   </a>
+
+  <!-- Project details -->
+  <div class="pmodal" id="pmodal" hidden>
+    <div class="pmodal__scrim" data-close></div>
+    <article class="pmodal__box" role="dialog" aria-modal="true" aria-labelledby="pmTitle">
+      <button class="pmodal__x" type="button" data-close aria-label="close">✕</button>
+      <div class="pmodal__gallery" id="pmGallery"></div>
+      <div class="pmodal__body">
+        <span class="project__cat" id="pmCat"></span>
+        <h2 id="pmTitle"></h2>
+        <div class="pmodal__text" id="pmText"></div>
+        <div class="project__stats" id="pmStats"></div>
+        <button type="button" class="btn btn--primary" id="pmCta"><span data-c="similar"></span><svg class="arr" viewBox="0 0 24 24"><path d="M19 12H5m0 0l6-6m-6 6l6 6"/></svg></button>
+      </div>
+    </article>
+  </div>
+
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+  <div class="cursor" aria-hidden="true"><span class="cursor__dot"></span><span class="cursor__ring"></span></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>

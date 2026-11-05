@@ -88,6 +88,7 @@ const VIEWS = {
   projects: { title: "المشاريع", sub: "أضف مشاريعك واعرضها في قسم الإنجازات", render: () => viewList("projects") },
   services: { title: "الخدمات", sub: "الخدمات التي تظهر في الموقع", render: () => viewList("services") },
   partners: { title: "الشركاء", sub: "شعارات العملاء والشركاء", render: () => viewList("partners") },
+  testimonials: { title: "آراء العملاء", sub: "بطاقات الآراء المتحركة في الموقع", render: () => viewList("testimonials") },
   messages: { title: "الرسائل", sub: "رسائل نموذج التواصل", render: viewMessages },
   account: { title: "الحساب", sub: "بيانات الدخول والأمان", render: viewAccount },
 };
@@ -370,7 +371,11 @@ const TEXT_FIELDS = [
   ["القسم الرئيسي (أعلى الصفحة)", [["hero_badge", "الشارة الصغيرة"], ["hero_title", "العنوان الرئيسي"], ["hero_sub", "الوصف", true], ["hero_cta", "زر 1"], ["hero_cta2", "زر 2"]]],
   ["قسم الإنجازات", [["projects_title", "العنوان"], ["projects_sub", "الوصف", true]]],
   ["قسم الخدمات", [["services_title", "العنوان"], ["services_sub", "الوصف", true]]],
+  ["قسم كيف نعمل", [["process_title", "العنوان"], ["process_sub", "الوصف", true]]],
   ["قسم الأرقام", [["stats_title", "العنوان"]]],
+  ["قسم آراء العملاء", [["testimonials_title", "العنوان"], ["testimonials_sub", "الوصف", true]]],
+  ["حاسبة التكلفة", [["calc_title", "العنوان"], ["calc_sub", "الوصف", true], ["calc_type", "عنوان نوع المشروع"], ["calc_features", "عنوان الميزات"], ["calc_speed", "عنوان المدة"], ["calc_normal", "مدة عادية"], ["calc_rush", "مدة مستعجلة"], ["calc_result", "عنوان النتيجة"], ["calc_note", "الملاحظة", true], ["calc_cta", "نص الزر"]]],
+  ["تفاصيل المشاريع", [["details", "زر عرض التفاصيل"], ["similar", "زر طلب مشروع مشابه"]]],
   ["قسم الشركاء", [["partners_title", "العنوان"], ["partners_sub", "الوصف", true]]],
   ["قسم التواصل", [["cta_title", "العنوان"], ["cta_sub", "الوصف", true], ["cta_button", "نص الزر"]]],
   ["التذييل", [["footer_text", "النص"]]],
@@ -378,7 +383,7 @@ const TEXT_FIELDS = [
 
 async function viewContent(view) {
   settingsActions();
-  const tabs = [["texts", "النصوص"], ["story", "القصة (المميزات)"], ["stats", "الأرقام"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
+  const tabs = [["texts", "النصوص"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
   view.innerHTML = `<div class="split"><div><div class="card">
       <div class="tabs" id="ctTabs">${tabs.map(([k, l]) => `<button data-k="${k}" class="${k === contentTab ? "on" : ""}">${l}</button>`).join("")}</div>
       <div id="ctBody"></div></div></div>${previewPane()}</div>`;
@@ -430,9 +435,49 @@ function renderContentTab() {
       $("#addStat").onclick = () => { settings.stats.push({ value: 0, suffix: "+", label_ar: "", label_en: "" }); changed(); draw(); };
     };
     draw(); return;
+  } else if (contentTab === "process") {
+    const draw = () => {
+      const items = settings.content[L].process || (settings.content[L].process = []);
+      body.innerHTML = langSeg() + `<p class="muted" style="margin-top:0">خطوات تضيء واحدة تلو الأخرى مع التمرير. يُفضّل 3 إلى 5 خطوات.</p><div class="stack">${items.map((_, i) => `<div class="sec-title">الخطوة ${i + 1} <button class="b b--sm b--ghost b--danger" data-del="${i}">${I.trash}</button></div>${input(`content.${L}.process.${i}.title`, "العنوان", false, `dir="${dir}"`)}${input(`content.${L}.process.${i}.text`, "النص", true, `dir="${dir}"`)}`).join("")}</div>
+        <button class="b b--sm" id="addStep" style="margin-top:12px">${I.plus}إضافة خطوة</button>`;
+      bindLangSeg(); bindPathInputs(body);
+      $$("[data-del]", body).forEach((b) => (b.onclick = () => { items.splice(+b.dataset.del, 1); changed(); draw(); }));
+      $("#addStep").onclick = () => { items.push({ title: "", text: "" }); changed(); draw(); };
+    };
+    draw(); return;
+  } else if (contentTab === "calc") {
+    const c = settings.calculator;
+    const draw = () => {
+      const row = (kind, x, i) => `<div class="stats-rep__row wide" style="grid-template-columns:${kind === "types" ? "78px " : ""}1.5fr 1.5fr 74px 74px 34px;gap:6px">
+        ${kind === "types" ? `<select class="fi" data-kind="${kind}" data-i="${i}" data-k="icon">${Object.keys(ICONS).map((k) => `<option ${x.icon === k ? "selected" : ""}>${k}</option>`).join("")}</select>` : ""}
+        <input class="fi" data-kind="${kind}" data-i="${i}" data-k="label_ar" value="${esc(x.label_ar)}" placeholder="الاسم بالعربي">
+        <input class="fi" data-kind="${kind}" data-i="${i}" data-k="label_en" value="${esc(x.label_en)}" placeholder="English" dir="ltr">
+        <input class="fi" data-kind="${kind}" data-i="${i}" data-k="min" type="number" value="${esc(x.min)}" placeholder="من" dir="ltr">
+        <input class="fi" data-kind="${kind}" data-i="${i}" data-k="max" type="number" value="${esc(x.max)}" placeholder="إلى" dir="ltr">
+        <button class="b b--icon b--ghost b--danger" data-kind="${kind}" data-del="${i}">${I.trash}</button></div>`;
+      body.innerHTML = `<p class="muted" style="margin-top:0">⚠️ الأسعار هنا تقديرية تظهر للزوار — راجعها وضع أسعار شركتك قبل النشر على الموقع الرئيسي. كل سعر هو نطاق (من — إلى).</p>
+        <div class="grid2"><label class="f"><span>رمز العملة</span><input class="fi" data-root="currency" value="${esc(c.currency)}" dir="ltr"></label>
+        <label class="f"><span>معامل التنفيذ المستعجل (مثلاً 1.3 = +30%)</span><input class="fi" data-root="rush" type="number" step="0.05" value="${esc(c.rush)}" dir="ltr"></label></div>
+        <div class="sec-title">أنواع المشاريع (السعر الأساسي)</div><div class="stats-rep">${c.types.map((x, i) => row("types", x, i)).join("")}</div>
+        <button class="b b--sm" data-add="types" style="margin-top:8px">${I.plus}إضافة نوع</button>
+        <div class="sec-title" style="margin-top:18px">الميزات الإضافية (تُضاف للسعر)</div><div class="stats-rep">${c.features.map((x, i) => row("features", x, i)).join("")}</div>
+        <button class="b b--sm" data-add="features" style="margin-top:8px">${I.plus}إضافة ميزة</button>`;
+      $$(".fi", body).forEach((el) => {
+        el.style.cssText = "height:38px;padding:0 10px;border:1px solid var(--line-2);border-radius:10px;width:100%;min-width:0;background:#fff";
+        el.oninput = el.onchange = () => {
+          const num = el.type === "number";
+          if (el.dataset.root) c[el.dataset.root] = num ? Number(el.value) : el.value;
+          else c[el.dataset.kind][el.dataset.i][el.dataset.k] = num ? Number(el.value) : el.value;
+          changed();
+        };
+      });
+      $$("[data-del]", body).forEach((b) => (b.onclick = () => { c[b.dataset.kind].splice(+b.dataset.del, 1); changed(); draw(); }));
+      $$("[data-add]", body).forEach((b) => (b.onclick = () => { c[b.dataset.add].push(b.dataset.add === "types" ? { icon: "web", label_ar: "", label_en: "", min: 0, max: 0 } : { label_ar: "", label_en: "", min: 0, max: 0 }); changed(); draw(); }));
+    };
+    draw(); return;
   } else if (contentTab === "sections") {
-    const names = { story: "القصة (المميزات)", projects: "الإنجازات (المشاريع)", services: "الخدمات", stats: "الأرقام", partners: "الشركاء", contact: "التواصل" };
-    body.innerHTML = `<p class="muted" style="margin-top:0">أخفِ أي قسم لا تحتاجه. (قسم الشركاء يختفي تلقائياً إذا لم تُضف شركاء.)</p><div class="stack">${Object.entries(names).map(([k, l]) => `<label class="switch"><input type="checkbox" data-path="sections.${k}" ${settings.sections[k] ? "checked" : ""}><i></i>${l}</label>`).join("")}</div>`;
+    const names = { story: "القصة (المميزات)", projects: "الإنجازات (المشاريع)", services: "الخدمات", process: "كيف نعمل", stats: "الأرقام", testimonials: "آراء العملاء", calculator: "حاسبة التكلفة", partners: "الشركاء", contact: "التواصل" };
+    body.innerHTML = `<p class="muted" style="margin-top:0">أخفِ أي قسم لا تحتاجه. (قسما الشركاء وآراء العملاء يختفيان تلقائياً إذا كانا فارغين.)</p><div class="stack">${Object.entries(names).map(([k, l]) => `<label class="switch"><input type="checkbox" data-path="sections.${k}" ${settings.sections[k] ? "checked" : ""}><i></i>${l}</label>`).join("")}</div>`;
   } else if (contentTab === "brand") {
     body.innerHTML = `<div class="stack"><div class="grid2">${input("brand.name_ar", "اسم الشركة بالعربي")}${input("brand.name_en", "اسم الشركة بالإنجليزي", false, 'dir="ltr"')}</div>
       <div class="f"><span>الشعار (اختياري — يُفضّل مربع PNG أو SVG)</span><div id="logoField"></div></div></div>`;
@@ -491,6 +536,8 @@ const ENTITIES = {
       ["sec", "الوصف"], ["pairArea", "summary", "وصف مختصر"],
       ["url", "link", "رابط المشروع (اختياري)"],
       ["sec", "الصور"], ["image", "image_url", "صورة الشاشة (لوحة تحكم أو موقع) — أفقية 16:10", "projects"], ["image", "mobile_image_url", "صورة شاشة الجوال (اختياري) — عمودية", "projects"],
+      ["sec", "صفحة التفاصيل"], ["note", "تظهر عند الضغط على «عرض التفاصيل». افصل الفقرات بسطر فارغ، السطر القصير في أول الفقرة يصبح عنواناً، وابدأ النقاط بـ •"], ["pairArea", "details", "التفاصيل"],
+      ["gallery", "gallery", "صور إضافية للمعرض", "projects"],
       ["sec", "أرقام المشروع"], ["stats", "stats"],
       ["sec", "النشر"], ["toggle", "published", "منشور ويظهر في الموقع"],
     ],
@@ -500,6 +547,12 @@ const ENTITIES = {
     title: (r) => r.title_ar || r.title_en, sub: (r) => r.summary_ar, icon: (r) => r.icon,
     blank: { icon: "web", title_ar: "", title_en: "", summary_ar: "", summary_en: "", published: true },
     fields: [["icon", "icon", "الأيقونة"], ["pair", "title", "اسم الخدمة"], ["pairArea", "summary", "الوصف"], ["toggle", "published", "منشورة"]],
+  },
+  testimonials: {
+    one: "رأي", empty: "لا توجد آراء بعد. أضف آراء عملائك لتظهر في شريط متحرك على الموقع.",
+    title: (r) => r.name, sub: (r) => r.quote_ar, thumb: (r) => r.avatar_url,
+    blank: { name: "", role_ar: "", role_en: "", quote_ar: "", quote_en: "", avatar_url: "", rating: 5, published: true },
+    fields: [["text", "name", "اسم العميل"], ["pair", "role", "المنصب أو الشركة"], ["pairArea", "quote", "نص الرأي"], ["rating", "rating", "التقييم"], ["image", "avatar_url", "صورة العميل (اختياري — مربعة)", "testimonials"], ["toggle", "published", "منشور"]],
   },
   partners: {
     one: "شريك", empty: "لا يوجد شركاء بعد. أضف شعارات عملائك وشركائك.",
@@ -565,10 +618,12 @@ function editItem(table, row) {
   const bindText = (el, key) => { el.value = rec[key] ?? ""; el.oninput = () => (rec[key] = el.value); };
   for (const [type, key, label, folder, contain] of E.fields) {
     if (type === "sec") { body.insertAdjacentHTML("beforeend", `<div class="sec-title">${key}</div>`); continue; }
+    if (type === "note") { body.insertAdjacentHTML("beforeend", `<p class="muted" style="margin:-6px 0 0;font-size:13px">${key}</p>`); continue; }
     if (type === "pair" || type === "pairArea") {
       const area = type === "pairArea";
       const g = document.createElement("div"); g.className = "grid2";
-      g.innerHTML = `<label class="f"><span>${label} — عربي</span>${area ? "<textarea rows=3></textarea>" : "<input>"}</label><label class="f"><span>${label} — English</span>${area ? '<textarea rows=3 dir="ltr"></textarea>' : '<input dir="ltr">'}</label>`;
+      const rows = key === "details" ? 9 : 3;
+      g.innerHTML = `<label class="f"><span>${label} — عربي</span>${area ? `<textarea rows=${rows}></textarea>` : "<input>"}</label><label class="f"><span>${label} — English</span>${area ? `<textarea rows=${rows} dir="ltr"></textarea>` : '<input dir="ltr">'}</label>`;
       const [a, b] = $$("input, textarea", g); bindText(a, `${key}_ar`); bindText(b, `${key}_en`);
       body.append(g);
     } else if (type === "text" || type === "url") {
@@ -587,6 +642,25 @@ function editItem(table, row) {
       d.innerHTML = `<span>${label}</span><div class="icons">${Object.keys(ICONS).map((k) => `<button type="button" data-ic="${k}" class="${rec.icon === k ? "on" : ""}" title="${k}">${ICONS[k]}</button>`).join("")}</div>`;
       $$("[data-ic]", d).forEach((b) => (b.onclick = () => { rec.icon = b.dataset.ic; $$("[data-ic]", d).forEach((x) => x.classList.toggle("on", x === b)); }));
       body.append(d);
+    } else if (type === "rating") {
+      const d = document.createElement("div"); d.className = "f";
+      const draw = () => { d.innerHTML = `<span>${label}</span><div style="display:flex;gap:4px;font-size:28px;cursor:pointer;color:#D9A441">${[1, 2, 3, 4, 5].map((n) => `<span data-n="${n}" style="opacity:${n <= (rec.rating || 5) ? 1 : .25}">★</span>`).join("")}</div>`;
+        $$("[data-n]", d).forEach((st) => (st.onclick = () => { rec.rating = +st.dataset.n; draw(); })); };
+      draw(); body.append(d);
+    } else if (type === "gallery") {
+      const d = document.createElement("div"); d.className = "f";
+      const draw = () => {
+        rec.gallery = Array.isArray(rec.gallery) ? rec.gallery : [];
+        d.innerHTML = `<span>${label}</span><div class="stack" style="gap:10px"></div><button type="button" class="b b--sm" style="justify-self:start">${I.plus}إضافة صورة</button>`;
+        const list = $(".stack", d);
+        rec.gallery.forEach((u, i) => {
+          const row = document.createElement("div"); row.style.cssText = "display:flex;gap:8px;align-items:center";
+          row.append(imageField(u, folder, (url) => { if (url) rec.gallery[i] = url; else { rec.gallery.splice(i, 1); draw(); } }));
+          list.append(row);
+        });
+        $("button.b--sm", d).onclick = () => { rec.gallery.push(""); draw(); };
+      };
+      draw(); body.append(d);
     } else if (type === "stats") {
       const d = document.createElement("div");
       const draw = () => {
@@ -610,6 +684,7 @@ function editItem(table, row) {
     const saveBtn = e.currentTarget; saveBtn.disabled = true;
     const { id, created_at, ...payload } = rec;
     if (payload.stats) payload.stats = payload.stats.filter((s) => String(s.value).trim());
+    if (payload.gallery) payload.gallery = payload.gallery.filter(Boolean);
     let res;
     if (row) res = await sb.from(table).update(payload).eq("id", row.id);
     else res = await sb.from(table).insert({ ...payload, sort: (cache[table]?.length || 0) });
