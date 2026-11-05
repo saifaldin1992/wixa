@@ -24,10 +24,21 @@ Local stack (requires Docker): `npx supabase start`.
 Dashboard → Project Settings → Integrations → GitHub → connect `saifaldin1992/wixa`
 and set the Supabase directory to `supabase`.
 
-## Cloudflare Worker
+## Website & admin dashboard
 
-`src/index.js` is a Cloudflare Worker that talks to Supabase. `GET /health` reports
-whether the Worker can reach the Supabase project.
+- `public/index.html`, `styles.css`, `main.js`: the public bilingual (Arabic/English) site. All content, colors and fonts come from Supabase through `GET /api/site`.
+- `public/admin/`: the admin dashboard at `/admin/`: visitor stats, colors, fonts and font size with live preview, all site text, projects, services, partners (with image uploads) and contact messages.
+- `public/shared.js`: default content, fonts, icons and theme helpers used by both.
+- `src/index.js`: Cloudflare Worker: `/api/site`, `/api/track` (anonymous daily-hashed visits), `/api/contact`, `/api/config`, `/health`; everything else is served from `public/`.
+
+### First admin account
+
+Open `/admin/`, choose "create admin account" and sign up. **The first account ever created becomes the admin**; any later sign-up has no rights.
+Then, in Supabase → Authentication:
+- add your site URL (e.g. `https://wixa.<you>.workers.dev`) to **URL Configuration** so the confirmation email links back to the site;
+- optionally turn off **Allow new users to sign up** once the admin exists.
+
+## Cloudflare Worker
 
 ```bash
 npm install

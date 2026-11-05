@@ -3,196 +3,154 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>WIXA — ويكسا | حلول تقنية</title>
-  <meta name="description" content="ويكسا شركة حلول تقنية: تطوير مواقع وتطبيقات، أنظمة أعمال، تصميم تجربة المستخدم، حلول سحابية وأمن سيبراني.">
-  <meta name="theme-color" content="#0E0E0C">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230E0E0C'/%3E%3Cpath d='M12 18l8 28 12-20 12 20 8-28' stroke='%23FF4D1F' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <title>WIXA — ويكسا</title>
+  <meta name="description" content="ويكسا: نصمم ونطور منصات وتطبيقات وأنظمة رقمية من الفكرة حتى التشغيل.">
+  <meta name="theme-color" content="#F5F7FB">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231F5BFF'/%3E%3Cpath d='M14 20l7 24 11-17 11 17 7-24' stroke='white' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@200;300;400;500;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
+  <script src="/shared.js"></script>
 </head>
 <body class="is-loading">
 
-  <!-- Preloader -->
-  <div class="loader" aria-hidden="true">
-    <div class="loader__count"><span id="loaderNum">0</span><small>%</small></div>
-    <div class="loader__word">WIXA</div>
-  </div>
-
-  <div class="grain" aria-hidden="true"></div>
-  <div class="cursor" aria-hidden="true"><span class="cursor__label"></span></div>
+  <div class="loader" aria-hidden="true"><div class="loader__mark"><svg viewBox="0 0 64 40"><path d="M4 6l10 28 14-22 14 22 10-28"/></svg></div></div>
 
   <!-- Header -->
-  <header class="nav">
-    <a href="#top" class="nav__logo" aria-label="WIXA">
-      <svg viewBox="0 0 64 40" width="44" height="28" aria-hidden="true"><path d="M4 6l10 28 14-22 14 22 10-28" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="60" cy="8" r="4" fill="var(--accent)"/></svg>
-      <span>WIXA</span>
-    </a>
-    <nav class="nav__links" aria-label="main">
-      <a href="#services" data-i18n="nav.services">الخدمات</a>
-      <a href="#process" data-i18n="nav.process">طريقتنا</a>
-      <a href="#about" data-i18n="nav.about">من نحن</a>
-      <a href="#contact" data-i18n="nav.contact">تواصل</a>
-    </nav>
-    <div class="nav__actions">
-      <button class="lang" id="langToggle" type="button" aria-label="Switch language">EN</button>
-      <a href="#contact" class="btn btn--small magnetic" data-cursor="go"><span data-i18n="nav.cta">ابدأ مشروعك</span></a>
-      <button class="burger" id="burger" type="button" aria-label="menu" aria-expanded="false"><i></i><i></i></button>
+  <header class="header" id="header">
+    <div class="header__bar">
+      <a href="#top" class="brand" aria-label="WIXA">
+        <span class="brand__mark" id="brandMark"><svg viewBox="0 0 64 40" aria-hidden="true"><path d="M4 6l10 28 14-22 14 22 10-28"/></svg></span>
+        <span class="brand__name" data-t="brand"></span>
+      </a>
+      <nav class="header__nav" aria-label="main">
+        <a href="#top" data-t="nav_home"></a>
+        <a href="#projects" data-t="nav_projects" data-sec="projects"></a>
+        <a href="#services" data-t="nav_services" data-sec="services"></a>
+        <a href="#partners" data-t="nav_partners" data-sec="partners"></a>
+        <a href="#contact" data-t="nav_contact" data-sec="contact"></a>
+      </nav>
+      <div class="header__end">
+        <button class="pill-btn lang-btn" id="langBtn" type="button"></button>
+        <button class="menu-btn" id="menuBtn" type="button" aria-label="menu" aria-expanded="false"><span></span><span></span></button>
+      </div>
+    </div>
+    <div class="header__menu" id="menu">
+      <a href="#top" data-t="nav_home"></a>
+      <a href="#projects" data-t="nav_projects" data-sec="projects"></a>
+      <a href="#services" data-t="nav_services" data-sec="services"></a>
+      <a href="#partners" data-t="nav_partners" data-sec="partners"></a>
+      <a href="#contact" data-t="nav_contact" data-sec="contact"></a>
     </div>
   </header>
-
-  <div class="menu" id="menu" aria-hidden="true">
-    <a href="#services" data-i18n="nav.services">الخدمات</a>
-    <a href="#process" data-i18n="nav.process">طريقتنا</a>
-    <a href="#about" data-i18n="nav.about">من نحن</a>
-    <a href="#contact" data-i18n="nav.contact">تواصل</a>
-  </div>
+  <div class="scrim" id="scrim"></div>
 
   <main id="top">
-
     <!-- Hero -->
     <section class="hero">
-      <div class="hero__meta">
-        <span class="tag"><i class="dot"></i><span data-i18n="hero.tag">متاحون لمشاريع جديدة</span></span>
-        <span class="mono" data-i18n="hero.est">STUDIO / ٢٠٢٦</span>
+      <div class="hero__bg" aria-hidden="true">
+        <svg class="net" id="net" viewBox="0 0 800 700" preserveAspectRatio="xMidYMid slice"></svg>
       </div>
-
-      <h1 class="hero__title">
-        <span class="line"><span class="line__in" data-i18n="hero.l1">نحوّل الأفكار</span></span>
-        <span class="line"><span class="line__in"><span data-i18n="hero.l2">إلى</span> <em class="rotator" id="rotator" data-i18n-list="hero.words">منتجات</em></span></span>
-        <span class="line"><span class="line__in hero__outline" data-i18n="hero.l3">تُحَس.</span></span>
-      </h1>
-
-      <div class="hero__bottom">
-        <p class="hero__lead" data-i18n="hero.lead">ويكسا استوديو تقني يصمّم ويبني مواقع وتطبيقات وأنظمة رقمية بعناية الحِرفي — تقنية تعمل بصمت، وتجربة يتذكّرها الناس.</p>
-        <a href="#services" class="scroll-cue" data-cursor="scroll" aria-label="scroll">
-          <svg viewBox="0 0 120 120" class="scroll-cue__ring"><defs><path id="circ" d="M60,60 m-46,0 a46,46 0 1,1 92,0 a46,46 0 1,1 -92,0"/></defs><text><textPath href="#circ" textLength="286" lengthAdjust="spacingAndGlyphs" data-i18n="hero.scroll">اكتشف المزيد • اكتشف المزيد •</textPath></text></svg>
-          <svg viewBox="0 0 24 24" class="scroll-cue__arrow"><path d="M12 4v16m0 0l-6-6m6 6l6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-        </a>
+      <div class="hero__content">
+        <span class="badge reveal-up"><i class="pulse"></i><span data-c="hero_badge"></span></span>
+        <h1 class="hero__title" id="heroTitle" data-c="hero_title"></h1>
+        <p class="hero__sub reveal-up" data-c="hero_sub"></p>
+        <div class="hero__ctas reveal-up">
+          <a href="#projects" class="btn btn--primary magnetic"><span data-c="hero_cta"></span><svg class="arr" viewBox="0 0 24 24"><path d="M19 12H5m0 0l6-6m-6 6l6 6"/></svg></a>
+          <a href="#contact" class="btn btn--ghost"><span data-c="hero_cta2"></span></a>
+        </div>
       </div>
-
-      <div class="hero__shape" aria-hidden="true">
-        <svg viewBox="0 0 600 600">
-          <g class="orbit orbit--1"><circle cx="300" cy="300" r="250" /></g>
-          <g class="orbit orbit--2"><circle cx="300" cy="300" r="180" /></g>
-          <g class="orbit orbit--3"><circle cx="300" cy="300" r="110" /></g>
-          <circle class="sat sat--1" cx="300" cy="50" r="10"/>
-          <circle class="sat sat--2" cx="480" cy="300" r="7"/>
-          <circle class="sat sat--3" cx="300" cy="410" r="5"/>
-        </svg>
-      </div>
+      <a href="#story" class="hero__scroll" aria-label="scroll"><span></span></a>
     </section>
 
-    <!-- Marquee -->
-    <section class="marquee" aria-hidden="true">
-      <div class="marquee__track">
-        <div class="marquee__group" data-i18n-marquee></div>
+    <!-- Story -->
+    <section class="story" id="story" data-section="story">
+      <div class="story__list" id="storyList"></div>
+    </section>
+
+    <!-- Projects -->
+    <section class="projects" id="projects" data-section="projects">
+      <div class="head">
+        <h2 class="head__title reveal-up" data-c="projects_title"></h2>
+        <p class="head__sub reveal-up" data-c="projects_sub"></p>
       </div>
+      <div class="projects__list" id="projectsList"></div>
     </section>
 
     <!-- Services -->
-    <section class="services" id="services">
-      <div class="section-head">
-        <span class="mono">(01)</span>
-        <h2 class="reveal" data-i18n="services.title">ماذا نصنع</h2>
-        <p class="reveal" data-i18n="services.sub">خدمات متكاملة من الفكرة إلى الإطلاق — وما بعده.</p>
+    <section class="services" id="services" data-section="services">
+      <div class="head">
+        <h2 class="head__title reveal-up" data-c="services_title"></h2>
+        <p class="head__sub reveal-up" data-c="services_sub"></p>
       </div>
-      <ol class="svc-list" id="svcList"></ol>
+      <div class="services__grid" id="servicesGrid"></div>
     </section>
 
-    <!-- Statement -->
-    <section class="statement" id="about">
-      <span class="mono">(02)</span>
-      <p class="statement__text" id="statement" data-i18n="about.statement">لا نكتب كوداً فقط. نصغي، نفهم عملك، ثم نبني شيئاً يشبهك — سريعاً، آمناً، وجميلاً بما يكفي ليُحَب.</p>
-      <div class="stats">
-        <div class="stat"><b data-count="120">0</b><sup>+</sup><span data-i18n="stats.projects">مشروع مُنجز</span></div>
-        <div class="stat"><b data-count="98">0</b><sup>%</sup><span data-i18n="stats.satisfaction">رضا العملاء</span></div>
-        <div class="stat"><b data-count="24">0</b><sup>/7</sup><span data-i18n="stats.support">دعم فني</span></div>
-        <div class="stat"><b data-count="9">0</b><sup>+</sup><span data-i18n="stats.years">سنوات خبرة</span></div>
+    <!-- Stats -->
+    <section class="stats" data-section="stats">
+      <div class="stats__inner">
+        <h2 class="stats__title reveal-up" data-c="stats_title"></h2>
+        <div class="stats__grid" id="statsGrid"></div>
       </div>
     </section>
 
-    <!-- Process -->
-    <section class="process" id="process">
-      <div class="process__pin">
-        <div class="process__head">
-          <span class="mono">(03)</span>
-          <h2 data-i18n="process.title">كيف نعمل</h2>
-        </div>
-        <div class="process__track" id="processTrack"></div>
+    <!-- Partners -->
+    <section class="partners" id="partners" data-section="partners">
+      <div class="head">
+        <h2 class="head__title reveal-up" data-c="partners_title"></h2>
+        <p class="head__sub reveal-up" data-c="partners_sub"></p>
       </div>
+      <div class="partners__grid" id="partnersGrid"></div>
     </section>
 
-    <!-- Values -->
-    <section class="values">
-      <div class="section-head">
-        <span class="mono">(04)</span>
-        <h2 class="reveal" data-i18n="values.title">لماذا ويكسا</h2>
-      </div>
-      <div class="values__grid" id="valuesGrid"></div>
-    </section>
-
-    <!-- Contact -->
-    <section class="contact" id="contact">
-      <div class="contact__left">
-        <span class="mono">(05)</span>
-        <h2 class="contact__title">
-          <span class="line"><span class="line__in" data-i18n="contact.l1">لنصنع</span></span>
-          <span class="line"><span class="line__in accent-text" data-i18n="contact.l2">شيئاً مذهلاً</span></span>
-        </h2>
-        <p data-i18n="contact.sub">أخبرنا عن فكرتك، وسنعود إليك خلال يوم عمل واحد.</p>
-        <ul class="contact__info">
-          <li><span class="mono" data-i18n="contact.emailLabel">البريد</span><a href="mailto:hello@wixa.tech" id="emailLink">hello@wixa.tech</a></li>
-          <li><span class="mono" data-i18n="contact.phoneLabel">واتساب</span><a href="#" id="waLink" dir="ltr">+000 00 000 0000</a></li>
-        </ul>
+    <!-- CTA + Contact -->
+    <section class="cta" id="contact" data-section="contact">
+      <div class="cta__glow" aria-hidden="true"></div>
+      <h2 class="cta__title reveal-up" data-c="cta_title"></h2>
+      <p class="cta__sub reveal-up" data-c="cta_sub"></p>
+      <div class="cta__actions reveal-up">
+        <a class="icon-btn" id="ctaPhone" href="#" aria-label="phone"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2"/></svg></a>
+        <button class="btn btn--primary magnetic" id="openForm" type="button"><span data-c="cta_button"></span><svg class="arr" viewBox="0 0 24 24"><path d="M19 12H5m0 0l6-6m-6 6l6 6"/></svg></button>
       </div>
 
       <form class="form" id="contactForm" novalidate>
-        <div class="field">
-          <input id="f-name" name="name" required maxlength="120" placeholder=" " autocomplete="name">
-          <label for="f-name" data-i18n="form.name">الاسم</label>
-        </div>
-        <div class="field">
-          <input id="f-email" name="email" type="email" required maxlength="200" placeholder=" " autocomplete="email">
-          <label for="f-email" data-i18n="form.email">البريد الإلكتروني</label>
-        </div>
-        <div class="field">
-          <input id="f-phone" name="phone" type="tel" maxlength="40" placeholder=" " autocomplete="tel" dir="ltr">
-          <label for="f-phone" data-i18n="form.phone">رقم الجوال (اختياري)</label>
-        </div>
-        <fieldset class="chips">
-          <legend data-i18n="form.service">ما الذي تحتاجه؟</legend>
-          <div class="chips__row" id="chipsRow"></div>
-        </fieldset>
-        <div class="field">
-          <textarea id="f-msg" name="message" required maxlength="4000" rows="4" placeholder=" "></textarea>
-          <label for="f-msg" data-i18n="form.message">حدّثنا عن مشروعك</label>
+       <div class="form__inner">
+        <div class="form__grid">
+          <label class="field"><span data-t="f_name"></span><input name="name" required maxlength="120" autocomplete="name"></label>
+          <label class="field"><span data-t="f_email"></span><input name="email" type="email" required maxlength="200" autocomplete="email" dir="ltr"></label>
+          <label class="field"><span data-t="f_phone"></span><input name="phone" type="tel" maxlength="40" autocomplete="tel" dir="ltr"></label>
+          <label class="field"><span data-t="f_service"></span><select name="service" id="serviceSelect"></select></label>
+          <label class="field field--full"><span data-t="f_message"></span><textarea name="message" required maxlength="4000" rows="4"></textarea></label>
         </div>
         <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-        <button class="btn btn--big magnetic" type="submit" data-cursor="send">
-          <span data-i18n="form.send">أرسل الرسالة</span>
-          <svg viewBox="0 0 24 24" width="22" height="22" class="btn__arrow"><path d="M5 12h14m0 0l-6-6m6 6l-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-        </button>
-        <p class="form__status" id="formStatus" role="status"></p>
+        <div class="form__end">
+          <p class="form__status" id="formStatus" role="status"></p>
+          <button class="btn btn--primary" type="submit"><span data-t="f_send"></span></button>
+        </div>
+       </div>
       </form>
     </section>
   </main>
 
   <footer class="footer">
     <div class="footer__top">
-      <p data-i18n="footer.line">صُنع بشغف — من الفكرة إلى الإطلاق.</p>
-      <a href="#top" class="mono back-top" data-i18n="footer.top">للأعلى ↑</a>
+      <a href="#top" class="brand"><span class="brand__mark"><svg viewBox="0 0 64 40"><path d="M4 6l10 28 14-22 14 22 10-28"/></svg></span><span class="brand__name" data-t="brand"></span></a>
+      <nav class="footer__nav">
+        <a href="#top" data-t="nav_home"></a>
+        <a href="#projects" data-t="nav_projects" data-sec="projects"></a>
+        <a href="#partners" data-t="nav_partners" data-sec="partners"></a>
+        <a href="#contact" data-t="nav_contact" data-sec="contact"></a>
+      </nav>
     </div>
-    <div class="footer__word" aria-hidden="true"><span>W</span><span>I</span><span>X</span><span>A</span></div>
-    <div class="footer__bottom mono">
-      <span>© <span id="year"></span> WIXA</span>
-      <span data-i18n="footer.rights">جميع الحقوق محفوظة</span>
+    <div class="footer__bottom">
+      <div class="footer__social" id="social"></div>
+      <button class="footer__lang" id="langBtn2" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg><span></span></button>
+      <p class="footer__credit"><span data-c="footer_text"></span> · © <span id="year"></span></p>
     </div>
   </footer>
 
-  <a class="wa-float" id="waFloat" href="#" target="_blank" rel="noopener" aria-label="WhatsApp" data-cursor="chat">
-    <svg viewBox="0 0 32 32" width="26" height="26"><path fill="currentColor" d="M16 3a13 13 0 00-11.2 19.6L3 29l6.6-1.7A13 13 0 1016 3zm0 23.6a10.6 10.6 0 01-5.4-1.5l-.4-.2-3.9 1 1-3.8-.2-.4A10.6 10.6 0 1116 26.6zm5.8-7.9c-.3-.2-1.9-.9-2.2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7 0a8.7 8.7 0 01-4.3-3.8c-.3-.6.3-.5.9-1.7.1-.2 0-.4 0-.6l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6a1.2 1.2 0 00-.9.4 3.7 3.7 0 00-1.2 2.8 6.5 6.5 0 001.4 3.4 14.8 14.8 0 005.7 5c2.1.9 2.9 1 4 .8a3.4 3.4 0 002.2-1.6 2.8 2.8 0 00.2-1.6c-.1-.1-.3-.2-.6-.4z"/></svg>
+  <a class="wa" id="wa" href="#" target="_blank" rel="noopener" aria-label="WhatsApp" hidden>
+    <svg viewBox="0 0 32 32"><path fill="currentColor" d="M16 3a13 13 0 00-11.2 19.6L3 29l6.6-1.7A13 13 0 1016 3zm0 23.6a10.6 10.6 0 01-5.4-1.5l-.4-.2-3.9 1 1-3.8-.2-.4A10.6 10.6 0 1116 26.6zm5.8-7.9c-.3-.2-1.9-.9-2.2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7 0a8.7 8.7 0 01-4.3-3.8c-.3-.6.3-.5.9-1.7.1-.2 0-.4 0-.6l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6a1.2 1.2 0 00-.9.4 3.7 3.7 0 00-1.2 2.8 6.5 6.5 0 001.4 3.4 14.8 14.8 0 005.7 5c2.1.9 2.9 1 4 .8a3.4 3.4 0 002.2-1.6 2.8 2.8 0 00.2-1.6c-.1-.1-.3-.2-.6-.4z"/></svg>
   </a>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>

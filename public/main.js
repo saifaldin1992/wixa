@@ -1,373 +1,327 @@
-/* WIXA — site behaviour */
+/* WIXA — public site */
 (() => {
-  // ====== Company settings: edit these ======
-  const CONFIG = {
-    whatsapp: "", // e.g. "9665XXXXXXXX" (international format, digits only)
-    whatsappDisplay: "+000 00 000 0000",
-    email: "hello@wixa.tech",
-  };
-
-  // ====== Content (AR / EN) ======
-  const I18N = {
-    ar: {
-      "nav.services": "الخدمات", "nav.process": "طريقتنا", "nav.about": "من نحن", "nav.contact": "تواصل", "nav.cta": "ابدأ مشروعك",
-      "hero.tag": "متاحون لمشاريع جديدة", "hero.est": "استوديو تقني / ٢٠٢٦",
-      "hero.l1": "نحوّل الأفكار", "hero.l2": "إلى", "hero.l3": "تُحَس.",
-      "hero.words": ["منتجات", "مواقع", "تطبيقات", "أنظمة", "تجارب"],
-      "hero.lead": "ويكسا استوديو تقني يصمّم ويبني مواقع وتطبيقات وأنظمة رقمية بعناية الحِرفي — تقنية تعمل بصمت، وتجربة يتذكّرها الناس.",
-      "hero.scroll": "اكتشف المزيد • اكتشف المزيد •",
-      "services.title": "ماذا نصنع", "services.sub": "خدمات متكاملة من الفكرة إلى الإطلاق — وما بعده.",
-      "about.statement": "لا نكتب كوداً فقط. نصغي، نفهم عملك، ثم نبني شيئاً يشبهك — سريعاً، آمناً، وجميلاً بما يكفي ليُحَب.",
-      "stats.projects": "مشروع مُنجز", "stats.satisfaction": "رضا العملاء", "stats.support": "دعم فني", "stats.years": "سنوات خبرة",
-      "process.title": "كيف نعمل",
-      "values.title": "لماذا ويكسا",
-      "contact.l1": "لنصنع", "contact.l2": "شيئاً مذهلاً", "contact.sub": "أخبرنا عن فكرتك، وسنعود إليك خلال يوم عمل واحد.",
-      "contact.emailLabel": "البريد", "contact.phoneLabel": "واتساب",
-      "form.name": "الاسم", "form.email": "البريد الإلكتروني", "form.phone": "رقم الجوال (اختياري)", "form.service": "ما الذي تحتاجه؟",
-      "form.message": "حدّثنا عن مشروعك", "form.send": "أرسل الرسالة",
-      "form.sending": "جارٍ الإرسال…", "form.ok": "وصلت رسالتك ✓ سنتواصل معك قريباً.", "form.err": "تعذّر الإرسال، حاول مرة أخرى أو راسلنا على واتساب.",
-      "form.invalid": "رجاءً أكمل الحقول المطلوبة بشكل صحيح.",
-      "footer.line": "صُنع بشغف — من الفكرة إلى الإطلاق.", "footer.top": "للأعلى ↑", "footer.rights": "جميع الحقوق محفوظة",
-      cursor: { go: "ابدأ", scroll: "انزل", send: "أرسل", chat: "تحدث", open: "افتح" },
-      services: [
-        { t: "تطوير المواقع", d: "مواقع سريعة ومتجاوبة تُبنى لتبيع وتُقنع، من الصفحات التعريفية إلى المنصات المعقدة والمتاجر الإلكترونية.", tags: ["مواقع الشركات", "المتاجر الإلكترونية", "لوحات التحكم", "SEO"] },
-        { t: "تطبيقات الجوال", d: "تطبيقات iOS وAndroid بتجربة سلسة وأداء أصلي، من النموذج الأولي حتى النشر في المتاجر.", tags: ["iOS", "Android", "Flutter", "React Native"] },
-        { t: "الأنظمة والبرمجيات المخصصة", d: "أنظمة إدارة تُصمَّم حول طريقة عملك: ERP وCRM وأنظمة الحجوزات والمخزون والفوترة.", tags: ["ERP", "CRM", "أتمتة العمليات", "التكامل مع الأنظمة"] },
-        { t: "تصميم تجربة وواجهة المستخدم", d: "بحث، هوية بصرية، ونماذج تفاعلية تجعل منتجك واضحاً وممتعاً من النقرة الأولى.", tags: ["UI/UX", "الهوية البصرية", "Prototyping", "Design Systems"] },
-        { t: "الحلول السحابية والاستضافة", d: "بنية تحتية سحابية قابلة للتوسّع، نشر مستمر، ومراقبة على مدار الساعة.", tags: ["Cloud", "DevOps", "الاستضافة", "النسخ الاحتياطي"] },
-        { t: "الأمن السيبراني", d: "فحص الثغرات، تأمين الأنظمة والبيانات، وسياسات حماية تتوافق مع المعايير.", tags: ["اختبار الاختراق", "حماية البيانات", "المراجعة الأمنية"] },
-        { t: "الذكاء الاصطناعي والأتمتة", d: "مساعدات ذكية، تحليل بيانات، وأتمتة المهام المتكررة لتوفير الوقت والتكلفة.", tags: ["روبوتات المحادثة", "تحليل البيانات", "الأتمتة"] },
-        { t: "الدعم الفني والصيانة", d: "عقود صيانة ودعم مستمر لضمان أن كل شيء يعمل — اليوم وغداً.", tags: ["عقود الصيانة", "التحديثات", "الدعم ٢٤/٧"] },
-      ],
-      steps: [
-        { t: "نكتشف", d: "جلسة لفهم عملك وأهدافك وجمهورك، ثم خطة واضحة بالنطاق والوقت والتكلفة." },
-        { t: "نصمّم", d: "هوية وتجربة ونماذج تفاعلية تراها وتلمسها قبل كتابة سطر كود واحد." },
-        { t: "نبني", d: "تطوير بمراحل قصيرة، تتابع التقدم أسبوعياً وتجرّب بنفسك." },
-        { t: "نطلق وننمو", d: "إطلاق آمن، ثم قياس وتحسين ودعم مستمر لينمو المنتج معك." },
-      ],
-      values: [
-        { t: "حِرفية في التفاصيل", d: "كل حركة وكل بكسل مقصود. لا قوالب جاهزة ولا حلول مكررة." },
-        { t: "سرعة بلا تنازل", d: "مواعيد واضحة وتسليم في الوقت، مع جودة كود تصمد للمستقبل." },
-        { t: "شريك لا مورّد", d: "نبقى معك بعد الإطلاق، ونفكر في نمو عملك كأنه عملنا." },
-      ],
-    },
-    en: {
-      "nav.services": "Services", "nav.process": "Process", "nav.about": "About", "nav.contact": "Contact", "nav.cta": "Start a project",
-      "hero.tag": "Available for new projects", "hero.est": "Tech studio / 2026",
-      "hero.l1": "We turn ideas", "hero.l2": "into", "hero.l3": "people feel.",
-      "hero.words": ["products", "websites", "apps", "systems", "experiences"],
-      "hero.lead": "WIXA is a technology studio that designs and builds websites, apps and digital systems with a craftsman's care — tech that works quietly, experiences people remember.",
-      "hero.scroll": "SCROLL • EXPLORE • SCROLL • EXPLORE •",
-      "services.title": "What we make", "services.sub": "End-to-end services, from idea to launch — and beyond.",
-      "about.statement": "We don't just write code. We listen, understand your business, then build something that feels like you — fast, secure, and beautiful enough to be loved.",
-      "stats.projects": "Projects delivered", "stats.satisfaction": "Client satisfaction", "stats.support": "Technical support", "stats.years": "Years of experience",
-      "process.title": "How we work",
-      "values.title": "Why WIXA",
-      "contact.l1": "Let's make", "contact.l2": "something great", "contact.sub": "Tell us about your idea and we'll get back to you within one business day.",
-      "contact.emailLabel": "Email", "contact.phoneLabel": "WhatsApp",
-      "form.name": "Name", "form.email": "Email", "form.phone": "Phone (optional)", "form.service": "What do you need?",
-      "form.message": "Tell us about your project", "form.send": "Send message",
-      "form.sending": "Sending…", "form.ok": "Message received ✓ We'll be in touch soon.", "form.err": "Couldn't send. Please try again or message us on WhatsApp.",
-      "form.invalid": "Please complete the required fields correctly.",
-      "footer.line": "Made with passion — from idea to launch.", "footer.top": "Back to top ↑", "footer.rights": "All rights reserved",
-      cursor: { go: "Go", scroll: "Scroll", send: "Send", chat: "Chat", open: "Open" },
-      services: [
-        { t: "Web Development", d: "Fast, responsive websites built to persuade and convert — from company sites to complex platforms and online stores.", tags: ["Company sites", "E-commerce", "Dashboards", "SEO"] },
-        { t: "Mobile Apps", d: "iOS and Android apps with smooth experiences and native performance, from prototype to store launch.", tags: ["iOS", "Android", "Flutter", "React Native"] },
-        { t: "Custom Software & Systems", d: "Management systems designed around how you work: ERP, CRM, booking, inventory and invoicing.", tags: ["ERP", "CRM", "Process automation", "Integrations"] },
-        { t: "UI / UX Design", d: "Research, visual identity and interactive prototypes that make your product clear and delightful from the first tap.", tags: ["UI/UX", "Brand identity", "Prototyping", "Design systems"] },
-        { t: "Cloud & Hosting", d: "Scalable cloud infrastructure, continuous deployment and round-the-clock monitoring.", tags: ["Cloud", "DevOps", "Hosting", "Backups"] },
-        { t: "Cybersecurity", d: "Vulnerability testing, system and data hardening, and standards-aligned protection policies.", tags: ["Pen testing", "Data protection", "Security audits"] },
-        { t: "AI & Automation", d: "Smart assistants, data analysis and automation of repetitive work to save time and cost.", tags: ["Chatbots", "Data analytics", "Automation"] },
-        { t: "Support & Maintenance", d: "Maintenance contracts and ongoing support so everything keeps working — today and tomorrow.", tags: ["Maintenance", "Updates", "24/7 support"] },
-      ],
-      steps: [
-        { t: "Discover", d: "A session to understand your business, goals and audience — then a clear plan for scope, time and cost." },
-        { t: "Design", d: "Identity, experience and interactive prototypes you can see and touch before a line of code is written." },
-        { t: "Build", d: "Development in short sprints. You follow progress weekly and try it yourself." },
-        { t: "Launch & grow", d: "A safe launch, then measuring, improving and ongoing support so the product grows with you." },
-      ],
-      values: [
-        { t: "Craft in the details", d: "Every motion and every pixel is intentional. No templates, no recycled solutions." },
-        { t: "Speed without compromise", d: "Clear timelines and on-time delivery, with code quality that lasts." },
-        { t: "A partner, not a vendor", d: "We stay with you after launch and care about your growth like it's ours." },
-      ],
-    },
-  };
-
-  const ICONS = [
-    '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 32c8-16 40-16 48 0-8 16-40 16-48 0z"/><circle cx="32" cy="32" r="8"/></svg>',
-    '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M32 6l6 20 20 6-20 6-6 20-6-20-20-6 20-6z"/></svg>',
-    '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="22" cy="32" r="14"/><circle cx="42" cy="32" r="14"/></svg>',
-  ];
-
+  const { DEFAULTS, merge, applyTheme } = window.WIXA;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
-  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let lang = "ar";
-  try { lang = localStorage.getItem("wixa-lang") || "ar"; } catch (e) {}
-  if (!I18N[lang]) lang = "ar";
-  const selected = new Set();
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const safeUrl = (u) => { if (!u || typeof u !== "string" || !u.trim()) return ""; try { const x = new URL(u, location.href); return ["http:", "https:", "mailto:", "tel:"].includes(x.protocol) ? x.href : ""; } catch { return ""; } };
+  const PREVIEW = new URLSearchParams(location.search).has("preview");
+  const reducedOS = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // ====== Rendering ======
+  const UI = {
+    ar: { nav_home: "الرئيسية", nav_projects: "إنجازاتنا", nav_services: "خدماتنا", nav_partners: "شركاؤنا", nav_contact: "تواصل معنا",
+      lang: "English", f_name: "الاسم", f_email: "البريد الإلكتروني", f_phone: "رقم الهاتف (اختياري)", f_service: "الخدمة المطلوبة", f_any: "استشارة عامة",
+      f_message: "حدّثنا عن مشروعك", f_send: "إرسال", sending: "جارٍ الإرسال…", ok: "شكراً لك! وصلت رسالتك وسنتواصل معك قريباً.", err: "تعذّر الإرسال، حاول مرة أخرى.", invalid: "يرجى تعبئة الحقول المطلوبة بشكل صحيح.",
+      no_projects: "ستُعرض المشاريع هنا قريباً.", step: "٠" },
+    en: { nav_home: "Home", nav_projects: "Our work", nav_services: "Services", nav_partners: "Partners", nav_contact: "Contact",
+      lang: "العربية", f_name: "Name", f_email: "Email", f_phone: "Phone (optional)", f_service: "Service", f_any: "General enquiry",
+      f_message: "Tell us about your project", f_send: "Send", sending: "Sending…", ok: "Thank you! Your message arrived and we'll be in touch soon.", err: "Couldn't send. Please try again.", invalid: "Please fill in the required fields correctly.",
+      no_projects: "Projects will appear here soon.", step: "0" },
+  };
+
+  const ICONS = window.WIXA.ICONS;
+  const SOCIAL = {
+    instagram: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="17.3" cy="6.7" r="1.2"/></svg>',
+    x: '<svg viewBox="0 0 24 24"><path d="M17.8 2.5h3.1l-6.8 7.8 8 10.6h-6.3l-4.9-6.4-5.6 6.4H2.2l7.3-8.3L1.8 2.5h6.4l4.4 5.9zm-1.1 16.5h1.7L7.4 4.3H5.6z"/></svg>',
+    linkedin: '<svg viewBox="0 0 24 24"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9.5h4v11H3zm6.5 0h3.8v1.6h.1a4.2 4.2 0 013.8-2c4 0 4.8 2.6 4.8 6.1v6.3h-4v-5.6c0-1.3 0-3-1.9-3s-2.1 1.4-2.1 2.9v5.7h-4z"/></svg>',
+    facebook: '<svg viewBox="0 0 24 24"><path d="M14 8.5V6.6c0-.9.6-1.1 1-1.1h2.6V1.5h-3.6C10 1.5 9.2 4.4 9.2 6.3v2.2H6.5v4H9.2V22.5H14v-10h3.3l.4-4z"/></svg>',
+  };
+  const STORY_ART = [
+    // stacked documents
+    '<svg viewBox="0 0 300 220"><path d="M60 150l90 45 90-45-90-45z" class="fillp acc"/><path d="M60 135l90 45 90-45"/><path d="M60 120l90 45 90-45"/><path d="M60 105l90 45 90-45-90-45z"/><path d="M60 105v45M240 105v45M150 150v45"/><path d="M110 82l40-20 40 20" class="acc"/><path d="M95 95l55 27 55-27"/><line x1="205" y1="40" x2="245" y2="80" class="acc"/><line x1="245" y1="40" x2="205" y2="80" class="acc"/></svg>',
+    // phone + clock
+    '<svg viewBox="0 0 300 220"><rect x="105" y="30" width="90" height="170" rx="16"/><rect x="115" y="48" width="70" height="120" rx="6" class="fillp"/><line x1="140" y1="186" x2="160" y2="186"/><circle cx="150" cy="96" r="24" class="acc"/><polyline points="150,82 150,96 160,104" class="acc"/><rect x="125" y="134" width="50" height="16" rx="8" class="acc"/><path d="M40 70h40M30 100h50M45 130h35" /><path d="M220 70h40M220 100h50M220 130h35"/></svg>',
+    // laptop + rocket
+    '<svg viewBox="0 0 300 220"><rect x="70" y="50" width="160" height="105" rx="10"/><path d="M45 175h210l-18-20H63z"/><path d="M100 85l-14 14 14 14M200 85l14 14-14 14" class="acc"/><line x1="160" y1="78" x2="140" y2="122" class="acc"/><path d="M150 40c12-14 30-20 44-20 0 14-6 32-20 44l-14 4-14-14z" class="fillp acc"/><circle cx="178" cy="34" r="5" class="acc"/></svg>',
+  ];
+
+  let state = { settings: merge(DEFAULTS, {}), projects: [], services: [], partners: [] };
+  let lang = "ar";
+  try { lang = localStorage.getItem("wixa-lang") || "ar"; } catch {}
+  if (!UI[lang]) lang = "ar";
+  let anim = !reducedOS;
+
+  const C = () => state.settings.content[lang] || state.settings.content.ar;
+  const L = (row, f) => row[`${f}_${lang}`] || row[`${f}_ar`] || row[`${f}_en`] || "";
+
+  // ---------- render ----------
+  function splitWords(el, text) {
+    el.innerHTML = String(text).split(/\s+/).filter(Boolean)
+      .map((w, i) => `<span class="word"><span style="transition-delay:${i * 70}ms">${esc(w)}</span></span>`).join(" ");
+  }
+
   function render() {
-    const t = I18N[lang];
+    const s = state.settings, c = C(), ui = UI[lang];
+    anim = !reducedOS && s.animations !== false;
+    document.documentElement.classList.toggle("no-anim", !anim);
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
-    $("#langToggle").textContent = lang === "ar" ? "EN" : "ع";
-    document.title = lang === "ar" ? "WIXA — ويكسا | حلول تقنية" : "WIXA | Technology Studio";
+    applyTheme(s);
+    const brand = lang === "ar" ? s.brand.name_ar : s.brand.name_en;
+    document.title = `${brand} — ${c.hero_title}`;
 
-    $$("[data-i18n]").forEach((el) => { const v = t[el.dataset.i18n]; if (typeof v === "string") el.textContent = v; });
-    $("#rotator").textContent = t["hero.words"][0];
+    $$("[data-c]").forEach((el) => { if (el.id !== "heroTitle") el.textContent = c[el.dataset.c] ?? ""; });
+    $$("[data-t]").forEach((el) => { el.textContent = el.dataset.t === "brand" ? brand : ui[el.dataset.t] ?? ""; });
+    splitWords($("#heroTitle"), c.hero_title);
+    $("#langBtn").textContent = lang === "ar" ? "EN" : "ع";
+    $("#langBtn2 span").textContent = ui.lang;
 
-    // marquee
-    const items = t.services.map((s) => `<span class="marquee__item">${s.t}</span>`).join("");
-    $(".marquee__track").innerHTML = `<div class="marquee__group">${items}</div><div class="marquee__group">${items}</div>`;
-
-    // services
-    $("#svcList").innerHTML = t.services.map((s, i) => `
-      <li class="svc" data-cursor="open">
-        <button class="svc__row" type="button" aria-expanded="false">
-          <span class="svc__num">${String(i + 1).padStart(2, "0")}</span>
-          <span class="svc__title">${s.t}</span>
-          <span class="svc__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
-        </button>
-        <div class="svc__body"><div><div class="svc__inner"><i></i><p>${s.d}</p><div class="svc__tags">${s.tags.map((x) => `<span>${x}</span>`).join("")}</div></div></div></div>
-      </li>`).join("");
-    $$(".svc").forEach((li) => {
-      const btn = $(".svc__row", li);
-      btn.style.width = "100%"; btn.style.textAlign = "start";
-      btn.addEventListener("click", () => {
-        const open = !li.classList.contains("open");
-        $$(".svc.open").forEach((o) => { o.classList.remove("open"); $(".svc__row", o).setAttribute("aria-expanded", "false"); });
-        if (open) { li.classList.add("open"); btn.setAttribute("aria-expanded", "true"); }
-        setTimeout(() => window.ScrollTrigger && ScrollTrigger.refresh(), 750);
-      });
+    $$(".brand__mark").forEach((m) => {
+      if (s.brand.logo_url) { m.classList.add("has-logo"); m.innerHTML = `<img src="${esc(safeUrl(s.brand.logo_url))}" alt="">`; }
+      else { m.classList.remove("has-logo"); m.innerHTML = '<svg viewBox="0 0 64 40"><path d="M4 6l10 28 14-22 14 22 10-28"/></svg>'; }
     });
 
-    // process
-    $("#processTrack").innerHTML = t.steps.map((s, i) => `
-      <article class="step"><div class="step__num">${String(i + 1).padStart(2, "0")}<small> /04</small></div>
-      <div><h3>${s.t}</h3><p>${s.d}</p></div></article>`).join("");
+    // sections visibility
+    for (const [k, on] of Object.entries(s.sections)) {
+      $$(`[data-section="${k}"]`).forEach((el) => (el.hidden = !on));
+      $$(`[data-sec="${k}"]`).forEach((el) => (el.hidden = !on));
+    }
+    if (!state.partners.length) { $$('[data-section="partners"], [data-sec="partners"]').forEach((el) => (el.hidden = true)); }
 
-    // values
-    $("#valuesGrid").innerHTML = t.values.map((v, i) => `
-      <div class="value reveal"><div class="value__ico">${ICONS[i]}</div><h3>${v.t}</h3><p>${v.d}</p></div>`).join("");
+    // story
+    $("#storyList").innerHTML = (c.story || []).map((it, i) => `
+      <article class="story-item">
+        <div class="story-item__text reveal-up"><span class="story-item__num">0${i + 1}</span><h3>${esc(it.title)}</h3><p>${esc(it.text)}</p></div>
+        <div class="story-item__art" aria-hidden="true">${STORY_ART[i % STORY_ART.length]}</div>
+      </article>`).join("");
 
-    // form chips
-    $("#chipsRow").innerHTML = t.services.slice(0, 7).map((s, i) =>
-      `<button type="button" class="chip" data-i="${i}" aria-pressed="${selected.has(i)}">${s.t}</button>`).join("");
-    $$(".chip").forEach((c) => c.addEventListener("click", () => {
-      const i = +c.dataset.i; selected.has(i) ? selected.delete(i) : selected.add(i);
-      c.setAttribute("aria-pressed", selected.has(i));
+    // projects
+    $("#projectsList").innerHTML = state.projects.length ? state.projects.map((p) => {
+      const link = safeUrl(p.link);
+      const stats = Array.isArray(p.stats) ? p.stats : [];
+      return `<article class="project">
+        <div class="project__body reveal-up">
+          ${L(p, "category") ? `<span class="project__cat">${esc(L(p, "category"))}</span>` : ""}
+          <h3>${esc(L(p, "title"))}</h3>
+          <p>${esc(L(p, "summary"))}</p>
+          ${link ? `<a class="project__link" href="${esc(link)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg>${esc(link.replace(/^https?:\/\//, "").replace(/\/$/, ""))}</a>` : ""}
+          ${stats.length ? `<div class="project__stats">${stats.map((st) => `<div><b>${esc(st.value)}</b><span>${esc(st[`label_${lang}`] || st.label_ar || "")}</span></div>`).join("")}</div>` : ""}
+        </div>
+        <div class="project__media">
+          <div class="screen"><div class="screen__bar"><i></i><i></i><i></i></div>${p.image_url ? `<img src="${esc(safeUrl(p.image_url))}" alt="" loading="lazy">` : mockUI()}</div>
+          <div class="phone">${p.mobile_image_url ? `<img src="${esc(safeUrl(p.mobile_image_url))}" alt="" loading="lazy">` : mockUI()}</div>
+        </div>
+      </article>`;
+    }).join("") : `<p class="empty">${ui.no_projects}</p>`;
+
+    // services
+    $("#servicesGrid").innerHTML = state.services.map((sv) => `
+      <article class="svc reveal-up"><div class="svc__ico">${ICONS[sv.icon] || ICONS.code}</div><h3>${esc(L(sv, "title"))}</h3><p>${esc(L(sv, "summary"))}</p></article>`).join("");
+    $$(".svc").forEach((el) => el.addEventListener("pointermove", (e) => {
+      const r = el.getBoundingClientRect(); el.style.setProperty("--mx", `${e.clientX - r.left}px`); el.style.setProperty("--my", `${e.clientY - r.top}px`);
     }));
 
-    splitStatement();
-    observeReveals();
-    bindCursorTargets();
-  }
+    // stats
+    $("#statsGrid").innerHTML = (s.stats || []).map((st) => `
+      <div class="stat reveal-up"><b><span data-count="${Number(st.value) || 0}">${anim ? 0 : Number(st.value) || 0}</span><em>${esc(st.suffix || "")}</em></b><span>${esc(st[`label_${lang}`] || st.label_ar || "")}</span></div>`).join("");
 
-  // ====== Contact links ======
-  function setupContact() {
-    $("#emailLink").href = `mailto:${CONFIG.email}`;
-    $("#emailLink").textContent = CONFIG.email;
-    const wa = CONFIG.whatsapp ? `https://wa.me/${CONFIG.whatsapp}` : "#contact";
-    $("#waLink").href = wa; $("#waLink").textContent = CONFIG.whatsappDisplay;
-    $("#waFloat").href = wa;
-    if (!CONFIG.whatsapp) $("#waFloat").removeAttribute("target");
+    // partners
+    $("#partnersGrid").innerHTML = state.partners.map((p) => {
+      const inner = p.logo_url ? `<img src="${esc(safeUrl(p.logo_url))}" alt="${esc(p.name)}" loading="lazy">` : `<span>${esc(p.name)}</span>`;
+      const link = safeUrl(p.link);
+      return link ? `<a class="partner" href="${esc(link)}" target="_blank" rel="noopener" title="${esc(p.name)}">${inner}</a>` : `<div class="partner" title="${esc(p.name)}">${inner}</div>`;
+    }).join("");
+
+    // contact
+    const ct = s.contact;
+    const sel = $("#serviceSelect");
+    sel.innerHTML = `<option value="">${ui.f_any}</option>` + state.services.map((sv) => `<option>${esc(L(sv, "title"))}</option>`).join("");
+    const phone = ct.phone || ct.whatsapp;
+    $("#ctaPhone").hidden = !phone;
+    if (phone) $("#ctaPhone").href = `tel:${phone.replace(/[^\d+]/g, "")}`;
+    const wa = (ct.whatsapp || "").replace(/\D/g, "");
+    $("#wa").hidden = !wa;
+    if (wa) $("#wa").href = `https://wa.me/${wa}`;
+    $("#social").innerHTML = ["instagram", "x", "linkedin", "facebook"].filter((k) => safeUrl(ct[k]))
+      .map((k) => `<a href="${esc(safeUrl(ct[k]))}" target="_blank" rel="noopener" aria-label="${k}">${SOCIAL[k]}</a>`).join("")
+      + (ct.email ? `<a href="mailto:${esc(ct.email)}" aria-label="email"><svg viewBox="0 0 24 24"><path d="M3 5h18v14H3z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 6l9 7 9-7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></a>` : "");
     $("#year").textContent = new Date().getFullYear();
+
+    buildNet();
+    observe();
+    if (window.ScrollTrigger) ScrollTrigger.refresh();
   }
 
-  // ====== Reveal on scroll ======
-  let io;
-  function observeReveals() {
-    if (!io) io = new IntersectionObserver((entries) => entries.forEach((e) => {
-      if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); }
-    }), { threshold: 0.15, rootMargin: "0px 0px -8% 0px" });
-    $$(".reveal:not(.is-in), .contact__title .line:not(.is-in), .footer__word:not(.is-in)").forEach((el) => io.observe(el));
+  function mockUI() {
+    return `<div class="mock"><div class="mock__row"><div class="mock__card"></div><div class="mock__card"></div><div class="mock__card"></div></div>
+      <div class="mock__chart"><svg viewBox="0 0 200 60" preserveAspectRatio="none"><path d="M0 50 C30 40 40 20 70 28 S120 50 140 22 180 10 200 14"/></svg></div>
+      <div class="mock__line"></div><div class="mock__line"></div><div class="mock__line"></div></div>`;
   }
 
-  // ====== Statement word-by-word light up ======
-  function splitStatement() {
-    const el = $("#statement");
-    el.innerHTML = el.textContent.split(/\s+/).map((w) => `<span class="w">${w}</span>`).join(" ");
-    updateStatement();
-  }
-  function updateStatement() {
-    const el = $("#statement"); if (!el) return;
-    const r = el.getBoundingClientRect(), vh = innerHeight;
-    const p = Math.min(1, Math.max(0, (vh * 0.85 - r.top) / (r.height + vh * 0.35)));
-    const words = $$(".w", el), n = Math.round(p * words.length);
-    words.forEach((w, i) => w.classList.toggle("on", reduced || i < n));
+  // ---------- hero network ----------
+  function buildNet() {
+    const svg = $("#net");
+    const blob = "M210 110 C300 60 420 70 500 100 C590 135 640 120 700 190 C760 260 720 330 690 400 C660 470 700 540 620 600 C540 650 450 610 380 630 C300 650 220 620 170 560 C110 490 140 430 110 360 C80 290 90 220 130 170 C150 140 180 125 210 110 Z";
+    const nodes = [[260, 200], [430, 170], [560, 250], [360, 330], [520, 420], [300, 480], [600, 520], [450, 560]];
+    const links = [[0, 1], [1, 2], [0, 3], [1, 3], [2, 4], [3, 4], [3, 5], [4, 6], [5, 7], [4, 7]];
+    const words = lang === "ar" ? ["منصات", "تطبيقات", "أنظمة"] : ["Platforms", "Apps", "Systems"];
+    const flip = "";
+    const chip = (x, y, t, d) => { const w = t.length * 11 + 48; return `<g class="chip" style="animation:float 6s ${d}s ease-in-out infinite"><g${flip} style="transform-box:fill-box;transform-origin:center"><rect x="${x}" y="${y}" rx="17" width="${w}" height="34"/><circle cx="${x + w - 18}" cy="${y + 17}" r="5"/><text x="${x + (w - 18) / 2}" y="${y + 22}" text-anchor="middle">${t}</text></g></g>`; };
+    svg.innerHTML = `
+      <style>@keyframes float{50%{transform:translateY(-10px)}}</style>
+      <path class="blob" d="${blob}"/>
+      ${[0.82, 0.64, 0.46].map((k) => `<path class="contour" d="${blob}" transform="translate(${400 * (1 - k)} ${360 * (1 - k)}) scale(${k})"/>`).join("")}
+      ${links.map(([a, b]) => `<line class="link" x1="${nodes[a][0]}" y1="${nodes[a][1]}" x2="${nodes[b][0]}" y2="${nodes[b][1]}"/>`).join("")}
+      ${nodes.map(([x, y], i) => `<circle class="halo" cx="${x}" cy="${y}" r="10" style="animation-delay:${(i * 0.37) % 2.6}s"/><circle class="node" cx="${x}" cy="${y}" r="5"/>`).join("")}
+      ${chip(470, 120, words[0], 0)}${chip(150, 300, words[1], 1.5)}${chip(500, 470, words[2], 3)}`;
   }
 
-  // ====== Counters ======
-  function setupCounters() {
-    const cio = new IntersectionObserver((entries) => entries.forEach((e) => {
+  // ---------- reveal / counters ----------
+  let io, cio;
+  function observe() {
+    io ??= new IntersectionObserver((entries) => entries.forEach((e) => {
+      if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+    }), { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
+    $$(".reveal-up:not(.in), .story-item:not(.in), .hero:not(.in)").forEach((el) => io.observe(el));
+
+    cio ??= new IntersectionObserver((entries) => entries.forEach((e) => {
       if (!e.isIntersecting) return;
-      const el = e.target, end = +el.dataset.count, t0 = performance.now(), dur = 1800;
-      const tick = (now) => {
-        const k = Math.min(1, (now - t0) / dur), eased = 1 - Math.pow(1 - k, 4);
-        el.textContent = Math.round(end * eased);
-        if (k < 1) requestAnimationFrame(tick);
-      };
-      reduced ? (el.textContent = end) : requestAnimationFrame(tick);
-      cio.unobserve(el);
-    }), { threshold: 0.6 });
+      const el = e.target, end = +el.dataset.count; cio.unobserve(el);
+      if (!anim) { el.textContent = end.toLocaleString("en"); return; }
+      const t0 = performance.now();
+      const tick = (now) => { const k = Math.min(1, (now - t0) / 1800); el.textContent = Math.round(end * (1 - Math.pow(1 - k, 4))).toLocaleString("en"); if (k < 1) requestAnimationFrame(tick); };
+      requestAnimationFrame(tick);
+    }), { threshold: 0.5 });
     $$("[data-count]").forEach((el) => cio.observe(el));
   }
 
-  // ====== Word rotator ======
-  function setupRotator() {
-    let i = 0; const el = $("#rotator");
-    setInterval(() => {
-      if (document.hidden) return;
-      const words = I18N[lang]["hero.words"];
-      el.classList.remove("swap-in"); el.classList.add("swap-out");
-      setTimeout(() => {
-        i = (i + 1) % words.length; el.textContent = words[i];
-        el.classList.remove("swap-out"); el.classList.add("swap-in");
-      }, 420);
-    }, 2600);
-  }
+  // ---------- interactions ----------
+  function setupUI() {
+    const header = $("#header"), menu = $("#menu"), btn = $("#menuBtn"), scrim = $("#scrim");
+    const toggle = (open) => { btn.setAttribute("aria-expanded", open); menu.classList.toggle("open", open); scrim.classList.toggle("open", open); };
+    btn.addEventListener("click", () => toggle(btn.getAttribute("aria-expanded") !== "true"));
+    scrim.addEventListener("click", () => toggle(false));
+    $$("a", menu).forEach((a) => a.addEventListener("click", () => toggle(false)));
 
-  // ====== Cursor & magnetic ======
-  const cursor = $(".cursor"), cursorLabel = $(".cursor__label");
-  const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
-  function setupCursor() {
-    if (!fine) return;
-    let x = innerWidth / 2, y = innerHeight / 2, cx = x, cy = y;
-    addEventListener("mousemove", (e) => { x = e.clientX; y = e.clientY; }, { passive: true });
-    const loop = () => { cx += (x - cx) * 0.18; cy += (y - cy) * 0.18; cursor.style.transform = `translate(${cx}px, ${cy}px)`; requestAnimationFrame(loop); };
-    loop();
-  }
-  function bindCursorTargets() {
-    if (!fine) return;
-    $$("[data-cursor]").forEach((el) => {
-      if (el.dataset.bound) return; el.dataset.bound = 1;
-      el.addEventListener("mouseenter", () => { cursorLabel.textContent = I18N[lang].cursor[el.dataset.cursor] || ""; cursor.classList.add("is-big"); });
-      el.addEventListener("mouseleave", () => cursor.classList.remove("is-big"));
+    let last = 0;
+    addEventListener("scroll", () => {
+      const y = scrollY;
+      header.classList.toggle("hide", y > last && y > 300 && !menu.classList.contains("open"));
+      last = y;
+    }, { passive: true });
+
+    const switchLang = () => {
+      lang = lang === "ar" ? "en" : "ar";
+      try { localStorage.setItem("wixa-lang", lang); } catch {}
+      document.body.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: "forwards" }).onfinish = () => {
+        render(); $(".hero").classList.add("in", "in-hero");
+        document.body.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, fill: "forwards" });
+      };
+    };
+    $("#langBtn").addEventListener("click", switchLang);
+    $("#langBtn2").addEventListener("click", switchLang);
+
+    $("#openForm").addEventListener("click", () => {
+      const f = $("#contactForm"); f.classList.add("open");
+      setTimeout(() => { f.querySelector("input").focus({ preventScroll: true }); window.ScrollTrigger && ScrollTrigger.refresh(); }, 500);
     });
-    $$(".magnetic").forEach((el) => {
-      if (el.dataset.mag) return; el.dataset.mag = 1;
-      el.addEventListener("mousemove", (e) => {
-        const r = el.getBoundingClientRect();
-        el.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * 0.3}px, ${(e.clientY - r.top - r.height / 2) * 0.4}px)`;
-      });
-      el.addEventListener("mouseleave", () => { el.style.transform = ""; });
+
+    if (matchMedia("(hover: hover)").matches) $$(".magnetic").forEach((el) => {
+      el.addEventListener("pointermove", (e) => { if (!anim) return; const r = el.getBoundingClientRect(); el.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * 0.25}px, ${(e.clientY - r.top - r.height / 2) * 0.35}px)`; });
+      el.addEventListener("pointerleave", () => (el.style.transform = ""));
     });
-  }
 
-  // ====== Menu ======
-  function setupMenu() {
-    const b = $("#burger"), m = $("#menu");
-    const toggle = (open) => { b.setAttribute("aria-expanded", open); m.classList.toggle("open", open); m.setAttribute("aria-hidden", !open); document.body.style.overflow = open ? "hidden" : ""; };
-    b.addEventListener("click", () => toggle(b.getAttribute("aria-expanded") !== "true"));
-    $$("a", m).forEach((a) => a.addEventListener("click", () => toggle(false)));
-  }
-
-  // ====== Form ======
-  function setupForm() {
-    const form = $("#contactForm"), status = $("#formStatus"), btn = $("button[type=submit]", form);
+    // form
+    const form = $("#contactForm"), status = $("#formStatus");
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const t = I18N[lang];
-      const fields = ["name", "email", "message"].map((n) => form.elements[n]);
+      const ui = UI[lang];
       let ok = true;
-      fields.forEach((f) => { const bad = !f.value.trim() || (f.type === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.value)); f.parentElement.classList.toggle("invalid", bad); if (bad) ok = false; });
-      if (!ok) { status.className = "form__status err"; status.textContent = t["form.invalid"]; return; }
-
-      btn.classList.add("loading"); status.className = "form__status"; status.textContent = t["form.sending"];
-      const payload = {
-        name: form.elements.name.value.trim(), email: form.elements.email.value.trim(),
-        phone: form.elements.phone.value.trim(), message: form.elements.message.value.trim(),
-        services: [...selected].map((i) => I18N.en.services[i].t), lang, website: form.elements.website.value,
-      };
+      ["name", "email", "message"].forEach((n) => {
+        const f = form.elements[n]; const bad = !f.value.trim() || (n === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.value));
+        f.closest(".field").classList.toggle("bad", bad); if (bad) ok = false;
+      });
+      if (!ok) { status.className = "form__status err"; status.textContent = ui.invalid; return; }
+      if (PREVIEW) { status.className = "form__status ok"; status.textContent = ui.ok; return; }
+      const btnS = form.querySelector("[type=submit]"); btnS.disabled = true;
+      status.className = "form__status"; status.textContent = ui.sending;
       try {
-        const res = await fetch("/api/contact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+        const svc = form.elements.service.value;
+        const res = await fetch("/api/contact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({
+          name: form.elements.name.value, email: form.elements.email.value, phone: form.elements.phone.value,
+          message: form.elements.message.value, services: svc ? [svc] : [], lang, website: form.elements.website.value }) });
         if (!res.ok) throw new Error(res.status);
-        status.className = "form__status ok"; status.textContent = t["form.ok"];
-        form.reset(); selected.clear(); $$(".chip").forEach((c) => c.setAttribute("aria-pressed", "false"));
-      } catch (err) {
-        status.className = "form__status err"; status.textContent = t["form.err"];
-      } finally { btn.classList.remove("loading"); }
+        form.reset(); status.className = "form__status ok"; status.textContent = ui.ok;
+      } catch { status.className = "form__status err"; status.textContent = ui.err; }
+      finally { btnS.disabled = false; }
     });
   }
 
-  // ====== GSAP: smooth scroll, pinned horizontal process, parallax ======
   function setupMotion() {
-    if (reduced || !window.gsap || !window.ScrollTrigger) return;
+    if (!anim || !window.gsap || !window.ScrollTrigger) return;
     gsap.registerPlugin(ScrollTrigger);
-
     if (window.Lenis) {
-      const lenis = new Lenis({ duration: 1.15, smoothWheel: true });
+      const lenis = new Lenis({ duration: 1.1, smoothWheel: true });
       lenis.on("scroll", ScrollTrigger.update);
-      gsap.ticker.add((time) => lenis.raf(time * 1000));
-      gsap.ticker.lagSmoothing(0);
-      $$('a[href^="#"]').forEach((a) => a.addEventListener("click", (e) => {
-        const id = a.getAttribute("href"); if (id.length < 2) { e.preventDefault(); lenis.scrollTo(0); return; }
-        const target = $(id); if (target) { e.preventDefault(); lenis.scrollTo(target, { offset: -20 }); }
-      }));
+      gsap.ticker.add((t) => lenis.raf(t * 1000)); gsap.ticker.lagSmoothing(0);
+      document.addEventListener("click", (e) => {
+        const a = e.target.closest('a[href^="#"]'); if (!a) return;
+        const id = a.getAttribute("href"); const t = id === "#top" ? 0 : $(id);
+        if (t !== null) { e.preventDefault(); lenis.scrollTo(t, { offset: -90 }); }
+      });
     }
-
-    gsap.to(".hero__shape", { yPercent: -30, rotate: 25, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } });
-    gsap.to(".hero__title", { yPercent: 25, opacity: 0.2, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } });
-
-    const mm = gsap.matchMedia();
-    mm.add("(min-width: 861px)", () => {
-      const track = $("#processTrack");
-      const dist = () => track.scrollWidth - innerWidth + parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--gutter") || 0);
-      const dir = () => (document.documentElement.dir === "rtl" ? 1 : -1);
-      const tween = gsap.to(track, { x: () => dir() * Math.max(0, track.scrollWidth - innerWidth), ease: "none",
-        scrollTrigger: { trigger: ".process", start: "top top", end: () => "+=" + dist(), pin: ".process__pin", scrub: 1, invalidateOnRefresh: true } });
-      return () => tween.kill();
+    gsap.to(".net", { yPercent: -18, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } });
+    gsap.to(".hero__content", { y: 80, opacity: 0.3, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } });
+    $$(".project").forEach((p) => {
+      gsap.fromTo($(".screen", p), { y: 60 }, { y: -20, ease: "none", scrollTrigger: { trigger: p, start: "top bottom", end: "bottom top", scrub: true } });
+      gsap.fromTo($(".phone", p), { y: 120 }, { y: -40, ease: "none", scrollTrigger: { trigger: p, start: "top bottom", end: "bottom top", scrub: true } });
+      gsap.from(p, { y: 80, opacity: 0, scale: 0.97, duration: 1.2, ease: "power3.out", scrollTrigger: { trigger: p, start: "top 88%" } });
     });
-
-    $$(".svc").forEach((el, i) => gsap.from(el, { y: 60, opacity: 0, duration: 1, ease: "power3.out", delay: (i % 4) * 0.05, scrollTrigger: { trigger: el, start: "top 92%" } }));
+    gsap.from(".stats__inner", { clipPath: "inset(12% 8% 12% 8% round 40px)", duration: 1.4, ease: "power3.out", scrollTrigger: { trigger: ".stats", start: "top 85%" } });
+    gsap.from(".partner", { opacity: 0, y: 30, duration: 0.8, stagger: { each: 0.05, from: "random" }, ease: "power2.out", scrollTrigger: { trigger: ".partners__grid", start: "top 85%" } });
   }
 
-  // ====== Language toggle ======
-  function setupLang() {
-    $("#langToggle").addEventListener("click", () => {
-      lang = lang === "ar" ? "en" : "ar";
-      try { localStorage.setItem("wixa-lang", lang); } catch (e) {}
-      document.body.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: "forwards" }).onfinish = () => {
-        render();
-        if (window.ScrollTrigger) ScrollTrigger.refresh();
-        document.body.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 420, fill: "forwards" });
-      };
-    });
+  // ---------- data ----------
+  async function load() {
+    try {
+      const cached = JSON.parse(localStorage.getItem("wixa-site") || "null");
+      if (cached && !PREVIEW) setData(cached);
+    } catch {}
+    try {
+      const res = await fetch("/api/site", { cache: "no-store" });
+      if (!res.ok) throw new Error(res.status);
+      const data = await res.json();
+      setData(data);
+      try { localStorage.setItem("wixa-site", JSON.stringify(data)); } catch {}
+    } catch (e) { console.warn("Using default content:", e); }
   }
-
-  // ====== Loader ======
-  function runLoader(done) {
-    const num = $("#loaderNum"), loader = $(".loader");
-    if (reduced) { loader.remove(); done(); return; }
-    const t0 = performance.now(), dur = 1400;
-    const tick = (now) => {
-      const k = Math.min(1, (now - t0) / dur);
-      num.textContent = Math.round(100 * (1 - Math.pow(1 - k, 3)));
-      if (k < 1) return requestAnimationFrame(tick);
-      loader.classList.add("done");
-      setTimeout(done, 350);
-      setTimeout(() => loader.remove(), 1200);
+  function setData(d) {
+    state = {
+      settings: merge(DEFAULTS, d.settings || {}),
+      projects: d.projects || [], services: d.services || [], partners: d.partners || [],
     };
-    requestAnimationFrame(tick);
   }
 
-  // ====== Boot ======
-  render();
-  setupContact(); setupCursor(); setupMenu(); setupForm(); setupLang(); setupCounters(); setupRotator();
-  addEventListener("scroll", () => {
-    updateStatement();
-    $("#waFloat").classList.toggle("show", scrollY > innerHeight * 0.6);
-  }, { passive: true });
+  function track() {
+    if (PREVIEW) return;
+    const body = JSON.stringify({ path: location.pathname, referrer: document.referrer, lang });
+    try { navigator.sendBeacon ? navigator.sendBeacon("/api/track", new Blob([body], { type: "application/json" })) : fetch("/api/track", { method: "POST", body, keepalive: true }); } catch {}
+  }
 
-  addEventListener("load", () => {
-    runLoader(() => {
-      document.body.classList.remove("is-loading");
-      $$(".hero .line").forEach((l) => l.classList.add("is-in"));
-      setupMotion();
-    });
+  // live preview from the admin dashboard
+  if (PREVIEW) addEventListener("message", (e) => {
+    if (e.origin !== location.origin || e.data?.type !== "wixa-preview") return;
+    const d = e.data.payload;
+    if (d.settings) state.settings = merge(DEFAULTS, d.settings);
+    for (const k of ["projects", "services", "partners"]) if (d[k]) state[k] = d[k];
+    if (d.lang && UI[d.lang]) lang = d.lang;
+    render(); $(".hero").classList.add("in", "in-hero");
   });
+
+  // ---------- boot ----------
+  (async () => {
+    applyTheme(state.settings);
+    await load();
+    render();
+    setupUI();
+    const start = () => {
+      $(".loader").classList.add("done");
+      document.body.classList.remove("is-loading");
+      setTimeout(() => $(".hero").classList.add("in", "in-hero"), 150);
+      setupMotion();
+      track();
+    };
+    if (document.readyState === "complete") start(); else addEventListener("load", start, { once: true });
+    if (PREVIEW) parent.postMessage({ type: "wixa-preview-ready" }, location.origin);
+  })();
 })();
