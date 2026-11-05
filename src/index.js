@@ -16,7 +16,7 @@ async function handleSite(env) {
     q("projects"), q("services"), q("partners"),
   ]);
   return json(
-    { settings: settings[0]?.data || {}, projects, services, partners },
+    { env: env.SITE_ENV || "production", settings: settings[0]?.data || {}, projects, services, partners },
     200,
     { "cache-control": "public, max-age=10" },
   );
@@ -91,14 +91,19 @@ export default {
         case "POST /api/contact": return await handleContact(request, env);
         case "GET /api/config":
           // Public values the admin dashboard needs to talk to Supabase.
-          return json({ supabaseUrl: env.SUPABASE_URL, supabaseKey: env.SUPABASE_PUBLISHABLE_KEY });
+          return json({ env: env.SITE_ENV || "production", supabaseUrl: env.SUPABASE_URL, supabaseKey: env.SUPABASE_PUBLISHABLE_KEY });
+        case "GET /robots.txt":
+          // Keep the staging copy out of search engines.
+          return new Response(env.SITE_ENV === "staging" ? "User-agent: *\nDisallow: /\n" : "User-agent: *\nDisallow: /admin/\n", {
+            headers: { "content-type": "text/plain; charset=utf-8" },
+          });
         case "GET /health": {
           let supabase = "unreachable";
           try {
             const r = await fetch(`${env.SUPABASE_URL}/auth/v1/health`, { headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY } });
             supabase = r.ok ? "ok" : `error ${r.status}`;
           } catch (err) { supabase = `error: ${err.message}`; }
-          return json({ worker: "ok", supabase });
+          return json({ worker: "ok", env: env.SITE_ENV || "production", supabase });
         }
       }
       if (url.pathname.startsWith("/api/")) return json({ error: "not_found" }, 404);

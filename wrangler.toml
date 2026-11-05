@@ -1,21 +1,40 @@
+# ─────────────────────────────────────────────────────────────
+#  WIXA — two environments
+#   production : wixa.dev         ← branch `main`     (npx wrangler deploy)
+#   staging    : staging.wixa.dev ← branch `staging`  (npx wrangler deploy --env staging)
+#  Each has its own Supabase project. Only public (publishable) keys live here.
+# ─────────────────────────────────────────────────────────────
 name = "wixa"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
 
-# Company domain (registered on Cloudflare). Deploying attaches both automatically.
+# Static site (public/) is served first; these paths go to the Worker.
+[assets]
+directory = "./public"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*", "/health", "/robots.txt"]
+
+# ---------- production ----------
 workers_dev = true
 routes = [
   { pattern = "wixa.dev", custom_domain = true },
   { pattern = "www.wixa.dev", custom_domain = true },
 ]
 
-# Static site (public/) is served first; anything else (e.g. /api/*) goes to the Worker.
-[assets]
-directory = "./public"
-not_found_handling = "single-page-application"
-run_worker_first = ["/api/*", "/health"]
-
-# Public values only. The publishable key is safe to expose to clients.
 [vars]
+SITE_ENV = "production"
 SUPABASE_URL = "https://oswetqychjhfrwulzkjy.supabase.co"
 SUPABASE_PUBLISHABLE_KEY = "sb_publishable_m6oe17fpFQvF1huyQ_8U_g_4NLmHiAm"
+
+# ---------- staging ----------
+[env.staging]
+name = "wixa-staging"
+workers_dev = true
+routes = [
+  { pattern = "staging.wixa.dev", custom_domain = true },
+]
+
+[env.staging.vars]
+SITE_ENV = "staging"
+SUPABASE_URL = "https://zwusczwhlshdgnoyesde.supabase.co"
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_bw5DNoKlh5foR4Ibq0PljQ_BvVa6fFn"

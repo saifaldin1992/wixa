@@ -48,3 +48,22 @@ npm run deploy   # deploy with wrangler (needs `npx wrangler login`)
 
 To deploy automatically from GitHub: Cloudflare dashboard → Workers & Pages → Create →
 Import a repository → `saifaldin1992/wixa`. Every push then builds and deploys the Worker.
+
+## Environments: production and staging
+
+| | Production | Staging (trial) |
+|---|---|---|
+| URL | https://wixa.dev | https://staging.wixa.dev |
+| Git branch | `main` | `staging` |
+| Cloudflare Worker | `wixa` | `wixa-staging` |
+| Deploy command | `npx wrangler deploy` | `npx wrangler deploy --env staging` |
+| Supabase project | `oswetqychjhfrwulzkjy` | `zwusczwhlshdgnoyesde` |
+
+Staging shows a red "نسخة تجريبية" bar and is excluded from search engines.
+
+**Workflow**
+1. All changes land on `staging` first and auto-deploy to staging.wixa.dev.
+2. New database migrations are applied to the staging Supabase project first.
+3. To publish: merge `staging` into `main` (code), apply the same new migrations to the
+   production project, and optionally copy content (site_settings, projects, services,
+   partners) from staging to production.

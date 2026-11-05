@@ -13,6 +13,8 @@ const cache = {};
 (async function boot() {
   try {
     const cfg = await fetch("/api/config").then((r) => r.json());
+    window.WIXA.markEnv(cfg.env);
+    if (cfg.env === "staging") document.title = `[تجريبي] ${document.title}`;
     sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, { auth: { persistSession: true, autoRefreshToken: true } });
   } catch (e) {
     document.body.innerHTML = '<p style="padding:40px;text-align:center">تعذّر الاتصال بالخادم. حدّث الصفحة.</p>';

@@ -286,6 +286,7 @@
     } catch (e) { console.warn("Using default content:", e); }
   }
   function setData(d) {
+    window.WIXA.markEnv(d.env);
     state = {
       settings: merge(DEFAULTS, d.settings || {}),
       projects: d.projects || [], services: d.services || [], partners: d.partners || [],

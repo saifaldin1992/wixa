@@ -148,5 +148,40 @@
     for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v);
   }
 
-  window.WIXA = { DEFAULTS, FONTS, ICONS, merge, applyTheme, loadFont };
+  // Red "trial version" bar shown only on the staging copy (staging.wixa.dev).
+  function isStagingHost() {
+    return /^staging\./.test(location.hostname) || /wixa-staging\./.test(location.hostname);
+  }
+  function markEnv(env) {
+    if (env !== "staging" && !isStagingHost()) return;
+    const root = document.documentElement;
+    if (root.classList.contains("is-staging")) return;
+    root.classList.add("is-staging");
+    const meta = document.createElement("meta");
+    meta.name = "robots"; meta.content = "noindex, nofollow";
+    document.head.appendChild(meta);
+    const style = document.createElement("style");
+    style.textContent = `
+      .staging-bar{position:fixed;top:0;left:0;right:0;z-index:1000;height:34px;display:flex;align-items:center;justify-content:center;gap:10px;
+        background:#D92D20;color:#fff;font:600 13px/1 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;letter-spacing:.01em;
+        box-shadow:0 2px 10px rgba(217,45,32,.35);direction:rtl;padding:0 12px;white-space:nowrap;overflow:hidden}
+      .staging-bar b{background:#fff;color:#D92D20;border-radius:6px;padding:3px 8px;font-size:12px}
+      .staging-bar a{color:#fff;text-decoration:underline;text-underline-offset:3px;opacity:.9}
+      .staging-bar span{overflow:hidden;text-overflow:ellipsis}
+      html.is-staging body{padding-top:34px}
+      html.is-staging .header{top:46px}
+      html.is-staging .top{top:34px}
+      html.is-staging .side{top:34px;height:calc(100vh - 34px)}
+      @media (max-width:560px){.staging-bar .hide-sm{display:none}}`;
+    document.head.appendChild(style);
+    const bar = document.createElement("div");
+    bar.className = "staging-bar";
+    bar.setAttribute("role", "status");
+    bar.innerHTML = '<b>نسخة تجريبية</b><span class="hide-sm">التعديلات هنا لا تظهر على الموقع الرئيسي</span><a href="https://wixa.dev" target="_blank" rel="noopener">الموقع الرئيسي ↗</a>';
+    const add = () => document.body.prepend(bar);
+    document.body ? add() : addEventListener("DOMContentLoaded", add, { once: true });
+  }
+  markEnv();
+
+  window.WIXA = { DEFAULTS, FONTS, ICONS, merge, applyTheme, loadFont, markEnv };
 })();
