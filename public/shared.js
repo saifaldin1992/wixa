@@ -132,14 +132,32 @@
     return family;
   }
 
+  // Mix two hex colors: k = share of `b` (0..1).
+  function mix(a, b, k) {
+    const A = hexToRgb(a).split(",").map(Number), B = hexToRgb(b).split(",").map(Number);
+    return "#" + A.map((v, i) => Math.round(v * (1 - k) + B[i] * k).toString(16).padStart(2, "0")).join("");
+  }
+
+  // Light tokens come from the dashboard; the dark palette is derived from the brand color.
+  // CSS maps --bg, --surface, … to --l-* or --dk-* depending on html[data-theme].
   function applyTheme(settings, root = document.documentElement) {
     const t = settings.theme, f = settings.font;
     const fam = loadFont(f.family);
+    const dk = {
+      bg: mix(t.primary, "#0C0A0B", 0.9),
+      surface: mix(t.primary, "#18151A", 0.86),
+      text: "#F4EEF0",
+      muted: "#B9ABB0",
+      dark: mix(t.primary, "#050304", 0.55),
+      fg: mix(t.primary, "#FFD9E4", 0.68),
+    };
     const vars = {
       "--primary": t.primary, "--primary-rgb": hexToRgb(t.primary), "--primary-ink": t.primaryInk,
       "--accent": t.accent, "--accent-rgb": hexToRgb(t.accent),
-      "--bg": t.bg, "--surface": t.surface, "--text": t.text, "--text-rgb": hexToRgb(t.text),
-      "--muted": t.muted, "--dark": t.dark, "--dark-rgb": hexToRgb(t.dark),
+      "--l-bg": t.bg, "--l-surface": t.surface, "--l-surface-rgb": hexToRgb(t.surface), "--l-text": t.text, "--l-text-rgb": hexToRgb(t.text),
+      "--l-muted": t.muted, "--l-dark": t.dark, "--l-dark-rgb": hexToRgb(t.dark), "--l-fg": t.primary, "--l-fg-rgb": hexToRgb(t.primary),
+      "--dk-bg": dk.bg, "--dk-surface": dk.surface, "--dk-surface-rgb": hexToRgb(dk.surface), "--dk-text": dk.text, "--dk-text-rgb": hexToRgb(dk.text),
+      "--dk-muted": dk.muted, "--dk-dark": dk.dark, "--dk-dark-rgb": hexToRgb(dk.dark), "--dk-fg": dk.fg, "--dk-fg-rgb": hexToRgb(dk.fg),
       "--radius": `${Number(t.radius) || 0}px`,
       "--font": `"${fam}", system-ui, sans-serif`,
       "--scale": String(Math.min(1.4, Math.max(0.8, Number(f.scale) || 1))),

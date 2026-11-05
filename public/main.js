@@ -151,7 +151,7 @@
       + (ct.email ? `<a href="mailto:${esc(ct.email)}" aria-label="email"><svg viewBox="0 0 24 24"><path d="M3 5h18v14H3z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 6l9 7 9-7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></a>` : "");
     $("#year").textContent = new Date().getFullYear();
 
-    buildNet();
+    buildHeroLogo();
     observe();
     if (window.ScrollTrigger) ScrollTrigger.refresh();
   }
@@ -162,22 +162,106 @@
       <div class="mock__line"></div><div class="mock__line"></div><div class="mock__line"></div></div>`;
   }
 
-  // ---------- hero network ----------
-  function buildNet() {
-    const svg = $("#net");
-    const blob = "M210 110 C300 60 420 70 500 100 C590 135 640 120 700 190 C760 260 720 330 690 400 C660 470 700 540 620 600 C540 650 450 610 380 630 C300 650 220 620 170 560 C110 490 140 430 110 360 C80 290 90 220 130 170 C150 140 180 125 210 110 Z";
-    const nodes = [[260, 200], [430, 170], [560, 250], [360, 330], [520, 420], [300, 480], [600, 520], [450, 560]];
-    const links = [[0, 1], [1, 2], [0, 3], [1, 3], [2, 4], [3, 4], [3, 5], [4, 6], [5, 7], [4, 7]];
-    const words = lang === "ar" ? ["منصات", "تطبيقات", "أنظمة"] : ["Platforms", "Apps", "Systems"];
-    const flip = "";
-    const chip = (x, y, t, d) => { const w = t.length * 11 + 48; return `<g class="chip" style="animation:float 6s ${d}s ease-in-out infinite"><g${flip} style="transform-box:fill-box;transform-origin:center"><rect x="${x}" y="${y}" rx="17" width="${w}" height="34"/><circle cx="${x + w - 18}" cy="${y + 17}" r="5"/><text x="${x + (w - 18) / 2}" y="${y + 22}" text-anchor="middle">${t}</text></g></g>`; };
+  // ---------- hero: self-drawing logo ----------
+  let logoD = null;
+  async function buildHeroLogo() {
+    const svg = $("#heroLogoSvg");
+    if (!svg) return;
+    const custom = state.settings.brand.logo_url;
+    const key = custom || "default";
+    if (svg.dataset.built === key) return; // keep the animation when other settings change
+    svg.dataset.built = key;
+    if (custom) {
+      // An uploaded logo can't be traced, so it fades in with the same glow and float.
+      svg.innerHTML = `<image href="${esc(safeUrl(custom))}" x="0" y="0" width="2021" height="982" preserveAspectRatio="xMidYMid meet" class="lg-fill"/>`;
+      return;
+    }
+    if (!logoD) {
+      try {
+        const txt = await (await fetch("/logo.svg")).text();
+        logoD = (txt.match(/\sd="([^"]+)"/) || [])[1];
+      } catch {}
+    }
+    if (!logoD) return;
     svg.innerHTML = `
-      <style>@keyframes float{50%{transform:translateY(-10px)}}</style>
-      <path class="blob" d="${blob}"/>
-      ${[0.82, 0.64, 0.46].map((k) => `<path class="contour" d="${blob}" transform="translate(${400 * (1 - k)} ${360 * (1 - k)}) scale(${k})"/>`).join("")}
-      ${links.map(([a, b]) => `<line class="link" x1="${nodes[a][0]}" y1="${nodes[a][1]}" x2="${nodes[b][0]}" y2="${nodes[b][1]}"/>`).join("")}
-      ${nodes.map(([x, y], i) => `<circle class="halo" cx="${x}" cy="${y}" r="10" style="animation-delay:${(i * 0.37) % 2.6}s"/><circle class="node" cx="${x}" cy="${y}" r="5"/>`).join("")}
-      ${chip(470, 120, words[0], 0)}${chip(150, 300, words[1], 1.5)}${chip(500, 470, words[2], 3)}`;
+      <defs>
+        <linearGradient id="lgShine" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+        </linearGradient>
+        <clipPath id="lgClip"><path d="${logoD}" fill-rule="evenodd"/></clipPath>
+      </defs>
+      <path class="lg-glow" d="${logoD}" fill-rule="evenodd"/>
+      <path class="lg-fill" d="${logoD}" fill-rule="evenodd"/>
+      <g clip-path="url(#lgClip)"><rect class="lg-shine lg-shine-bar" x="0" y="-100" width="700" height="1200" transform="skewX(-18)"/></g>
+      <path class="lg-stroke" d="${logoD}" pathLength="1"/>`;
+  }
+
+  // ---------- hero: floating particles ----------
+  function setupParticles() {
+    const c = $("#particles");
+    if (!c || !anim) return;
+    const ctx = c.getContext("2d");
+    let w, h, dpr, dots = [], mouse = { x: -999, y: -999 }, running = true;
+    const color = () => getComputedStyle(document.documentElement).getPropertyValue("--fg-rgb").trim() || "87,6,34";
+    const accent = () => getComputedStyle(document.documentElement).getPropertyValue("--accent-rgb").trim() || "217,164,65";
+    const resize = () => {
+      dpr = Math.min(2, devicePixelRatio || 1);
+      w = c.clientWidth; h = c.clientHeight;
+      c.width = w * dpr; c.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const n = Math.round(Math.min(70, (w * h) / 16000));
+      dots = Array.from({ length: n }, (_, i) => ({ x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.8 + .6,
+        vx: (Math.random() - .5) * .25, vy: (Math.random() - .5) * .25, gold: i % 7 === 0 }));
+    };
+    resize(); addEventListener("resize", resize);
+    $(".hero").addEventListener("pointermove", (e) => { const r = c.getBoundingClientRect(); mouse = { x: e.clientX - r.left, y: e.clientY - r.top }; });
+    $(".hero").addEventListener("pointerleave", () => (mouse = { x: -999, y: -999 }));
+    new IntersectionObserver(([e]) => (running = e.isIntersecting)).observe($(".hero"));
+    let fg = color(), ac = accent();
+    new MutationObserver(() => { fg = color(); ac = accent(); }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "style"] });
+    const tick = () => {
+      requestAnimationFrame(tick);
+      if (!running || document.hidden) return;
+      ctx.clearRect(0, 0, w, h);
+      for (const d of dots) {
+        const dx = d.x - mouse.x, dy = d.y - mouse.y, dist = Math.hypot(dx, dy);
+        if (dist < 120) { d.x += dx / dist * .8; d.y += dy / dist * .8; }
+        d.x += d.vx; d.y += d.vy;
+        if (d.x < -10) d.x = w + 10; if (d.x > w + 10) d.x = -10; if (d.y < -10) d.y = h + 10; if (d.y > h + 10) d.y = -10;
+      }
+      for (let i = 0; i < dots.length; i++) for (let j = i + 1; j < dots.length; j++) {
+        const a = dots[i], b = dots[j], dd = Math.hypot(a.x - b.x, a.y - b.y);
+        if (dd < 110) { ctx.strokeStyle = `rgba(${fg},${(1 - dd / 110) * .16})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+      }
+      for (const d of dots) { ctx.fillStyle = d.gold ? `rgba(${ac},.85)` : `rgba(${fg},.45)`; ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2); ctx.fill(); }
+    };
+    tick();
+  }
+
+  // ---------- hero: logo follows the pointer in 3D ----------
+  function setupLogoTilt() {
+    const logo = $("#heroLogo");
+    if (!logo || !matchMedia("(hover: hover)").matches) return;
+    $(".hero").addEventListener("pointermove", (e) => {
+      if (!anim) return;
+      const x = e.clientX / innerWidth - .5, y = e.clientY / innerHeight - .5;
+      logo.style.setProperty("--ly", `${x * 18}deg`); logo.style.setProperty("--lx", `${-y * 12}deg`);
+    });
+    $(".hero").addEventListener("pointerleave", () => { logo.style.removeProperty("--ly"); logo.style.removeProperty("--lx"); });
+  }
+
+  // ---------- dark mode ----------
+  function setupTheme() {
+    const btn = $("#themeBtn");
+    if (!btn) return;
+    const set = (t) => {
+      const root = document.documentElement;
+      root.classList.add("theme-anim");
+      root.setAttribute("data-theme", t);
+      try { localStorage.setItem("wixa-theme", t); } catch {}
+      btn.setAttribute("aria-label", t === "dark" ? (lang === "ar" ? "الوضع النهاري" : "Light mode") : (lang === "ar" ? "الوضع الليلي" : "Dark mode"));
+      setTimeout(() => root.classList.remove("theme-anim"), 600);
+    };
+    btn.addEventListener("click", () => set(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark"));
   }
 
   // ---------- reveal / counters ----------
@@ -274,7 +358,7 @@
         if (t !== null) { e.preventDefault(); lenis.scrollTo(t, { offset: -90 }); }
       });
     }
-    gsap.to(".net", { yPercent: -18, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } });
+    gsap.to(".hero__bg", { yPercent: 18, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } });
     gsap.to(".hero__content", { y: 80, opacity: 0.3, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } });
     $$(".project").forEach((p) => {
       gsap.fromTo($(".screen", p), { y: 60 }, { y: -20, ease: "none", scrollTrigger: { trigger: p, start: "top bottom", end: "bottom top", scrub: true } });
@@ -329,6 +413,9 @@
     await load();
     render();
     setupUI();
+    setupTheme();
+    setupParticles();
+    setupLogoTilt();
     const start = () => {
       $(".loader").classList.add("done");
       document.body.classList.remove("is-loading");
