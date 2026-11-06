@@ -186,10 +186,10 @@ html[dir=rtl] .bar__top span:first-child { direction: rtl; }
 .preview { position: sticky; top: 92px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow); overflow: hidden; }
 .preview__bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
 .preview__bar b { font-size: 13px; }
-.preview__stage { position: relative; direction: ltr; height: calc(100vh - 170px); min-height: 480px; background: var(--bg); overflow: hidden; }
+.preview__stage { position: relative; direction: ltr; height: calc(100vh - 170px); min-height: 360px; background: var(--bg); overflow: hidden; }
 .preview iframe { position: absolute; top: 0; left: 0; border: 0; background: #fff; transform-origin: 0 0; }
 .preview.mobile iframe { box-shadow: 0 0 0 1px var(--line), 0 20px 50px -20px rgba(16,20,34,.3); }
-@media (max-width: 1180px) { .split { grid-template-columns: 1fr; } .preview { position: static; } .preview__stage { height: 640px; } }
+@media (max-width: 1180px) { .split { grid-template-columns: 1fr; } .preview { position: static; } .preview__stage { height: min(640px, 75vh); } }
 
 .presets { display: flex; flex-wrap: wrap; gap: 8px; }
 .preset { display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; border: 1px solid var(--line-2); border-radius: 99px; font-size: 13px; transition: border-color .2s, transform .2s; }
@@ -318,3 +318,13 @@ html[dir=rtl] .bar__top span:first-child { direction: rtl; }
 .vbar { display: flex; height: 6px; border-radius: 6px; overflow: hidden; background: var(--line); margin-top: 8px; }
 .vbar i { display: block; height: 100%; } .vbar .g { background: var(--ok); } .vbar .m { background: var(--warn); } .vbar .p { background: var(--danger); }
 .vital small { font-size: 11px; color: var(--muted); }
+
+/* phones: nothing may stretch the page wider than the screen (grid items default to their content width) */
+.app > *, .main, .split > *, .card { min-width: 0; }
+@media (max-width: 960px) {
+  .seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .seg::-webkit-scrollbar { display: none; }
+  .seg button { flex: none; }
+}
+.colors > * { min-width: 0; }
+@media (max-width: 420px) { .colors { grid-template-columns: 1fr; } }

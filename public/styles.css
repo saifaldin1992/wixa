@@ -656,16 +656,6 @@ html[data-theme="dark"] .iq-line { opacity: .7; }
 .wa { transition: transform .45s var(--ease-out), opacity .3s; }
 .wa.wa--away { transform: translateY(140%); opacity: 0; pointer-events: none; }
 @media (max-width: 760px) { .wa { width: 48px; height: 48px; bottom: 16px; inset-inline-start: 14px; } .wa svg { width: 24px; } }
-/* quick section bar (phones), shown inside the header after the hero */
-.quick { display: none; }
-@media (max-width: 760px) {
-  .quick { display: flex; gap: 6px; justify-content: center; margin-top: 8px; padding: 6px; border-radius: 99px; background: rgba(var(--surface-rgb), .82); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); box-shadow: var(--shadow);
-           opacity: 0; transform: translateY(-8px); pointer-events: none; transition: opacity .35s, transform .45s var(--ease-out); }
-  .header.deep .quick { opacity: 1; transform: none; pointer-events: auto; }
-  .quick a { flex: 1; text-align: center; font-size: .78rem; padding: 7px 4px; border-radius: 99px; color: var(--muted); white-space: nowrap; }
-  .quick a:active { background: rgba(var(--fg-rgb), .1); color: var(--fg); }
-  .quick a[hidden] { display: none; }
-}
 /* calculator: price follows the visitor on phones */
 .calc__sticky { display: none; }
 @media (max-width: 760px) {

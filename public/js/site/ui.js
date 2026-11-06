@@ -11,12 +11,11 @@ export function setupUI() {
   $$("a", menu).forEach((a) => a.addEventListener("click", () => toggle(false)));
 
   let last = 0;
-  const wa = $("#wa"), hero = $(".hero");
+  const wa = $("#wa");
   let waTimer;
   addEventListener("scroll", () => {
     const y = scrollY, down = y > last;
     header.classList.toggle("hide", down && y > 300 && !menu.classList.contains("open"));
-    header.classList.toggle("deep", y > (hero ? hero.offsetHeight - 120 : 600));
     // the floating WhatsApp button steps aside while reading, and comes back when scrolling stops or goes up
     if (wa) {
       wa.classList.toggle("wa--away", down && y > 200);

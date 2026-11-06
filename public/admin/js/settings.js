@@ -59,13 +59,15 @@ export function bindPreview() {
 export function fitPreview() {
   const st = $(".preview__stage"), fr = $("#pvFrame"); if (!st || !fr) return;
   const mob = $("#preview").classList.contains("mobile");
+  // a real screen size (phone 390×844, computer 1280×up to 900), scaled to fit; the page scrolls inside it
   const W = mob ? 390 : 1280, H = st.clientHeight;
   const s = Math.min(1, (st.clientWidth - (mob ? 24 : 0)) / W, mob ? (H - 24) / 844 : 1);
+  const FH = mob ? 844 : Math.min(900, H / s);
   fr.style.width = `${W}px`;
-  fr.style.height = `${mob ? 844 : H / s}px`;
+  fr.style.height = `${FH}px`;
   fr.style.transform = `scale(${s})`;
   fr.style.left = `${(st.clientWidth - W * s) / 2}px`;
-  fr.style.top = mob ? `${(H - 844 * s) / 2}px` : "0px";
+  fr.style.top = `${Math.max(0, (H - FH * s) / 2)}px`;
 }
 export function onPreviewMsg(e) { if (e.origin === location.origin && e.data?.type === "wixa-preview-ready") pushPreview(true); }
 export function pushPreview(now) {
