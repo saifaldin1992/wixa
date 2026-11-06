@@ -79,7 +79,7 @@ try {
   }
 
   // Other pages
-  for (const [url, sel, min] of [["/admin/", "#authForm", 1], ["/brand/", "#logos .card", 16]]) {
+  for (const [url, sel, min] of [["/admin/", "#authForm", 1]]) {
     const { p, ctx, errors } = await page(browser, url, { viewport: { width: 1280, height: 800 } });
     check(errors.length === 0, `${url} has no errors`, errors.slice(0, 3).join(" | "));
     check((await p.$$(sel)).length >= min, `${url} renders ${sel}`);

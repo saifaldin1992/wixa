@@ -76,16 +76,6 @@ const beacon = (env) => env.CF_BEACON_TOKEN
   ? `<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"${env.CF_BEACON_TOKEN}"}'></script>`
   : "";
 
-// GET /brand/ — static page plus the analytics beacon.
-async function handleBrand(request, env) {
-  const page = await env.ASSETS.fetch(new Request(new URL("/brand/", request.url), request));
-  const res = new HTMLRewriter().on("body", { element: (el) => el.append(beacon(env), { html: true }) }).transform(page);
-  const headers = new Headers(res.headers);
-  for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v);
-  headers.set("x-robots-tag", "noindex, nofollow"); // private page: not linked, not indexed
-  return new Response(res.body, { status: res.status, headers });
-}
-
 // GET / — static HTML with the content embedded (no flash of default text, one request per visit).
 async function handleHome(request, env, ctx) {
   const [page, data] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx)]);
@@ -298,7 +288,6 @@ export default {
           });
         case "POST /api/track": return new Response(null, { status: 204 }); // replaced by Cloudflare Web Analytics
         case "GET /api/admin/stats": return await handleAdminStats(request, env, url);
-        case "GET /brand/": return await handleBrand(request, env);
         case "POST /api/contact": return await handleContact(request, env, ctx);
         case "GET /api/config":
           // Public values the admin dashboard needs to talk to Supabase.
@@ -312,7 +301,7 @@ export default {
         }
         case "GET /robots.txt":
           // Keep the staging copy out of search engines.
-          return new Response(env.SITE_ENV === "staging" ? "User-agent: *\nDisallow: /\n" : "User-agent: *\nDisallow: /admin/\nDisallow: /brand/\nSitemap: https://wixa.dev/sitemap.xml\n", {
+          return new Response(env.SITE_ENV === "staging" ? "User-agent: *\nDisallow: /\n" : "User-agent: *\nDisallow: /admin/\nSitemap: https://wixa.dev/sitemap.xml\n", {
             headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" },
           });
         case "GET /health": {
