@@ -62,7 +62,12 @@
     document.title = `${brand} — ${c.hero_title}`;
 
     $$("[data-c]").forEach((el) => { if (el.id !== "heroTitle") el.textContent = c[el.dataset.c] ?? ""; });
-    $$("[data-t]").forEach((el) => { el.textContent = el.dataset.t === "brand" ? brand : ui[el.dataset.t] ?? ""; });
+    $$("[data-t]").forEach((el) => {
+      if (el.dataset.t !== "brand") { el.textContent = ui[el.dataset.t] ?? ""; return; }
+      // the official wordmark, unless a custom logo image was uploaded from the dashboard
+      el.innerHTML = s.brand.logo_url ? esc(brand) : `<svg class="wm" viewBox="0 0 716.6 150" aria-hidden="true"><use href="/brand/wordmark.svg#wm"/></svg><span class="sr-only">${esc(brand)}</span>`;
+      el.classList.toggle("brand__name--text", !!s.brand.logo_url);
+    });
     splitWords($("#heroTitle"), c.hero_title);
     $("#langBtn").textContent = lang === "ar" ? "EN" : "ع";
     $("#langBtn2 span").textContent = ui.lang;
