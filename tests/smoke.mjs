@@ -45,6 +45,8 @@ try {
   check(bad.status === 422 || bad.status === 403, "contact form rejects invalid input", String(bad.status));
   const trap = await fetch(`${BASE}/api/contact`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ website: "spam" }) });
   check(trap.status === 200, "honeypot silently accepts bots", String(trap.status));
+  const stats = await fetch(`${BASE}/api/admin/stats`);
+  check(stats.status === 401, "admin stats require sign-in", String(stats.status));
   const home = await (await fetch(`${BASE}/`)).text();
   check(home.includes('id="wixa-data"'), "homepage embeds site data");
   const h = (await fetch(`${BASE}/`)).headers;

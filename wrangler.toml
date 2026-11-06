@@ -4,7 +4,7 @@
 #   staging    : staging.wixa.dev ← branch `staging`  (npx wrangler deploy --env staging)
 #  Each has its own Supabase project. Only public (publishable) keys live here.
 #  Secrets set on each Worker (never in git): WRITE_TOKEN, VISITOR_SALT,
-#  TURNSTILE_SECRET, RESEND_API_KEY, NOTIFY_EMAIL.
+#  TURNSTILE_SECRET, RESEND_API_KEY, NOTIFY_EMAIL, CF_ANALYTICS_TOKEN.
 # ─────────────────────────────────────────────────────────────
 name = "wixa"
 main = "src/index.js"
@@ -22,7 +22,7 @@ routes = [
 directory = "./public"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
-run_worker_first = ["/", "/index.html", "/api/*", "/health", "/robots.txt", "/sitemap.xml"]
+run_worker_first = ["/", "/index.html", "/brand/", "/api/*", "/health", "/robots.txt", "/sitemap.xml"]
 
 # Abuse protection: per-IP limits, counted per Cloudflare location.
 [[ratelimits]]
@@ -37,6 +37,9 @@ simple = { limit = 30, period = 60 }
 
 [vars]
 SITE_ENV = "production"
+CF_ACCOUNT_ID = "1816dc735005fa354d10dfef69ac1450"
+CF_SITE_TAG = "a4d140ea04cf4d6f8cb3117d66cb91e8"
+CF_BEACON_TOKEN = "091acec747554b91b55fdb1703fd6fb6"
 TURNSTILE_SITE_KEY = "0x4AAAAAAF18CPavg0KnYszj"
 SUPABASE_URL = "https://oswetqychjhfrwulzkjy.supabase.co"
 SUPABASE_PUBLISHABLE_KEY = "sb_publishable_m6oe17fpFQvF1huyQ_8U_g_4NLmHiAm"
@@ -61,6 +64,9 @@ simple = { limit = 30, period = 60 }
 
 [env.staging.vars]
 SITE_ENV = "staging"
+CF_ACCOUNT_ID = "1816dc735005fa354d10dfef69ac1450"
+CF_SITE_TAG = "57a74dffd4314b11ab3d247957199494"
+CF_BEACON_TOKEN = "3e0bde0c61e7495d904b8bdd01e51da0"
 TURNSTILE_SITE_KEY = "0x4AAAAAAF18CPavg0KnYszj"
 SUPABASE_URL = "https://zwusczwhlshdgnoyesde.supabase.co"
 SUPABASE_PUBLISHABLE_KEY = "sb_publishable_bw5DNoKlh5foR4Ibq0PljQ_BvVa6fFn"

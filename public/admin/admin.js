@@ -236,8 +236,18 @@ let period = 30;
 async function viewOverview(view) {
   $("#topActions").innerHTML = `<div class="seg" id="period">${[7, 30, 90].map((d) => `<button data-d="${d}" class="${d === period ? "on" : ""}">${d} يوم</button>`).join("")}</div>`;
   $$("#period button").forEach((b) => (b.onclick = () => { period = +b.dataset.d; route(); }));
-  const { data: s, error } = await sb.rpc("admin_stats", { days: period });
-  if (error) throw error;
+  let s;
+  try {
+    const { data: ses } = await sb.auth.getSession();
+    const r = await fetch(`/api/admin/stats?days=${period}`, { headers: { authorization: `Bearer ${ses.session?.access_token || ""}` } });
+    if (!r.ok) throw new Error(r.status);
+    s = await r.json();
+  } catch (e) {
+    // fallback: the older in-database counter
+    const { data, error } = await sb.rpc("admin_stats", { days: period });
+    if (error) throw error;
+    s = { ...data, source: "database", views_90d: data.all_time_views };
+  }
   const kpi = (label, val, foot, ic) => `<div class="kpi"><div class="kpi__label"><i>${ic}</i>${label}</div><div class="kpi__value">${fmt(val)}</div><div class="kpi__foot">${foot}</div></div>`;
   const flag = (cc) => (/^[A-Z]{2}$/.test(cc) ? String.fromCodePoint(...[...cc].map((c) => 127397 + c.charCodeAt(0))) + " " : "🌐 ");
   const DEV = { mobile: "جوال", desktop: "كمبيوتر", tablet: "تابلت" };
@@ -248,13 +258,13 @@ async function viewOverview(view) {
   };
   view.innerHTML = `
     <div class="kpis">
-      ${kpi("زوار اليوم", s.today_visitors, `${fmt(s.today_views)} مشاهدة صفحة اليوم`, I.users)}
-      ${kpi(`الزوار (${period} يوم)`, s.visitors, "زائر فريد يومياً", I.users)}
-      ${kpi(`المشاهدات (${period} يوم)`, s.views, `${fmt(s.all_time_views)} منذ البداية`, I.views)}
+      ${kpi("زيارات اليوم", s.today_visitors, `${fmt(s.today_views)} مشاهدة صفحة اليوم`, I.users)}
+      ${kpi(`الزيارات (${period} يوم)`, s.visitors, s.source === "cloudflare" ? "عبر Cloudflare Web Analytics" : "زائر فريد يومياً", I.users)}
+      ${kpi(`المشاهدات (${period} يوم)`, s.views, `${fmt(s.views_90d)} خلال 90 يوماً`, I.views)}
       ${kpi("رسائل جديدة", s.messages_new, `<a href="#messages" style="color:var(--brand)">عرض الرسائل ←</a>`, I.mail)}
     </div>
     <div class="two">
-      <div class="card"><div class="card__head"><div><h3>الزيارات اليومية</h3><p>آخر ${period} يوم</p></div><div class="legend"><span><i></i>مشاهدات</span><span><i class="u"></i>زوار</span></div></div><div id="chart"></div></div>
+      <div class="card"><div class="card__head"><div><h3>الزيارات اليومية</h3><p>آخر ${period} يوم</p></div><div class="legend"><span><i></i>مشاهدات</span><span><i class="u"></i>زيارات</span></div></div><div id="chart"></div></div>
       <div class="card"><div class="card__head"><h3>الأجهزة</h3></div>${bars(s.devices, (r) => DEV[r.label] || r.label)}
         <div class="card__head" style="margin-top:22px"><h3>الدول</h3></div>${bars(s.countries, (r) => flag(r.label) + r.label)}</div>
     </div>

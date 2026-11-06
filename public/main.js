@@ -650,8 +650,7 @@
       $(".loader").classList.add("done");
       document.body.classList.remove("is-loading");
       setTimeout(() => $(".hero").classList.add("in", "in-hero"), 150);
-      setupMotion();
-      track();
+      setupMotion(); // visits are counted by Cloudflare Web Analytics (beacon added by the Worker)
     };
     let started = false;
     const once = () => { if (!started) { started = true; start(); } };

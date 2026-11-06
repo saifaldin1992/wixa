@@ -9,7 +9,7 @@
 
 const SITE_TTL = 60; // seconds the site content may be served from cache
 // Keep in sync with public/_headers. The sha256 is the inline theme script in index.html.
-const CSP = "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://challenges.cloudflare.com 'sha256-NVKT0UrdROLsGcatClpvEhxXytwpjLyEshzIKuByDnE='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'";
+const CSP = "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://challenges.cloudflare.com 'sha256-NVKT0UrdROLsGcatClpvEhxXytwpjLyEshzIKuByDnE='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://cloudflareinsights.com https://*.supabase.co https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'";
 const SECURITY_HEADERS = {
   "content-security-policy": CSP,
   "permissions-policy": "camera=(), microphone=(), geolocation=()",
@@ -71,12 +71,27 @@ async function getSiteData(env, ctx) {
   }
 }
 
+// Cloudflare Web Analytics: privacy-friendly, cookie-less visit counting that never touches our database.
+const beacon = (env) => env.CF_BEACON_TOKEN
+  ? `<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"${env.CF_BEACON_TOKEN}"}'></script>`
+  : "";
+
+// GET /brand/ — static page plus the analytics beacon.
+async function handleBrand(request, env) {
+  const page = await env.ASSETS.fetch(new Request(new URL("/brand/", request.url), request));
+  const res = new HTMLRewriter().on("body", { element: (el) => el.append(beacon(env), { html: true }) }).transform(page);
+  const headers = new Headers(res.headers);
+  for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v);
+  return new Response(res.body, { status: res.status, headers });
+}
+
 // GET / — static HTML with the content embedded (no flash of default text, one request per visit).
 async function handleHome(request, env, ctx) {
   const [page, data] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx)]);
   const safe = data.replace(/</g, "\\u003c");
   const res = new HTMLRewriter()
     .on("head", { element: (el) => el.append(`<script id="wixa-data" type="application/json">${safe}</script>`, { html: true }) })
+    .on("body", { element: (el) => { if (!new URL(request.url).searchParams.has("preview")) el.append(beacon(env), { html: true }); } })
     .transform(page);
   const headers = new Headers(res.headers);
   headers.set("cache-control", "no-cache");
@@ -137,6 +152,69 @@ async function handleTrack(request, env, ctx) {
   // Respond immediately; the write finishes in the background.
   ctx.waitUntil(rpc(env, "track_view", p).then(async (r) => { if (!r.ok) console.error("track", r.status, await r.text()); }));
   return new Response(null, { status: 204 });
+}
+
+// ---------------------------------------------------------------- GET /api/admin/stats
+// Visitor numbers for the dashboard, read from Cloudflare Web Analytics.
+// Only signed-in admins (checked against Supabase with their own session) can read it;
+// the Cloudflare token stays on the server.
+async function handleAdminStats(request, env, url) {
+  const auth = request.headers.get("authorization") || "";
+  if (!auth.startsWith("Bearer ")) return json({ error: "unauthorized" }, 401);
+  const asUser = (path, init = {}) => fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, { ...init, headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, authorization: auth, "content-type": "application/json", ...(init.headers || {}) } });
+  const adm = await asUser("rpc/is_admin", { method: "POST", body: "{}" });
+  if (!adm.ok || (await adm.json()) !== true) return json({ error: "forbidden" }, 403);
+  if (!env.CF_ANALYTICS_TOKEN || !env.CF_SITE_TAG) return json({ error: "analytics_not_configured" }, 503);
+
+  const days = Math.min(90, Math.max(1, parseInt(url.searchParams.get("days") || "30", 10) || 30));
+  const day = (d) => d.toISOString().slice(0, 10);
+  const today = new Date();
+  const since = new Date(today.getTime() - (days - 1) * 864e5);
+  const since90 = new Date(today.getTime() - 89 * 864e5);
+  const q = `query($acc: String!, $tag: String!, $since: Date!, $since90: Date!, $today: Date!) { viewer { accounts(filter: {accountTag: $acc}) {
+    byDay: rumPageloadEventsAdaptiveGroups(limit: 100, filter: {siteTag: $tag, date_geq: $since}, orderBy: [date_ASC]) { count sum { visits } dimensions { date } }
+    today: rumPageloadEventsAdaptiveGroups(limit: 1, filter: {siteTag: $tag, date: $today}) { count sum { visits } }
+    total90: rumPageloadEventsAdaptiveGroups(limit: 1, filter: {siteTag: $tag, date_geq: $since90}) { count }
+    countries: rumPageloadEventsAdaptiveGroups(limit: 6, filter: {siteTag: $tag, date_geq: $since}, orderBy: [sum_visits_DESC]) { sum { visits } dimensions { countryName } }
+    devices: rumPageloadEventsAdaptiveGroups(limit: 5, filter: {siteTag: $tag, date_geq: $since}, orderBy: [sum_visits_DESC]) { sum { visits } dimensions { deviceType } }
+    pages: rumPageloadEventsAdaptiveGroups(limit: 6, filter: {siteTag: $tag, date_geq: $since}, orderBy: [count_DESC]) { count dimensions { requestPath } }
+    refs: rumPageloadEventsAdaptiveGroups(limit: 6, filter: {siteTag: $tag, date_geq: $since, refererHost_neq: ""}, orderBy: [sum_visits_DESC]) { sum { visits } dimensions { refererHost } }
+  } } }`;
+  const r = await fetch("https://api.cloudflare.com/client/v4/graphql", {
+    method: "POST",
+    headers: { authorization: `Bearer ${env.CF_ANALYTICS_TOKEN}`, "content-type": "application/json" },
+    body: JSON.stringify({ query: q, variables: { acc: env.CF_ACCOUNT_ID, tag: env.CF_SITE_TAG, since: day(since), since90: day(since90), today: day(today) } }),
+  });
+  const g = await r.json().catch(() => ({}));
+  const a = g?.data?.viewer?.accounts?.[0];
+  if (!a) { console.error("analytics", JSON.stringify(g?.errors || g).slice(0, 500)); return json({ error: "analytics_failed" }, 502); }
+
+  const byDate = new Map((a.byDay || []).map((x) => [x.dimensions.date, x]));
+  const by_day = [];
+  for (let t = since.getTime(); t <= today.getTime(); t += 864e5) {
+    const d = day(new Date(t)), x = byDate.get(d);
+    by_day.push({ day: d, views: x?.count || 0, visitors: x?.sum?.visits || 0 });
+  }
+  const rows = (list, f, v) => (list || []).map((x) => ({ label: f(x), value: v(x) })).filter((x) => x.label);
+
+  // unread messages, read with the admin's own session
+  const msg = await asUser("contact_messages?select=id&handled=eq.false", { method: "HEAD", headers: { prefer: "count=exact" } });
+  const messages_new = parseInt((msg.headers.get("content-range") || "/0").split("/")[1], 10) || 0;
+
+  return json({
+    source: "cloudflare",
+    views: by_day.reduce((n, x) => n + x.views, 0),
+    visitors: by_day.reduce((n, x) => n + x.visitors, 0),
+    today_views: a.today?.[0]?.count || 0,
+    today_visitors: a.today?.[0]?.sum?.visits || 0,
+    views_90d: a.total90?.[0]?.count || 0,
+    messages_new,
+    by_day,
+    top_pages: rows(a.pages, (x) => x.dimensions.requestPath, (x) => x.count),
+    countries: rows(a.countries, (x) => x.dimensions.countryName, (x) => x.sum.visits),
+    devices: rows(a.devices, (x) => x.dimensions.deviceType, (x) => x.sum.visits),
+    referrers: rows(a.refs, (x) => x.dimensions.refererHost, (x) => x.sum.visits),
+  }, 200, { "cache-control": "private, max-age=60" });
 }
 
 // ---------------------------------------------------------------- POST /api/contact
@@ -214,7 +292,9 @@ export default {
           return new Response(await getSiteData(env, ctx), {
             headers: { ...SECURITY_HEADERS, "content-type": "application/json; charset=utf-8", "cache-control": `public, max-age=${SITE_TTL}` },
           });
-        case "POST /api/track": return await handleTrack(request, env, ctx);
+        case "POST /api/track": return new Response(null, { status: 204 }); // replaced by Cloudflare Web Analytics
+        case "GET /api/admin/stats": return await handleAdminStats(request, env, url);
+        case "GET /brand/": return await handleBrand(request, env);
         case "POST /api/contact": return await handleContact(request, env, ctx);
         case "GET /api/config":
           // Public values the admin dashboard needs to talk to Supabase.
