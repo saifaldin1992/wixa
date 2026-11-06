@@ -13,8 +13,8 @@ export const UI = {
     f_message: "حدّثنا عن مشروعك", f_send: "إرسال", sending: "جارٍ الإرسال…", ok: "شكراً لك! وصلت رسالتك وسنتواصل معك قريباً.", err: "تعذّر الإرسال، حاول مرة أخرى.", invalid: "يرجى تعبئة الحقول المطلوبة بشكل صحيح.",
     no_projects: "ستُعرض المشاريع هنا قريباً.", step: "٠" },
   en: { nav_home: "Home", nav_projects: "Solutions", nav_services: "Services", nav_partners: "Partners", nav_contact: "Contact", calc_est: "Estimate",
-    lang: "العربية", f_name: "Name", f_email: "Email", f_phone: "Phone (optional)", f_service: "Service", f_any: "General enquiry",
-    f_message: "Tell us about your project", f_send: "Send", sending: "Sending…", ok: "Thank you! Your message arrived and we'll be in touch soon.", err: "Couldn't send. Please try again.", invalid: "Please fill in the required fields correctly.",
+    lang: "العربية", f_name: "Name", f_email: "Email", f_phone: "Phone (optional)", f_service: "Service", f_any: "General inquiry",
+    f_message: "Tell us about your project", f_send: "Send", sending: "Sending…", ok: "Thank you! We've received your message and will be in touch soon.", err: "Couldn't send. Please try again.", invalid: "Please fill in the required fields correctly.",
     no_projects: "Projects will appear here soon.", step: "0" },
 };
 
@@ -37,7 +37,10 @@ export const STORY_ART = [
 // Shared state. Other modules read these live bindings; only the setters below change them.
 export let state = { settings: merge(DEFAULTS, {}), projects: [], services: [], partners: [] };
 export let lang = "ar";
-try { lang = localStorage.getItem("wixa-lang") || "ar"; } catch {}
+// the visitor's own choice wins; otherwise the server already picked a language for this device (html lang)
+try { lang = localStorage.getItem("wixa-lang") || document.documentElement.lang || "ar"; } catch { lang = document.documentElement.lang || "ar"; }
+const urlLang = new URLSearchParams(location.search).get("lang"); // ?lang=en links (used by search engines) always win
+if (urlLang === "ar" || urlLang === "en") lang = urlLang;
 if (!UI[lang]) lang = "ar";
 export let anim = !reducedOS;
 export const setState = (s) => { state = s; };

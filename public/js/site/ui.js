@@ -27,6 +27,7 @@ export function setupUI() {
   const switchLang = () => {
     setLang(lang === "ar" ? "en" : "ar");
     try { localStorage.setItem("wixa-lang", lang); } catch {}
+      document.cookie = `wixa-lang=${lang}; path=/; max-age=31536000; samesite=lax`; // lets the server open the next visit in this language
     document.body.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: "forwards" }).onfinish = () => {
       render(); $(".hero").classList.add("in", "in-hero");
       document.body.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, fill: "forwards" });

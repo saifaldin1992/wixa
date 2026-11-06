@@ -78,28 +78,63 @@ const beacon = (env) => env.CF_BEACON_TOKEN
   ? `<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"${env.CF_BEACON_TOKEN}"}'></script>`
   : "";
 
+// Hero text used when the dashboard has not changed it (the HTML itself ships the Arabic version).
+const HERO_DEFAULTS = {
+  ar: { hero_badge: "الشريك التقني لمشاريعك", hero_title: "نبني المستقبل الرقمي", hero_sub: "ويكسا تصمم وتطور منصات وتطبيقات وأنظمة رقمية سريعة وآمنة تختصر الوقت على عملائك — من الفكرة حتى التشغيل." },
+  en: { hero_badge: "Your technology partner", hero_title: "Building the digital future", hero_sub: "WIXA designs and builds fast, secure platforms, apps and digital systems that save your customers time — from idea to launch." },
+};
+const SEO_DEFAULTS = {
+  en: { title: "WIXA — Websites, apps & software development in Iraq", description: "WIXA designs and builds websites, digital platforms, mobile apps and custom business systems in Iraq — from idea to launch." },
+};
+
+// Which language a visit opens in: ?lang= link → the visitor's saved choice (cookie) → dashboard setting →
+// the device language (Accept-Language: first Arabic or English entry). No header at all (most crawlers) → Arabic.
+function pickLang(request, setting) {
+  const q = new URL(request.url).searchParams.get("lang");
+  if (q === "ar" || q === "en") return q;
+  const c = (request.headers.get("cookie") || "").match(/(?:^|;\s*)wixa-lang=(ar|en)/);
+  if (c) return c[1];
+  if (setting === "ar" || setting === "en") return setting;
+  const al = request.headers.get("accept-language") || "";
+  if (!al.trim()) return "ar";
+  for (const part of al.split(",")) {
+    const tag = part.trim().toLowerCase();
+    if (tag.startsWith("ar")) return "ar";
+    if (tag.startsWith("en")) return "en";
+  }
+  return "en";
+}
+
 // GET / — static HTML with the content embedded (no flash of default text, one request per visit).
 async function handleHome(request, env, ctx) {
   const [page, data] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx)]);
   const safe = data.replace(/</g, "\\u003c");
   // Put the hero text in the HTML itself (same markup the script builds), so the first paint
   // already has it and nothing moves when the script runs.
-  let hero = {}, mapOn = true, seo = {};
-  try { const st = JSON.parse(data)?.settings; hero = st?.content?.ar || {}; mapOn = st?.sections?.iraq_map !== false; seo = st?.seo || {}; } catch {}
+  let st = {};
+  try { st = JSON.parse(data)?.settings || {}; } catch {}
+  const lang = pickLang(request, st.default_lang);
+  const hero = { ...HERO_DEFAULTS[lang], ...Object.fromEntries(Object.entries(st.content?.[lang] || {}).filter(([, v]) => v)) };
+  const mapOn = st.sections?.iraq_map !== false;
+  const seo = st.seo || {};
   const origin = new URL(request.url).origin;
   const abs = (u) => (/^https?:\/\//.test(u) ? u : `${origin}${u.startsWith("/") ? "" : "/"}${u}`);
   const attr = (sel, name, val) => [sel, { element: (el) => { if (val) el.setAttribute(name, val); } }];
-  const title = seo.title_ar, desc = seo.description_ar, img = seo.og_image ? abs(seo.og_image) : "";
+  const title = seo[`title_${lang}`] || (lang === "en" ? SEO_DEFAULTS.en.title : ""), desc = seo[`description_${lang}`] || (lang === "en" ? SEO_DEFAULTS.en.description : ""), img = seo.og_image ? abs(seo.og_image) : "";
   const headTags = [
     seo.google_verification && `<meta name="google-site-verification" content="${esc(seo.google_verification)}">`,
     seo.bing_verification && `<meta name="msvalidate.01" content="${esc(seo.bing_verification)}">`,
     seo.index === false && `<meta name="robots" content="noindex, nofollow">`,
+    // one address, two languages: tell search engines about both versions
+    `<link rel="alternate" hreflang="ar" href="${origin}/?lang=ar"><link rel="alternate" hreflang="en" href="${origin}/?lang=en"><link rel="alternate" hreflang="x-default" href="${origin}/">`,
   ].filter(Boolean).join("");
   const words = (t) => String(t).split(/\s+/).filter(Boolean).map((w, i) => `<span class="word"><span style="transition-delay:${i * 70}ms">${esc(w)}</span></span>`).join(" ");
   const fill = (key, html) => ({ element: (el) => { if (hero[key]) el.setInnerContent(html ? words(hero[key]) : hero[key], { html }); } });
   const res = new HTMLRewriter()
     .on("head", { element: (el) => el.append(`${headTags}<script id="wixa-data" type="application/json">${safe}</script>`, { html: true }) })
+    .on("html", { element: (el) => { el.setAttribute("lang", lang); el.setAttribute("dir", lang === "ar" ? "rtl" : "ltr"); } })
     .on("title", { element: (el) => { if (title) el.setInnerContent(title); } })
+    .on(...attr('meta[property="og:locale"]', "content", lang === "en" ? "en_US" : "ar_IQ"))
     .on(...attr('meta[name="description"]', "content", desc))
     .on(...attr('meta[name="keywords"]', "content", seo.keywords))
     .on(...attr('meta[property="og:title"]', "content", title))
@@ -119,6 +154,8 @@ async function handleHome(request, env, ctx) {
     .transform(page);
   const headers = new Headers(res.headers);
   headers.set("cache-control", "no-cache");
+  headers.set("vary", "Accept-Language, Cookie");
+  headers.set("content-language", lang);
   headers.delete("etag");
   for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v);
   return new Response(res.body, { status: res.status, headers });
