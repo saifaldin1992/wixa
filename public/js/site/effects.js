@@ -49,3 +49,9 @@ export function setupMotion() {
   gsap.from(".stats__inner", { clipPath: "inset(12% 8% 12% 8% round 40px)", duration: 1.4, ease: "power3.out", scrollTrigger: { trigger: ".stats", start: "top 85%" } });
   gsap.from(".partner", { opacity: 0, y: 30, duration: 0.8, stagger: { each: 0.05, from: "random" }, ease: "power2.out", scrollTrigger: { trigger: ".partners__grid", start: "top 85%" } });
 }
+
+// Looping animations (hero logo and map, story illustrations) pause while off screen, so scrolling and taps stay smooth on phones.
+export function pauseOffscreen() {
+  const io = new IntersectionObserver((entries) => entries.forEach((e) => e.target.classList.toggle("is-off", !e.isIntersecting)), { rootMargin: "80px" });
+  $$(".hero, .story-item").forEach((el) => io.observe(el));
+}

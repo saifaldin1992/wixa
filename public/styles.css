@@ -752,3 +752,8 @@ html[data-theme="dark"] .pstep.on .pstep__num { box-shadow: 0 0 0 8px rgba(var(-
 .story-item.in:nth-child(2) .story-item__art svg, .story-item.in:nth-child(2) .story-item__art svg * { animation-delay: .8s; }
 .story-item.in:nth-child(3) .story-item__art svg, .story-item.in:nth-child(3) .story-item__art svg * { animation-delay: 1.6s; }
 .no-anim .story-item__art svg, .no-anim .story-item__art svg * { animation: none !important; stroke-dashoffset: 0 !important; }
+
+/* accessibility: steps not yet reached stay readable; looping animations pause off screen */
+.pstep { opacity: 1; } /* text always fully readable; the number circle shows progress */
+.is-off, .is-off * { animation-play-state: paused !important; }
+.loader { transition-duration: .35s; }

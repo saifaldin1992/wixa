@@ -49,7 +49,7 @@ function runnerDot(d) {
 // ---------- hero: floating particles ----------
 export function setupParticles() {
   const c = $("#particles");
-  if (!c || !anim) return;
+  if (!c || !anim || !matchMedia("(hover: hover) and (pointer: fine)").matches) return;
   const ctx = c.getContext("2d");
   let w, h, dpr, dots = [], mouse = { x: -999, y: -999 }, running = true;
   const color = () => getComputedStyle(document.documentElement).getPropertyValue("--fg-rgb").trim() || "91,33,182";

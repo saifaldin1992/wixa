@@ -50,25 +50,34 @@ async function loadFromSupabase(env) {
   });
 }
 
+// Stale-while-revalidate: a visit never waits for the database if any copy exists. Copies younger than
+// SITE_TTL are served as they are; older ones are served at once and refreshed in the background.
+let refreshing = null;
 async function getSiteData(env, ctx) {
   const now = Date.now();
   if (memo.text && now - memo.at < SITE_TTL * 1000) return memo.text;
 
   const cache = caches.default;
   const key = new Request(`https://wixa-cache.internal/site-data/${env.SITE_ENV || "production"}`);
-  const hit = await cache.match(key);
-  if (hit) {
-    memo = { at: now, text: await hit.text() };
+  const refresh = () => (refreshing ??= loadFromSupabase(env)
+    .then((text) => {
+      memo = { at: Date.now(), text };
+      return cache.put(key, new Response(text, { headers: { "content-type": "application/json", "cache-control": "public, max-age=86400", "x-saved-at": String(Date.now()) } })).then(() => text);
+    })
+    .finally(() => { refreshing = null; }));
+
+  if (!memo.text) {
+    const hit = await cache.match(key);
+    if (hit) memo = { at: Number(hit.headers.get("x-saved-at")) || 0, text: await hit.text() };
+  }
+  if (memo.text) {
+    if (now - memo.at >= SITE_TTL * 1000) ctx.waitUntil(refresh().catch((err) => console.error("site data refresh", err)));
     return memo.text;
   }
   try {
-    const text = await loadFromSupabase(env);
-    memo = { at: now, text };
-    ctx.waitUntil(cache.put(key, new Response(text, { headers: { "content-type": "application/json", "cache-control": `public, max-age=${SITE_TTL}` } })));
-    return text;
+    return await refresh();
   } catch (err) {
     console.error("site data", err);
-    if (memo.text) return memo.text; // serve the last good copy if Supabase is unavailable
     return JSON.stringify({ env: env.SITE_ENV || "production", turnstile: env.TURNSTILE_SITE_KEY || "", settings: {}, projects: [], services: [], partners: [], testimonials: [] });
   }
 }
@@ -195,8 +204,12 @@ async function adminSession(request, env) {
   const auth = request.headers.get("authorization") || "";
   if (!auth.startsWith("Bearer ")) return { error: json({ error: "unauthorized" }, 401) };
   const asUser = (path, init = {}) => fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, { ...init, headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, authorization: auth, "content-type": "application/json", ...(init.headers || {}) } });
-  const adm = await asUser("rpc/is_admin", { method: "POST", body: "{}" });
-  if (!adm.ok || (await adm.json()) !== true) return { error: json({ error: "forbidden" }, 403) };
+  let isAdmin = false;
+  try {
+    const adm = await asUser("rpc/is_admin", { method: "POST", body: "{}" });
+    isAdmin = adm.ok && (await adm.json()) === true;
+  } catch { return { error: json({ error: "auth_unavailable" }, 503) }; }
+  if (!isAdmin) return { error: json({ error: "forbidden" }, 403) };
   return { asUser };
 }
 
@@ -418,6 +431,8 @@ async function handleContact(request, env, ctx) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    // one address for search engines: www.wixa.dev → wixa.dev (permanent)
+    if (url.hostname === "www.wixa.dev") { url.hostname = "wixa.dev"; return Response.redirect(url.toString(), 301); }
     const route = `${request.method} ${url.pathname}`;
 
     try {
@@ -425,6 +440,11 @@ export default {
         case "GET /":
         case "GET /index.html":
           return await handleHome(request, env, ctx);
+        case "HEAD /":
+        case "HEAD /index.html": {
+          const r = await handleHome(new Request(request.url, { method: "GET", headers: request.headers }), env, ctx);
+          return new Response(null, { status: r.status, headers: r.headers });
+        }
         case "GET /api/site":
           return new Response(await getSiteData(env, ctx), {
             headers: { ...SECURITY_HEADERS, "content-type": "application/json; charset=utf-8", "cache-control": `public, max-age=${SITE_TTL}` },

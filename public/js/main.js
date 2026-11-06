@@ -8,7 +8,7 @@ import { setupParticles, setupLogoTilt } from "./site/hero.js";
 import { setupCalc } from "./site/calculator.js";
 import { setupContact } from "./site/contact.js";
 import { setupProjectModal } from "./site/projects.js";
-import { setupProgress, setupCursor, setupMotion } from "./site/effects.js";
+import { setupProgress, setupCursor, setupMotion, pauseOffscreen } from "./site/effects.js";
 const { DEFAULTS, merge, applyTheme } = window.WIXA;
 
 // sign-in links from Supabase emails that land on the homepage belong to the dashboard
@@ -38,15 +38,14 @@ if (PREVIEW) addEventListener("message", (e) => {
   setupProjectModal();
   setupProgress();
   setupCursor();
-  const start = () => {
-    $(".loader").classList.add("done");
-    document.body.classList.remove("is-loading");
-    setTimeout(() => $(".hero").classList.add("in", "in-hero"), 150);
-    setupMotion(); // visits are counted by Cloudflare Web Analytics (beacon added by the Worker)
-  };
-  let started = false;
-  const once = () => { if (!started) { started = true; start(); } };
-  if (document.readyState === "complete") once();
-  else { addEventListener("load", once, { once: true }); setTimeout(once, 1200); }
+  // reveal right away (the content is already in the page); scroll effects start once everything has loaded
+  $(".loader").classList.add("done");
+  document.body.classList.remove("is-loading");
+  requestAnimationFrame(() => $(".hero").classList.add("in", "in-hero"));
+  let moving = false;
+  const motion = () => { if (!moving) { moving = true; setupMotion(); } };
+  if (document.readyState === "complete") motion();
+  else { addEventListener("load", motion, { once: true }); setTimeout(motion, 2500); }
+  pauseOffscreen();
   if (PREVIEW) parent.postMessage({ type: "wixa-preview-ready" }, location.origin);
 })();

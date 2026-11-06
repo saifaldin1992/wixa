@@ -12,6 +12,17 @@ function splitWords(el, text) {
     .map((w, i) => `<span class="word"><span style="transition-delay:${i * 70}ms">${esc(w)}</span></span>`).join(" ");
 }
 
+// "www.instagram/wixa.iq", "instagram.com/wixa.iq", "@wixa.iq" or a full link → https://www.instagram.com/wixa.iq
+const SOCIAL_HOST = { instagram: "www.instagram.com", x: "x.com", linkedin: "www.linkedin.com", facebook: "www.facebook.com" };
+export function socialUrl(kind, raw) {
+  let v = String(raw || "").trim();
+  if (!v) return "";
+  if (/^https?:\/\/[^/]+\.[a-z]{2,}/i.test(v)) return safeUrl(v);
+  v = v.replace(/^https?:\/\//i, "").replace(/^@/, "");
+  const path = v.replace(/^(www\.)?(instagram|facebook|linkedin|x|twitter)(\.com)?\/?/i, "");
+  return safeUrl(`https://${SOCIAL_HOST[kind]}/${path.replace(/^\/+/, "")}`);
+}
+
 export function render() {
   const s = state.settings, c = C(), ui = UI[lang];
   setAnim(!reducedOS && s.animations !== false);
@@ -126,8 +137,8 @@ export function render() {
   const wa = (ct.whatsapp || "").replace(/\D/g, "");
   $("#wa").hidden = !wa;
   if (wa) $("#wa").href = `https://wa.me/${wa}`;
-  $("#social").innerHTML = ["instagram", "x", "linkedin", "facebook"].filter((k) => safeUrl(ct[k]))
-    .map((k) => `<a href="${esc(safeUrl(ct[k]))}" target="_blank" rel="noopener" aria-label="${k}">${SOCIAL[k]}</a>`).join("")
+  $("#social").innerHTML = ["instagram", "x", "linkedin", "facebook"].map((k) => [k, socialUrl(k, ct[k])]).filter(([, u]) => u)
+    .map(([k, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener" aria-label="${k}">${SOCIAL[k]}</a>`).join("")
     + (ct.email ? `<a href="mailto:${esc(ct.email)}" aria-label="email"><svg viewBox="0 0 24 24"><path d="M3 5h18v14H3z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 6l9 7 9-7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></a>` : "");
   $("#year").textContent = new Date().getFullYear();
 
