@@ -89,8 +89,17 @@ async function handleBrand(request, env) {
 async function handleHome(request, env, ctx) {
   const [page, data] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx)]);
   const safe = data.replace(/</g, "\\u003c");
+  // Put the hero text in the HTML itself (same markup the script builds), so the first paint
+  // already has it and nothing moves when the script runs.
+  let hero = {};
+  try { hero = JSON.parse(data)?.settings?.content?.ar || {}; } catch {}
+  const words = (t) => String(t).split(/\s+/).filter(Boolean).map((w, i) => `<span class="word"><span style="transition-delay:${i * 70}ms">${esc(w)}</span></span>`).join(" ");
+  const fill = (key, html) => ({ element: (el) => { if (hero[key]) el.setInnerContent(html ? words(hero[key]) : hero[key], { html }); } });
   const res = new HTMLRewriter()
     .on("head", { element: (el) => el.append(`<script id="wixa-data" type="application/json">${safe}</script>`, { html: true }) })
+    .on("#heroTitle", fill("hero_title", true))
+    .on('[data-c="hero_badge"]', fill("hero_badge", false))
+    .on('.hero__sub[data-c="hero_sub"]', fill("hero_sub", false))
     .on("body", { element: (el) => { if (!new URL(request.url).searchParams.has("preview")) el.append(beacon(env), { html: true }); } })
     .transform(page);
   const headers = new Headers(res.headers);
@@ -99,6 +108,8 @@ async function handleHome(request, env, ctx) {
   for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v);
   return new Response(res.body, { status: res.status, headers });
 }
+
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 // ---------------------------------------------------------------- protection helpers
 const clientIp = (request) => request.headers.get("cf-connecting-ip") || "0.0.0.0";
@@ -180,6 +191,12 @@ async function handleAdminStats(request, env, url) {
     devices: rumPageloadEventsAdaptiveGroups(limit: 5, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since}, orderBy: [sum_visits_DESC]) { sum { visits } dimensions { deviceType } }
     pages: rumPageloadEventsAdaptiveGroups(limit: 6, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since}, orderBy: [count_DESC]) { count dimensions { requestPath } }
     refs: rumPageloadEventsAdaptiveGroups(limit: 6, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since, refererHost_neq: ""}, orderBy: [sum_visits_DESC]) { sum { visits } dimensions { refererHost } }
+    vitals: rumWebVitalsEventsAdaptiveGroups(limit: 1, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since}) {
+      count
+      quantiles { largestContentfulPaintP75 interactionToNextPaintP75 cumulativeLayoutShiftP75 }
+      sum { lcpGood lcpNeedsImprovement lcpPoor inpGood inpNeedsImprovement inpPoor clsGood clsNeedsImprovement clsPoor }
+    }
+    load: rumPerformanceEventsAdaptiveGroups(limit: 1, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since}) { count quantiles { pageLoadTimeP75 } }
   } } }`;
   const r = await fetch("https://api.cloudflare.com/client/v4/graphql", {
     method: "POST",
@@ -215,7 +232,24 @@ async function handleAdminStats(request, env, url) {
     countries: rows(a.countries, (x) => x.dimensions.countryName, (x) => x.sum.visits),
     devices: rows(a.devices, (x) => x.dimensions.deviceType, (x) => x.sum.visits),
     referrers: rows(a.refs, (x) => x.dimensions.refererHost, (x) => x.sum.visits),
+    speed: speedReport(a.vitals?.[0], a.load?.[0]),
   }, 200, { "cache-control": "private, max-age=60" });
+}
+
+// Core Web Vitals from real visitors (75th percentile, the value Google uses).
+// Cloudflare reports times in microseconds; we return milliseconds.
+function speedReport(v, load) {
+  if (!v?.count) return null;
+  const q = v.quantiles || {}, n = v.sum || {};
+  const share = (k) => { const g = n[`${k}Good`] || 0, m = n[`${k}NeedsImprovement`] || 0, p = n[`${k}Poor`] || 0, t = g + m + p; return t ? { good: g / t, mid: m / t, poor: p / t, samples: t } : null; };
+  return {
+    samples: v.count,
+    load_ms: load?.quantiles?.pageLoadTimeP75 != null ? Math.round(load.quantiles.pageLoadTimeP75 / 1000) : null,
+    lcp_ms: q.largestContentfulPaintP75 != null ? Math.round(q.largestContentfulPaintP75 / 1000) : null,
+    inp_ms: q.interactionToNextPaintP75 != null ? Math.round(q.interactionToNextPaintP75 / 1000) : null,
+    cls: q.cumulativeLayoutShiftP75 ?? null,
+    lcp: share("lcp"), inp: share("inp"), cls_share: share("cls"),
+  };
 }
 
 // ---------------------------------------------------------------- POST /api/contact
@@ -224,22 +258,21 @@ async function notifyOwner(env, row) {
   if (!env.RESEND_API_KEY) return;
   const to = env.NOTIFY_EMAIL || ""; // private Worker secret, never stored in the public site settings
   if (!to) return;
-  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const staging = env.SITE_ENV === "staging";
   const admin = staging ? "https://staging.wixa.dev/admin/#messages" : "https://wixa.dev/admin/#messages";
   const wa = row.phone ? `https://wa.me/${row.phone.replace(/\D/g, "")}` : "";
   const html = `<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;background:#F6F3F2;padding:24px">
     <div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #ECE6E8">
-      <div style="background:#570622;color:#fff;padding:18px 22px;font-size:18px;font-weight:bold">رسالة جديدة من موقع ويكسا${staging ? " (النسخة التجريبية)" : ""}</div>
+      <div style="background:#5B21B6;color:#fff;padding:18px 22px;font-size:18px;font-weight:bold">رسالة جديدة من موقع ويكسا${staging ? " (النسخة التجريبية)" : ""}</div>
       <div style="padding:22px;color:#1A0E12;font-size:15px;line-height:1.8">
         <p style="margin:0 0 6px"><b>الاسم:</b> ${esc(row.name)}</p>
         <p style="margin:0 0 6px"><b>البريد:</b> <a href="mailto:${esc(row.email)}">${esc(row.email)}</a></p>
         ${row.phone ? `<p style="margin:0 0 6px"><b>الهاتف:</b> ${esc(row.phone)}</p>` : ""}
         ${row.services?.length ? `<p style="margin:0 0 6px"><b>الخدمة:</b> ${esc(row.services.join("، "))}</p>` : ""}
         <div style="margin:14px 0;padding:14px;background:#F8EEF1;border-radius:12px;white-space:pre-wrap">${esc(row.message)}</div>
-        <a href="mailto:${esc(row.email)}" style="display:inline-block;background:#570622;color:#fff;padding:10px 18px;border-radius:10px;text-decoration:none;margin-left:6px">رد بالبريد</a>
+        <a href="mailto:${esc(row.email)}" style="display:inline-block;background:#5B21B6;color:#fff;padding:10px 18px;border-radius:10px;text-decoration:none;margin-left:6px">رد بالبريد</a>
         ${wa ? `<a href="${wa}" style="display:inline-block;background:#25D366;color:#fff;padding:10px 18px;border-radius:10px;text-decoration:none;margin-left:6px">واتساب</a>` : ""}
-        <a href="${admin}" style="display:inline-block;color:#570622;padding:10px 4px">فتح لوحة التحكم ←</a>
+        <a href="${admin}" style="display:inline-block;color:#5B21B6;padding:10px 4px">فتح لوحة التحكم ←</a>
       </div></div></div>`;
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",

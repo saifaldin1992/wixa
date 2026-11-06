@@ -1,14 +1,14 @@
 /* ================= WIXA site ================= */
 :root {
   --accent-ink: #137D90;
-  --primary: #570622; --primary-rgb: 87,6,34; --primary-ink: #fff;
-  --accent: #D9A441; --accent-rgb: 217,164,65;
+  --primary: #5B21B6; --primary-rgb: 91,33,182; --primary-ink: #fff;
+  --accent: #1FC8E3; --accent-rgb: 31,200,227;
   /* light palette (overridden from the dashboard via applyTheme) */
-  --l-bg: #FAF7F6; --l-surface: #fff; --l-surface-rgb: 255,255,255; --l-text: #1A0E12; --l-text-rgb: 26,14,18; --l-muted: #6E5F64;
-  --l-dark: #2A0711; --l-dark-rgb: 42,7,17; --l-fg: #570622; --l-fg-rgb: 87,6,34;
+  --l-bg: #F7F6FB; --l-surface: #fff; --l-surface-rgb: 255,255,255; --l-text: #140F1F; --l-text-rgb: 20,15,31; --l-muted: #625C70;
+  --l-dark: #120A24; --l-dark-rgb: 18,10,36; --l-fg: #5B21B6; --l-fg-rgb: 91,33,182;
   /* dark palette (derived from the brand color) */
-  --dk-bg: #110A0C; --dk-surface: #1E1518; --dk-surface-rgb: 30,21,24; --dk-text: #F4EEF0; --dk-text-rgb: 244,238,240; --dk-muted: #B9ABB0;
-  --dk-dark: #2C0512; --dk-dark-rgb: 44,5,18; --dk-fg: #C995A6; --dk-fg-rgb: 201,149,166;
+  --dk-bg: #130C1F; --dk-surface: #201731; --dk-surface-rgb: 32,23,49; --dk-text: #F2F0F7; --dk-text-rgb: 242,240,247; --dk-muted: #B2ACBF;
+  --dk-dark: #2B1057; --dk-dark-rgb: 43,16,87; --dk-fg: #C1ABE3; --dk-fg-rgb: 193,171,227;
   /* active tokens */
   --bg: var(--l-bg); --surface: var(--l-surface); --surface-rgb: var(--l-surface-rgb); --text: var(--l-text); --text-rgb: var(--l-text-rgb);
   --muted: var(--l-muted); --dark: var(--l-dark); --dark-rgb: var(--l-dark-rgb); --fg: var(--l-fg); --fg-rgb: var(--l-fg-rgb);
@@ -34,6 +34,8 @@ html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
 body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); font-weight: 400; line-height: 1.7; overflow-x: clip; -webkit-font-smoothing: antialiased; }
 body.is-loading { overflow: hidden; }
+/* keep room for the scrollbar so the page does not jump sideways when loading ends */
+html { scrollbar-gutter: stable; }
 a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { background: none; border: 0; cursor: pointer; padding: 0; }
@@ -55,7 +57,7 @@ html[dir="rtl"] h1, html[dir="rtl"] h2, html[dir="rtl"] h3 { letter-spacing: 0; 
 /* header */
 .header { position: fixed; top: 12px; inset-inline: 12px; z-index: 60; max-width: var(--max); margin: 0 auto; transition: transform .6s var(--ease); }
 .header.hide { transform: translateY(-130%); }
-.header__bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 12px 10px 18px; background: rgba(var(--surface-rgb), .72); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6); border: 1px solid var(--line); border-radius: 999px; box-shadow: var(--shadow); }
+.header__bar { display: flex; align-items: center; justify-content: flex-start; gap: 16px; padding: 10px 12px 10px 18px; background: rgba(var(--surface-rgb), .72); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6); border: 1px solid var(--line); border-radius: 999px; box-shadow: var(--shadow); }
 html[dir="rtl"] .header__bar { padding: 10px 18px 10px 12px; }
 .brand { display: inline-flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.05rem; direction: ltr; }
 .brand__name { display: inline-flex; align-items: center; color: var(--text); line-height: 1; }
@@ -67,10 +69,10 @@ html[dir="rtl"] .header__bar { padding: 10px 18px 10px 12px; }
 .brand__mark svg { width: 100%; height: 100%; }
 .brand__mark img { width: 100%; height: 100%; object-fit: contain; }
 .brand__mark.has-logo { width: 40px; height: 34px; }
-.header__nav { display: flex; gap: 6px; }
+.header__nav { display: flex; gap: 4px; padding-inline-start: 14px; border-inline-start: 1px solid var(--line); }
 .header__nav a { padding: 8px 14px; border-radius: 99px; font-size: .92rem; color: var(--muted); transition: color .3s, background .3s; }
 .header__nav a:hover { color: var(--text); background: rgba(var(--text-rgb), .05); }
-.header__end { display: flex; align-items: center; gap: 8px; }
+.header__end { display: flex; align-items: center; gap: 8px; margin-inline-start: auto; }
 .pill-btn { padding: 8px 14px; border-radius: 99px; border: 1px solid var(--line-2); font-size: .85rem; transition: background .3s; }
 .pill-btn:hover { background: rgba(var(--text-rgb), .05); }
 .menu-btn { width: 40px; height: 40px; border-radius: 50%; position: relative; display: none; }
@@ -175,7 +177,9 @@ html[data-theme="dark"] .hero__logo .lg-shine { mix-blend-mode: screen; }
 .badge { display: inline-flex; align-items: center; gap: 10px; padding: 7px 16px 7px 14px; border-radius: 99px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: .9rem; }
 .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 rgba(var(--accent-rgb), .7); animation: pulse 2s infinite; }
 @keyframes pulse { 70% { box-shadow: 0 0 0 10px rgba(var(--accent-rgb), 0); } 100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0); } }
-.hero__title { font-size: clamp(2.6rem, calc(7vw * var(--scale)), 5.8rem); line-height: 1.15; margin: 22px auto 18px; max-width: 16ch; }
+.hero__title { font-size: clamp(2.6rem, calc(7vw * var(--scale)), 5.8rem); line-height: 1.15; margin: 22px auto 18px; max-width: 9.6em; }
+/* the last word (the highlighted one) always gets its own line, so the title keeps the same height whichever font is showing */
+.hero__title .word:last-child:not(:first-child) { display: block; width: max-content; margin-inline: auto; }
 .hero__title .word:last-child > span { background: linear-gradient(100deg, var(--fg), var(--accent-ink, var(--accent)) 60%, var(--fg)); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 6s ease-in-out infinite; }
 @keyframes shimmer { 50% { background-position: 100% 0; } }
 .hero__sub { max-width: 620px; font-size: clamp(1.02rem, 1.4vw, 1.2rem); color: var(--muted); margin: 0 auto 34px; }

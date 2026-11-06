@@ -11,6 +11,8 @@
   Cache-Control: public, max-age=2592000, stale-while-revalidate=86400
 /brand/png/*
   Cache-Control: public, max-age=2592000, stale-while-revalidate=86400
+/brand/social/*
+  Cache-Control: public, max-age=2592000, stale-while-revalidate=86400
 /og.jpg
   Cache-Control: public, max-age=604800
 

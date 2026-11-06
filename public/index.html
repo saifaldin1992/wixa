@@ -29,16 +29,18 @@
     "name": "WIXA",
     "alternateName": "ويكسا",
     "url": "https://wixa.dev/",
-    "logo": "https://wixa.dev/logo-maroon.svg",
+    "logo": "https://wixa.dev/logo-color.svg",
     "description": "شركة تقنية تصمم وتطور المواقع والتطبيقات والأنظمة الرقمية.",
     "areaServed": "IQ",
     "contactPoint": { "@type": "ContactPoint", "telephone": "+964-782-255-8252", "contactType": "customer service", "availableLanguage": ["Arabic", "English"] }
   }
   </script>
-  <meta name="theme-color" content="#570622">
+  <meta name="theme-color" content="#5B21B6">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- default font loaded with the page (not later from JS) so the hero text does not jump when it arrives -->
+  <link id="wixa-font" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;700;800&display=swap">
   <link rel="stylesheet" href="/styles.css">
   <script>
     // Apply the saved (or system) theme before first paint to avoid a flash.
@@ -274,6 +276,17 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>
-  <script src="/main.js" defer></script>
+  <link rel="modulepreload" href="/js/site/core.js">
+  <link rel="modulepreload" href="/js/site/data.js">
+  <link rel="modulepreload" href="/js/site/render.js">
+  <link rel="modulepreload" href="/js/site/hero.js">
+  <link rel="modulepreload" href="/js/site/theme.js">
+  <link rel="modulepreload" href="/js/site/sections.js">
+  <link rel="modulepreload" href="/js/site/calculator.js">
+  <link rel="modulepreload" href="/js/site/contact.js">
+  <link rel="modulepreload" href="/js/site/projects.js">
+  <link rel="modulepreload" href="/js/site/effects.js">
+  <link rel="modulepreload" href="/js/site/ui.js">
+  <script type="module" src="/js/main.js"></script>
 </body>
 </html>

@@ -1,0 +1,52 @@
+/* WIXA — public site entry. Each part lives in its own module under /js/site/. */
+import { $, PREVIEW, state, setLang } from "./site/core.js";
+import { load } from "./site/data.js";
+import { render } from "./site/render.js";
+import { setupUI } from "./site/ui.js";
+import { setupTheme } from "./site/theme.js";
+import { setupParticles, setupLogoTilt } from "./site/hero.js";
+import { setupCalc } from "./site/calculator.js";
+import { setupContact } from "./site/contact.js";
+import { setupProjectModal } from "./site/projects.js";
+import { setupProgress, setupCursor, setupMotion } from "./site/effects.js";
+const { DEFAULTS, merge, applyTheme } = window.WIXA;
+
+// sign-in links from Supabase emails that land on the homepage belong to the dashboard
+if (/(^|&)(type=(recovery|email_change|signup)|error_description=|message=)/.test(location.hash.slice(1))) location.replace("/admin/" + location.hash);
+
+// live preview from the admin dashboard
+if (PREVIEW) addEventListener("message", (e) => {
+  if (e.origin !== location.origin || e.data?.type !== "wixa-preview") return;
+  const d = e.data.payload;
+  if (d.settings) state.settings = merge(DEFAULTS, d.settings);
+  for (const k of ["projects", "services", "partners", "testimonials"]) if (d[k]) state[k] = d[k];
+  if (d.lang) setLang(d.lang);
+  render(); $(".hero").classList.add("in", "in-hero");
+});
+
+// ---------- boot ----------
+(async () => {
+  applyTheme(state.settings);
+  await load();
+  render();
+  setupUI();
+  setupContact();
+  setupTheme();
+  setupParticles();
+  setupLogoTilt();
+  setupCalc();
+  setupProjectModal();
+  setupProgress();
+  setupCursor();
+  const start = () => {
+    $(".loader").classList.add("done");
+    document.body.classList.remove("is-loading");
+    setTimeout(() => $(".hero").classList.add("in", "in-hero"), 150);
+    setupMotion(); // visits are counted by Cloudflare Web Analytics (beacon added by the Worker)
+  };
+  let started = false;
+  const once = () => { if (!started) { started = true; start(); } };
+  if (document.readyState === "complete") once();
+  else { addEventListener("load", once, { once: true }); setTimeout(once, 1200); }
+  if (PREVIEW) parent.postMessage({ type: "wixa-preview-ready" }, location.origin);
+})();

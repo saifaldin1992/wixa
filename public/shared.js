@@ -15,14 +15,14 @@
 
   const DEFAULTS = {
     theme: {
-      primary: "#570622",
+      primary: "#5B21B6",
       primaryInk: "#FFFFFF",
-      accent: "#D9A441",
-      bg: "#FAF7F6",
+      accent: "#1FC8E3",
+      bg: "#F7F6FB",
       surface: "#FFFFFF",
-      text: "#1A0E12",
-      muted: "#6E5F64",
-      dark: "#2A0711",
+      text: "#140F1F",
+      muted: "#625C70",
+      dark: "#120A24",
       radius: 22,
     },
     font: { family: "Alexandria", scale: 1, headingWeight: 800 },
@@ -204,12 +204,12 @@
     const t = settings.theme, f = settings.font;
     const fam = loadFont(f.family);
     const dk = {
-      bg: mix(t.primary, "#0C0A0B", 0.9),
-      surface: mix(t.primary, "#18151A", 0.86),
-      text: "#F4EEF0",
-      muted: "#B9ABB0",
-      dark: mix(t.primary, "#050304", 0.55),
-      fg: mix(t.primary, "#FFD9E4", 0.68),
+      bg: mix(t.primary, "#0B0A0E", 0.9),
+      surface: mix(t.primary, "#16151B", 0.86),
+      text: "#F2F0F7",
+      muted: "#B2ACBF",
+      dark: mix(t.primary, "#040309", 0.55),
+      fg: mix(t.primary, "#FFFFFF", 0.62),
     };
     const vars = {
       "--primary": t.primary, "--primary-rgb": hexToRgb(t.primary), "--primary-ink": t.primaryInk,

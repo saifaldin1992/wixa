@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;700;800&display=swap" rel="stylesheet">
   <style>
-    :root { --m: #570622; --c: #1FC8E3; --ci: #137D90; --bg: #F7F6F8; --s: #fff; --t: #140C12; --mu: #665C64; --d: #12070C; --l: rgba(20,12,18,.09); --r: 22px; }
+    :root { --m: #5B21B6; --c: #1FC8E3; --ci: #137D90; --bg: #F7F6FB; --s: #fff; --t: #140F1F; --mu: #625C70; --d: #120A24; --l: rgba(20,15,31,.09); --r: 22px; }
     * { box-sizing: border-box; }
     body { margin: 0; background: var(--bg); color: var(--t); font-family: Alexandria, system-ui, sans-serif; line-height: 1.7; }
     a { color: inherit; }
@@ -45,6 +45,11 @@
     .sw.copied span::after { content: "  ✓ نُسخ"; color: #12A150; }
     .type { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
     .type .card { padding: 26px; }
+    .socgrid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+    .soc { display: flex; flex-direction: column; color: inherit; text-decoration: none; transition: transform .3s; }
+    .soc:hover { transform: translateY(-3px); }
+    .soc img { width: 100%; aspect-ratio: 16/10; object-fit: contain; background: #EEEAF6; display: block; }
+    .soc div { padding: 12px 16px; display: grid; gap: 2px; } .soc span { color: var(--mu); font-size: 13px; }
     .type .big { font-size: 3.2rem; line-height: 1.1; margin: 10px 0; }
     .type .wm { height: 46px; margin: 14px 0 6px; }
     .wavebox { background: var(--s); border: 1px solid var(--l); border-radius: var(--r); padding: 40px; display: grid; gap: 30px; place-items: center; }
@@ -80,14 +85,14 @@
 
     <section>
       <h2>الألوان</h2>
-      <p class="lead">اضغط على أي لون لنسخ قيمته. الخمري هو لون الهوية الأساسي، والسماوي لون التمييز التقني (يُستخدم بدرجته الداكنة للنصوص على الخلفيات الفاتحة).</p>
+      <p class="lead">اضغط على أي لون لنسخ قيمته. البنفسجي هو لون الهوية الأساسي، والسماوي لون التمييز التقني (يُستخدم بدرجته الداكنة للنصوص على الخلفيات الفاتحة).</p>
       <div class="swatches">
-        <button class="sw" data-hex="#570622"><i style="background:#570622"></i><div><b>خمري ويكسا</b><span>#570622</span></div></button>
+        <button class="sw" data-hex="#5B21B6"><i style="background:#5B21B6"></i><div><b>بنفسجي ويكسا</b><span>#5B21B6</span></div></button>
         <button class="sw" data-hex="#1FC8E3"><i style="background:#1FC8E3"></i><div><b>سماوي تقني</b><span>#1FC8E3</span></div></button>
         <button class="sw" data-hex="#137D90"><i style="background:#137D90"></i><div><b>سماوي للنصوص</b><span>#137D90</span></div></button>
-        <button class="sw" data-hex="#12070C"><i style="background:#12070C"></i><div><b>الليلي</b><span>#12070C</span></div></button>
-        <button class="sw" data-hex="#140C12"><i style="background:#140C12"></i><div><b>النص</b><span>#140C12</span></div></button>
-        <button class="sw" data-hex="#F7F6F8"><i style="background:#F7F6F8"></i><div><b>الخلفية</b><span>#F7F6F8</span></div></button>
+        <button class="sw" data-hex="#120A24"><i style="background:#120A24"></i><div><b>الليلي</b><span>#120A24</span></div></button>
+        <button class="sw" data-hex="#140F1F"><i style="background:#140F1F"></i><div><b>النص</b><span>#140F1F</span></div></button>
+        <button class="sw" data-hex="#F7F6FB"><i style="background:#F7F6FB"></i><div><b>الخلفية</b><span>#F7F6FB</span></div></button>
       </div>
     </section>
 
@@ -109,11 +114,25 @@
     </section>
 
     <section>
+      <h2>التواصل الاجتماعي</h2>
+      <p class="lead">صور جاهزة بالهوية البنفسجية. اضغط على أي صورة لتنزيلها. صورة الحساب مصممة لتظهر كاملة داخل الدائرة.</p>
+      <div class="grid socgrid">
+        <a class="card soc" href="/brand/social/wixa-profile.png" download><img src="/brand/social/wixa-profile.png" alt="صورة الحساب" loading="lazy"><div><b>صورة الحساب</b><span>1080×1080 · إنستغرام، فيسبوك، X، لينكدإن</span></div></a>
+        <a class="card soc" href="/brand/social/wixa-profile-light.png" download><img src="/brand/social/wixa-profile-light.png" alt="صورة الحساب — فاتحة" loading="lazy"><div><b>صورة الحساب — فاتحة</b><span>1080×1080</span></div></a>
+        <a class="card soc" href="/brand/social/wixa-cover-x.png" download><img src="/brand/social/wixa-cover-x.png" alt="غلاف X" loading="lazy"><div><b>غلاف X</b><span>1500×500</span></div></a>
+        <a class="card soc" href="/brand/social/wixa-cover-facebook.png" download><img src="/brand/social/wixa-cover-facebook.png" alt="غلاف فيسبوك" loading="lazy"><div><b>غلاف فيسبوك</b><span>1640×624</span></div></a>
+        <a class="card soc" href="/brand/social/wixa-cover-linkedin.png" download><img src="/brand/social/wixa-cover-linkedin.png" alt="غلاف لينكدإن" loading="lazy"><div><b>غلاف لينكدإن</b><span>1584×396</span></div></a>
+        <a class="card soc" href="/brand/social/wixa-post.png" download><img src="/brand/social/wixa-post.png" alt="منشور" loading="lazy"><div><b>منشور</b><span>1080×1080</span></div></a>
+        <a class="card soc" href="/brand/social/wixa-story.png" download><img src="/brand/social/wixa-story.png" alt="ستوري" loading="lazy"><div><b>ستوري</b><span>1080×1920</span></div></a>
+      </div>
+    </section>
+
+    <section>
       <h2>العنصر البصري — موجة ويكسا</h2>
       <p class="lead">منحنى مستخرج من انحناءات الرمز، يُستخدم زخرفةً فوق العناوين، وفاصلاً بين الأقسام، وخلفية خفيفة في المطبوعات.</p>
       <div class="wavebox">
-        <svg viewBox="0 0 108 24"><defs><linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#570622"/><stop offset="1" stop-color="#1FC8E3"/></linearGradient></defs><path d="M3 12 C 15 1, 27 1, 39 12 S 63 23, 75 12 S 93 1, 105 12" fill="none" stroke="url(#g1)" stroke-width="3" stroke-linecap="round"/></svg>
-        <svg viewBox="0 0 1200 40" preserveAspectRatio="none" style="height:40px"><path d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20" fill="none" stroke="#570622" stroke-opacity=".35" stroke-width="2"/></svg>
+        <svg viewBox="0 0 108 24"><defs><linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#5B21B6"/><stop offset="1" stop-color="#1FC8E3"/></linearGradient></defs><path d="M3 12 C 15 1, 27 1, 39 12 S 63 23, 75 12 S 93 1, 105 12" fill="none" stroke="url(#g1)" stroke-width="3" stroke-linecap="round"/></svg>
+        <svg viewBox="0 0 1200 40" preserveAspectRatio="none" style="height:40px"><path d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20" fill="none" stroke="#5B21B6" stroke-opacity=".35" stroke-width="2"/></svg>
       </div>
     </section>
 
@@ -123,7 +142,7 @@
       <div class="rules">
         <div class="rule yes"><h3>مساحة فارغة حول الشعار</h3><p>اترك حول الشعار مساحة لا تقل عن ارتفاع حرف W.</p></div>
         <div class="rule yes"><h3>حد أدنى للحجم</h3><p>لا يقل عرض الشعار الأفقي عن 96px على الشاشة و25mm في الطباعة. أصغر من ذلك استخدم الرمز وحده.</p></div>
-        <div class="rule yes"><h3>تباين واضح</h3><p>الملوّن على الفاتح، والأبيض أو الداكن على الخمري والصور.</p></div>
+        <div class="rule yes"><h3>تباين واضح</h3><p>الملوّن على الفاتح، والأبيض أو الداكن على البنفسجي والصور.</p></div>
         <div class="rule no"><h3>لا تغيّر الألوان</h3><p>لا تلوّن الشعار بألوان خارج هذا الدليل، ولا تضف له تدرجات أو ظلالاً.</p></div>
         <div class="rule no"><h3>لا تشوّه النسب</h3><p>لا تمطّ الشعار أو تضغطه أو تُدره، ولا تغيّر المسافة بين الرمز والكلمة.</p></div>
         <div class="rule no"><h3>لا تعيد كتابته</h3><p>استخدم ملفات الشعار دائماً، ولا تكتب «WIXA» بخط آخر.</p></div>

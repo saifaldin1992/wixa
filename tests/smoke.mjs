@@ -64,6 +64,16 @@ try {
       check((await p.getAttribute("html", "data-theme")) !== before, "dark-mode toggle works");
       await p.click("#langBtn"); await p.waitForTimeout(800);
       check((await p.getAttribute("html", "lang")) === "en", "language toggle works");
+      // cost calculator: picking a type changes the estimate, the button prefills the contact form
+      const price0 = await p.textContent("#calcPrice");
+      await p.click("#calcTypes .ctype:last-child"); await p.click("#calcFeats .cfeat"); await p.waitForTimeout(900);
+      check((await p.textContent("#calcPrice")) !== price0, "calculator updates the estimate");
+      await p.click("#calcCta"); await p.waitForTimeout(1200);
+      check((await p.inputValue("#contactForm [name=message]")).length > 10, "calculator prefills the contact form");
+      if (await p.$("#projectsList [data-open]")) {
+        await p.click("#projectsList .project__more"); await p.waitForTimeout(400);
+        check(!(await p.$eval("#pmodal", (m) => m.hidden)), "project details open");
+      }
     }
     await ctx.close();
   }
@@ -73,6 +83,24 @@ try {
     const { p, ctx, errors } = await page(browser, url, { viewport: { width: 1280, height: 800 } });
     check(errors.length === 0, `${url} has no errors`, errors.slice(0, 3).join(" | "));
     check((await p.$$(sel)).length >= min, `${url} renders ${sel}`);
+    await ctx.close();
+  }
+  // Dashboard views, signed in against a stand-in Supabase (no real data involved)
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    await ctx.route(/supabase-js/, (r) => r.fulfill({ body: readFileSync(new URL("./supabase-stub.js", import.meta.url)), contentType: "application/javascript" }));
+    await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.fulfill({ body: "", contentType: "text/css" }));
+    const p = await ctx.newPage();
+    const errors = [];
+    p.on("pageerror", (e) => errors.push(e.message));
+    await p.goto(`${BASE}/admin/`, { waitUntil: "load" });
+    await p.waitForTimeout(1200);
+    for (const v of ["overview", "appearance", "content", "projects", "services", "partners", "testimonials", "messages", "account"]) {
+      await p.evaluate((h) => (location.hash = h), v);
+      await p.waitForTimeout(600);
+      const ok = await p.evaluate(() => document.querySelector("#view")?.children.length > 0);
+      check(ok && errors.length === 0, `dashboard: ${v} view opens`, errors.splice(0).slice(0, 2).join(" | "));
+    }
     await ctx.close();
   }
 } finally {
