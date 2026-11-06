@@ -156,6 +156,7 @@ async function handleTrack(request, env, ctx) {
 
 // ---------------------------------------------------------------- GET /api/admin/stats
 // Visitor numbers for the dashboard, read from Cloudflare Web Analytics.
+// Counts only this environment's public pages: the dashboard itself (/admin) is excluded.
 // Only signed-in admins (checked against Supabase with their own session) can read it;
 // the Cloudflare token stays on the server.
 async function handleAdminStats(request, env, url) {
@@ -171,19 +172,19 @@ async function handleAdminStats(request, env, url) {
   const today = new Date();
   const since = new Date(today.getTime() - (days - 1) * 864e5);
   const since90 = new Date(today.getTime() - 89 * 864e5);
-  const q = `query($acc: String!, $tag: String!, $since: Date!, $since90: Date!, $today: Date!) { viewer { accounts(filter: {accountTag: $acc}) {
-    byDay: rumPageloadEventsAdaptiveGroups(limit: 100, filter: {siteTag: $tag, date_geq: $since}, orderBy: [date_ASC]) { count sum { visits } dimensions { date } }
-    today: rumPageloadEventsAdaptiveGroups(limit: 1, filter: {siteTag: $tag, date: $today}) { count sum { visits } }
-    total90: rumPageloadEventsAdaptiveGroups(limit: 1, filter: {siteTag: $tag, date_geq: $since90}) { count }
-    countries: rumPageloadEventsAdaptiveGroups(limit: 6, filter: {siteTag: $tag, date_geq: $since}, orderBy: [sum_visits_DESC]) { sum { visits } dimensions { countryName } }
-    devices: rumPageloadEventsAdaptiveGroups(limit: 5, filter: {siteTag: $tag, date_geq: $since}, orderBy: [sum_visits_DESC]) { sum { visits } dimensions { deviceType } }
-    pages: rumPageloadEventsAdaptiveGroups(limit: 6, filter: {siteTag: $tag, date_geq: $since}, orderBy: [count_DESC]) { count dimensions { requestPath } }
-    refs: rumPageloadEventsAdaptiveGroups(limit: 6, filter: {siteTag: $tag, date_geq: $since, refererHost_neq: ""}, orderBy: [sum_visits_DESC]) { sum { visits } dimensions { refererHost } }
+  const q = `query($acc: String!, $tag: String!, $hosts: [string!], $since: Date!, $since90: Date!, $today: Date!) { viewer { accounts(filter: {accountTag: $acc}) {
+    byDay: rumPageloadEventsAdaptiveGroups(limit: 100, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since}, orderBy: [date_ASC]) { count sum { visits } dimensions { date } }
+    today: rumPageloadEventsAdaptiveGroups(limit: 1, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date: $today}) { count sum { visits } }
+    total90: rumPageloadEventsAdaptiveGroups(limit: 1, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since90}) { count }
+    countries: rumPageloadEventsAdaptiveGroups(limit: 6, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since}, orderBy: [sum_visits_DESC]) { sum { visits } dimensions { countryName } }
+    devices: rumPageloadEventsAdaptiveGroups(limit: 5, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since}, orderBy: [sum_visits_DESC]) { sum { visits } dimensions { deviceType } }
+    pages: rumPageloadEventsAdaptiveGroups(limit: 6, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since}, orderBy: [count_DESC]) { count dimensions { requestPath } }
+    refs: rumPageloadEventsAdaptiveGroups(limit: 6, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since, refererHost_neq: ""}, orderBy: [sum_visits_DESC]) { sum { visits } dimensions { refererHost } }
   } } }`;
   const r = await fetch("https://api.cloudflare.com/client/v4/graphql", {
     method: "POST",
     headers: { authorization: `Bearer ${env.CF_ANALYTICS_TOKEN}`, "content-type": "application/json" },
-    body: JSON.stringify({ query: q, variables: { acc: env.CF_ACCOUNT_ID, tag: env.CF_SITE_TAG, since: day(since), since90: day(since90), today: day(today) } }),
+    body: JSON.stringify({ query: q, variables: { acc: env.CF_ACCOUNT_ID, tag: env.CF_SITE_TAG, hosts: env.SITE_ENV === "staging" ? ["staging.wixa.dev"] : ["wixa.dev", "www.wixa.dev"], since: day(since), since90: day(since90), today: day(today) } }),
   });
   const g = await r.json().catch(() => ({}));
   const a = g?.data?.viewer?.accounts?.[0];
