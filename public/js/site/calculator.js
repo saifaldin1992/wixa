@@ -28,7 +28,8 @@ function updateCalc(animate = true) {
   if (!range) { el.textContent = "—"; return; }
   const cur = (state.settings.calculator || {}).currency || "$";
   const fmt = (v) => Math.round(v).toLocaleString("en");
-  const draw = (a, b) => { el.innerHTML = `${fmt(a)} – ${fmt(b)} <small>${esc(cur)}</small>`; };
+  const sticky = $("#calcStickyPrice");
+  const draw = (a, b) => { el.innerHTML = `${fmt(a)} – ${fmt(b)} <small>${esc(cur)}</small>`; if (sticky) sticky.textContent = `${fmt(a)} – ${fmt(b)} ${cur}`; };
   const maxAll = Math.max(...((state.settings.calculator || {}).types || []).map((t) => Number(t.max) || 0), 1) * 1.6;
   $("#calcBar").style.width = `${Math.min(100, (range[1] / maxAll) * 100)}%`;
   if (!animate || !anim) { calcShown = range; draw(...range); return; }
@@ -40,7 +41,19 @@ function updateCalc(animate = true) {
   };
   requestAnimationFrame(step);
 }
+// phones: while the options are on screen but the price card is not, keep the price visible at the bottom
+function setupCalcSticky() {
+  const bar = $("#calcSticky"), opts = $(".calc__opts"), result = $(".calc__result");
+  if (!bar || !opts || !result) return;
+  let optsIn = false, resultIn = false;
+  const sync = () => bar.classList.toggle("show", optsIn && !resultIn);
+  new IntersectionObserver(([e]) => { optsIn = e.isIntersecting; sync(); }, { rootMargin: "-20% 0px -20% 0px" }).observe(opts);
+  new IntersectionObserver(([e]) => { resultIn = e.isIntersecting; sync(); }, { threshold: 0.3 }).observe(result);
+  bar.addEventListener("click", () => result.scrollIntoView({ behavior: "smooth", block: "center" }));
+}
+
 export function setupCalc() {
+  setupCalcSticky();
   $("#calcTypes").addEventListener("click", (e) => { const b = e.target.closest(".ctype"); if (!b) return; calc.type = +b.dataset.i; $$(".ctype").forEach((x) => x.setAttribute("aria-checked", x === b)); updateCalc(); });
   $("#calcFeats").addEventListener("click", (e) => { const b = e.target.closest(".cfeat"); if (!b) return; const i = +b.dataset.i; calc.feats.has(i) ? calc.feats.delete(i) : calc.feats.add(i); b.setAttribute("aria-pressed", calc.feats.has(i)); updateCalc(); });
   $("#calcSpeed").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; calc.rush = b.dataset.rush === "1"; $$("#calcSpeed button").forEach((x) => x.classList.toggle("on", x === b)); updateCalc(); });

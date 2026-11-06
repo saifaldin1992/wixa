@@ -115,7 +115,10 @@ export function renderContentTab() {
     draw(); return;
   } else if (contentTab === "sections") {
     const names = { iraq_map: "خريطة العراق في الواجهة الرئيسية", story: "القصة (المميزات)", projects: "الإنجازات (المشاريع)", services: "الخدمات", process: "كيف نعمل", stats: "الأرقام", testimonials: "آراء العملاء", calculator: "حاسبة التكلفة", partners: "الشركاء", contact: "التواصل" };
-    body.innerHTML = `<p class="muted" style="margin-top:0">أخفِ أي قسم لا تحتاجه. (قسما الشركاء وآراء العملاء يختفيان تلقائياً إذا كانا فارغين.)</p><div class="stack">${Object.entries(names).map(([k, l]) => `<label class="switch"><input type="checkbox" data-path="sections.${k}" ${settings.sections[k] ? "checked" : ""}><i></i>${l}</label>`).join("")}</div>`;
+    body.innerHTML = `<p class="muted" style="margin-top:0">أخفِ أي قسم لا تحتاجه. (قسما الشركاء وآراء العملاء يختفيان تلقائياً إذا كانا فارغين.)</p><div class="stack">${Object.entries(names).map(([k, l]) => `<label class="switch"><input type="checkbox" data-path="sections.${k}" ${settings.sections[k] ? "checked" : ""}><i></i>${l}</label>`).join("")}</div>
+      <label class="f" style="margin-top:18px;max-width:360px"><span>طريقة عرض الشركاء</span><select data-path="partners_style">
+        <option value="grid" ${settings.partners_style !== "marquee" ? "selected" : ""}>ثابتة — ٣ شعارات في السطر</option>
+        <option value="marquee" ${settings.partners_style === "marquee" ? "selected" : ""}>شريط متحرك مثل آراء العملاء</option></select></label>`;
   } else if (contentTab === "brand") {
     body.innerHTML = `<div class="stack"><div class="grid2">${input("brand.name_ar", "اسم الشركة بالعربي")}${input("brand.name_en", "اسم الشركة بالإنجليزي", false, 'dir="ltr"')}</div>
       <div class="f"><span>الشعار (اختياري — يُفضّل مربع PNG أو SVG)</span><div id="logoField"></div></div></div>`;

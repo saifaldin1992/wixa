@@ -101,11 +101,18 @@ export function render() {
     <div class="stat reveal-up"><b><span data-count="${Number(st.value) || 0}">${anim ? 0 : Number(st.value) || 0}</span><em>${esc(st.suffix || "")}</em></b><span>${esc(st[`label_${lang}`] || st.label_ar || "")}</span></div>`).join("");
 
   // partners
-  $("#partnersGrid").innerHTML = state.partners.map((p) => {
+  const marquee = s.partners_style === "marquee";
+  $("#partnersGrid").classList.toggle("is-marquee", marquee);
+  const partnerCards = state.partners.map((p) => {
     const inner = p.logo_url ? `<img src="${esc(safeUrl(p.logo_url))}" alt="${esc(p.name)}" loading="lazy">` : `<span>${esc(p.name)}</span>`;
     const link = safeUrl(p.link);
     return link ? `<a class="partner" href="${esc(link)}" target="_blank" rel="noopener" title="${esc(p.name)}">${inner}</a>` : `<div class="partner" title="${esc(p.name)}">${inner}</div>`;
-  }).join("");
+  });
+  if (marquee && partnerCards.length) {
+    // repeat so one half always fills the screen, then duplicate for a seamless loop
+    let base = partnerCards.slice(); while (base.length < 8) base = base.concat(partnerCards);
+    $("#partnersGrid").innerHTML = `<div class="partners__track" style="--dur:${Math.max(20, base.length * 3)}s">${base.join("") + base.join("")}</div>`;
+  } else $("#partnersGrid").innerHTML = partnerCards.join("");
 
   // contact
   const ct = s.contact;

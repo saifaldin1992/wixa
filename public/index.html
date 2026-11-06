@@ -84,6 +84,13 @@
       <a href="#partners" data-t="nav_partners" data-sec="partners">شركاؤنا</a>
       <a href="#contact" data-t="nav_contact" data-sec="contact">تواصل معنا</a>
     </div>
+    <!-- phones: quick jump between sections once the visitor is past the hero -->
+    <nav class="quick" id="quick" aria-label="sections">
+      <a href="#projects" data-t="nav_projects" data-sec="projects">حلولنا</a>
+      <a href="#services" data-t="nav_services" data-sec="services">خدماتنا</a>
+      <a href="#calculator" data-t="nav_calc" data-sec="calculator">احسب التكلفة</a>
+      <a href="#contact" data-t="nav_contact" data-sec="contact">تواصل معنا</a>
+    </nav>
   </header>
   <div class="scrim" id="scrim"></div>
 
@@ -191,6 +198,7 @@
             <button type="button" data-rush="1" data-c="calc_rush"></button>
           </div>
         </div>
+        <button type="button" class="calc__sticky" id="calcSticky" aria-label="estimate"><span data-t="calc_est">التقدير المبدئي</span><b id="calcStickyPrice" dir="ltr">—</b></button>
         <div class="calc__result">
           <span class="calc__label" data-c="calc_result"></span>
           <div class="calc__price" id="calcPrice" dir="ltr">—</div>
