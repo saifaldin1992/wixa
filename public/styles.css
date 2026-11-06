@@ -121,7 +121,7 @@ section { position: relative; }
 .head__sub { color: var(--muted); font-size: 1.1rem; margin: 10px 0 0; max-width: 620px; }
 
 /* hero — centered, animated logo */
-.hero { min-height: 100svh; display: grid; place-items: center; text-align: center; padding: 120px var(--gutter) 90px; overflow: hidden; isolation: isolate; }
+.hero { min-height: 100svh; display: grid; place-items: center; text-align: center; padding: 100px var(--gutter) 70px; overflow: hidden; isolation: isolate; }
 .hero__bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
 .hero__grid { position: absolute; inset: 0; background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 64px 64px; mask-image: radial-gradient(ellipse 60% 55% at 50% 42%, #000 15%, transparent 75%); -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 42%, #000 15%, transparent 75%); }
 .aurora { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .55; will-change: transform; }
@@ -135,7 +135,7 @@ html[data-theme="dark"] .aurora { opacity: .8; }
 .particles { position: absolute; inset: 0; width: 100%; height: 100%; }
 
 .hero__content { position: relative; width: 100%; max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
-.hero__logo { position: relative; width: min(360px, 66vw); aspect-ratio: 2021 / 982; margin: 24px 0 52px; transform: perspective(900px) rotateX(var(--lx, 0deg)) rotateY(var(--ly, 0deg)); transition: transform .8s var(--ease-out); }
+.hero__logo { position: relative; width: min(280px, 70vw, 27vh); aspect-ratio: 1080 / 1096; margin: 0 0 22px; transform: perspective(900px) rotateX(var(--lx, 0deg)) rotateY(var(--ly, 0deg)); transition: transform .8s var(--ease-out); }
 .hero__logo svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .hero__logo .lg-stroke { fill: none; stroke: var(--fg); stroke-width: 6; opacity: .7; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
 .hero__logo .lg-fill { fill: var(--fg); opacity: 0; transform-origin: center; transform-box: fill-box; }
@@ -148,9 +148,10 @@ html[data-theme="dark"] .hero__logo .lg-shine { mix-blend-mode: screen; }
 .hero.in .lg-shine { animation: lgShineIn .1s linear 3s forwards; }
 .hero.in .lg-shine-bar { animation: lgSweep 4.8s cubic-bezier(.65,0,.35,1) 3s infinite; }
 .hero.in .hero__logo-float { animation: lgFloat 7s ease-in-out 3.2s infinite; }
-.hero__logo-float { position: absolute; inset: 0; }
-@keyframes lgDraw { 70% { stroke-dashoffset: 0; opacity: .7; } 100% { stroke-dashoffset: 0; opacity: .35; } }
-@keyframes lgFill { from { opacity: 0; transform: scale(.96); } to { opacity: .2; transform: none; } }
+/* the logo sits inside the map of Iraq, in its widest part */
+.hero__logo-float { position: absolute; left: 22.69%; top: 42.16%; width: 40.74%; height: 19.51%; z-index: 1; }
+@keyframes lgDraw { 70% { stroke-dashoffset: 0; opacity: .8; } 100% { stroke-dashoffset: 0; opacity: .55; } }
+@keyframes lgFill { from { opacity: 0; transform: scale(.96); } to { opacity: .5; transform: none; } }
 @keyframes lgGlow { to { opacity: .16; } }
 @keyframes lgBreathe { 0%, 100% { opacity: .16; } 50% { opacity: .07; } }
 @keyframes lgShineIn { to { opacity: .6; } }
@@ -163,7 +164,7 @@ html[data-theme="dark"] .hero__logo .lg-shine { mix-blend-mode: screen; }
 .badge { display: inline-flex; align-items: center; gap: 10px; padding: 7px 16px 7px 14px; border-radius: 99px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: .9rem; }
 .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 rgba(var(--accent-rgb), .7); animation: pulse 2s infinite; }
 @keyframes pulse { 70% { box-shadow: 0 0 0 10px rgba(var(--accent-rgb), 0); } 100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0); } }
-.hero__title { font-size: clamp(2.6rem, calc(7vw * var(--scale)), 5.8rem); line-height: 1.15; margin: 22px auto 30px; max-width: 9.6em; }
+.hero__title { font-size: clamp(2.6rem, calc(min(7vw, 9vh) * var(--scale)), 5.4rem); line-height: 1.15; margin: 22px auto 30px; max-width: 9.6em; }
 /* the last word (the highlighted one) always gets its own line, so the title keeps the same height whichever font is showing */
 html[lang="ar"] .hero__title .word:last-child:not(:first-child) { display: block; width: max-content; margin-inline: auto; }
 .hero__title .word:last-child > span { padding-bottom: .3em; margin-bottom: -.3em; background: linear-gradient(100deg, var(--fg), var(--accent-ink, var(--accent)) 60%, var(--fg)); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 6s ease-in-out infinite; }
@@ -175,10 +176,10 @@ html[lang="ar"] .hero__title .word:last-child:not(:first-child) { display: block
 .hero__scroll span { position: absolute; left: 50%; top: 8px; width: 4px; height: 8px; margin-left: -2px; border-radius: 4px; background: var(--fg); animation: wheel 1.8s var(--ease) infinite; }
 @keyframes wheel { 0% { transform: translateY(0); opacity: 1; } 80% { transform: translateY(14px); opacity: 0; } 100% { opacity: 0; } }
 .no-anim .lg-stroke { stroke-dashoffset: 0 !important; opacity: .35; }
-.no-anim .lg-fill { opacity: .2 !important; }
+.no-anim .lg-fill { opacity: .5 !important; }
 @media (max-width: 760px) {
   .hero { padding-top: 110px; }
-  .hero__logo { margin: 18px 0 40px; }
+  .hero__logo { margin: 0 0 18px; width: min(70vw, 23vh); }
   .hero__scroll { display: none; }
 }
 
@@ -585,9 +586,9 @@ html[data-theme="dark"] .hero__title .word:last-child > span { background-image:
 .lg-runner__halo { fill: var(--accent); opacity: .25; filter: blur(10px); }
 @keyframes lgRunnerIn { to { opacity: 1; } }
 /* map of Iraq behind the logo: the border draws itself, a light travels along it, Baghdad pulses */
-.hero__logo .iraq { position: absolute; inset: auto; left: 14.0%; top: -25.2%; width: 72%; height: auto; aspect-ratio: 1080 / 1096; overflow: visible; pointer-events: none; z-index: -1; }
+.hero__logo .iraq { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 0; }
 .iq-fill { fill: url(#iqFill); opacity: 0; }
-.iq-line { fill: none; stroke: url(#iqStroke); stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; opacity: .55; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.iq-line { fill: none; stroke: url(#iqStroke); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linejoin: round; opacity: .8; stroke-dasharray: 1; stroke-dashoffset: 1; }
 .iq-flow { fill: none; stroke: var(--accent); stroke-width: 2.6; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-dasharray: 3 97; stroke-dashoffset: 100; opacity: 0; filter: drop-shadow(0 0 4px rgba(var(--accent-rgb), .9)); }
 .iq-city { opacity: 0; }
 .iq-dot { fill: var(--accent); }
