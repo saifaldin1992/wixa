@@ -33,6 +33,16 @@
       instagram: "", x: "", linkedin: "", facebook: "",
     },
     partners_style: "grid",
+    iraq_map_size: 100,
+    // search engines & link previews (edited in the dashboard → البحث والمشاركة)
+    seo: {
+      title_ar: "ويكسا — شركة برمجة وتطوير مواقع وتطبيقات في العراق",
+      title_en: "WIXA — Websites, apps & software development in Iraq",
+      description_ar: "ويكسا شركة تقنية تصمم وتطور المواقع والمنصات الإلكترونية وتطبيقات الجوال والأنظمة الإدارية المخصصة في العراق — من الفكرة حتى التشغيل.",
+      description_en: "WIXA designs and builds websites, digital platforms, mobile apps and custom business systems in Iraq — from idea to launch.",
+      keywords: "ويكسا, WIXA, تصميم مواقع, تطوير تطبيقات, برمجة أنظمة, شركة برمجة في العراق, ERP, منصات إلكترونية",
+      icon_url: "", og_image: "", google_verification: "", bing_verification: "", index: true,
+    },
     sections: { iraq_map: true, story: true, projects: true, services: true, process: true, stats: false, testimonials: true, calculator: true, partners: true, contact: true },
     // Cost estimator. Prices are in USD and are only indicative ranges — review them from the dashboard.
     calculator: {

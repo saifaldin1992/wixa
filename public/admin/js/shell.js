@@ -7,6 +7,8 @@ import { viewContent } from "./views/content.js";
 import { viewList } from "./views/lists.js";
 import { viewMessages } from "./views/messages.js";
 import { viewOverview } from "./views/overview.js";
+import { viewSeo } from "./views/seo.js";
+import { viewStatus } from "./views/status.js";
 
 // ---------------- shell / router ----------------
 export const VIEWS = {
@@ -17,6 +19,8 @@ export const VIEWS = {
   services: { title: "الخدمات", sub: "الخدمات التي تظهر في الموقع", render: () => viewList("services") },
   partners: { title: "الشركاء", sub: "شعارات العملاء والشركاء", render: () => viewList("partners") },
   testimonials: { title: "آراء العملاء", sub: "بطاقات الآراء المتحركة في الموقع", render: () => viewList("testimonials") },
+  seo: { title: "البحث والمشاركة", sub: "كيف يظهر موقعك في Google وعند مشاركة الرابط", render: viewSeo },
+  status: { title: "الاتصالات", sub: "النطاق والاستضافة وقاعدة البيانات والبريد والكود — فحص مباشر", render: viewStatus },
   messages: { title: "الرسائل", sub: "رسائل نموذج التواصل", render: viewMessages },
   account: { title: "الحساب", sub: "بيانات الدخول والأمان", render: viewAccount },
 };
@@ -38,7 +42,7 @@ export function setupShell() {
 export async function route() {
   const name = location.hash.slice(1) || "overview";
   const v = VIEWS[name] || VIEWS.overview;
-  if (current && ["appearance", "content"].includes(current) && !["appearance", "content"].includes(name) && isDirty()) {
+  if (current && ["appearance", "content", "seo"].includes(current) && !["appearance", "content", "seo"].includes(name) && isDirty()) {
     if (!(await confirmBox("لديك تغييرات غير محفوظة", "هل تريد المغادرة دون حفظ؟", "مغادرة"))) { history.replaceState(null, "", `#${current}`); return; }
     setSettings(merge(DEFAULTS, JSON.parse(savedJSON)));
   }

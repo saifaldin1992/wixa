@@ -9,6 +9,10 @@
 # Images and brand files change rarely: cache for a month in browsers and at the edge.
 /img/*
   Cache-Control: public, max-age=2592000, stale-while-revalidate=86400
+/icons/*
+  Cache-Control: public, max-age=86400
+/favicon.*
+  Cache-Control: public, max-age=86400
 /og.jpg
   Cache-Control: public, max-age=604800
 

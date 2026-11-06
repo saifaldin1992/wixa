@@ -328,3 +328,31 @@ html[dir=rtl] .bar__top span:first-child { direction: rtl; }
 }
 .colors > * { min-width: 0; }
 @media (max-width: 420px) { .colors { grid-template-columns: 1fr; } }
+
+/* search & sharing */
+.seo, .conns { display: grid; gap: 16px; }
+.seo__media { gap: 16px; }
+.gpreview { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; font-family: Arial, "Segoe UI", sans-serif; direction: rtl; }
+.g__site { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.g__site img { width: 28px; height: 28px; border-radius: 50%; padding: 4px; background: #F1F3F4; object-fit: contain; }
+.g__site b { display: block; font-size: 14px; color: #202124; font-weight: 400; } .g__site span { font-size: 12px; color: #4D5156; }
+.g__title { display: block; color: #1A0DAB; font-size: 20px; line-height: 1.35; margin-bottom: 4px; }
+.g__desc { margin: 0; color: #4D5156; font-size: 14px; line-height: 1.6; }
+.steps { margin: 0 0 14px; padding-inline-start: 20px; display: grid; gap: 8px; line-height: 1.8; }
+.steps code, .conn code { background: var(--bg); padding: 1px 6px; border-radius: 6px; font-size: 12.5px; }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.checks li { padding: 10px 12px; border-radius: 10px; background: var(--bg); font-size: 14px; }
+.checks li.ok { color: var(--ok); } .checks li.warn { color: var(--warn); }
+.checks li a { color: var(--brand); }
+/* connections */
+.conns { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); margin-bottom: 16px; }
+.conn { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow); }
+.conn__head { display: flex; gap: 12px; align-items: center; }
+.conn__head h3 { margin: 0; font-size: 16px; } .conn__head p { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); }
+.conn__ico { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; background: var(--muted); }
+.conn--ok .conn__ico { background: var(--ok); } .conn--warn .conn__ico { background: var(--warn); } .conn--err .conn__ico { background: var(--danger); } .conn--info .conn__ico { background: var(--brand); }
+.conn dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; font-size: 13px; }
+.conn dt { color: var(--muted); } .conn dd { margin: 0; overflow-wrap: anywhere; }
+.conn .b { align-self: flex-start; margin-top: auto; }
+.conn-sum { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.conn-sum h3 { margin: 0 0 4px; } .conn-sum p { margin: 0; }

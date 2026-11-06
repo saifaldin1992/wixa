@@ -589,7 +589,7 @@ html[data-theme="dark"] .hero__title .word:last-child > span { background-image:
 /* map of Iraq behind the logo: the border draws itself, a light travels along it, Baghdad pulses */
 /* the map of Iraq sits right under the badge, behind the title and subtitle */
 .hero__stage { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; isolation: isolate; }
-.hero__stage .iraq { position: absolute; left: 50%; top: 4px; width: min(530px, 92vw); height: auto; aspect-ratio: 1080 / 1096; transform: translateX(-50%); overflow: visible; pointer-events: none; z-index: -1; opacity: .5; -webkit-mask-image: linear-gradient(#000 45%, transparent 72%); mask-image: linear-gradient(#000 45%, transparent 72%); }
+.hero__stage .iraq { position: absolute; left: 50%; top: 4px; width: calc(min(530px, 92vw) * var(--map-scale, 1)); height: auto; aspect-ratio: 1080 / 1096; transform: translateX(-50%); overflow: visible; pointer-events: none; z-index: -1; opacity: .5; -webkit-mask-image: linear-gradient(#000 45%, transparent 72%); mask-image: linear-gradient(#000 45%, transparent 72%); }
 .iraq[hidden] { display: none; }
 .iq-fill { fill: url(#iqFill); opacity: 0; }
 .iq-line { fill: none; stroke: url(#iqStroke); stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; opacity: .55; stroke-dasharray: 1; stroke-dashoffset: 1; }
@@ -677,4 +677,25 @@ html[dir="rtl"] .partners__track { animation-name: tstScrollRtl; }
 .partners__track .partner { width: clamp(130px, 22vw, 190px); aspect-ratio: 16/9; padding: 14px 20px; margin: 0; border-radius: calc(var(--radius) * .6); flex: none; }
 .partners__track .partner img { max-height: 44px; }
 .no-anim .partners__track { animation: none; flex-wrap: wrap; justify-content: center; width: auto; }
+
+/* "How we work": the line between the numbers becomes the WIXA wave */
+.process__line { height: 16px; top: 26px; border-radius: 0; background: rgba(var(--fg-rgb), .2);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 16'%3E%3Cpath d='M0 8 C 8 1, 16 1, 24 8 S 40 15, 48 8' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x center / 48px 16px; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 16'%3E%3Cpath d='M0 8 C 8 1, 16 1, 24 8 S 40 15, 48 8' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x center / 48px 16px; }
+.process__line span { border-radius: 0; }
+@media (max-width: 860px) {
+  .process__line { width: 16px; height: auto; top: 0; inset-inline-start: calc(var(--gutter) + 26px);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 48'%3E%3Cpath d='M8 0 C 1 8, 1 16, 8 24 S 15 40, 8 48' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") repeat-y center / 16px 48px; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 48'%3E%3Cpath d='M8 0 C 1 8, 1 16, 8 24 S 15 40, 8 48' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") repeat-y center / 16px 48px; }
+}
+
+/* story cards: sized to match the rest of the site (bigger type and illustration on tablets and computers) */
+@media (min-width: 600px) {
+  .story__list { max-width: var(--max); gap: 16px; }
+  .story-item, .story-item.in { padding: clamp(22px, 3vw, 34px) clamp(22px, 3.5vw, 44px); gap: clamp(20px, 4vw, 48px); }
+  .story-item .story-item__art, .story-item:nth-child(even) .story-item__art { width: clamp(130px, 17vw, 220px); height: clamp(100px, 12vw, 160px); }
+  .story-item h3 { font-size: clamp(1.5rem, calc(2.8vw * var(--scale)), 2.4rem); margin: 4px 0 10px; }
+  .story-item p { font-size: clamp(1rem, 1.5vw, 1.18rem); }
+  .story-item__num { font-size: .95rem; }
+}
+/* hero: never taller than it needs to be on tall tablet screens */
+@media (min-width: 761px) { .hero { min-height: min(100svh, 920px); } }
 

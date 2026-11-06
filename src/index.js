@@ -84,12 +84,33 @@ async function handleHome(request, env, ctx) {
   const safe = data.replace(/</g, "\\u003c");
   // Put the hero text in the HTML itself (same markup the script builds), so the first paint
   // already has it and nothing moves when the script runs.
-  let hero = {}, mapOn = true;
-  try { const st = JSON.parse(data)?.settings; hero = st?.content?.ar || {}; mapOn = st?.sections?.iraq_map !== false; } catch {}
+  let hero = {}, mapOn = true, seo = {};
+  try { const st = JSON.parse(data)?.settings; hero = st?.content?.ar || {}; mapOn = st?.sections?.iraq_map !== false; seo = st?.seo || {}; } catch {}
+  const origin = new URL(request.url).origin;
+  const abs = (u) => (/^https?:\/\//.test(u) ? u : `${origin}${u.startsWith("/") ? "" : "/"}${u}`);
+  const attr = (sel, name, val) => [sel, { element: (el) => { if (val) el.setAttribute(name, val); } }];
+  const title = seo.title_ar, desc = seo.description_ar, img = seo.og_image ? abs(seo.og_image) : "";
+  const headTags = [
+    seo.google_verification && `<meta name="google-site-verification" content="${esc(seo.google_verification)}">`,
+    seo.bing_verification && `<meta name="msvalidate.01" content="${esc(seo.bing_verification)}">`,
+    seo.index === false && `<meta name="robots" content="noindex, nofollow">`,
+  ].filter(Boolean).join("");
   const words = (t) => String(t).split(/\s+/).filter(Boolean).map((w, i) => `<span class="word"><span style="transition-delay:${i * 70}ms">${esc(w)}</span></span>`).join(" ");
   const fill = (key, html) => ({ element: (el) => { if (hero[key]) el.setInnerContent(html ? words(hero[key]) : hero[key], { html }); } });
   const res = new HTMLRewriter()
-    .on("head", { element: (el) => el.append(`<script id="wixa-data" type="application/json">${safe}</script>`, { html: true }) })
+    .on("head", { element: (el) => el.append(`${headTags}<script id="wixa-data" type="application/json">${safe}</script>`, { html: true }) })
+    .on("title", { element: (el) => { if (title) el.setInnerContent(title); } })
+    .on(...attr('meta[name="description"]', "content", desc))
+    .on(...attr('meta[name="keywords"]', "content", seo.keywords))
+    .on(...attr('meta[property="og:title"]', "content", title))
+    .on(...attr('meta[name="twitter:title"]', "content", title))
+    .on(...attr('meta[property="og:description"]', "content", desc))
+    .on(...attr('meta[name="twitter:description"]', "content", desc))
+    .on(...attr('meta[property="og:image"]', "content", img))
+    .on(...attr('meta[name="twitter:image"]', "content", img))
+    .on(...attr('link[rel="icon"][type="image/svg+xml"]', "href", seo.icon_url))
+    .on(...attr('link[rel="icon"][sizes]', "href", seo.icon_url))
+    .on(...attr('link[rel="apple-touch-icon"]', "href", seo.icon_url))
     .on("#heroTitle", fill("hero_title", true))
     .on("svg.iraq", { element: (el) => { if (!mapOn) el.remove(); } })
     .on('[data-c="hero_badge"]', fill("hero_badge", false))
@@ -132,12 +153,19 @@ const rpc = (env, fn, p) => sb(env, `rpc/${fn}`, { method: "POST", body: JSON.st
 // Counts only this environment's public pages: the dashboard itself (/admin) is excluded.
 // Only signed-in admins (checked against Supabase with their own session) can read it;
 // the Cloudflare token stays on the server.
-async function handleAdminStats(request, env, url) {
+// Admin-only endpoints: the caller's own Supabase session must belong to an admin.
+async function adminSession(request, env) {
   const auth = request.headers.get("authorization") || "";
-  if (!auth.startsWith("Bearer ")) return json({ error: "unauthorized" }, 401);
+  if (!auth.startsWith("Bearer ")) return { error: json({ error: "unauthorized" }, 401) };
   const asUser = (path, init = {}) => fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, { ...init, headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, authorization: auth, "content-type": "application/json", ...(init.headers || {}) } });
   const adm = await asUser("rpc/is_admin", { method: "POST", body: "{}" });
-  if (!adm.ok || (await adm.json()) !== true) return json({ error: "forbidden" }, 403);
+  if (!adm.ok || (await adm.json()) !== true) return { error: json({ error: "forbidden" }, 403) };
+  return { asUser };
+}
+
+async function handleAdminStats(request, env, url) {
+  const { error, asUser } = await adminSession(request, env);
+  if (error) return error;
   if (!env.CF_ANALYTICS_TOKEN || !env.CF_SITE_TAG) return json({ error: "analytics_not_configured" }, 503);
 
   const days = Math.min(90, Math.max(1, parseInt(url.searchParams.get("days") || "30", 10) || 30));
@@ -196,6 +224,82 @@ async function handleAdminStats(request, env, url) {
     referrers: rows(a.refs, (x) => x.dimensions.refererHost, (x) => x.sum.visits),
     speed: speedReport(a.vitals?.[0], a.load?.[0]),
   }, 200, { "cache-control": "private, max-age=60" });
+}
+
+// ---------------------------------------------------------------- GET /api/admin/status
+// Live check of everything the site is connected to, for the dashboard's "Connections" page.
+async function handleAdminStatus(request, env, ctx) {
+  const { error } = await adminSession(request, env);
+  if (error) return error;
+  const host = new URL(request.url).host;
+  const staging = env.SITE_ENV === "staging";
+  const acc = env.CF_ACCOUNT_ID;
+  const timed = (p, ms = 6000) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
+  const code = (v) => `<code dir="ltr">${esc(v)}</code>`;
+  const fmtDate = (t) => (t ? new Date(t).toISOString().replace("T", " ").slice(0, 16) + " UTC" : "—");
+
+  const [ver, supa, resend, analytics] = await Promise.allSettled([
+    timed(env.ASSETS.fetch(new Request(new URL("/build/version.json", request.url))).then((r) => (r.ok ? r.json() : null))),
+    timed(Promise.all([
+      fetch(`${env.SUPABASE_URL}/auth/v1/health`, { headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY } }).then((r) => r.ok),
+      sb(env, "site_settings?select=updated_at&id=eq.1").then((r) => (r.ok ? r.json() : null)),
+    ])),
+    env.RESEND_API_KEY ? timed(fetch("https://api.resend.com/domains", { headers: { authorization: `Bearer ${env.RESEND_API_KEY}` } }).then(async (r) => ({ status: r.status, body: r.ok ? await r.json() : null }))) : Promise.resolve(null),
+    env.CF_ANALYTICS_TOKEN ? timed(fetch("https://api.cloudflare.com/client/v4/graphql", {
+      method: "POST", headers: { authorization: `Bearer ${env.CF_ANALYTICS_TOKEN}`, "content-type": "application/json" },
+      body: JSON.stringify({ query: "query($a: String!) { viewer { accounts(filter: {accountTag: $a}) { accountTag } } }", variables: { a: acc } }),
+    }).then((r) => r.json())) : Promise.resolve(null),
+  ]);
+  const v = ver.status === "fulfilled" ? ver.value : null;
+  const site = JSON.parse(await getSiteData(env, ctx));
+  const seo = site.settings?.seo || {};
+  const items = [];
+
+  items.push({ name: "النطاق", role: "عنوان موقعك على الإنترنت", state: "ok",
+    rows: [["العنوان", code(host)], ["إدارة النطاق (DNS)", "Cloudflare"], ["الاتصال الآمن", "HTTPS مفعّل"], ["عناوين أخرى", staging ? code("wixa.dev") + " (الرئيسية)" : code("www.wixa.dev") + " · " + code("staging.wixa.dev") + " (تجريبية)"]],
+    link: `https://dash.cloudflare.com/${acc}/wixa.dev/dns/records`, linkText: "إعدادات النطاق" });
+
+  items.push({ name: "Cloudflare — الاستضافة", role: "يشغّل الموقع ويوزّعه من أقرب خادم للزائر", state: "ok",
+    rows: [["الخدمة", `Workers · ${code(staging ? "wixa-staging" : "wixa")}`], ["آخر نشر", fmtDate(env.CF_VERSION?.timestamp)], ["رقم النسخة", env.CF_VERSION?.id ? code(env.CF_VERSION.id.slice(0, 8)) : "—"], ["حماية النموذج", env.TURNSTILE_SECRET ? "Turnstile مفعّل" : "غير مفعّلة"]],
+    link: `https://dash.cloudflare.com/${acc}/workers/services/view/${staging ? "wixa-staging" : "wixa"}/production`, linkText: "لوحة Cloudflare" });
+
+  items.push({ name: "GitHub — الكود", role: "يحفظ كود الموقع؛ كل تحديث يُنشر تلقائياً", state: v?.commit ? "ok" : "info",
+    rows: [["المستودع", code("saifaldin1992/wixa")], ["الفرع", code(v?.branch || (staging ? "staging" : "main"))], ["آخر تحديث", v?.commit ? `${code(v.commit.slice(0, 7))} · ${esc(v.message || "")}` : "—"], ["وقت البناء", fmtDate(v?.built_at)]],
+    link: v?.commit ? `https://github.com/saifaldin1992/wixa/commit/${v.commit}` : "https://github.com/saifaldin1992/wixa", linkText: "فتح على GitHub" });
+
+  const sOk = supa.status === "fulfilled" && supa.value[0] && Array.isArray(supa.value[1]);
+  const ref = (env.SUPABASE_URL || "").match(/https:\/\/([^.]+)/)?.[1] || "";
+  items.push({ name: "Supabase — قاعدة البيانات", role: "المحتوى والرسائل وحساب الدخول", state: sOk ? "ok" : "err",
+    rows: [["المشروع", code(ref)], ["الحالة", sOk ? "متصلة وتعمل" : "تعذّر الاتصال"], ["آخر حفظ للمحتوى", sOk ? fmtDate(supa.value[1][0]?.updated_at) : "—"]],
+    link: `https://supabase.com/dashboard/project/${ref}`, linkText: "لوحة Supabase" });
+
+  let rState = "err", rRows = [["المفتاح", "غير مضاف"]];
+  if (env.RESEND_API_KEY && resend.status === "fulfilled" && resend.value) {
+    const { status, body } = resend.value;
+    const dom = body?.data?.find?.((x) => x.name === "wixa.dev");
+    if (dom) { rState = dom.status === "verified" ? "ok" : "warn"; rRows = [["النطاق", `${code("wixa.dev")} · ${dom.status === "verified" ? "موثّق" : esc(dom.status)}`]]; }
+    else if (status === 401 || status === 403) { rState = "ok"; rRows = [["المفتاح", "مفتاح إرسال فقط (آمن)"]]; }
+    else { rState = "warn"; rRows = [["الحالة", `رد غير متوقع (${status})`]]; }
+  } else if (env.RESEND_API_KEY) { rState = "warn"; rRows = [["الحالة", "لم يرد في الوقت المحدد"]]; }
+  const to = env.NOTIFY_EMAIL || "";
+  rRows.push(["المرسِل", code("notify@wixa.dev")], ["التنبيهات تصل إلى", to ? code(to.replace(/^(.{2}).*(@.*)$/, "$1•••$2")) : "غير محدد"]);
+  items.push({ name: "Resend — البريد الصادر", role: "يرسل لك تنبيه كل رسالة جديدة من الموقع", state: rState, rows: rRows, link: "https://resend.com/domains", linkText: "لوحة Resend" });
+
+  items.push({ name: "البريد الوارد", role: "عناوين الشركة تُحوَّل إلى بريدك", state: "info",
+    rows: [["العناوين", `${code("info@")} ${code("sales@")} ${code("support@")}`], ["الخدمة", "Cloudflare Email Routing"], ["يُحوَّل إلى", "Gmail الخاص بالشركة"]],
+    link: `https://dash.cloudflare.com/${acc}/wixa.dev/email/routing/overview`, linkText: "إعدادات البريد" });
+
+  const aOk = analytics.status === "fulfilled" && analytics.value?.data?.viewer?.accounts?.length > 0;
+  items.push({ name: "Cloudflare — الإحصائيات", role: "عدد الزيارات وسرعة الموقع في «نظرة عامة»", state: aOk ? "ok" : "err",
+    rows: [["الخدمة", "Web Analytics"], ["الحالة", aOk ? "متصلة" : env.CF_ANALYTICS_TOKEN ? "المفتاح لا يعمل" : "المفتاح غير مضاف"]],
+    link: `https://dash.cloudflare.com/${acc}/web-analytics`, linkText: "الإحصائيات في Cloudflare" });
+
+  const gState = staging ? "info" : seo.index === false ? "err" : seo.google_verification ? "ok" : "warn";
+  items.push({ name: "Google — البحث", role: "ظهور موقعك في نتائج البحث", state: gState,
+    rows: [["الفهرسة", staging ? "متوقفة عمداً (نسخة تجريبية)" : seo.index === false ? "متوقفة" : "مسموحة"], ["Search Console", seo.google_verification ? "مربوط برمز تحقق" : "غير مربوط بعد"], ["خريطة الموقع", code("/sitemap.xml")]],
+    link: "https://search.google.com/search-console", linkText: "Google Search Console" });
+
+  return json({ env: env.SITE_ENV || "production", checked_at: new Date().toISOString(), items }, 200, { "cache-control": "no-store" });
 }
 
 // Core Web Vitals from real visitors (75th percentile, the value Google uses).
@@ -290,6 +394,7 @@ export default {
           });
         case "POST /api/track": return new Response(null, { status: 204 }); // replaced by Cloudflare Web Analytics
         case "GET /api/admin/stats": return await handleAdminStats(request, env, url);
+        case "GET /api/admin/status": return await handleAdminStatus(request, env, ctx);
         case "POST /api/contact": return await handleContact(request, env, ctx);
         case "GET /api/config":
           // Public values the admin dashboard needs to talk to Supabase.
@@ -301,11 +406,14 @@ export default {
             headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" },
           });
         }
-        case "GET /robots.txt":
-          // Keep the staging copy out of search engines.
-          return new Response(env.SITE_ENV === "staging" ? "User-agent: *\nDisallow: /\n" : "User-agent: *\nDisallow: /admin/\nSitemap: https://wixa.dev/sitemap.xml\n", {
-            headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" },
+        case "GET /robots.txt": {
+          // Keep the staging copy (and the site, if indexing is switched off in the dashboard) out of search engines.
+          let indexOff = false;
+          try { indexOff = JSON.parse(await getSiteData(env, ctx))?.settings?.seo?.index === false; } catch {}
+          return new Response(env.SITE_ENV === "staging" || indexOff ? "User-agent: *\nDisallow: /\n" : "User-agent: *\nDisallow: /admin/\nSitemap: https://wixa.dev/sitemap.xml\n", {
+            headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=300" },
           });
+        }
         case "GET /health": {
           // the database check is remembered for 30 s, so a flood of /health calls never reaches Supabase
           if (Date.now() - health.at > 30_000) {
