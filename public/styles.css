@@ -121,7 +121,7 @@ section { position: relative; }
 .head__sub { color: var(--muted); font-size: 1.1rem; margin: 10px 0 0; max-width: 620px; }
 
 /* hero — centered, animated logo */
-.hero { min-height: 100svh; display: grid; place-items: center; text-align: center; padding: 104px var(--gutter) 72px; overflow: hidden; isolation: isolate; }
+.hero { min-height: 100svh; display: grid; place-items: center; text-align: center; padding: 88px var(--gutter) 64px; overflow: hidden; isolation: isolate; }
 .hero__bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
 .hero__grid { position: absolute; inset: 0; background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 64px 64px; opacity: .55; mask-image: radial-gradient(ellipse 55% 50% at 50% 40%, #000 10%, transparent 70%); -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 42%, #000 15%, transparent 75%); }
 .aurora { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .32; will-change: transform; }
@@ -163,7 +163,7 @@ html[data-theme="dark"] .hero__logo .lg-shine { mix-blend-mode: screen; }
 .badge { display: inline-flex; align-items: center; gap: 10px; padding: 7px 16px 7px 14px; border-radius: 99px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: .9rem; }
 .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 rgba(var(--accent-rgb), .7); animation: pulse 2s infinite; }
 @keyframes pulse { 70% { box-shadow: 0 0 0 10px rgba(var(--accent-rgb), 0); } 100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0); } }
-.hero__title { font-size: clamp(2.6rem, calc(7vw * var(--scale)), 5.8rem); line-height: 1.15; margin: 22px auto 30px; max-width: 9.6em; }
+.hero__title { font-size: clamp(2.6rem, calc(7vw * var(--scale)), 5.8rem); line-height: 1.15; margin: 40px auto 30px; max-width: 9.6em; }
 /* the last word (the highlighted one) always gets its own line, so the title keeps the same height whichever font is showing */
 html[lang="ar"] .hero__title .word:last-child:not(:first-child) { display: block; width: max-content; margin-inline: auto; }
 .hero__title .word:last-child > span { padding-bottom: .3em; margin-bottom: -.3em; background: linear-gradient(100deg, var(--fg), var(--accent-ink, var(--accent)) 60%, var(--fg)); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 6s ease-in-out infinite; }
@@ -587,7 +587,7 @@ html[data-theme="dark"] .hero__title .word:last-child > span { background-image:
 /* map of Iraq behind the logo: the border draws itself, a light travels along it, Baghdad pulses */
 /* the map of Iraq sits right under the badge, behind the title and subtitle */
 .hero__stage { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; isolation: isolate; }
-.hero__stage .iraq { position: absolute; left: 50%; top: 4px; width: min(530px, 92vw); height: auto; aspect-ratio: 1080 / 1096; transform: translateX(-50%); overflow: visible; pointer-events: none; z-index: -1; opacity: .5; -webkit-mask-image: linear-gradient(#000 52%, transparent 82%); mask-image: linear-gradient(#000 52%, transparent 82%); }
+.hero__stage .iraq { position: absolute; left: 50%; top: 4px; width: min(530px, 92vw); height: auto; aspect-ratio: 1080 / 1096; transform: translateX(-50%); overflow: visible; pointer-events: none; z-index: -1; opacity: .5; -webkit-mask-image: linear-gradient(#000 45%, transparent 72%); mask-image: linear-gradient(#000 45%, transparent 72%); }
 .iraq[hidden] { display: none; }
 .iq-fill { fill: url(#iqFill); opacity: 0; }
 .iq-line { fill: none; stroke: url(#iqStroke); stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; opacity: .55; stroke-dasharray: 1; stroke-dashoffset: 1; }
@@ -612,30 +612,19 @@ html[data-theme="dark"] .iq-line { opacity: .7; }
 @media (max-width: 760px) {
   .hero { min-height: auto; padding-top: 104px; padding-bottom: 56px; }
 }
-/* story: the three points side by side on wide screens (art above text) */
-@media (min-width: 900px) {
-  .story__list { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(20px, 3vw, 40px); }
-  .story-item { grid-template-columns: 1fr; gap: 18px; padding: 32px 0 0; text-align: center; align-content: start; }
-  .story-item:nth-child(even) .story-item__art { order: -1; }
-  .story-item__art { order: -1; height: 170px; }
-  .story-item h3 { font-size: clamp(1.5rem, calc(2.2vw * var(--scale)), 2rem); }
-  .story-item p { margin-inline: auto; font-size: 1.02rem; }
-}
 /* phones: smaller illustrations, two project types per row in the calculator, tighter steps */
 @media (max-width: 760px) {
-  .story-item__art { height: 130px; }
-  .story-item { padding: 22px 0; }
   .process__steps { gap: 20px; }
 }
 @media (max-width: 480px) {
   .calc__types { grid-template-columns: 1fr 1fr; }
   .ctype { flex-direction: column; text-align: center; gap: 8px; padding: 12px 8px; }
 }
-/* phones: the three story points become swipeable cards (same content, a third of the height) */
-@media (max-width: 760px) {
-  .story__list { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-inline: calc(var(--gutter) * -1); padding: 4px var(--gutter) 8px; }
-  .story__list::-webkit-scrollbar { display: none; }
-  .story-item { flex: 0 0 84%; scroll-snap-align: center; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(var(--surface-rgb), .6); padding: 22px 18px; }
-  .story-item h3 { font-size: 1.6rem; }
-  .story-item p { font-size: 1rem; }
-}
+
+/* story: three slim rectangular cards, one above the other (small illustration beside the text) */
+.story__list { display: grid; gap: 14px; max-width: 980px; margin-inline: auto; }
+.story-item, .story-item.in { grid-template-columns: auto 1fr; gap: clamp(16px, 3vw, 36px); align-items: center; padding: clamp(14px, 2.2vw, 22px) clamp(16px, 3vw, 32px); border: 1px solid var(--line); border-top: 1px solid var(--line); border-radius: var(--radius); background: rgba(var(--surface-rgb), .6); }
+.story-item .story-item__art, .story-item:nth-child(even) .story-item__art { order: 0; width: clamp(84px, 12vw, 150px); height: clamp(70px, 9vw, 112px); aspect-ratio: auto; }
+.story-item .story-item__text { text-align: start; }
+.story-item h3 { font-size: clamp(1.2rem, calc(2.1vw * var(--scale)), 1.9rem); margin: 2px 0 6px; }
+.story-item p { font-size: clamp(.92rem, 1.2vw, 1.05rem); line-height: 1.7; max-width: none; margin: 0; }
