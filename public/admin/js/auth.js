@@ -1,5 +1,5 @@
 /* Sign-in, two-step verification, password reset and entering the dashboard */
-import { $, sb, setUser, toast } from "./core.js";
+import { $, adminApi, rememberOwner, sb, setUser, toast } from "./core.js";
 import { loadSettings } from "./settings.js";
 import { route, setupShell } from "./shell.js";
 import { refreshMsgCount } from "./views/messages.js";
@@ -109,5 +109,6 @@ export async function enter(u) {
   $("#auth").hidden = true; $("#app").hidden = false;
   setupShell();
   route();
+  adminApi("integrations").then(rememberOwner).catch(() => {}); // keeps the real site visible to the owner during maintenance
   refreshMsgCount();
 }

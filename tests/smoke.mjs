@@ -45,6 +45,8 @@ try {
   check(bad.status === 422 || bad.status === 403, "contact form rejects invalid input", String(bad.status));
   const trap = await fetch(`${BASE}/api/contact`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ website: "spam" }) });
   check(trap.status === 200, "honeypot silently accepts bots", String(trap.status));
+  check((await fetch(`${BASE}/api/admin/integrations`)).status === 401, "integrations require sign-in");
+  check((await fetch(`${BASE}/api/admin/refresh`, { method: "POST" })).status === 401, "publish-now requires sign-in");
   const stats = await fetch(`${BASE}/api/admin/stats`);
   check(stats.status === 401, "admin stats require sign-in", String(stats.status));
   const home = await (await fetch(`${BASE}/`)).text();
@@ -93,12 +95,16 @@ try {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
     await ctx.route(/supabase-js/, (r) => r.fulfill({ body: readFileSync(new URL("./supabase-stub.js", import.meta.url)), contentType: "application/javascript" }));
     await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.fulfill({ body: "", contentType: "text/css" }));
+    // the Worker's admin endpoints would check the stand-in session against the real Supabase: answer them here
+    await ctx.route(/\/api\/admin\/integrations$/, (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({
+      alerts: { on: true, from_name: "WIXA" }, autoreply: { on: false, subject_ar: "", body_ar: "", subject_en: "", body_en: "" },
+      spam: { turnstile: true, blocked: "" }, tags: { ga4: "", meta_pixel: "", clarity: "", tiktok: "" }, maintenance: { on: false, message_ar: "", message_en: "", bypass: "" } }) }));
     const p = await ctx.newPage();
     const errors = [];
     p.on("pageerror", (e) => errors.push(e.message));
     await p.goto(`${BASE}/admin/`, { waitUntil: "load" });
     await p.waitForTimeout(1200);
-    for (const v of ["overview", "appearance", "content", "projects", "services", "partners", "testimonials", "messages", "seo", "account"]) {
+    for (const v of ["overview", "appearance", "content", "projects", "services", "partners", "testimonials", "messages", "seo", "integrations", "account"]) {
       await p.evaluate((h) => (location.hash = h), v);
       await p.waitForTimeout(600);
       const ok = await p.evaluate(() => document.querySelector("#view")?.children.length > 0);

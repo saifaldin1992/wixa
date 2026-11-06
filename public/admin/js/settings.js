@@ -1,5 +1,5 @@
 /* Site settings (load / save / unsaved changes) and the live preview */
-import { $, $$, DEFAULTS, I, merge, savedJSON, sb, setSaved, setSettings, settings, toast } from "./core.js";
+import { $, $$, DEFAULTS, I, merge, publishNow, savedJSON, sb, setSaved, setSettings, settings, toast } from "./core.js";
 import { route } from "./shell.js";
 
 // ---------------- settings ----------------
@@ -16,6 +16,7 @@ export async function saveSettings() {
   if (btn) btn.disabled = false;
   if (error) { toast(`فشل الحفظ: ${error.message}`, "err"); return; }
   setSaved(JSON.stringify(settings));
+  publishNow();
   markDirty(); toast("تم الحفظ ونُشرت التغييرات على الموقع ✓");
 }
 export function markDirty() {

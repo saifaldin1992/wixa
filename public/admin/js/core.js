@@ -49,3 +49,19 @@ export const I = {
   users: icon('<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-7 7-7s7 3 7 7M17 4a4 4 0 010 8M22 21c0-3-2-5.5-4-6.5"/>'), views: icon('<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
   mail: icon('<path d="M4 5h16v14H4z"/><path d="M4 6l8 7 8-7"/>'), reset: icon('<path d="M4 4v6h6M4 10a8 8 0 112 6"/>'), out: icon('<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/>'),
 };
+
+// ---------------- server endpoints (admins only; the Worker checks the session) ----------------
+export async function adminApi(path, method = "GET", body) {
+  const { data: ses } = await sb.auth.getSession();
+  const r = await fetch(`/api/admin/${path}`, { method, headers: { authorization: `Bearer ${ses.session?.access_token || ""}`, "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error(data.error || String(r.status)), { status: r.status, data });
+  return data;
+}
+// Show saved changes on the site at once (instead of within a minute). Never blocks or fails a save.
+export const publishNow = () => adminApi("refresh", "POST").catch(() => {});
+// While maintenance mode is on, this browser keeps seeing the real site (the Worker checks this cookie).
+export function rememberOwner(cfg) {
+  const t = cfg?.maintenance?.bypass;
+  if (t) document.cookie = `wixa-bypass=${t}; path=/; max-age=31536000; secure; samesite=lax`;
+}

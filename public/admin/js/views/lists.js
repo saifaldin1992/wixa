@@ -1,5 +1,5 @@
 /* Projects, services, partners and testimonials editors */
-import { $, $$, I, ICONS, cache, clone, closeModal, confirmBox, esc, openModal, sb, toast } from "../core.js";
+import { $, $$, cache, clone, closeModal, confirmBox, esc, I, ICONS, openModal, publishNow, sb, toast } from "../core.js";
 import { imageField } from "../fields.js";
 
 // ---------------- generic lists: projects / services / partners ----------------
@@ -69,21 +69,21 @@ export async function viewList(table) {
     const r = data.find((x) => x.id === b.dataset.pub);
     const { error } = await sb.from(table).update({ published: !r.published }).eq("id", r.id);
     if (error) return toast(error.message, "err");
-    toast(r.published ? "تم الإخفاء" : "تم النشر ✓"); viewList(table);
+    publishNow(); toast(r.published ? "تم الإخفاء" : "تم النشر ✓"); viewList(table);
   }));
   $$("[data-del]").forEach((b) => (b.onclick = async () => {
     const r = data.find((x) => x.id === b.dataset.del);
     if (!(await confirmBox(`حذف ${E.one}`, `هل تريد حذف "${E.title(r)}" نهائياً؟`, "حذف"))) return;
     const { error } = await sb.from(table).delete().eq("id", r.id);
     if (error) return toast(error.message, "err");
-    toast("تم الحذف"); viewList(table);
+    publishNow(); toast("تم الحذف"); viewList(table);
   }));
   $$("[data-mv]").forEach((b) => (b.onclick = async () => {
     const i = +b.dataset.i, j = i + +b.dataset.mv;
     const arr = [...data]; [arr[i], arr[j]] = [arr[j], arr[i]];
     const updates = arr.map((r, k) => ({ id: r.id, sort: k })).filter((u, k) => data.findIndex((r) => r.id === u.id) !== k || data[k].sort !== k);
     const results = await Promise.all(updates.map((u) => sb.from(table).update({ sort: u.sort }).eq("id", u.id)));
-    const err = results.find((r) => r.error); if (err) toast(err.error.message, "err");
+    const err = results.find((r) => r.error); if (err) toast(err.error.message, "err"); else publishNow();
     viewList(table);
   }));
 }
@@ -167,6 +167,6 @@ export function editItem(table, row) {
     else res = await sb.from(table).insert({ ...payload, sort: (cache[table]?.length || 0) });
     saveBtn.disabled = false;
     if (res.error) return toast(`فشل الحفظ: ${res.error.message}`, "err");
-    closeModal(); toast(row ? "تم حفظ التعديلات ✓" : `تمت إضافة ${E.one} ✓`); viewList(table);
+    publishNow(); closeModal(); toast(row ? "تم حفظ التعديلات ✓" : `تمت إضافة ${E.one} ✓`); viewList(table);
   };
 }

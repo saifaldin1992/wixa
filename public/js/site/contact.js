@@ -60,6 +60,7 @@ export function setupContact() {
         message: form.elements.message.value, services: svc ? [svc] : [], lang, website: form.elements.website.value, turnstile: turnstileToken() }) });
       if (!res.ok) throw new Error(res.status);
       form.reset(); status.className = "form__status ok"; status.textContent = ui.ok;
+      dispatchEvent(new Event("wixa:lead")); // counted by any analytics switched on in the dashboard
     } catch { status.className = "form__status err"; status.textContent = ui.err; }
     finally { btnS.disabled = false; resetTurnstile(); }
   });

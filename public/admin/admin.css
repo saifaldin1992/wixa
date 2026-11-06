@@ -357,3 +357,11 @@ html[dir=rtl] .bar__top span:first-child { direction: rtl; }
 .conn-sum { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
 .conn-sum h3 { margin: 0 0 4px; } .conn-sum p { margin: 0; }
 .fixes { border-color: color-mix(in srgb, var(--brand) 35%, var(--line)); background: color-mix(in srgb, var(--brand) 5%, var(--panel)); margin-bottom: 16px; }
+
+/* integrations page */
+.ints { display: grid; gap: 16px; max-width: 980px; }
+.ints .row-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.ints .hint { font-size: 12px; line-height: 1.6; }
+.ints code { font-size: 12px; background: var(--soft, rgba(91,33,182,.08)); padding: 1px 6px; border-radius: 6px; }
+.pill.warn { color: #B45309; background: color-mix(in srgb, #B45309 14%, transparent); }
+.pill:not(.ok):not(.warn) { color: var(--muted); background: color-mix(in srgb, var(--muted) 12%, transparent); }

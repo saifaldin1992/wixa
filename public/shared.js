@@ -28,7 +28,7 @@
     font: { family: "Alexandria", scale: 1, headingWeight: 800 },
     brand: { name_ar: "ويكسا", name_en: "WIXA", logo_url: "" },
     contact: {
-      email: "hello@wixa.tech", phone: "", whatsapp: "",
+      email: "info@wixa.dev", phone: "", whatsapp: "",
       address_ar: "", address_en: "",
       instagram: "", x: "", linkedin: "", facebook: "",
     },

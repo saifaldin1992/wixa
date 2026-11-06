@@ -30,7 +30,7 @@ function sb(env, path, init = {}) {
 }
 
 // ---------------------------------------------------------------- site content (cached)
-let memo = { at: 0, text: null }; // per-isolate copy
+let memo = { at: 0, checked: 0, text: null }; // per-isolate copy
 let health = { at: 0, supabase: "unknown" };
 
 async function loadFromSupabase(env) {
@@ -55,21 +55,23 @@ async function loadFromSupabase(env) {
 let refreshing = null;
 async function getSiteData(env, ctx) {
   const now = Date.now();
-  if (memo.text && now - memo.at < SITE_TTL * 1000) return memo.text;
+  if (memo.text && now - memo.checked < 5000 && now - memo.at < SITE_TTL * 1000) return memo.text;
 
   const cache = caches.default;
   const key = new Request(`https://wixa-cache.internal/site-data/${env.SITE_ENV || "production"}`);
   const refresh = () => (refreshing ??= loadFromSupabase(env)
     .then((text) => {
-      memo = { at: Date.now(), text };
+      memo = { at: Date.now(), checked: Date.now(), text };
       return cache.put(key, new Response(text, { headers: { "content-type": "application/json", "cache-control": "public, max-age=86400", "x-saved-at": String(Date.now()) } })).then(() => text);
     })
     .finally(() => { refreshing = null; }));
 
-  if (!memo.text) {
-    const hit = await cache.match(key);
-    if (hit) memo = { at: Number(hit.headers.get("x-saved-at")) || 0, text: await hit.text() };
+  const hit = await cache.match(key);
+  if (hit) {
+    const at = Number(hit.headers.get("x-saved-at")) || 0;
+    if (!memo.text || at > memo.at) memo = { at, checked: now, text: await hit.text() };
   }
+  memo.checked = now;
   if (memo.text) {
     if (now - memo.at >= SITE_TTL * 1000) ctx.waitUntil(refresh().catch((err) => console.error("site data refresh", err)));
     return memo.text;
@@ -80,6 +82,154 @@ async function getSiteData(env, ctx) {
     console.error("site data", err);
     return JSON.stringify({ env: env.SITE_ENV || "production", turnstile: env.TURNSTILE_SITE_KEY || "", settings: {}, projects: [], services: [], partners: [], testimonials: [] });
   }
+}
+
+// Reload the content from the database now and replace the shared copy at this location (dashboard "publish now").
+async function publishNow(env) {
+  const text = await loadFromSupabase(env);
+  memo = { at: Date.now(), checked: Date.now(), text };
+  await caches.default.put(new Request(`https://wixa-cache.internal/site-data/${env.SITE_ENV || "production"}`),
+    new Response(text, { headers: { "content-type": "application/json", "cache-control": "public, max-age=86400", "x-saved-at": String(Date.now()) } }));
+}
+
+// ---------------------------------------------------------------- integrations (private settings)
+// Set from the dashboard (Integrations page) and kept in the private Cloudflare store, never sent to visitors as a whole.
+const CONFIG_DEFAULTS = {
+  alerts: { on: true, from_name: "WIXA" },
+  autoreply: {
+    on: false,
+    subject_ar: "وصلتنا رسالتك — ويكسا",
+    body_ar: "أهلاً {name}،\n\nشكراً لتواصلك مع ويكسا. وصلتنا رسالتك وسيتواصل معك أحد أفراد فريقنا في أقرب وقت.\n\nمع التحية،\nفريق ويكسا",
+    subject_en: "We got your message — WIXA",
+    body_en: "Hi {name},\n\nThank you for contacting WIXA. We have received your message and a member of our team will get back to you soon.\n\nBest regards,\nThe WIXA team",
+  },
+  spam: { turnstile: true, blocked: "" },
+  tags: { ga4: "", meta_pixel: "", clarity: "", tiktok: "" },
+  maintenance: {
+    on: false,
+    message_ar: "نعمل على تحديث الموقع وسنعود قريباً. للتواصل العاجل راسلنا عبر البريد أو واتساب.",
+    message_en: "We are updating the site and will be back shortly. For anything urgent, reach us by email or WhatsApp.",
+    bypass: "",
+  },
+};
+const TAG_RULES = { ga4: /^G-[A-Z0-9]{4,15}$/, meta_pixel: /^\d{8,20}$/, clarity: /^[a-z0-9]{6,20}$/, tiktok: /^[A-Z0-9]{10,30}$/ };
+const deepMerge = (a, b) => {
+  const out = { ...a };
+  for (const [k, v] of Object.entries(b || {})) out[k] = v && typeof v === "object" && !Array.isArray(v) && a[k] && typeof a[k] === "object" ? deepMerge(a[k], v) : v;
+  return out;
+};
+let cfgMemo = { at: 0, v: null };
+async function getConfig(env) {
+  if (cfgMemo.v && Date.now() - cfgMemo.at < 15_000) return cfgMemo.v;
+  const raw = env.PRIVATE ? await env.PRIVATE.get("config", { type: "json", cacheTtl: 30 }).catch(() => null) : null;
+  cfgMemo = { at: Date.now(), v: deepMerge(CONFIG_DEFAULTS, raw || {}) };
+  return cfgMemo.v;
+}
+// Keep only known fields, with safe lengths and formats.
+function cleanConfig(prev, body) {
+  const str = (v, max) => String(v ?? "").replace(/\r/g, "").slice(0, max);
+  const next = deepMerge(prev, {});
+  const b = body || {};
+  if (b.alerts) next.alerts = { on: b.alerts.on !== false, from_name: str(b.alerts.from_name, 40).replace(/[<>"@,;\n]/g, "").trim() || "WIXA" };
+  if (b.autoreply) {
+    const a = b.autoreply, d = CONFIG_DEFAULTS.autoreply;
+    next.autoreply = { on: a.on === true,
+      subject_ar: str(a.subject_ar, 120).replace(/\n/g, " ").trim() || d.subject_ar, body_ar: str(a.body_ar, 2000).trim() || d.body_ar,
+      subject_en: str(a.subject_en, 120).replace(/\n/g, " ").trim() || d.subject_en, body_en: str(a.body_en, 2000).trim() || d.body_en };
+  }
+  if (b.spam) next.spam = { turnstile: b.spam.turnstile !== false, blocked: str(b.spam.blocked, 3000) };
+  if (b.tags) {
+    next.tags = {};
+    for (const [k, re] of Object.entries(TAG_RULES)) {
+      let v = str(b.tags[k], 40).trim();
+      if (k === "clarity") v = v.toLowerCase(); else if (k !== "meta_pixel") v = v.toUpperCase();
+      if (v && !re.test(v)) throw Object.assign(new Error("bad_tag"), { field: k });
+      next.tags[k] = v;
+    }
+  }
+  if (b.maintenance) {
+    const m = b.maintenance, d = CONFIG_DEFAULTS.maintenance;
+    next.maintenance = { on: m.on === true, message_ar: str(m.message_ar, 500).trim() || d.message_ar, message_en: str(m.message_en, 500).trim() || d.message_en,
+      bypass: prev.maintenance.bypass || crypto.randomUUID().replace(/-/g, "") };
+  }
+  return next;
+}
+async function saveConfig(env, cfg) {
+  await env.PRIVATE.put("config", JSON.stringify(cfg));
+  cfgMemo = { at: Date.now(), v: cfg };
+}
+
+// Analytics and ad pixels switched on in the dashboard: the extra hosts the page may load from.
+const TAG_HOSTS = {
+  ga4: { script: "https://www.googletagmanager.com", connect: "https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com", img: "https://*.google-analytics.com https://www.googletagmanager.com" },
+  meta_pixel: { script: "https://connect.facebook.net", connect: "https://www.facebook.com https://connect.facebook.net", img: "https://www.facebook.com" },
+  clarity: { script: "https://www.clarity.ms https://*.clarity.ms", connect: "https://*.clarity.ms https://c.bing.com", img: "https://*.clarity.ms https://c.bing.com" },
+  tiktok: { script: "https://analytics.tiktok.com", connect: "https://analytics.tiktok.com https://*.tiktok.com", img: "https://analytics.tiktok.com" },
+};
+function cspWithTags(tags) {
+  const on = Object.keys(TAG_HOSTS).filter((k) => tags[k]);
+  if (!on.length) return CSP;
+  const add = (kind) => on.map((k) => TAG_HOSTS[k][kind]).join(" ");
+  return CSP.replace("script-src 'self'", `script-src 'self' ${add("script")}`)
+    .replace("connect-src 'self'", `connect-src 'self' ${add("connect")}`)
+    .replace("img-src 'self'", `img-src 'self' ${add("img")}`);
+}
+
+const hasBypass = (request, cfg) => !!cfg.maintenance.bypass && (request.headers.get("cookie") || "").includes(`wixa-bypass=${cfg.maintenance.bypass}`);
+
+// "Back soon" page while maintenance mode is on (the owner, with the dashboard cookie, still sees the site).
+function maintenancePage(request, cfg, st) {
+  const lang = pickLang(request, st.default_lang);
+  const ar = lang === "ar";
+  const msg = cfg.maintenance[`message_${lang}`];
+  const c = st.contact || {};
+  const wa = String(c.whatsapp || "").replace(/\D/g, "");
+  const links = [c.email && `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`, wa && `<a href="https://wa.me/${wa}">${ar ? "واتساب" : "WhatsApp"}</a>`].filter(Boolean).join(" · ");
+  const html = `<!doctype html><html lang="${lang}" dir="${ar ? "rtl" : "ltr"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${ar ? "ويكسا — نعود قريباً" : "WIXA — Back soon"}</title><meta name="robots" content="noindex"><link rel="icon" href="/favicon.svg">
+<style>:root{color-scheme:light dark;--bg:#F7F5FB;--fg:#1B1530;--mut:#5E5873;--brand:#5B21B6}@media(prefers-color-scheme:dark){:root{--bg:#0F0B1A;--fg:#F1EEF8;--mut:#A9A3BC;--brand:#A574F1}}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;text-align:center;padding:24px;box-sizing:border-box}
+main{max-width:520px}img{width:84px;height:84px;margin-bottom:18px}h1{font-size:28px;margin:0 0 12px}p{color:var(--mut);line-height:1.9;margin:0 0 18px;font-size:16px}a{color:var(--brand);font-weight:600;text-decoration:none}</style></head>
+<body><main><img src="/icons/icon-192.png" alt="WIXA"><h1>${ar ? "نعود قريباً" : "Back soon"}</h1><p>${esc(msg)}</p>${links ? `<p>${links}</p>` : ""}</main></body></html>`;
+  return new Response(request.method === "HEAD" ? null : html, { status: 503, headers: { ...SECURITY_HEADERS, "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "retry-after": "3600" } });
+}
+
+// GET/PUT /api/admin/integrations — read or change the integrations (admins only)
+async function handleAdminIntegrations(request, env) {
+  const { error } = await adminSession(request, env);
+  if (error) return error;
+  if (!env.PRIVATE) return json({ error: "storage_not_configured" }, 503);
+  cfgMemo.at = 0; // always read the stored copy here
+  const cfg = await getConfig(env);
+  if (request.method === "GET") return json(cfg, 200, { "cache-control": "no-store" });
+  let body = {};
+  try { body = await request.json(); } catch {}
+  let next;
+  try { next = cleanConfig(cfg, body); } catch (e) { return json({ error: e.message, field: e.field }, 422); }
+  await saveConfig(env, next);
+  return json(next, 200, { "cache-control": "no-store" });
+}
+
+// POST /api/admin/integrations/test — send a sample alert or auto-reply to the alerts address
+async function handleAdminTest(request, env) {
+  const { error } = await adminSession(request, env);
+  if (error) return error;
+  let body = {};
+  try { body = await request.json(); } catch {}
+  const to = await notifyAddress(env);
+  if (!env.RESEND_API_KEY || !to) return json({ error: "email_not_configured" }, 503);
+  const cfg = await getConfig(env);
+  const sample = { name: "زائر تجريبي", email: to, phone: null, message: "هذه رسالة تجريبية من لوحة التحكم.", services: [], lang: body.lang === "en" ? "en" : "ar" };
+  const ok = body.kind === "autoreply" ? await sendAutoReply(env, cfg, sample, true) : await notifyOwner(env, sample, true);
+  return ok ? json({ ok: true, to }) : json({ error: "send_failed" }, 502);
+}
+
+// POST /api/admin/refresh — show the latest content on the site now
+async function handleAdminRefresh(request, env) {
+  const { error } = await adminSession(request, env);
+  if (error) return error;
+  try { await publishNow(env); } catch (e) { console.error("refresh", e); return json({ error: "refresh_failed" }, 502); }
+  return json({ ok: true });
 }
 
 // Cloudflare Web Analytics: privacy-friendly, cookie-less visit counting that never touches our database.
@@ -116,7 +266,12 @@ function pickLang(request, setting) {
 
 // GET / — static HTML with the content embedded (no flash of default text, one request per visit).
 async function handleHome(request, env, ctx) {
-  const [page, data] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx)]);
+  const [page, raw, cfg] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx), getConfig(env)]);
+  const data = cfg.spam.turnstile ? raw : raw.replace(/"turnstile":"[^"]*"/, '"turnstile":""');
+  const owner = hasBypass(request, cfg);
+  if (cfg.maintenance.on && !owner) { let st0 = {}; try { st0 = JSON.parse(data)?.settings || {}; } catch {} return maintenancePage(request, cfg, st0); }
+  const preview = new URL(request.url).searchParams.has("preview");
+  const tags = preview ? {} : Object.fromEntries(Object.entries(cfg.tags).filter(([, v]) => v));
   const safe = data.replace(/</g, "\\u003c");
   // Put the hero text in the HTML itself (same markup the script builds), so the first paint
   // already has it and nothing moves when the script runs.
@@ -159,7 +314,11 @@ async function handleHome(request, env, ctx) {
     .on("svg.iraq", { element: (el) => { if (!mapOn) el.remove(); } })
     .on('[data-c="hero_badge"]', fill("hero_badge", false))
     .on('.hero__sub[data-c="hero_sub"]', fill("hero_sub", false))
-    .on("body", { element: (el) => { if (!new URL(request.url).searchParams.has("preview")) el.append(beacon(env), { html: true }); } })
+    .on("body", { element: (el) => {
+      if (!preview) el.append(beacon(env), { html: true });
+      if (Object.keys(tags).length) el.append(`<script id="wixa-tags" type="application/json">${JSON.stringify(tags)}</script><script type="module" src="/build/tags.js"></script>`, { html: true });
+      if (cfg.maintenance.on && owner && !preview) el.append('<div style="position:fixed;inset:auto 12px 12px auto;z-index:99999;background:#B45309;color:#fff;padding:8px 14px;border-radius:10px;font:600 13px system-ui,Tahoma,sans-serif">وضع الصيانة مفعّل — الزوار يرون صفحة «نعود قريباً»</div>', { html: true });
+    } })
     .transform(page);
   const headers = new Headers(res.headers);
   headers.set("cache-control", "no-cache");
@@ -167,6 +326,7 @@ async function handleHome(request, env, ctx) {
   headers.set("content-language", lang);
   headers.delete("etag");
   for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v);
+  headers.set("content-security-policy", cspWithTags(tags));
   return new Response(res.body, { status: res.status, headers });
 }
 
@@ -427,10 +587,12 @@ async function handleAdminNotify(request, env) {
 
 // ---------------------------------------------------------------- POST /api/contact
 // Email the site owner about a new message (needs RESEND_API_KEY and NOTIFY_EMAIL secrets on the Worker).
-async function notifyOwner(env, row) {
-  if (!env.RESEND_API_KEY) return;
+async function notifyOwner(env, row, test = false) {
+  if (!env.RESEND_API_KEY) return false;
+  const cfg = await getConfig(env);
+  if (!cfg.alerts.on && !test) return false;
   const to = (await notifyAddress(env)) || ""; // dashboard setting (private store) or the NOTIFY_EMAIL secret
-  if (!to) return;
+  if (!to) return false;
   const staging = env.SITE_ENV === "staging";
   const admin = staging ? "https://staging.wixa.dev/admin/#messages" : "https://wixa.dev/admin/#messages";
   const wa = row.phone ? `https://wa.me/${row.phone.replace(/\D/g, "")}` : "";
@@ -450,9 +612,35 @@ async function notifyOwner(env, row) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
-    body: JSON.stringify({ from: "WIXA <notify@wixa.dev>", to: [to], reply_to: row.email, subject: `${staging ? "[تجريبي] " : ""}رسالة جديدة من ${row.name}`, html }),
+    body: JSON.stringify({ from: `${cfg.alerts.from_name} <notify@wixa.dev>`, to: [to], reply_to: row.email, subject: `${test ? "[اختبار] " : ""}${staging ? "[تجريبي] " : ""}رسالة جديدة من ${row.name}`, html }),
   });
   if (!res.ok) console.error("notify failed", res.status, await res.text());
+  return res.ok;
+}
+
+// Thank-you email to the visitor (switched on in the dashboard). The name is shortened and stripped of links,
+// so the form cannot be used to send someone else a message of the sender's choosing.
+async function sendAutoReply(env, cfg, row, test = false) {
+  if (!env.RESEND_API_KEY || (!cfg.autoreply.on && !test)) return false;
+  const lang = row.lang === "en" ? "en" : "ar";
+  const name = row.name.replace(/https?:\/\/\S+|www\.\S+|\S+\.(com|net|org|io|dev|me|ly|xyz)\S*/gi, "").replace(/[<>]/g, "").trim().slice(0, 40) || (lang === "ar" ? "بك" : "there");
+  const text = cfg.autoreply[`body_${lang}`].split("{name}").join(name);
+  let contact = "";
+  try { contact = JSON.parse(memo.text || (await loadFromSupabase(env)))?.settings?.contact?.email || ""; } catch {}
+  const site = env.SITE_ENV === "staging" ? "https://staging.wixa.dev" : "https://wixa.dev";
+  const html = `<div dir="${lang === "ar" ? "rtl" : "ltr"}" style="font-family:Tahoma,Arial,sans-serif;background:#F6F3F2;padding:24px">
+    <div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #ECE6E8">
+      <div style="background:#5B21B6;color:#fff;padding:18px 22px;font-size:18px;font-weight:bold">${lang === "ar" ? "ويكسا" : "WIXA"}</div>
+      <div style="padding:22px;color:#1A0E12;font-size:15px;line-height:1.9;white-space:pre-wrap">${esc(text)}</div>
+      <div style="padding:0 22px 20px"><a href="${site}" style="color:#5B21B6;text-decoration:none">${site.replace("https://", "")}</a></div></div></div>`;
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
+    body: JSON.stringify({ from: `${cfg.alerts.from_name} <noreply@wixa.dev>`, to: [row.email], ...(EMAIL_RE.test(contact) ? { reply_to: contact } : {}),
+      subject: `${test ? "[اختبار] " : ""}${cfg.autoreply[`subject_${lang}`]}`, html, text }),
+  });
+  if (!res.ok) console.error("autoreply failed", res.status, await res.text());
+  return res.ok;
 }
 
 async function handleContact(request, env, ctx) {
@@ -462,7 +650,8 @@ async function handleContact(request, env, ctx) {
   let body;
   try { body = await request.json(); } catch { return json({ error: "invalid_json" }, 400); }
   if (body.website) return json({ ok: true }); // honeypot
-  if (!(await turnstileOk(env, body.turnstile, ip))) return json({ error: "captcha" }, 403);
+  const cfg = await getConfig(env);
+  if (cfg.spam.turnstile && !(await turnstileOk(env, body.turnstile, ip))) return json({ error: "captcha" }, 403);
 
   const clean = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
   const row = {
@@ -474,6 +663,10 @@ async function handleContact(request, env, ctx) {
     lang: body.lang === "en" ? "en" : "ar",
   };
   if (!row.name || !row.message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) return json({ error: "validation" }, 422);
+  // words or addresses blocked in the dashboard: accepted quietly, never stored
+  const blocked = cfg.spam.blocked.split(/[\n,،]/).map((w) => w.trim().toLowerCase()).filter((w) => w.length >= 2);
+  const hay = `${row.name} ${row.email} ${row.phone || ""} ${row.message}`.toLowerCase();
+  if (blocked.some((w) => hay.includes(w))) return json({ ok: true }, 201);
 
   const res = await rpc(env, "submit_contact", row);
   if (!res.ok) {
@@ -481,6 +674,7 @@ async function handleContact(request, env, ctx) {
     return json({ error: "storage" }, 502);
   }
   ctx.waitUntil(notifyOwner(env, row).catch((e) => console.error("notify", e)));
+  ctx.waitUntil(sendAutoReply(env, cfg, row).catch((e) => console.error("autoreply", e)));
   return json({ ok: true }, 201);
 }
 
@@ -502,10 +696,12 @@ export default {
           const r = await handleHome(new Request(request.url, { method: "GET", headers: request.headers }), env, ctx);
           return new Response(null, { status: r.status, headers: r.headers });
         }
-        case "GET /api/site":
-          return new Response(await getSiteData(env, ctx), {
+        case "GET /api/site": {
+          const [raw, cfg] = await Promise.all([getSiteData(env, ctx), getConfig(env)]);
+          return new Response(cfg.spam.turnstile ? raw : raw.replace(/"turnstile":"[^"]*"/, '"turnstile":""'), {
             headers: { ...SECURITY_HEADERS, "content-type": "application/json; charset=utf-8", "cache-control": `public, max-age=${SITE_TTL}` },
           });
+        }
         case "POST /api/track": return new Response(null, { status: 204 }); // replaced by Cloudflare Web Analytics
         case "GET /admin/":
         case "GET /admin/index.html":
@@ -514,6 +710,11 @@ export default {
         case "GET /api/admin/notify":
         case "PUT /api/admin/notify":
           return await handleAdminNotify(request, env);
+        case "GET /api/admin/integrations":
+        case "PUT /api/admin/integrations":
+          return await handleAdminIntegrations(request, env);
+        case "POST /api/admin/integrations/test": return await handleAdminTest(request, env);
+        case "POST /api/admin/refresh": return await handleAdminRefresh(request, env);
         case "GET /api/admin/status": return await handleAdminStatus(request, env, ctx);
         case "POST /api/contact": return await handleContact(request, env, ctx);
         case "GET /api/config":
