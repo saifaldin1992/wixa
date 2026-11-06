@@ -36,6 +36,10 @@ export async function viewAccount(view) {
       ${user.new_email ? `<p class="muted" style="margin:0 0 12px">بانتظار التأكيد: <b dir="ltr">${esc(user.new_email)}</b></p>` : ""}
       <form id="emailForm" class="stack"><label class="f"><span>البريد الجديد</span><input name="email" type="email" required autocomplete="email" dir="ltr"></label>
       <button class="b b--primary" style="justify-self:start">${I.mail}إرسال رابط التأكيد</button></form>`)
+    + card(`<div class="card__head"><div><h3>بريد تنبيهات الرسائل</h3><p>يصلك عليه تنبيه بكل رسالة جديدة من نموذج «تواصل معنا». لا يظهر لزوار الموقع.</p></div></div>
+      <form id="notifyForm" class="stack"><label class="f"><span>البريد</span><input name="email" type="email" required autocomplete="off" dir="ltr" placeholder="جارٍ التحميل…"></label>
+      <p class="muted" id="notifyHint" style="margin:0;font-size:12px"></p>
+      <button class="b b--primary" style="justify-self:start">${I.save}حفظ</button></form>`)
     + card(`<div class="card__head"><div><h3>التحقق بخطوتين ${totp ? '<span class="pill ok">مفعّل</span>' : ""}</h3>
       <p>${totp ? "عند الدخول يُطلب رمز من تطبيق المصادقة في هاتفك، فلا يكفي معرفة كلمة المرور وحدها." : "حماية إضافية: بعد كلمة المرور يُطلب رمز من تطبيق في هاتفك مثل Google Authenticator أو Microsoft Authenticator."}</p></div>
       <button class="b ${totp ? "b--danger" : "b--primary"}" id="mfaBtn">${totp ? "إيقاف" : "تفعيل"}</button></div><div id="mfaSetup"></div>`)
@@ -64,6 +68,24 @@ export async function viewAccount(view) {
     if (error) return toast(/rate limit|seconds/i.test(error.message) ? "محاولات كثيرة، انتظر قليلاً" : /already/i.test(error.message) ? "هذا البريد مستخدم في حساب آخر" : error.message, "err");
     toast("أرسلنا رابط التأكيد. افتح البريدين واضغط الرابط في كل منهما.");
     route();
+  };
+  // alerts address: stored privately on the server (Cloudflare), changed through an admin-only endpoint
+  const api = async (method, body) => {
+    const { data: ses } = await sb.auth.getSession();
+    return fetch("/api/admin/notify", { method, headers: { authorization: `Bearer ${ses.session?.access_token || ""}`, "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+  };
+  api("GET").then((r) => r.json()).then((d) => {
+    const f = $("#notifyForm"); if (!f) return;
+    f.email.value = d.email || ""; f.email.placeholder = "name@example.com";
+    $("#notifyHint").textContent = d.source === "dashboard" ? "محدد من لوحة التحكم." : "البريد الافتراضي المحفوظ على الخادم.";
+  }).catch(() => { const h = $("#notifyHint"); if (h) h.textContent = "تعذّر تحميل البريد الحالي."; });
+  $("#notifyForm").onsubmit = async (e) => {
+    e.preventDefault(); const f = e.target, btn = f.querySelector("button"); btn.disabled = true;
+    const r = await api("PUT", { email: f.email.value.trim() }).catch(() => null);
+    btn.disabled = false;
+    if (!r || !r.ok) return toast(r?.status === 422 ? "البريد غير صحيح" : "تعذّر الحفظ", "err");
+    $("#notifyHint").textContent = "محدد من لوحة التحكم.";
+    toast("تم الحفظ ✓ التنبيهات القادمة تصل إلى هذا البريد");
   };
   $("#mfaBtn").onclick = async () => {
     if (totp) {

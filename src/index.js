@@ -363,7 +363,7 @@ async function handleAdminStatus(request, env, ctx) {
     else if (status === 401 || status === 403) { rState = "ok"; rRows = [["المفتاح", "مفتاح إرسال فقط (آمن)"]]; }
     else { rState = "warn"; rRows = [["الحالة", `رد غير متوقع (${status})`]]; }
   } else if (env.RESEND_API_KEY) { rState = "warn"; rRows = [["الحالة", "لم يرد في الوقت المحدد"]]; }
-  const to = env.NOTIFY_EMAIL || "";
+  const to = await notifyAddress(env);
   rRows.push(["المرسِل", code("notify@wixa.dev")], ["التنبيهات تصل إلى", to ? code(to.replace(/^(.{2}).*(@.*)$/, "$1•••$2")) : "غير محدد"]);
   items.push({ name: "Resend — البريد الصادر", role: "يرسل لك تنبيه كل رسالة جديدة من الموقع", state: rState, rows: rRows, link: "https://resend.com/domains", linkText: "لوحة Resend" });
 
@@ -400,11 +400,36 @@ function speedReport(v, load) {
   };
 }
 
+// ---------------------------------------------------------------- alerts address (private)
+// Kept in a private Cloudflare store, not in the public site settings, so it is never exposed to visitors.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+async function notifyAddress(env) {
+  const v = env.PRIVATE ? await env.PRIVATE.get("notify_email").catch(() => null) : null;
+  return v || env.NOTIFY_EMAIL || "";
+}
+// GET/PUT /api/admin/notify — read or change where new-message alerts are sent (admins only)
+async function handleAdminNotify(request, env) {
+  const { error } = await adminSession(request, env);
+  if (error) return error;
+  if (request.method === "GET") {
+    const custom = env.PRIVATE ? await env.PRIVATE.get("notify_email") : null;
+    return json({ email: await notifyAddress(env), source: custom ? "dashboard" : "default", editable: !!env.PRIVATE }, 200, { "cache-control": "no-store" });
+  }
+  if (!env.PRIVATE) return json({ error: "storage_not_configured" }, 503);
+  let body = {};
+  try { body = await request.json(); } catch {}
+  const email = String(body.email || "").trim().slice(0, 200);
+  if (!email) { await env.PRIVATE.delete("notify_email"); return json({ email: env.NOTIFY_EMAIL || "", source: "default" }); }
+  if (!EMAIL_RE.test(email)) return json({ error: "invalid_email" }, 422);
+  await env.PRIVATE.put("notify_email", email);
+  return json({ email, source: "dashboard" });
+}
+
 // ---------------------------------------------------------------- POST /api/contact
 // Email the site owner about a new message (needs RESEND_API_KEY and NOTIFY_EMAIL secrets on the Worker).
 async function notifyOwner(env, row) {
   if (!env.RESEND_API_KEY) return;
-  const to = env.NOTIFY_EMAIL || ""; // private Worker secret, never stored in the public site settings
+  const to = (await notifyAddress(env)) || ""; // dashboard setting (private store) or the NOTIFY_EMAIL secret
   if (!to) return;
   const staging = env.SITE_ENV === "staging";
   const admin = staging ? "https://staging.wixa.dev/admin/#messages" : "https://wixa.dev/admin/#messages";
@@ -486,6 +511,9 @@ export default {
         case "GET /admin/index.html":
           return await handleAdminPage(request, env);
         case "GET /api/admin/stats": return await handleAdminStats(request, env, url, ctx);
+        case "GET /api/admin/notify":
+        case "PUT /api/admin/notify":
+          return await handleAdminNotify(request, env);
         case "GET /api/admin/status": return await handleAdminStatus(request, env, ctx);
         case "POST /api/contact": return await handleContact(request, env, ctx);
         case "GET /api/config":
