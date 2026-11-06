@@ -720,3 +720,9 @@ html[dir="rtl"] .partners__track { animation-name: tstScrollRtl; }
   .hero__title { font-size: clamp(2.4rem, calc(8vh * var(--scale)), 4.6rem); margin: 22px auto 20px; }
   .hero__sub { margin-bottom: 22px; }
 }
+/* phones & tablets: the menu button sits at the start of the bar (right in Arabic), before the logo */
+@media (max-width: 900px) {
+  .header__end { display: contents; }
+  .menu-btn { order: -1; margin-inline-end: -4px; }
+  .header__end > .theme-btn { margin-inline-start: auto; }
+}
