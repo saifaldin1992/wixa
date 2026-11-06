@@ -37,8 +37,8 @@ export const STORY_ART = [
 // Shared state. Other modules read these live bindings; only the setters below change them.
 export let state = { settings: merge(DEFAULTS, {}), projects: [], services: [], partners: [] };
 export let lang = "ar";
-// the visitor's own choice wins; otherwise the server already picked a language for this device (html lang)
-try { lang = localStorage.getItem("wixa-lang") || document.documentElement.lang || "ar"; } catch { lang = document.documentElement.lang || "ar"; }
+// the server already chose the language for this visit (saved choice → dashboard setting → device/country)
+lang = document.documentElement.lang || "ar";
 const urlLang = new URLSearchParams(location.search).get("lang"); // ?lang=en links (used by search engines) always win
 if (urlLang === "ar" || urlLang === "en") lang = urlLang;
 if (!UI[lang]) lang = "ar";

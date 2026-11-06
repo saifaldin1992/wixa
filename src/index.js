@@ -88,20 +88,20 @@ const SEO_DEFAULTS = {
 };
 
 // Which language a visit opens in: ?lang= link → the visitor's saved choice (cookie) → dashboard setting →
-// the device language (Accept-Language: first Arabic or English entry). No header at all (most crawlers) → Arabic.
+// the device language or the visitor's country. No header at all (most crawlers) → Arabic.
+const ARAB_COUNTRIES = new Set(["IQ", "SA", "AE", "KW", "QA", "BH", "OM", "JO", "SY", "LB", "PS", "EG", "LY", "TN", "DZ", "MA", "SD", "YE", "MR"]);
+
 function pickLang(request, setting) {
   const q = new URL(request.url).searchParams.get("lang");
   if (q === "ar" || q === "en") return q;
   const c = (request.headers.get("cookie") || "").match(/(?:^|;\s*)wixa-lang=(ar|en)/);
   if (c) return c[1];
   if (setting === "ar" || setting === "en") return setting;
-  const al = request.headers.get("accept-language") || "";
-  if (!al.trim()) return "ar";
-  for (const part of al.split(",")) {
-    const tag = part.trim().toLowerCase();
-    if (tag.startsWith("ar")) return "ar";
-    if (tag.startsWith("en")) return "en";
-  }
+  // Arabic anywhere in the device languages, or a visitor in an Arab country → Arabic; otherwise English.
+  // (Many phones and in-app browsers send English first even when the phone itself is in Arabic.)
+  const al = (request.headers.get("accept-language") || "").toLowerCase();
+  if (!al.trim() || /(^|,)\s*ar\b/.test(al)) return "ar";
+  if (ARAB_COUNTRIES.has(request.cf?.country)) return "ar";
   return "en";
 }
 
