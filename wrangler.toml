@@ -26,7 +26,7 @@ watch_dir = ["public/js", "public/admin/js", "public/admin/admin.js", "public/ad
 directory = "./public"
 binding = "ASSETS"
 not_found_handling = "404-page"
-run_worker_first = ["/", "/index.html", "/api/*", "/health", "/robots.txt", "/sitemap.xml"]
+run_worker_first = ["/", "/index.html", "/admin/", "/admin/index.html", "/api/*", "/health", "/robots.txt", "/sitemap.xml"]
 
 # Abuse protection: per-IP limits, counted per Cloudflare location.
 [[ratelimits]]

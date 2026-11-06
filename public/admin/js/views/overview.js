@@ -8,18 +8,31 @@ export let period = 30;
 export async function viewOverview(view) {
   $("#topActions").innerHTML = `<div class="seg" id="period">${[7, 30, 90].map((d) => `<button data-d="${d}" class="${d === period ? "on" : ""}">${d} يوم</button>`).join("")}</div>`;
   $$("#period button").forEach((b) => (b.onclick = () => { period = +b.dataset.d; route(); }));
+  // the last numbers seen in this tab appear at once; fresh ones replace them a moment later
+  const cacheKey = `wixa-stats-${period}`;
+  let cached = null;
+  try { cached = JSON.parse(sessionStorage.getItem(cacheKey) || "null"); } catch {}
+  if (cached) paintOverview(view, cached);
   let s;
   try {
     const { data: ses } = await sb.auth.getSession();
     const r = await fetch(`/api/admin/stats?days=${period}`, { headers: { authorization: `Bearer ${ses.session?.access_token || ""}` } });
     if (!r.ok) throw new Error(r.status);
     s = await r.json();
+    try { sessionStorage.setItem(cacheKey, JSON.stringify(s)); } catch {}
   } catch (e) {
+    if (cached) return; // keep showing the last numbers
     // fallback: the older in-database counter
     const { data, error } = await sb.rpc("admin_stats", { days: period });
     if (error) throw error;
     s = { ...data, source: "database", views_90d: data.all_time_views };
   }
+  if (location.hash.slice(1) && location.hash.slice(1) !== "overview") return; // the user moved on
+  paintOverview(view, s);
+  if (!sessionStorage.getItem("wixa-fixes-checked")) { textFixesCard(view); try { sessionStorage.setItem("wixa-fixes-checked", "1"); } catch {} }
+}
+
+function paintOverview(view, s) {
   const kpi = (label, val, foot, ic) => `<div class="kpi"><div class="kpi__label"><i>${ic}</i>${label}</div><div class="kpi__value">${fmt(val)}</div><div class="kpi__foot">${foot}</div></div>`;
   const flag = (cc) => (/^[A-Z]{2}$/.test(cc) ? String.fromCodePoint(...[...cc].map((c) => 127397 + c.charCodeAt(0))) + " " : "🌐 ");
   const DEV = { mobile: "جوال", desktop: "كمبيوتر", tablet: "تابلت" };
@@ -46,7 +59,6 @@ export async function viewOverview(view) {
     </div>
     ${speedCard(s.speed, s.source)}`;
   drawChart($("#chart"), s.by_day || []);
-  textFixesCard(view); // one-time wording corrections, shown only while needed
 }
 
 export function drawChart(el, rows) {

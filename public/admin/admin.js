@@ -4,7 +4,9 @@ import { sb, setSb, toast } from "./js/core.js";
 
 (async function boot() {
   try {
-    const cfg = await fetch("/api/config").then((r) => r.json());
+    // config is built into the page by the server; the request is only a fallback
+    const inline = document.getElementById("wixa-config");
+    const cfg = inline ? JSON.parse(inline.textContent) : await fetch("/api/config").then((r) => r.json());
     window.WIXA.markEnv(cfg.env);
     if (cfg.env === "staging") document.title = `[تجريبي] ${document.title}`;
     setSb(window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, { auth: { persistSession: true, autoRefreshToken: true } }));

@@ -96,7 +96,8 @@ export async function afterSignIn(u) {
 }
 
 export async function enter(u) {
-  const { data: isAdmin, error } = await sb.rpc("is_admin");
+  // the admin check and the site settings load together
+  const [{ data: isAdmin, error }] = await Promise.all([sb.rpc("is_admin"), loadSettings()]);
   if (error || !isAdmin) {
     await sb.auth.signOut();
     showAuth();
@@ -106,7 +107,6 @@ export async function enter(u) {
   }
   setUser(u);
   $("#auth").hidden = true; $("#app").hidden = false;
-  await loadSettings();
   setupShell();
   route();
   refreshMsgCount();

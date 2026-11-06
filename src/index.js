@@ -199,6 +199,18 @@ const rpc = (env, fn, p) => sb(env, `rpc/${fn}`, { method: "POST", body: JSON.st
 // Counts only this environment's public pages: the dashboard itself (/admin) is excluded.
 // Only signed-in admins (checked against Supabase with their own session) can read it;
 // the Cloudflare token stays on the server.
+// GET /admin/ — the dashboard page with its public config built in (saves a round trip on every open)
+async function handleAdminPage(request, env) {
+  const page = await env.ASSETS.fetch(new Request(new URL("/admin/", request.url), request));
+  const cfg = JSON.stringify({ env: env.SITE_ENV || "production", supabaseUrl: env.SUPABASE_URL, supabaseKey: env.SUPABASE_PUBLISHABLE_KEY }).replace(/</g, "\\u003c");
+  const res = new HTMLRewriter().on("head", { element: (el) => el.append(`<link rel="preconnect" href="${esc(env.SUPABASE_URL)}" crossorigin><script id="wixa-config" type="application/json">${cfg}</script>`, { html: true }) }).transform(page);
+  const headers = new Headers(res.headers);
+  for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v);
+  headers.set("cache-control", "no-cache");
+  headers.set("x-robots-tag", "noindex, nofollow");
+  return new Response(res.body, { status: res.status, headers });
+}
+
 // Admin-only endpoints: the caller's own Supabase session must belong to an admin.
 async function adminSession(request, env) {
   const auth = request.headers.get("authorization") || "";
@@ -213,10 +225,9 @@ async function adminSession(request, env) {
   return { asUser };
 }
 
-async function handleAdminStats(request, env, url) {
-  const { error, asUser } = await adminSession(request, env);
-  if (error) return error;
-  if (!env.CF_ANALYTICS_TOKEN || !env.CF_SITE_TAG) return json({ error: "analytics_not_configured" }, 503);
+async function handleAdminStats(request, env, url, ctx) {
+  const auth = adminSession(request, env); // checked in parallel with the work below
+  if (!env.CF_ANALYTICS_TOKEN || !env.CF_SITE_TAG) { const { error } = await auth; return error || json({ error: "analytics_not_configured" }, 503); }
 
   const days = Math.min(90, Math.max(1, parseInt(url.searchParams.get("days") || "30", 10) || 30));
   const day = (d) => d.toISOString().slice(0, 10);
@@ -238,6 +249,9 @@ async function handleAdminStats(request, env, url) {
     }
     load: rumPerformanceEventsAdaptiveGroups(limit: 1, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since}) { count quantiles { pageLoadTimeP75 } }
   } } }`;
+  const cache = caches.default;
+  const key = new Request(`https://wixa-cache.internal/stats/${env.SITE_ENV || "production"}/${days}`);
+  const loadAnalytics = async () => {
   const r = await fetch("https://api.cloudflare.com/client/v4/graphql", {
     method: "POST",
     headers: { authorization: `Bearer ${env.CF_ANALYTICS_TOKEN}`, "content-type": "application/json" },
@@ -245,7 +259,7 @@ async function handleAdminStats(request, env, url) {
   });
   const g = await r.json().catch(() => ({}));
   const a = g?.data?.viewer?.accounts?.[0];
-  if (!a) { console.error("analytics", JSON.stringify(g?.errors || g).slice(0, 500)); return json({ error: "analytics_failed" }, 502); }
+  if (!a) throw new Error(JSON.stringify(g?.errors || g).slice(0, 300));
 
   const byDate = new Map((a.byDay || []).map((x) => [x.dimensions.date, x]));
   const by_day = [];
@@ -255,11 +269,7 @@ async function handleAdminStats(request, env, url) {
   }
   const rows = (list, f, v) => (list || []).map((x) => ({ label: f(x), value: v(x) })).filter((x) => x.label);
 
-  // unread messages, read with the admin's own session
-  const msg = await asUser("contact_messages?select=id&handled=eq.false", { method: "HEAD", headers: { prefer: "count=exact" } });
-  const messages_new = parseInt((msg.headers.get("content-range") || "/0").split("/")[1], 10) || 0;
-
-  return json({
+  return {
     source: "cloudflare",
     views: by_day.reduce((n, x) => n + x.views, 0),
     visitors: by_day.reduce((n, x) => n + x.visitors, 0),
@@ -273,7 +283,29 @@ async function handleAdminStats(request, env, url) {
     devices: rows(a.devices, (x) => x.dimensions.deviceType, (x) => x.sum.visits),
     referrers: rows(a.refs, (x) => x.dimensions.refererHost, (x) => x.sum.visits),
     speed: speedReport(a.vitals?.[0], a.load?.[0]),
-  }, 200, { "cache-control": "private, max-age=60" });
+  };
+  };
+
+  // the admin check and the cache read run together; Cloudflare is only asked after the check passes
+  const [session, hit] = await Promise.all([auth, cache.match(key)]);
+  if (session.error) return session.error;
+  const age = hit ? Date.now() - (Number(hit.headers.get("x-saved-at")) || 0) : Infinity;
+  let data = null;
+  if (hit && age < 5 * 60e3) data = await hit.json();
+  else {
+    try {
+      data = await loadAnalytics();
+      ctx.waitUntil(cache.put(key, new Response(JSON.stringify(data), { headers: { "content-type": "application/json", "cache-control": "public, max-age=86400", "x-saved-at": String(Date.now()) } })));
+    } catch (err) {
+      console.error("analytics", err.message);
+      if (hit) data = { ...(await hit.json()), stale: true }; // Cloudflare busy: show the last numbers
+    }
+  }
+  if (!data) return json({ error: "analytics_failed" }, 502);
+  // unread messages, read with the admin's own session
+  const msg = await session.asUser("contact_messages?select=id&handled=eq.false", { method: "HEAD", headers: { prefer: "count=exact" } });
+  const messages_new = parseInt((msg.headers.get("content-range") || "/0").split("/")[1], 10) || 0;
+  return json({ ...data, messages_new }, 200, { "cache-control": "private, no-store" });
 }
 
 // ---------------------------------------------------------------- GET /api/admin/status
@@ -450,7 +482,10 @@ export default {
             headers: { ...SECURITY_HEADERS, "content-type": "application/json; charset=utf-8", "cache-control": `public, max-age=${SITE_TTL}` },
           });
         case "POST /api/track": return new Response(null, { status: 204 }); // replaced by Cloudflare Web Analytics
-        case "GET /api/admin/stats": return await handleAdminStats(request, env, url);
+        case "GET /admin/":
+        case "GET /admin/index.html":
+          return await handleAdminPage(request, env);
+        case "GET /api/admin/stats": return await handleAdminStats(request, env, url, ctx);
         case "GET /api/admin/status": return await handleAdminStatus(request, env, ctx);
         case "POST /api/contact": return await handleContact(request, env, ctx);
         case "GET /api/config":
