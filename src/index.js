@@ -91,13 +91,14 @@ async function handleHome(request, env, ctx) {
   const safe = data.replace(/</g, "\\u003c");
   // Put the hero text in the HTML itself (same markup the script builds), so the first paint
   // already has it and nothing moves when the script runs.
-  let hero = {};
-  try { hero = JSON.parse(data)?.settings?.content?.ar || {}; } catch {}
+  let hero = {}, mapOn = true;
+  try { const st = JSON.parse(data)?.settings; hero = st?.content?.ar || {}; mapOn = st?.sections?.iraq_map !== false; } catch {}
   const words = (t) => String(t).split(/\s+/).filter(Boolean).map((w, i) => `<span class="word"><span style="transition-delay:${i * 70}ms">${esc(w)}</span></span>`).join(" ");
   const fill = (key, html) => ({ element: (el) => { if (hero[key]) el.setInnerContent(html ? words(hero[key]) : hero[key], { html }); } });
   const res = new HTMLRewriter()
     .on("head", { element: (el) => el.append(`<script id="wixa-data" type="application/json">${safe}</script>`, { html: true }) })
     .on("#heroTitle", fill("hero_title", true))
+    .on("svg.iraq", { element: (el) => { if (!mapOn) el.remove(); } })
     .on('[data-c="hero_badge"]', fill("hero_badge", false))
     .on('.hero__sub[data-c="hero_sub"]', fill("hero_sub", false))
     .on("body", { element: (el) => { if (!new URL(request.url).searchParams.has("preview")) el.append(beacon(env), { html: true }); } })

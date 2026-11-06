@@ -588,6 +588,7 @@ html[data-theme="dark"] .hero__title .word:last-child > span { background-image:
 /* the map of Iraq sits right under the badge, behind the title and subtitle */
 .hero__stage { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; isolation: isolate; }
 .hero__stage .iraq { position: absolute; left: 50%; top: 4px; width: min(440px, 78vw); height: auto; aspect-ratio: 1080 / 1096; transform: translateX(-50%); overflow: visible; pointer-events: none; z-index: -1; opacity: .5; }
+.iraq[hidden] { display: none; }
 .iq-fill { fill: url(#iqFill); opacity: 0; }
 .iq-line { fill: none; stroke: url(#iqStroke); stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; opacity: .55; stroke-dasharray: 1; stroke-dashoffset: 1; }
 .iq-flow { fill: none; stroke: var(--accent); stroke-width: 2.6; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-dasharray: 3 97; stroke-dashoffset: 100; opacity: 0; filter: drop-shadow(0 0 4px rgba(var(--accent-rgb), .9)); }
