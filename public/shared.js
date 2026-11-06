@@ -48,6 +48,8 @@
     sections: { iraq_map: true, story: true, projects: true, services: true, process: true, stats: false, testimonials: true, calculator: true, partners: true, careers: true, faq: true, contact: true },
     // job openings (edited in the dashboard → المحتوى ← الوظائف). Empty list → "send us your CV" only.
     careers: { jobs: [] },
+    // choices in the contact form's "service" list; empty → the services shown on the site
+    contact_services: [],
     // Cost estimator. Prices are in USD and are only indicative ranges — review them from the dashboard.
     calculator: {
       currency: "$",

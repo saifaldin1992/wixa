@@ -147,7 +147,8 @@ export function render() {
   // contact
   const ct = s.contact;
   const sel = $("#serviceSelect");
-  sel.innerHTML = `<option value="">${ui.f_any}</option>` + state.services.map((sv) => `<option>${esc(L(sv, "title"))}</option>`).join("");
+  const choices = (s.contact_services || []).map((x) => x[lang] || x.ar || x.en).filter(Boolean);
+  sel.innerHTML = `<option value="">${ui.f_any}</option>` + (choices.length ? choices : state.services.map((sv) => L(sv, "title"))).map((t) => `<option>${esc(t)}</option>`).join("");
   const phone = ct.phone || ct.whatsapp;
   $("#ctaPhone").hidden = !phone;
   if (phone) $("#ctaPhone").href = `tel:${phone.replace(/[^\d+]/g, "")}`;

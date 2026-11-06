@@ -8,6 +8,8 @@
 //    token-checked database function, so nobody can write to the database directly.
 //  • Visits are counted by Cloudflare Web Analytics, not by this Worker.
 
+import { PRIVACY_DEFAULTS } from "../public/js/privacy-defaults.js";
+
 const SITE_TTL = 60; // seconds the site content may be served from cache
 // Keep in sync with public/_headers. The sha256 is the inline theme script in index.html.
 const CSP = "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://challenges.cloudflare.com 'sha256-NVKT0UrdROLsGcatClpvEhxXytwpjLyEshzIKuByDnE='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://cloudflareinsights.com https://*.supabase.co https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'";
@@ -811,27 +813,18 @@ async function handlePrivacy(request, env, ctx) {
   const lang = pickLang(request, st.default_lang), ar = lang === "ar";
   const email = st.contact?.email || "info@wixa.dev";
   const tagsOn = Object.values(cfg.tags || {}).some(Boolean);
-  const updated = "2026-11-06";
-  const S = ar ? [
-    ["من نحن", `هذا الموقع تديره ويكسا (WIXA). توضح هذه الصفحة البيانات التي نجمعها عند زيارتك للموقع أو تواصلك معنا، وكيف نستخدمها.`],
-    ["البيانات التي ترسلها لنا", `عند استخدام نموذج «تواصل معنا» أو التقديم على وظيفة نستلم ما تكتبه: الاسم، البريد الإلكتروني، رقم الهاتف، الخدمة أو الوظيفة، نص رسالتك، ورابط سيرتك الذاتية إن أضفته. نستخدمها فقط للرد عليك ومتابعة طلبك، ولا نبيعها ولا نشاركها لأغراض تسويقية.`],
-    ["الرسائل التلقائية", `قد يصلك بريد تأكيد تلقائي بعد إرسال النموذج. لا نضيف بريدك إلى أي قائمة بريدية دون موافقتك.`],
-    ["إحصاءات الزيارات", `نستخدم Cloudflare Web Analytics لقياس عدد الزيارات وسرعة الموقع، وهي لا تستخدم ملفات تعريف الارتباط (Cookies) ولا تتتبعك بين المواقع.${tagsOn ? " كما نستخدم أدوات قياس وإعلانات من جهات أخرى (مثل Google أو Meta أو Microsoft أو TikTok) لفهم أداء الموقع وحملاتنا، وقد تستخدم هذه الأدوات ملفات تعريف الارتباط وفق سياساتها." : ""}`],
-    ["ملفات تعريف الارتباط", `يحفظ الموقع اختيارك للغة والوضع الليلي على جهازك فقط لتسهيل زيارتك القادمة.`],
-    ["الحماية", `نحمي النموذج من البرامج الآلية عبر Cloudflare Turnstile، وتُنقل كل البيانات عبر اتصال مشفّر (HTTPS) وتُحفظ لدى مزوّدي خدمات موثوقين (Cloudflare وSupabase لقاعدة البيانات وResend لإرسال البريد).`],
-    ["مدة الاحتفاظ وحقوقك", `نحتفظ برسائلك طوال المدة اللازمة للرد عليك ومتابعة طلبك. يمكنك في أي وقت طلب الاطلاع على بياناتك أو تصحيحها أو حذفها عبر مراسلتنا على <a href="mailto:${esc(email)}">${esc(email)}</a>.`],
-    ["التعديلات", `قد نحدّث هذه السياسة عند الحاجة، ويظهر تاريخ آخر تحديث أعلى الصفحة.`],
-  ] : [
-    ["Who we are", `This site is operated by WIXA. This page explains what data we collect when you visit the site or contact us, and how we use it.`],
-    ["Data you send us", `When you use the contact form or apply for a job we receive what you enter: your name, email, phone number, the service or role, your message, and a link to your CV if you add one. We use it only to reply to you and follow up on your request. We never sell it or share it for marketing.`],
-    ["Automatic emails", `You may receive an automatic confirmation email after sending the form. We never add your address to a mailing list without your consent.`],
-    ["Visit statistics", `We use Cloudflare Web Analytics to count visits and measure site speed. It uses no cookies and does not track you across sites.${tagsOn ? " We also use third-party analytics and advertising tools (such as Google, Meta, Microsoft or TikTok) to understand how the site and our campaigns perform; these tools may use cookies under their own policies." : ""}`],
-    ["Cookies", `The site stores your language and dark-mode choice on your device only, to make your next visit easier.`],
-    ["Security", `The form is protected from bots by Cloudflare Turnstile. All data travels over an encrypted connection (HTTPS) and is stored with trusted providers (Cloudflare, Supabase for the database and Resend for email delivery).`],
-    ["Retention and your rights", `We keep your messages for as long as needed to reply and follow up on your request. You can ask to see, correct or delete your data at any time by emailing <a href="mailto:${esc(email)}">${esc(email)}</a>.`],
-    ["Changes", `We may update this policy when needed; the date of the last update is shown at the top of this page.`],
-  ];
-  const body = `<h1>${ar ? "سياسة الخصوصية" : "Privacy policy"}</h1><p class="lead">${ar ? "آخر تحديث:" : "Last updated:"} ${updated}</p>${S.map(([h, p]) => `<h2>${h}</h2><p>${p}</p>`).join("")}`;
+  // text from the dashboard (المحتوى ← سياسة الخصوصية), or the default wording
+  const pv = st.privacy || {};
+  const list = (Array.isArray(pv[lang]) && pv[lang].some((x) => x?.h || x?.p) ? pv[lang] : PRIVACY_DEFAULTS[lang]).filter((x) => x?.h || x?.p);
+  const updated = pv.updated || PRIVACY_DEFAULTS.updated;
+  const mail = `<a href="mailto:${esc(email)}">${esc(email)}</a>`;
+  const para = (t) => esc(t).split("{email}").join(mail).replace(/\n/g, "<br>");
+  const S = list.map((x) => [esc(x.h || ""), para(x.p || "")]);
+  // analytics or ad pixels switched on in the dashboard: say so automatically
+  if (tagsOn) S.push([ar ? "أدوات القياس والإعلانات" : "Analytics and advertising tools", ar
+    ? "نستخدم أيضاً أدوات قياس وإعلانات من جهات أخرى (مثل Google أو Meta أو Microsoft أو TikTok) لفهم أداء الموقع وحملاتنا، وقد تستخدم هذه الأدوات ملفات تعريف الارتباط وفق سياساتها."
+    : "We also use third-party analytics and advertising tools (such as Google, Meta, Microsoft or TikTok) to understand how the site and our campaigns perform; these tools may use cookies under their own policies."]);
+  const body = `<h1>${ar ? "سياسة الخصوصية" : "Privacy policy"}</h1><p class="lead">${ar ? "آخر تحديث:" : "Last updated:"} ${esc(updated)}</p>${S.map(([h, p]) => `${h ? `<h2>${h}</h2>` : ""}<p>${p}</p>`).join("")}`;
   return simplePage(request, st, { lang, title: ar ? "سياسة الخصوصية" : "Privacy policy", description: ar ? "كيف تجمع ويكسا بياناتك وتستخدمها وتحميها." : "How WIXA collects, uses and protects your data.", path: "/privacy", body });
 }
 

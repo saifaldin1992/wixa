@@ -1,5 +1,6 @@
 /* Content: texts, story, process, stats, calculator, sections, brand, contact */
-import { $, $$, I, ICONS, esc, settings } from "../core.js";
+import { $, $$, I, ICONS, esc, savedJSON, sb, setSaved, settings, toast } from "../core.js";
+import { PRIVACY_DEFAULTS } from "../../../js/privacy-defaults.js";
 import { imageField } from "../fields.js";
 import { bindPreview, changed, getPath, previewLang, previewPane, pushPreview, setPath, setPreviewLang, settingsActions } from "../settings.js";
 
@@ -23,7 +24,7 @@ export const TEXT_FIELDS = [
 
 export async function viewContent(view) {
   settingsActions();
-  const tabs = [["texts", "النصوص"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
+  const tabs = [["texts", "النصوص"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"], ["privacy", "سياسة الخصوصية"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
   view.innerHTML = `<div class="split"><div><div class="card">
       <div class="tabs" id="ctTabs">${tabs.map(([k, l]) => `<button data-k="${k}" class="${k === contentTab ? "on" : ""}">${l}</button>`).join("")}</div>
       <div id="ctBody"></div></div></div>${previewPane()}</div>`;
@@ -96,6 +97,27 @@ export function renderContentTab() {
       $("#addFaq").onclick = () => { items.push({ q: "", a: "" }); changed(); draw(); };
     };
     draw(); return;
+  } else if (contentTab === "privacy") {
+    const draw = () => {
+      // first open: start from the current default wording (saved only when you press «حفظ ونشر»)
+      if (!settings.privacy) {
+        const clean = JSON.stringify(settings) === savedJSON; // filling in the defaults is not an unsaved change
+        settings.privacy = structuredClone(PRIVACY_DEFAULTS);
+        if (clean) setSaved(JSON.stringify(settings));
+      }
+      const pv = settings.privacy;
+      const items = pv[L] || (pv[L] = structuredClone(PRIVACY_DEFAULTS[L]));
+      body.innerHTML = langSeg() + `<p class="muted" style="margin-top:0">نص صفحة <a href="/privacy?lang=${L}" target="_blank" rel="noopener" dir="ltr">/privacy</a>. اكتب <code>{email}</code> ليظهر بريد التواصل كرابط. إذا شغّلت أدوات إعلانات من «التكاملات» تُضاف فقرة عنها تلقائياً.</p>
+        <label class="f" style="max-width:240px"><span>تاريخ آخر تحديث</span><input type="date" data-path="privacy.updated" value="${esc(pv.updated || "")}" dir="ltr"></label>
+        <div class="stack" style="margin-top:12px">${items.map((_, i) => `<div class="sec-title">الفقرة ${i + 1} <span><button class="b b--sm b--ghost" data-mv="${i}" data-d="-1" ${i ? "" : "disabled"} title="أعلى">${I.up}</button><button class="b b--sm b--ghost" data-mv="${i}" data-d="1" ${i < items.length - 1 ? "" : "disabled"} title="أسفل">${I.down}</button><button class="b b--sm b--ghost b--danger" data-del="${i}">${I.trash}</button></span></div>${input(`privacy.${L}.${i}.h`, "العنوان", false, `dir="${dir}"`)}${input(`privacy.${L}.${i}.p`, "النص", true, `dir="${dir}" rows="4"`)}`).join("")}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><button class="b b--sm" id="addPv">${I.plus}إضافة فقرة</button><button class="b b--sm b--ghost" id="resetPv">${I.reset}استعادة النص الافتراضي (${L === "ar" ? "العربي" : "English"})</button></div>`;
+      bindLangSeg(); bindPathInputs(body);
+      $$("[data-del]", body).forEach((b) => (b.onclick = () => { items.splice(+b.dataset.del, 1); changed(); draw(); }));
+      $$("[data-mv]", body).forEach((b) => (b.onclick = () => { const i = +b.dataset.mv, j = i + +b.dataset.d; [items[i], items[j]] = [items[j], items[i]]; changed(); draw(); }));
+      $("#addPv").onclick = () => { items.push({ h: "", p: "" }); changed(); draw(); };
+      $("#resetPv").onclick = () => { pv[L] = structuredClone(PRIVACY_DEFAULTS[L]); changed(); draw(); };
+    };
+    draw(); return;
   } else if (contentTab === "careers") {
     const draw = () => {
       settings.careers ??= { jobs: [] };
@@ -165,7 +187,27 @@ export function renderContentTab() {
       <div class="grid2">${input("contact.address_ar", "العنوان بالعربي")}${input("contact.address_en", "العنوان بالإنجليزي", false, 'dir="ltr"')}</div>
       <div class="sec-title">روابط التواصل الاجتماعي</div>
       <div class="grid2">${input("contact.instagram", "Instagram", false, 'dir="ltr" placeholder="https://instagram.com/..."')}${input("contact.x", "X (Twitter)", false, 'dir="ltr" placeholder="https://x.com/..."')}
-      ${input("contact.linkedin", "LinkedIn", false, 'dir="ltr"')}${input("contact.facebook", "Facebook", false, 'dir="ltr"')}</div></div>`;
+      ${input("contact.linkedin", "LinkedIn", false, 'dir="ltr"')}${input("contact.facebook", "Facebook", false, 'dir="ltr"')}</div>
+      <div class="sec-title">خيارات «الخدمة المطلوبة» في نموذج تواصل معنا</div>
+      <p class="muted" style="margin:0;font-size:13px">إن تركتها فارغة تظهر الخدمات المعروضة في الموقع تلقائياً. خيار «استشارة عامة» يبقى أولاً دائماً.</p>
+      <div id="csList"></div></div>`;
+    bindPathInputs(body);
+    const list = settings.contact_services || (settings.contact_services = []);
+    const drawCs = () => {
+      $("#csList").innerHTML = `<div class="stack">${list.map((x, i) => `<div class="grid2 cs-row"><input class="cs" data-i="${i}" data-k="ar" value="${esc(x.ar)}" placeholder="الخيار بالعربي"><div style="display:flex;gap:6px"><input class="cs" data-i="${i}" data-k="en" value="${esc(x.en)}" placeholder="English" dir="ltr" style="flex:1"><button class="b b--icon b--ghost b--danger" data-csdel="${i}">${I.trash}</button></div></div>`).join("")}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"><button class="b b--sm" id="csAdd">${I.plus}إضافة خيار</button>${list.length ? "" : `<button class="b b--sm b--ghost" id="csCopy">نسخ الخدمات الحالية لأعدّلها</button>`}</div>`;
+      $$(".cs", body).forEach((el) => { el.style.cssText += ";height:38px;padding:0 10px;border:1px solid var(--line-2);border-radius:10px;width:100%;min-width:0"; el.oninput = () => { list[el.dataset.i][el.dataset.k] = el.value; changed(); }; });
+      $$("[data-csdel]", body).forEach((b) => (b.onclick = () => { list.splice(+b.dataset.csdel, 1); changed(); drawCs(); }));
+      $("#csAdd").onclick = () => { list.push({ ar: "", en: "" }); changed(); drawCs(); };
+      const cp = $("#csCopy");
+      if (cp) cp.onclick = async () => {
+        const { data, error } = await sb.from("services").select("title_ar, title_en").eq("published", true).order("sort");
+        if (error) return toast("تعذّر تحميل الخدمات", "err");
+        data.forEach((r) => list.push({ ar: r.title_ar || "", en: r.title_en || "" })); changed(); drawCs();
+      };
+    };
+    drawCs();
+    return;
   }
   bindPathInputs(body);
 }
