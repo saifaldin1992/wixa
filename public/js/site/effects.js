@@ -1,5 +1,5 @@
 /* Scroll progress, custom cursor and GSAP scroll motion */
-import { $, $$, lang, anim } from "./core.js";
+import { $, $$, lang, anim, state } from "./core.js";
 import { updateProcess } from "./sections.js";
 
 // ---------- scroll progress + custom cursor ----------
@@ -9,7 +9,7 @@ export function setupProgress() {
   addEventListener("scroll", upd, { passive: true }); addEventListener("resize", upd); upd();
 }
 export function setupCursor() {
-  if (!anim || !matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+  if (!anim || state.settings.cursor === false || !matchMedia("(hover: hover) and (pointer: fine)").matches) return;
   document.documentElement.classList.add("has-cursor");
   const cur = $(".cursor"), dot = $(".cursor__dot"), ring = $(".cursor__ring");
   let x = -100, y = -100, rx = -100, ry = -100;
@@ -28,7 +28,8 @@ export function setupCursor() {
 export function setupMotion() {
   if (!anim || !window.gsap || !window.ScrollTrigger) return;
   gsap.registerPlugin(ScrollTrigger);
-  if (window.Lenis) {
+  // touch screens keep the phone's own scrolling (lighter and more natural than a smoothed one)
+  if (window.Lenis && matchMedia("(hover: hover) and (pointer: fine)").matches) {
     const lenis = new Lenis({ duration: 1.1, smoothWheel: true });
     window.__lenis = lenis;
     lenis.on("scroll", ScrollTrigger.update);

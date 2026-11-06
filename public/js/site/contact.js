@@ -40,6 +40,16 @@ function check(form, names) {
   return msg;
 }
 
+// a red field goes back to normal as soon as it is filled in correctly
+function liveCheck(form) {
+  form.addEventListener("input", (e) => {
+    const f = e.target.closest(".field.bad"); if (!f) return;
+    const el = e.target, v = el.value.trim();
+    const ok = v && (el.name !== "email" || EMAIL.test(v)) && (el.name !== "phone" || phoneOk(v));
+    if (ok) f.classList.remove("bad");
+  });
+}
+
 async function send(form, statusEl, sel, body, okText) {
   const ui = UI[lang], btn = form.querySelector("[type=submit]");
   btn.disabled = true;
@@ -86,12 +96,15 @@ export function setupContact() {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const bad = check(form, ["name", "email", "phone", "message"]);
-    if (bad) { status.className = "form__status err"; status.textContent = bad; return; }
+    if (bad) { status.className = "form__status err"; status.textContent = bad; form.querySelector(".field.bad input, .field.bad textarea")?.focus(); return; }
     if (PREVIEW) { status.className = "form__status ok"; status.textContent = UI[lang].ok; return; }
     const svc = form.elements.service.value;
-    await send(form, status, "#turnstile", { name: form.elements.name.value, email: form.elements.email.value, phone: form.elements.phone.value,
+    const ok = await send(form, status, "#turnstile", { name: form.elements.name.value, email: form.elements.email.value, phone: form.elements.phone.value,
       message: form.elements.message.value, services: svc ? [svc] : [] }, UI[lang].ok);
+    if (ok) { status.textContent = ""; $(".form__inner", form).hidden = true; $("#formDone").hidden = false; }
   });
+  liveCheck(form);
+  $("#formAgain").addEventListener("click", () => { $("#formDone").hidden = true; $(".form__inner", form).hidden = false; form.elements.name.focus(); });
 
   // job applications
   $("#careersList").addEventListener("click", (e) => { const b = e.target.closest("[data-job]"); if (b) openJob(+b.dataset.job); });
@@ -102,10 +115,11 @@ export function setupContact() {
   jf.addEventListener("submit", async (e) => {
     e.preventDefault();
     const bad = check(jf, ["name", "email", "phone", "message"]);
-    if (bad) { js.className = "form__status err"; js.textContent = bad; return; }
+    if (bad) { js.className = "form__status err"; js.textContent = bad; jf.querySelector(".field.bad input, .field.bad textarea")?.focus(); return; }
     if (PREVIEW) { js.className = "form__status ok"; js.textContent = UI[lang].j_ok; return; }
     const ok = await send(jf, js, "#turnstileJob", { kind: "job", job: jf.elements.job.value, cv: jf.elements.cv.value, name: jf.elements.name.value,
       email: jf.elements.email.value, phone: jf.elements.phone.value, message: jf.elements.message.value }, UI[lang].j_ok);
     if (ok) setTimeout(closeJob, 2600);
   });
+  liveCheck(jf);
 }

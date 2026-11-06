@@ -155,6 +155,8 @@ export function render() {
   const wa = (ct.whatsapp || "").replace(/\D/g, "");
   $("#wa").hidden = !wa;
   if (wa) $("#wa").href = `https://wa.me/${wa}`;
+  for (const id of ["#mbarWa", "#formWa", "#calcWa"]) { const el = $(id); if (el) { el.hidden = !wa; if (wa && id !== "#calcWa") el.href = `https://wa.me/${wa}`; } }
+  document.documentElement.classList.toggle("has-wa", !!wa);
   $("#social").innerHTML = ["instagram", "x", "linkedin", "facebook"].map((k) => [k, socialUrl(k, ct[k])]).filter(([, u]) => u)
     .map(([k, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener" aria-label="${k}">${SOCIAL[k]}</a>`).join("")
     + (ct.email ? `<a href="mailto:${esc(ct.email)}" aria-label="email"><svg viewBox="0 0 24 24"><path d="M3 5h18v14H3z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 6l9 7 9-7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></a>` : "");

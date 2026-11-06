@@ -70,6 +70,7 @@
       rush: 1.3,
     },
     animations: true,
+    cursor: true, // the custom pointer on computers (can be switched off in the dashboard)
     mode: "auto", // default colour mode for first-time visitors: auto | light | dark
     // Add your real numbers from the dashboard, then enable the section. Never ship placeholder figures.
     stats: [],
@@ -78,7 +79,7 @@
         hero_badge: "الشريك التقني لمشاريعك",
         hero_title: "نبني المستقبل الرقمي",
         hero_sub: "ويكسا تصمم وتطور منصات وتطبيقات وأنظمة رقمية سريعة وآمنة تختصر الوقت على عملائك — من الفكرة حتى التشغيل.",
-        hero_cta: "أعمالنا",
+        hero_cta: "احسب تكلفة مشروعك",
         hero_cta2: "تواصل معنا",
         story: [
           { title: "لا معاملات ورقية", text: "لا ملفات ولا أختام ولا مراجعة دوائر. كل شيء رقمي وفي مكان واحد." },
@@ -138,7 +139,7 @@
         hero_badge: "Your technology partner",
         hero_title: "Building the digital future",
         hero_sub: "WIXA designs and builds fast, secure platforms, apps and digital systems that save your customers time — from idea to launch.",
-        hero_cta: "Our work",
+        hero_cta: "Estimate your project",
         hero_cta2: "Contact us",
         story: [
           { title: "No more paperwork", text: "No files, no stamps, no office visits. Everything digital, in one place." },

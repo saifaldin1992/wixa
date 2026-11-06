@@ -1,6 +1,7 @@
 /* Header, mobile menu, language switch, magnetic buttons */
 import { $, $$, lang, anim, setLang } from "./core.js";
 import { render } from "./render.js";
+import { openContact } from "./contact.js";
 
 // ---------- interactions ----------
 export function setupUI() {
@@ -23,6 +24,20 @@ export function setupUI() {
     }
     last = y;
   }, { passive: true });
+
+  // phones: contact + WhatsApp bar once past the first screen, out of the way at the contact form and the footer
+  const mbar = $("#mbar"), toTop = $("#toTop");
+  let atContact = false;
+  const io = new IntersectionObserver((es) => { es.forEach((e) => { e.target.dataset.vis = e.isIntersecting ? "1" : ""; }); atContact = !!document.querySelector('#contact[data-vis="1"], .footer[data-vis="1"]'); syncBars(); }, { threshold: 0.15 });
+  ["#contact", ".footer"].forEach((s) => { const el = $(s); if (el) io.observe(el); });
+  function syncBars() {
+    const past = scrollY > innerHeight * 0.8;
+    mbar?.classList.toggle("show", past && !atContact);
+    toTop?.classList.toggle("show", scrollY > innerHeight * 1.5);
+  }
+  addEventListener("scroll", syncBars, { passive: true }); syncBars();
+  toTop?.addEventListener("click", () => { if (window.__lenis) window.__lenis.scrollTo(0); else scrollTo({ top: 0, behavior: "smooth" }); });
+  $("#mbarContact")?.addEventListener("click", (e) => { e.preventDefault(); openContact(); });
 
   const switchLang = () => {
     setLang(lang === "ar" ? "en" : "ar");

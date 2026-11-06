@@ -799,3 +799,53 @@ html[data-theme="dark"] .pstep.on .pstep__num { box-shadow: 0 0 0 8px rgba(var(-
 .jmodal__box .form__grid { padding: 0; }
 .jmodal__box .form__end { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
 .jmodal__box select { width: 100%; }
+
+/* ---------- required fields: a red star next to the label; empty → red field ---------- */
+.field:has(> [required]) > span::after { content: " *"; color: #E5484D; font-weight: 700; }
+.field.bad > span { color: #E5484D; }
+.field.bad input, .field.bad textarea, .field.bad select { border-color: #E5484D; background: color-mix(in srgb, #E5484D 6%, var(--bg)); box-shadow: 0 0 0 3px color-mix(in srgb, #E5484D 18%, transparent); }
+
+/* ---------- WhatsApp buttons (form, calculator) ---------- */
+.btn--wa { background: #25D366; color: #fff; }
+.btn--wa svg { width: 20px; height: 20px; }
+.btn--wa:hover { box-shadow: 0 12px 26px -10px rgba(37,211,102,.7); }
+.form__btns, .calc__btns { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.calc__btns { margin-top: 4px; }
+.calc__result .btn--wa { background: #25D366; color: #fff; }
+@media (max-width: 640px) { .form__btns, .calc__btns { width: 100%; } .form__btns .btn, .calc__btns .btn { flex: 1 1 100%; } }
+
+/* ---------- form sent: success screen ---------- */
+.form__done { text-align: center; padding: clamp(28px, 5vw, 48px) 20px; }
+.form__done-ico { width: 64px; height: 64px; margin: 0 auto 14px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, #12B76A 14%, transparent); }
+.form__done-ico svg { width: 30px; height: 30px; fill: none; stroke: #12B76A; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.form__done h3 { margin: 0 0 6px; font-size: 1.35rem; }
+.form__done p { margin: 0 auto 18px; color: var(--muted); max-width: 420px; line-height: 1.8; }
+
+/* ---------- phones: contact + WhatsApp bar ---------- */
+.mbar { display: none; }
+@media (max-width: 760px) {
+  .mbar { display: flex; gap: 8px; position: fixed; inset: auto 12px calc(12px + env(safe-area-inset-bottom)) 12px; z-index: 60; padding: 8px; border-radius: 20px; background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); box-shadow: 0 16px 40px -14px rgba(0,0,0,.35); transform: translateY(140%); opacity: 0; transition: transform .45s var(--ease-out), opacity .3s; pointer-events: none; }
+  .mbar.show { transform: none; opacity: 1; pointer-events: auto; }
+  .mbar__btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; border-radius: 14px; font-weight: 600; font-size: .95rem; text-decoration: none; }
+  .mbar__btn svg { width: 20px; height: 20px; }
+  .mbar__btn--main { background: var(--primary); color: #fff; }
+  .mbar__btn--main svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+  .mbar__btn--wa { background: #25D366; color: #fff; }
+  /* the bar replaces the round WhatsApp button and the calculator's price bar sits above it */
+  .wa { display: none !important; }
+  .calc__sticky.show { bottom: calc(84px + env(safe-area-inset-bottom)); }
+  .footer { padding-bottom: 96px; }
+}
+
+/* ---------- back to top ---------- */
+.totop { position: fixed; bottom: 24px; inset-inline-end: 24px; z-index: 55; width: 46px; height: 46px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); display: grid; place-items: center; opacity: 0; transform: translateY(16px); pointer-events: none; transition: opacity .3s, transform .4s var(--ease-out); }
+.totop.show { opacity: 1; transform: none; pointer-events: auto; }
+.totop svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 760px) { .totop { bottom: calc(88px + env(safe-area-inset-bottom)); inset-inline-end: 14px; width: 42px; height: 42px; } }
+
+/* ---------- section titles and text appear faster (no faded text while scrolling) ---------- */
+.reveal-up { transform: translateY(16px); transition: opacity .55s var(--ease-out), transform .6s var(--ease-out); }
+.hero .reveal-up { transition-delay: .1s; }
+@media (max-width: 760px) { .calc__sticky, html[dir="rtl"] .calc__sticky { left: 14px; right: 14px; } }
+@media (max-width: 1100px) and (min-width: 901px) { .header__nav a { padding: 8px 10px; font-size: .86rem; } }
+@media (max-width: 640px) { .form__btns .btn--wa { order: 2; } }

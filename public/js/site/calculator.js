@@ -57,15 +57,25 @@ export function setupCalc() {
   $("#calcTypes").addEventListener("click", (e) => { const b = e.target.closest(".ctype"); if (!b) return; calc.type = +b.dataset.i; $$(".ctype").forEach((x) => x.setAttribute("aria-checked", x === b)); updateCalc(); });
   $("#calcFeats").addEventListener("click", (e) => { const b = e.target.closest(".cfeat"); if (!b) return; const i = +b.dataset.i; calc.feats.has(i) ? calc.feats.delete(i) : calc.feats.add(i); b.setAttribute("aria-pressed", calc.feats.has(i)); updateCalc(); });
   $("#calcSpeed").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; calc.rush = b.dataset.rush === "1"; $$("#calcSpeed button").forEach((x) => x.classList.toggle("on", x === b)); updateCalc(); });
-  $("#calcCta").addEventListener("click", () => {
+  $("#calcWa").addEventListener("click", (e) => {
+    const msg = estimateText(), wa = (state.settings.contact?.whatsapp || "").replace(/\D/g, "");
+    if (!msg || !wa) { e.preventDefault(); return; }
+    e.currentTarget.href = `https://wa.me/${wa}?text=${encodeURIComponent(msg)}`;
+  });
+  $("#calcCta").addEventListener("click", () => { const msg = estimateText(); if (msg) openContact(msg); });
+}
+
+// the chosen project, features and estimate as a ready message
+function estimateText() {
+  {
     const cfg = state.settings.calculator || {}, t = (cfg.types || [])[calc.type], r = calcRange();
-    if (!t || !r) return;
+    if (!t || !r) return "";
     const feats = [...calc.feats].map((i) => (cfg.features || [])[i]).filter(Boolean).map((f) => f[`label_${lang}`] || f.label_ar);
     const ar = lang === "ar";
     const msg = (ar ? `أرغب بعرض سعر لـ: ${t.label_ar}` : `I'd like a quote for: ${t.label_en || t.label_ar}`)
       + (feats.length ? (ar ? `\nالميزات: ${feats.join("، ")}` : `\nFeatures: ${feats.join(", ")}`) : "")
       + (calc.rush ? (ar ? "\nالتنفيذ: مستعجل" : "\nTimeline: rush") : "")
       + (ar ? `\nالتقدير المبدئي: ${r[0].toLocaleString("en")} – ${r[1].toLocaleString("en")} ${cfg.currency || "$"}` : `\nEstimate: ${r[0].toLocaleString("en")} – ${r[1].toLocaleString("en")} ${cfg.currency || "$"}`);
-    openContact(msg);
-  });
+    return msg;
+  }
 }

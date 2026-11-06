@@ -5,24 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
   <title>الصفحة غير موجودة — ويكسا</title>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml">
   <style>
-    :root { --p: #5B21B6; --t: #140F1F; --m: #625C70; --bg: #FBFAFE; }
-    @media (prefers-color-scheme: dark) { :root { --t: #F2F0F7; --m: #B2ACBF; --bg: #130C1F; --p: #C1ABE3; } }
+    :root { --p: #5B21B6; --a: #1FC8E3; --t: #140F1F; --m: #625C70; --bg: #FBFAFE; --s: #fff; --l: #ECE8F3; }
+    @media (prefers-color-scheme: dark) { :root { --t: #F2F0F7; --m: #B2ACBF; --bg: #130C1F; --s: #1B1430; --l: #2A2340; --p: #A574F1; } }
     * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100svh; display: grid; place-items: center; text-align: center; padding: 24px; background: var(--bg); color: var(--t); font: 400 1rem/1.7 system-ui, "Segoe UI", Tahoma, sans-serif; }
-    svg { width: 120px; height: auto; color: var(--p); }
-    h1 { font-size: 1.6rem; margin: 18px 0 6px; }
+    body { margin: 0; min-height: 100svh; display: grid; place-items: center; text-align: center; padding: 24px; background: radial-gradient(60% 50% at 50% 0%, color-mix(in srgb, var(--p) 12%, transparent), transparent 70%), var(--bg); color: var(--t); font: 400 1rem/1.7 system-ui, "Segoe UI", Tahoma, sans-serif; }
+    main { max-width: 560px; }
+    .logo { width: 110px; height: auto; color: var(--p); }
+    .code { font-size: clamp(4rem, 16vw, 7rem); font-weight: 800; line-height: 1; margin: 10px 0 0; background: linear-gradient(120deg, var(--p), var(--a)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    h1 { font-size: 1.5rem; margin: 10px 0 6px; }
     p { margin: 0 0 22px; color: var(--m); }
-    a { display: inline-block; padding: 12px 24px; border-radius: 99px; background: #5B21B6; color: #fff; text-decoration: none; font-weight: 600; }
+    .home { display: inline-block; padding: 13px 26px; border-radius: 99px; background: #5B21B6; color: #fff; text-decoration: none; font-weight: 600; }
+    nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 22px; }
+    nav a { padding: 8px 14px; border-radius: 99px; border: 1px solid var(--l); background: var(--s); color: var(--t); text-decoration: none; font-size: .9rem; }
+    nav a:hover { border-color: var(--p); }
+    .en { margin-top: 26px; font-size: .85rem; color: var(--m); }
+    .en a { color: var(--p); }
   </style>
 </head>
 <body>
   <main>
-    <svg viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m" fill="currentColor"/></svg>
+    <svg class="logo" viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m" fill="currentColor"/></svg>
+    <div class="code">404</div>
     <h1>الصفحة غير موجودة</h1>
-    <p>ربما تغيّر الرابط أو حُذفت الصفحة. · This page doesn't exist.</p>
-    <a href="/">العودة إلى الرئيسية · Home</a>
+    <p>ربما تغيّر الرابط أو حُذفت الصفحة. يمكنك العودة إلى الرئيسية أو الانتقال مباشرة إلى ما تبحث عنه.</p>
+    <a class="home" href="/">العودة إلى الرئيسية</a>
+    <nav aria-label="أقسام الموقع">
+      <a href="/#projects">حلولنا</a>
+      <a href="/#services">خدماتنا</a>
+      <a href="/#calculator">احسب تكلفة مشروعك</a>
+      <a href="/#careers">الوظائف</a>
+      <a href="/#contact">تواصل معنا</a>
+    </nav>
+    <p class="en">This page doesn't exist. <a href="/?lang=en">Go to the homepage</a></p>
   </main>
 </body>
 </html>
