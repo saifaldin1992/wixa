@@ -1,6 +1,7 @@
 /* Overview: visitors from Cloudflare Web Analytics, messages */
 import { $, $$, I, esc, fmt, sb } from "../core.js";
 import { route } from "../shell.js";
+import { textFixesCard } from "../textfixes.js";
 
 // ---------------- view: overview ----------------
 export let period = 30;
@@ -45,6 +46,7 @@ export async function viewOverview(view) {
     </div>
     ${speedCard(s.speed, s.source)}`;
   drawChart($("#chart"), s.by_day || []);
+  textFixesCard(view); // one-time wording corrections, shown only while needed
 }
 
 export function drawChart(el, rows) {
