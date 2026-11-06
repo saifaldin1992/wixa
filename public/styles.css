@@ -563,8 +563,9 @@ html[dir="ltr"] .progress span { transform-origin: left; }
 }
 
 /* ===== WIXA wave motif ===== */
-.wave { display: block; width: 168px; height: 22px; margin: 0 auto 18px; overflow: visible; }
-.wave path { fill: none; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.4s var(--ease); }
+.wave { display: block; width: 100%; height: 30px; margin: 0 auto clamp(28px, 4vw, 44px); overflow: visible; opacity: .75; }
+.cta > .wave { position: relative; max-width: calc(var(--max) - var(--gutter) * 2); margin-bottom: clamp(36px, 5vw, 56px); }
+.wave path { fill: none; stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.4s var(--ease); }
 .wave.in path, .no-anim .wave path { stroke-dashoffset: 0; }
 .footer { position: relative; border-top: 0; }
 .footer__wave { position: absolute; top: -20px; left: var(--gutter); right: var(--gutter); width: calc(100% - var(--gutter) * 2); height: 40px; }
