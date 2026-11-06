@@ -3,9 +3,13 @@
   "private": true,
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "test": "node tests/smoke.mjs"
   },
   "devDependencies": {
-    "wrangler": "^4.0.0"
-  }
+    "wrangler": "^4.0.0",
+    "playwright": "^1.49.0",
+    "wait-on": "^8.0.1"
+  },
+  "type": "module"
 }

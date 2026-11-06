@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>دليل الهوية — WIXA</title>
+  <meta name="description" content="دليل الهوية البصرية لويكسا: الشعار ونسخه، الألوان، الخطوط، العنصر البصري، وقواعد الاستخدام مع ملفات للتحميل.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --m: #570622; --c: #1FC8E3; --ci: #137D90; --bg: #F7F6F8; --s: #fff; --t: #140C12; --mu: #665C64; --d: #12070C; --l: rgba(20,12,18,.09); --r: 22px; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--t); font-family: Alexandria, system-ui, sans-serif; line-height: 1.7; }
+    a { color: inherit; }
+    .wrap { max-width: 1160px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px); }
+    header.top { display: flex; justify-content: space-between; align-items: center; padding: 22px 0; }
+    header.top img { height: 30px; }
+    header.top a.back { font-size: .92rem; color: var(--mu); text-decoration: none; padding: 8px 16px; border: 1px solid var(--l); border-radius: 99px; background: var(--s); }
+    .hero { text-align: center; padding: clamp(40px, 7vw, 90px) 0 clamp(40px, 6vw, 70px); }
+    .hero img { width: min(420px, 80%); }
+    .hero h1 { font-size: clamp(2rem, 5vw, 3.4rem); margin: 30px 0 8px; line-height: 1.25; }
+    .hero p { color: var(--mu); max-width: 560px; margin: 0 auto; }
+    section { padding: clamp(40px, 6vw, 72px) 0; border-top: 1px solid var(--l); }
+    h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); margin: 0 0 6px; }
+    .lead { color: var(--mu); margin: 0 0 28px; max-width: 640px; }
+    .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    .card { background: var(--s); border: 1px solid var(--l); border-radius: var(--r); overflow: hidden; }
+    .card .art { height: 180px; display: grid; place-items: center; padding: 26px; }
+    .card .art img { max-width: 100%; max-height: 100%; }
+    .card .art.dark { background: var(--d); }
+    .card .art.brand { background: var(--m); }
+    .card .meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--l); font-size: .88rem; }
+    .card .meta b { font-weight: 600; }
+    .dl { display: flex; gap: 6px; }
+    .dl a { font-size: .78rem; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--l); text-decoration: none; direction: ltr; }
+    .dl a:hover { border-color: var(--m); color: var(--m); }
+    .swatches { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+    .sw { border-radius: var(--r); overflow: hidden; border: 1px solid var(--l); background: var(--s); cursor: pointer; text-align: start; font: inherit; padding: 0; }
+    .sw i { display: block; height: 120px; }
+    .sw div { padding: 12px 16px; }
+    .sw b { display: block; }
+    .sw span { font-size: .85rem; color: var(--mu); direction: ltr; display: inline-block; }
+    .sw.copied span::after { content: "  ✓ نُسخ"; color: #12A150; }
+    .type { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
+    .type .card { padding: 26px; }
+    .type .big { font-size: 3.2rem; line-height: 1.1; margin: 10px 0; }
+    .type .wm { height: 46px; margin: 14px 0 6px; }
+    .wavebox { background: var(--s); border: 1px solid var(--l); border-radius: var(--r); padding: 40px; display: grid; gap: 30px; place-items: center; }
+    .wavebox svg { width: min(520px, 100%); height: auto; }
+    .rules { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+    .rule { background: var(--s); border: 1px solid var(--l); border-radius: var(--r); padding: 20px; }
+    .rule h3 { margin: 0 0 6px; font-size: 1.05rem; }
+    .rule p { margin: 0; color: var(--mu); font-size: .93rem; }
+    .rule.no h3::before { content: "✕ "; color: #D92D20; }
+    .rule.yes h3::before { content: "✓ "; color: #12A150; }
+    footer { padding: 40px 0 60px; color: var(--mu); font-size: .88rem; text-align: center; }
+    @media (max-width: 720px) { .type { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <img src="/brand/wixa-horizontal-color.svg" alt="WIXA">
+      <a class="back" href="/">العودة للموقع ←</a>
+    </header>
+
+    <div class="hero">
+      <img src="/brand/wixa-lockup-color.svg" alt="WIXA — ويكسا · حلول تقنية">
+      <h1>دليل الهوية البصرية</h1>
+      <p>كل ما تحتاجه لاستخدام هوية ويكسا بشكل صحيح: الشعار بنسخه، الألوان، الخطوط، العنصر البصري، وقواعد الاستخدام — مع ملفات جاهزة للتحميل.</p>
+    </div>
+
+    <section>
+      <h2>الشعار</h2>
+      <p class="lead">استخدم النسخة الملوّنة على الخلفيات الفاتحة، والنسخة الداكنة أو البيضاء على الخلفيات الداكنة والصور. ملفات SVG للطباعة والويب، وPNG شفاف للعروض ووسائل التواصل.</p>
+      <div class="grid" id="logos"></div>
+    </section>
+
+    <section>
+      <h2>الألوان</h2>
+      <p class="lead">اضغط على أي لون لنسخ قيمته. الخمري هو لون الهوية الأساسي، والسماوي لون التمييز التقني (يُستخدم بدرجته الداكنة للنصوص على الخلفيات الفاتحة).</p>
+      <div class="swatches">
+        <button class="sw" data-hex="#570622"><i style="background:#570622"></i><div><b>خمري ويكسا</b><span>#570622</span></div></button>
+        <button class="sw" data-hex="#1FC8E3"><i style="background:#1FC8E3"></i><div><b>سماوي تقني</b><span>#1FC8E3</span></div></button>
+        <button class="sw" data-hex="#137D90"><i style="background:#137D90"></i><div><b>سماوي للنصوص</b><span>#137D90</span></div></button>
+        <button class="sw" data-hex="#12070C"><i style="background:#12070C"></i><div><b>الليلي</b><span>#12070C</span></div></button>
+        <button class="sw" data-hex="#140C12"><i style="background:#140C12"></i><div><b>النص</b><span>#140C12</span></div></button>
+        <button class="sw" data-hex="#F7F6F8"><i style="background:#F7F6F8"></i><div><b>الخلفية</b><span>#F7F6F8</span></div></button>
+      </div>
+    </section>
+
+    <section>
+      <h2>الخطوط</h2>
+      <p class="lead">خطّان فقط للحفاظ على هوية واضحة.</p>
+      <div class="type">
+        <div class="card">
+          <b>Unbounded Bold — للشعار فقط</b>
+          <div><img class="wm" src="/brand/wordmark.svg" alt="WIXA"></div>
+          <p style="color:var(--mu);margin:0">الكلمة WIXA مرسومة كمسارات في ملفات الشعار، فلا تُكتب بالخط يدوياً.</p>
+        </div>
+        <div class="card">
+          <b>Alexandria — لكل النصوص</b>
+          <div class="big" style="font-weight:800">نبني المستقبل الرقمي</div>
+          <p style="color:var(--mu);margin:0">عربي وإنجليزي · أوزان 300 / 400 / 500 / 700 / 800 · <a href="https://fonts.google.com/specimen/Alexandria" target="_blank" rel="noopener">Google Fonts</a></p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>العنصر البصري — موجة ويكسا</h2>
+      <p class="lead">منحنى مستخرج من انحناءات الرمز، يُستخدم زخرفةً فوق العناوين، وفاصلاً بين الأقسام، وخلفية خفيفة في المطبوعات.</p>
+      <div class="wavebox">
+        <svg viewBox="0 0 108 24"><defs><linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#570622"/><stop offset="1" stop-color="#1FC8E3"/></linearGradient></defs><path d="M3 12 C 15 1, 27 1, 39 12 S 63 23, 75 12 S 93 1, 105 12" fill="none" stroke="url(#g1)" stroke-width="3" stroke-linecap="round"/></svg>
+        <svg viewBox="0 0 1200 40" preserveAspectRatio="none" style="height:40px"><path d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20" fill="none" stroke="#570622" stroke-opacity=".35" stroke-width="2"/></svg>
+      </div>
+    </section>
+
+    <section>
+      <h2>قواعد الاستخدام</h2>
+      <p class="lead">لتبقى الهوية قوية ومتماسكة في كل مكان.</p>
+      <div class="rules">
+        <div class="rule yes"><h3>مساحة فارغة حول الشعار</h3><p>اترك حول الشعار مساحة لا تقل عن ارتفاع حرف W.</p></div>
+        <div class="rule yes"><h3>حد أدنى للحجم</h3><p>لا يقل عرض الشعار الأفقي عن 96px على الشاشة و25mm في الطباعة. أصغر من ذلك استخدم الرمز وحده.</p></div>
+        <div class="rule yes"><h3>تباين واضح</h3><p>الملوّن على الفاتح، والأبيض أو الداكن على الخمري والصور.</p></div>
+        <div class="rule no"><h3>لا تغيّر الألوان</h3><p>لا تلوّن الشعار بألوان خارج هذا الدليل، ولا تضف له تدرجات أو ظلالاً.</p></div>
+        <div class="rule no"><h3>لا تشوّه النسب</h3><p>لا تمطّ الشعار أو تضغطه أو تُدره، ولا تغيّر المسافة بين الرمز والكلمة.</p></div>
+        <div class="rule no"><h3>لا تعيد كتابته</h3><p>استخدم ملفات الشعار دائماً، ولا تكتب «WIXA» بخط آخر.</p></div>
+      </div>
+    </section>
+
+    <footer>© WIXA · ويكسا — دليل الهوية البصرية · <a href="mailto:info@wixa.dev">info@wixa.dev</a></footer>
+  </div>
+  <script src="/brand/brand.js" defer></script>
+</body>
+</html>

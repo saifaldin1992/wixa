@@ -507,7 +507,7 @@ function imageField(url, folder, onChange, contain = false) {
   const wrap = document.createElement("div");
   wrap.className = "img-field drop";
   wrap.innerHTML = `<div class="img-field__prev ${contain ? "contain" : ""}"></div>
-    <div><div class="img-field__btns"><label class="b b--sm">${I.upload}<span>رفع صورة</span><input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" hidden></label>
+    <div><div class="img-field__btns"><label class="b b--sm">${I.upload}<span>رفع صورة</span><input type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden></label>
     <button class="b b--sm b--ghost b--danger" type="button" data-rm>${I.x}إزالة</button></div>
     <p class="muted" style="font-size:12px;margin:6px 0 0">أو اسحب الصورة وأفلتها هنا · حتى 5MB</p></div>`;
   const prev = $(".img-field__prev", wrap), rm = $("[data-rm]", wrap);
@@ -744,13 +744,36 @@ async function refreshMsgCount() {
 }
 
 // ---------------- view: account ----------------
+// Download everything editable as one JSON file (content backup).
+async function exportBackup(btn) {
+  btn.disabled = true;
+  try {
+    const tables = ["projects", "services", "partners", "testimonials"];
+    const [s, ...rows] = await Promise.all([
+      sb.from("site_settings").select("data").eq("id", 1).maybeSingle(),
+      ...tables.map((t) => sb.from(t).select("*").order("sort")),
+    ]);
+    const err = [s, ...rows].find((r) => r.error); if (err) throw err.error;
+    const dump = { exported_at: new Date().toISOString(), site: location.host, settings: s.data?.data || {} };
+    tables.forEach((t, i) => (dump[t] = rows[i].data));
+    const blob = new Blob([JSON.stringify(dump, null, 2)], { type: "application/json" });
+    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `wixa-backup-${new Date().toISOString().slice(0, 10)}.json` });
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    toast("تم تنزيل النسخة الاحتياطية ✓");
+  } catch (e) { toast(`فشل التصدير: ${e.message}`, "err"); }
+  finally { btn.disabled = false; }
+}
+
 async function viewAccount(view) {
-  view.innerHTML = `<div class="card" style="max-width:560px"><div class="card__head"><div><h3>الحساب</h3><p dir="ltr" style="text-align:right">${esc(user.email)}</p></div>
+  view.innerHTML = `<div class="card" style="max-width:560px"><div class="card__head"><div><h3>نسخة احتياطية للمحتوى</h3><p>نزّل كل النصوص والمشاريع والخدمات والشركاء والآراء في ملف واحد. يُنصح بتنزيلها بعد كل تعديل كبير.</p></div>
+      <button class="b b--primary" id="backupBtn">${I.upload}تنزيل</button></div></div>
+    <div class="card" style="max-width:560px"><div class="card__head"><div><h3>الحساب</h3><p dir="ltr" style="text-align:right">${esc(user.email)}</p></div>
       <button class="b b--danger" id="logout">${I.out}تسجيل الخروج</button></div></div>
     <div class="card" style="max-width:560px"><div class="card__head"><h3>تغيير كلمة المرور</h3></div>
       <form id="pwForm" class="stack"><label class="f"><span>كلمة المرور الجديدة</span><input name="p1" type="password" minlength="8" required autocomplete="new-password" dir="ltr"></label>
       <label class="f"><span>تأكيد كلمة المرور</span><input name="p2" type="password" minlength="8" required autocomplete="new-password" dir="ltr"></label>
       <button class="b b--primary" style="justify-self:start">${I.save}تحديث</button></form></div>`;
+  $("#backupBtn").onclick = (e) => exportBackup(e.currentTarget);
   $("#logout").onclick = async () => { await sb.auth.signOut(); location.hash = ""; };
   $("#pwForm").onsubmit = async (e) => {
     e.preventDefault(); const f = e.target;

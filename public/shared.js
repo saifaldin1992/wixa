@@ -32,7 +32,7 @@
       address_ar: "", address_en: "",
       instagram: "", x: "", linkedin: "", facebook: "",
     },
-    sections: { story: true, projects: true, services: true, process: true, stats: true, testimonials: true, calculator: true, partners: true, contact: true },
+    sections: { story: true, projects: true, services: true, process: true, stats: false, testimonials: true, calculator: true, partners: true, contact: true },
     // Cost estimator. Prices are in USD and are only indicative ranges — review them from the dashboard.
     calculator: {
       currency: "$",
@@ -54,17 +54,13 @@
     },
     animations: true,
     mode: "auto", // default colour mode for first-time visitors: auto | light | dark
-    stats: [
-      { value: 120, suffix: "+", label_ar: "مشروع منجز", label_en: "Projects delivered" },
-      { value: 40, suffix: "+", label_ar: "عميل وشريك", label_en: "Clients & partners" },
-      { value: 1, suffix: "M+", label_ar: "مستخدم لأنظمتنا", label_en: "Users of our systems" },
-      { value: 9, suffix: "", label_ar: "سنوات خبرة", label_en: "Years of experience" },
-    ],
+    // Add your real numbers from the dashboard, then enable the section. Never ship placeholder figures.
+    stats: [],
     content: {
       ar: {
         hero_badge: "الشريك التقني لمشاريعك",
         hero_title: "نبني المستقبل الرقمي",
-        hero_sub: "ويكسا تصمم وتطور منصات وتطبيقات وأنظمة رقمية تختصر الوقت وتخدم الملايين — من الفكرة حتى التشغيل.",
+        hero_sub: "ويكسا تصمم وتطور منصات وتطبيقات وأنظمة رقمية سريعة وآمنة تختصر الوقت على عملائك — من الفكرة حتى التشغيل.",
         hero_cta: "أعمالنا",
         hero_cta2: "تواصل معنا",
         story: [
@@ -72,8 +68,8 @@
           { title: "انتهى زمن الانتظار", text: "ما كان يحتاج طابوراً صار يُنجز من الهاتف خلال دقائق." },
           { title: "نبني من الفكرة حتى التشغيل", text: "نحلل، نصمم، نطور ونشغّل — ونبقى معك بعد الإطلاق." },
         ],
-        projects_title: "إنجازاتنا",
-        projects_sub: "حلول رقمية حقيقية صنعت فرقاً لعملائنا ومستخدميهم.",
+        projects_title: "نماذج من حلولنا",
+        projects_sub: "أمثلة على المنصات والتطبيقات والأنظمة التي نبنيها، ونصممها لتناسب طبيعة عملك.",
         services_title: "خدماتنا",
         services_sub: "كل ما يحتاجه مشروعك الرقمي تحت سقف واحد.",
         stats_title: "أرقام نفخر بها",
@@ -109,7 +105,7 @@
       en: {
         hero_badge: "Your technology partner",
         hero_title: "Building the digital future",
-        hero_sub: "WIXA designs and builds platforms, apps and digital systems that save time and serve millions — from idea to operation.",
+        hero_sub: "WIXA designs and builds fast, secure platforms, apps and digital systems that save your customers time — from idea to operation.",
         hero_cta: "Our work",
         hero_cta2: "Contact us",
         story: [
@@ -117,8 +113,8 @@
           { title: "The waiting is over", text: "What used to need a queue now takes minutes on a phone." },
           { title: "From idea to operation", text: "We analyse, design, build and run — and stay with you after launch." },
         ],
-        projects_title: "Our work",
-        projects_sub: "Real digital solutions that made a difference for our clients and their users.",
+        projects_title: "Solutions we build",
+        projects_sub: "Examples of the platforms, apps and systems we build — each tailored to how your business works.",
         services_title: "Services",
         services_sub: "Everything your digital project needs, under one roof.",
         stats_title: "Numbers we're proud of",
@@ -217,7 +213,7 @@
     };
     const vars = {
       "--primary": t.primary, "--primary-rgb": hexToRgb(t.primary), "--primary-ink": t.primaryInk,
-      "--accent": t.accent, "--accent-rgb": hexToRgb(t.accent),
+      "--accent": t.accent, "--accent-rgb": hexToRgb(t.accent), "--accent-ink": mix(t.accent, "#04222A", 0.45),
       "--l-bg": t.bg, "--l-surface": t.surface, "--l-surface-rgb": hexToRgb(t.surface), "--l-text": t.text, "--l-text-rgb": hexToRgb(t.text),
       "--l-muted": t.muted, "--l-dark": t.dark, "--l-dark-rgb": hexToRgb(t.dark), "--l-fg": t.primary, "--l-fg-rgb": hexToRgb(t.primary),
       "--dk-bg": dk.bg, "--dk-surface": dk.surface, "--dk-surface-rgb": hexToRgb(dk.surface), "--dk-text": dk.text, "--dk-text-rgb": hexToRgb(dk.text),

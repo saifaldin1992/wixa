@@ -1,5 +1,25 @@
 // WIXA — Cloudflare Worker: serves the site (public/) and the API.
-const json = (data, status = 200, headers = {}) => Response.json(data, { status, headers });
+//
+// Built to stay fast under heavy traffic:
+//  • Site content is read from Supabase at most once a minute per edge location
+//    (isolate memory + Cloudflare edge cache), never once per visitor.
+//  • The homepage HTML gets that content injected, so a visit needs no extra API round trip.
+//  • Writes (contact form, page views) are rate limited per IP and go through
+//    token-checked database functions, so nobody can write to the database directly.
+
+const SITE_TTL = 60; // seconds the site content may be served from cache
+// Keep in sync with public/_headers. The sha256 is the inline theme script in index.html.
+const CSP = "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://challenges.cloudflare.com 'sha256-NVKT0UrdROLsGcatClpvEhxXytwpjLyEshzIKuByDnE='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'";
+const SECURITY_HEADERS = {
+  "content-security-policy": CSP,
+  "permissions-policy": "camera=(), microphone=(), geolocation=()",
+  "x-content-type-options": "nosniff",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "x-frame-options": "SAMEORIGIN",
+};
+
+const json = (data, status = 200, headers = {}) =>
+  Response.json(data, { status, headers: { ...SECURITY_HEADERS, ...headers } });
 
 function sb(env, path, init = {}) {
   return fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, {
@@ -8,31 +28,97 @@ function sb(env, path, init = {}) {
   });
 }
 
-// GET /api/site — everything the public page needs, in one request.
-async function handleSite(env) {
-  const q = (t) => sb(env, `${t}?select=*&published=eq.true&order=sort.asc,created_at.asc`).then((r) => (r.ok ? r.json() : []));
+// ---------------------------------------------------------------- site content (cached)
+let memo = { at: 0, text: null }; // per-isolate copy
+
+async function loadFromSupabase(env) {
+  const q = (t) => sb(env, `${t}?select=*&published=eq.true&order=sort.asc,created_at.asc`).then((r) => {
+    if (!r.ok) throw new Error(`${t} ${r.status}`);
+    return r.json();
+  });
   const [settings, projects, services, partners, testimonials] = await Promise.all([
-    sb(env, "site_settings?select=data&id=eq.1").then((r) => (r.ok ? r.json() : [])),
+    sb(env, "site_settings?select=data&id=eq.1").then((r) => { if (!r.ok) throw new Error(`settings ${r.status}`); return r.json(); }),
     q("projects"), q("services"), q("partners"), q("testimonials"),
   ]);
-  return json(
-    { env: env.SITE_ENV || "production", settings: settings[0]?.data || {}, projects, services, partners, testimonials },
-    200,
-    { "cache-control": "public, max-age=10" },
-  );
+  return JSON.stringify({
+    env: env.SITE_ENV || "production",
+    turnstile: env.TURNSTILE_SITE_KEY || "",
+    settings: settings[0]?.data || {},
+    projects, services, partners, testimonials,
+  });
 }
 
-// POST /api/track — anonymous page view. The visitor id is a daily-rotating hash, never the raw IP.
-async function handleTrack(request, env) {
+async function getSiteData(env, ctx) {
+  const now = Date.now();
+  if (memo.text && now - memo.at < SITE_TTL * 1000) return memo.text;
+
+  const cache = caches.default;
+  const key = new Request(`https://wixa-cache.internal/site-data/${env.SITE_ENV || "production"}`);
+  const hit = await cache.match(key);
+  if (hit) {
+    memo = { at: now, text: await hit.text() };
+    return memo.text;
+  }
+  try {
+    const text = await loadFromSupabase(env);
+    memo = { at: now, text };
+    ctx.waitUntil(cache.put(key, new Response(text, { headers: { "content-type": "application/json", "cache-control": `public, max-age=${SITE_TTL}` } })));
+    return text;
+  } catch (err) {
+    console.error("site data", err);
+    if (memo.text) return memo.text; // serve the last good copy if Supabase is unavailable
+    return JSON.stringify({ env: env.SITE_ENV || "production", turnstile: env.TURNSTILE_SITE_KEY || "", settings: {}, projects: [], services: [], partners: [], testimonials: [] });
+  }
+}
+
+// GET / — static HTML with the content embedded (no flash of default text, one request per visit).
+async function handleHome(request, env, ctx) {
+  const [page, data] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx)]);
+  const safe = data.replace(/</g, "\\u003c");
+  const res = new HTMLRewriter()
+    .on("head", { element: (el) => el.append(`<script id="wixa-data" type="application/json">${safe}</script>`, { html: true }) })
+    .transform(page);
+  const headers = new Headers(res.headers);
+  headers.set("cache-control", "no-cache");
+  headers.delete("etag");
+  for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v);
+  return new Response(res.body, { status: res.status, headers });
+}
+
+// ---------------------------------------------------------------- protection helpers
+const clientIp = (request) => request.headers.get("cf-connecting-ip") || "0.0.0.0";
+
+async function allowed(limiter, key) {
+  if (!limiter) return true; // binding not configured (local dev)
+  try { return (await limiter.limit({ key })).success; } catch { return true; }
+}
+
+async function turnstileOk(env, token, ip) {
+  if (!env.TURNSTILE_SECRET) return true; // not configured (local dev)
+  if (!token) return false;
+  const form = new FormData();
+  form.append("secret", env.TURNSTILE_SECRET);
+  form.append("response", token);
+  form.append("remoteip", ip);
+  const r = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", { method: "POST", body: form });
+  const d = await r.json().catch(() => ({}));
+  return d.success === true;
+}
+
+const rpc = (env, fn, p) => sb(env, `rpc/${fn}`, { method: "POST", body: JSON.stringify({ token: env.WRITE_TOKEN || "", p }) });
+
+// ---------------------------------------------------------------- POST /api/track
+// Anonymous page view. The visitor id is a daily-rotating salted hash, never the raw IP.
+async function handleTrack(request, env, ctx) {
+  const ip = clientIp(request);
+  const ua = request.headers.get("user-agent") || "";
+  if (/bot|crawl|spider|slurp|preview|headless|lighthouse/i.test(ua)) return new Response(null, { status: 204 });
+  if (!(await allowed(env.TRACK_LIMITER, ip))) return new Response(null, { status: 204 });
+
   let body = {};
   try { body = await request.json(); } catch {}
-  const ip = request.headers.get("cf-connecting-ip") || "0.0.0.0";
-  const ua = request.headers.get("user-agent") || "";
-  if (/bot|crawl|spider|slurp|preview|headless/i.test(ua)) return new Response(null, { status: 204 });
-
   const day = new Date().toISOString().slice(0, 10);
-  const salt = env.VISITOR_SALT || "wixa";
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${salt}|${day}|${ip}|${ua}`));
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${env.VISITOR_SALT || "wixa"}|${day}|${ip}|${ua}`));
   const visitor_hash = [...new Uint8Array(digest)].slice(0, 16).map((b) => b.toString(16).padStart(2, "0")).join("");
 
   let referrer = null;
@@ -41,25 +127,23 @@ async function handleTrack(request, env) {
     if (r.host && r.host !== new URL(request.url).host) referrer = r.host.slice(0, 300);
   } catch {}
 
-  const device = /ipad|tablet/i.test(ua) ? "tablet" : /mobi|android|iphone/i.test(ua) ? "mobile" : "desktop";
-  const country = (request.cf && request.cf.country && /^[A-Z]{2}$/.test(request.cf.country)) ? request.cf.country : null;
-  const path = typeof body.path === "string" && body.path.startsWith("/") ? body.path.slice(0, 300) : "/";
-
-  const res = await sb(env, "page_views", {
-    method: "POST",
-    headers: { prefer: "return=minimal" },
-    body: JSON.stringify({ path, visitor_hash, referrer, country, device, lang: body.lang === "en" ? "en" : "ar" }),
-  });
-  if (!res.ok) console.error("track failed", res.status, await res.text());
+  const p = {
+    path: typeof body.path === "string" && body.path.startsWith("/") ? body.path.slice(0, 300) : "/",
+    visitor_hash, referrer,
+    country: request.cf?.country && /^[A-Z]{2}$/.test(request.cf.country) ? request.cf.country : null,
+    device: /ipad|tablet/i.test(ua) ? "tablet" : /mobi|android|iphone/i.test(ua) ? "mobile" : "desktop",
+    lang: body.lang === "en" ? "en" : "ar",
+  };
+  // Respond immediately; the write finishes in the background.
+  ctx.waitUntil(rpc(env, "track_view", p).then(async (r) => { if (!r.ok) console.error("track", r.status, await r.text()); }));
   return new Response(null, { status: 204 });
 }
 
-// POST /api/contact — contact form.
+// ---------------------------------------------------------------- POST /api/contact
 // Email the site owner about a new message (needs RESEND_API_KEY and NOTIFY_EMAIL secrets on the Worker).
 async function notifyOwner(env, row) {
   if (!env.RESEND_API_KEY) return;
-  // Recipient is a private Worker secret (NOTIFY_EMAIL), never stored in the public site settings.
-  const to = env.NOTIFY_EMAIL || "";
+  const to = env.NOTIFY_EMAIL || ""; // private Worker secret, never stored in the public site settings
   if (!to) return;
   const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const staging = env.SITE_ENV === "staging";
@@ -87,9 +171,13 @@ async function notifyOwner(env, row) {
 }
 
 async function handleContact(request, env, ctx) {
+  const ip = clientIp(request);
+  if (!(await allowed(env.CONTACT_LIMITER, ip))) return json({ error: "rate_limited" }, 429);
+
   let body;
   try { body = await request.json(); } catch { return json({ error: "invalid_json" }, 400); }
   if (body.website) return json({ ok: true }); // honeypot
+  if (!(await turnstileOk(env, body.turnstile, ip))) return json({ error: "captcha" }, 403);
 
   const clean = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
   const row = {
@@ -102,15 +190,16 @@ async function handleContact(request, env, ctx) {
   };
   if (!row.name || !row.message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) return json({ error: "validation" }, 422);
 
-  const res = await sb(env, "contact_messages", { method: "POST", headers: { prefer: "return=minimal" }, body: JSON.stringify(row) });
+  const res = await rpc(env, "submit_contact", row);
   if (!res.ok) {
     console.error("contact insert failed", res.status, await res.text());
     return json({ error: "storage" }, 502);
   }
-  ctx?.waitUntil(notifyOwner(env, row).catch((e) => console.error("notify", e)));
+  ctx.waitUntil(notifyOwner(env, row).catch((e) => console.error("notify", e)));
   return json({ ok: true }, 201);
 }
 
+// ---------------------------------------------------------------- router
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -118,22 +207,29 @@ export default {
 
     try {
       switch (route) {
-        case "GET /api/site": return await handleSite(env);
-        case "POST /api/track": return await handleTrack(request, env);
+        case "GET /":
+        case "GET /index.html":
+          return await handleHome(request, env, ctx);
+        case "GET /api/site":
+          return new Response(await getSiteData(env, ctx), {
+            headers: { ...SECURITY_HEADERS, "content-type": "application/json; charset=utf-8", "cache-control": `public, max-age=${SITE_TTL}` },
+          });
+        case "POST /api/track": return await handleTrack(request, env, ctx);
         case "POST /api/contact": return await handleContact(request, env, ctx);
         case "GET /api/config":
           // Public values the admin dashboard needs to talk to Supabase.
           return json({ env: env.SITE_ENV || "production", supabaseUrl: env.SUPABASE_URL, supabaseKey: env.SUPABASE_PUBLISHABLE_KEY });
         case "GET /sitemap.xml": {
           const today = new Date().toISOString().slice(0, 10);
-          return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://wixa.dev/</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url></urlset>\n`, {
-            headers: { "content-type": "application/xml; charset=utf-8" },
+          const urls = ["/", "/brand/"].map((p) => `<url><loc>https://wixa.dev${p}</loc><lastmod>${today}</lastmod></url>`).join("");
+          return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>\n`, {
+            headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" },
           });
         }
         case "GET /robots.txt":
           // Keep the staging copy out of search engines.
           return new Response(env.SITE_ENV === "staging" ? "User-agent: *\nDisallow: /\n" : "User-agent: *\nDisallow: /admin/\nSitemap: https://wixa.dev/sitemap.xml\n", {
-            headers: { "content-type": "text/plain; charset=utf-8" },
+            headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" },
           });
         case "GET /health": {
           let supabase = "unreachable";
@@ -141,7 +237,7 @@ export default {
             const r = await fetch(`${env.SUPABASE_URL}/auth/v1/health`, { headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY } });
             supabase = r.ok ? "ok" : `error ${r.status}`;
           } catch (err) { supabase = `error: ${err.message}`; }
-          return json({ worker: "ok", env: env.SITE_ENV || "production", supabase });
+          return json({ worker: "ok", env: env.SITE_ENV || "production", supabase }, 200, { "cache-control": "no-store" });
         }
       }
       if (url.pathname.startsWith("/api/")) return json({ error: "not_found" }, 404);

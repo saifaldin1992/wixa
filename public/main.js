@@ -9,11 +9,11 @@
   const reducedOS = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const UI = {
-    ar: { nav_home: "الرئيسية", nav_projects: "إنجازاتنا", nav_services: "خدماتنا", nav_partners: "شركاؤنا", nav_contact: "تواصل معنا",
+    ar: { nav_home: "الرئيسية", nav_projects: "حلولنا", nav_services: "خدماتنا", nav_partners: "شركاؤنا", nav_contact: "تواصل معنا", nav_brand: "الهوية البصرية",
       lang: "English", f_name: "الاسم", f_email: "البريد الإلكتروني", f_phone: "رقم الهاتف (اختياري)", f_service: "الخدمة المطلوبة", f_any: "استشارة عامة",
       f_message: "حدّثنا عن مشروعك", f_send: "إرسال", sending: "جارٍ الإرسال…", ok: "شكراً لك! وصلت رسالتك وسنتواصل معك قريباً.", err: "تعذّر الإرسال، حاول مرة أخرى.", invalid: "يرجى تعبئة الحقول المطلوبة بشكل صحيح.",
       no_projects: "ستُعرض المشاريع هنا قريباً.", step: "٠" },
-    en: { nav_home: "Home", nav_projects: "Our work", nav_services: "Services", nav_partners: "Partners", nav_contact: "Contact",
+    en: { nav_home: "Home", nav_projects: "Solutions", nav_services: "Services", nav_partners: "Partners", nav_contact: "Contact", nav_brand: "Brand guide",
       lang: "العربية", f_name: "Name", f_email: "Email", f_phone: "Phone (optional)", f_service: "Service", f_any: "General enquiry",
       f_message: "Tell us about your project", f_send: "Send", sending: "Sending…", ok: "Thank you! Your message arrived and we'll be in touch soon.", err: "Couldn't send. Please try again.", invalid: "Please fill in the required fields correctly.",
       no_projects: "Projects will appear here soon.", step: "0" },
@@ -84,6 +84,7 @@
     }
     if (!state.partners.length) { $$('[data-section="partners"], [data-sec="partners"]').forEach((el) => (el.hidden = true)); }
     if (!(state.testimonials || []).length) $$('[data-section="testimonials"]').forEach((el) => (el.hidden = true));
+    if (!(s.stats || []).length) $$('[data-section="stats"]').forEach((el) => (el.hidden = true));
 
     // story
     $("#storyList").innerHTML = (c.story || []).map((it, i) => `
@@ -160,6 +161,8 @@
     $("#year").textContent = new Date().getFullYear();
 
     buildHeroLogo();
+    // "WIXA wave": the logo's double curve as a signature ornament above every section title
+    $$(".head").forEach((h, i) => { if (!h.querySelector(".wave")) h.insertAdjacentHTML("afterbegin", `<svg class="wave" viewBox="0 0 108 24" aria-hidden="true"><defs><linearGradient id="wv${i}" x1="0" x2="1"><stop offset="0" style="stop-color:var(--fg)"/><stop offset="1" style="stop-color:var(--accent)"/></linearGradient></defs><path pathLength="1" stroke="url(#wv${i})" d="M3 12 C 15 1, 27 1, 39 12 S 63 23, 75 12 S 93 1, 105 12"/></svg>`); });
     renderProcess();
     renderTestimonials();
     renderCalc();
@@ -371,9 +374,32 @@
   }
 
   // ---------- contact form helper ----------
+  // ---------- Turnstile (bot protection), loaded lazily ----------
+  let tsWidget = null, tsLoading = null;
+  function ensureTurnstile() {
+    const key = state.turnstile;
+    if (!key || tsWidget !== null || PREVIEW) return;
+    tsLoading ??= new Promise((res) => {
+      window.onWixaTurnstile = res;
+      const sc = document.createElement("script");
+      sc.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onWixaTurnstile&render=explicit";
+      sc.async = true; document.head.appendChild(sc);
+    });
+    tsLoading.then(() => {
+      if (tsWidget !== null) return;
+      tsWidget = window.turnstile.render("#turnstile", {
+        sitekey: key, language: lang, appearance: "interaction-only",
+        theme: document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light",
+      });
+    });
+  }
+  const turnstileToken = () => { try { return tsWidget !== null ? window.turnstile.getResponse(tsWidget) || "" : ""; } catch { return ""; } };
+  const resetTurnstile = () => { try { if (tsWidget !== null) window.turnstile.reset(tsWidget); } catch {} };
+
   function openContact(message = "") {
     const f = $("#contactForm");
     f.classList.add("open");
+    ensureTurnstile();
     if (message) f.elements.message.value = message;
     const target = $("#contact");
     if (window.__lenis) window.__lenis.scrollTo(target, { offset: -80 }); else target.scrollIntoView({ behavior: "smooth" });
@@ -447,7 +473,7 @@
     io ??= new IntersectionObserver((entries) => entries.forEach((e) => {
       if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
     }), { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
-    $$(".reveal-up:not(.in), .story-item:not(.in), .hero:not(.in)").forEach((el) => io.observe(el));
+    $$(".reveal-up:not(.in), .story-item:not(.in), .hero:not(.in), .wave:not(.in), .footer__wave:not(.in)").forEach((el) => io.observe(el));
 
     cio ??= new IntersectionObserver((entries) => entries.forEach((e) => {
       if (!e.isIntersecting) return;
@@ -487,7 +513,7 @@
     $("#langBtn2").addEventListener("click", switchLang);
 
     $("#openForm").addEventListener("click", () => {
-      const f = $("#contactForm"); f.classList.add("open");
+      const f = $("#contactForm"); f.classList.add("open"); ensureTurnstile();
       setTimeout(() => { f.querySelector("input").focus({ preventScroll: true }); window.ScrollTrigger && ScrollTrigger.refresh(); }, 500);
     });
 
@@ -514,11 +540,11 @@
         const svc = form.elements.service.value;
         const res = await fetch("/api/contact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({
           name: form.elements.name.value, email: form.elements.email.value, phone: form.elements.phone.value,
-          message: form.elements.message.value, services: svc ? [svc] : [], lang, website: form.elements.website.value }) });
+          message: form.elements.message.value, services: svc ? [svc] : [], lang, website: form.elements.website.value, turnstile: turnstileToken() }) });
         if (!res.ok) throw new Error(res.status);
         form.reset(); status.className = "form__status ok"; status.textContent = ui.ok;
       } catch { status.className = "form__status err"; status.textContent = ui.err; }
-      finally { btnS.disabled = false; }
+      finally { btnS.disabled = false; resetTurnstile(); }
     });
   }
 
@@ -549,12 +575,17 @@
 
   // ---------- data ----------
   async function load() {
+    // The Worker embeds the content in the page, so normally no request is needed.
+    try {
+      const el = document.getElementById("wixa-data");
+      if (el) { setData(JSON.parse(el.textContent)); try { localStorage.setItem("wixa-site", el.textContent); } catch {} return; }
+    } catch {}
     try {
       const cached = JSON.parse(localStorage.getItem("wixa-site") || "null");
       if (cached && !PREVIEW) setData(cached);
     } catch {}
     try {
-      const res = await fetch("/api/site", { cache: "no-store" });
+      const res = await fetch("/api/site");
       if (!res.ok) throw new Error(res.status);
       const data = await res.json();
       setData(data);
@@ -566,11 +597,17 @@
     state = {
       settings: merge(DEFAULTS, d.settings || {}),
       projects: d.projects || [], services: d.services || [], partners: d.partners || [], testimonials: d.testimonials || [],
+      turnstile: d.turnstile || "",
     };
   }
 
   function track() {
     if (PREVIEW) return;
+    try {
+      const k = `wixa-seen:${location.pathname}`;
+      if (sessionStorage.getItem(k)) return;
+      sessionStorage.setItem(k, "1");
+    } catch {}
     const body = JSON.stringify({ path: location.pathname, referrer: document.referrer, lang });
     try { navigator.sendBeacon ? navigator.sendBeacon("/api/track", new Blob([body], { type: "application/json" })) : fetch("/api/track", { method: "POST", body, keepalive: true }); } catch {}
   }
@@ -605,7 +642,10 @@
       setupMotion();
       track();
     };
-    if (document.readyState === "complete") start(); else addEventListener("load", start, { once: true });
+    let started = false;
+    const once = () => { if (!started) { started = true; start(); } };
+    if (document.readyState === "complete") once();
+    else { addEventListener("load", once, { once: true }); setTimeout(once, 1200); }
     if (PREVIEW) parent.postMessage({ type: "wixa-preview-ready" }, location.origin);
   })();
 })();

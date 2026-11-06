@@ -1,0 +1,25 @@
+name: Smoke tests
+
+on:
+  push:
+    branches: [staging, main]
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # Local run: no database, no captcha — the site falls back to its built-in content.
+      - run: printf 'SUPABASE_URL="http://127.0.0.1:9"\nTURNSTILE_SITE_KEY=""\n' > .dev.vars
+      - run: npx wrangler dev --port 8787 > wrangler.log 2>&1 &
+      - run: npx wait-on -t 60000 http://localhost:8787/health
+      - run: npm test
+      - if: failure()
+        run: cat wrangler.log

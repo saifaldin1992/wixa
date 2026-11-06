@@ -219,6 +219,7 @@
           <label class="field field--full"><span data-t="f_message"></span><textarea name="message" required maxlength="4000" rows="4"></textarea></label>
         </div>
         <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <div id="turnstile" class="turnstile"></div>
         <div class="form__end">
           <p class="form__status" id="formStatus" role="status"></p>
           <button class="btn btn--primary" type="submit"><span data-t="f_send"></span></button>
@@ -229,6 +230,7 @@
   </main>
 
   <footer class="footer">
+    <svg class="footer__wave" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
     <div class="footer__top">
       <a href="#top" class="brand"><span class="brand__mark"><svg viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg></span><span class="brand__name" data-t="brand"></span></a>
       <nav class="footer__nav">
@@ -236,6 +238,7 @@
         <a href="#projects" data-t="nav_projects" data-sec="projects"></a>
         <a href="#partners" data-t="nav_partners" data-sec="partners"></a>
         <a href="#contact" data-t="nav_contact" data-sec="contact"></a>
+        <a href="/brand/" data-t="nav_brand"></a>
       </nav>
     </div>
     <div class="footer__bottom">

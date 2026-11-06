@@ -3,26 +3,41 @@
 #   production : wixa.dev         ← branch `main`     (npx wrangler deploy)
 #   staging    : staging.wixa.dev ← branch `staging`  (npx wrangler deploy --env staging)
 #  Each has its own Supabase project. Only public (publishable) keys live here.
+#  Secrets set on each Worker (never in git): WRITE_TOKEN, VISITOR_SALT,
+#  TURNSTILE_SECRET, RESEND_API_KEY, NOTIFY_EMAIL.
 # ─────────────────────────────────────────────────────────────
 name = "wixa"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
 
-# Static site (public/) is served first; these paths go to the Worker.
-[assets]
-directory = "./public"
-not_found_handling = "single-page-application"
-run_worker_first = ["/api/*", "/health", "/robots.txt", "/sitemap.xml"]
-
-# ---------- production ----------
+# ---------- production (top-level keys must come before any [table]) ----------
 workers_dev = true
 routes = [
   { pattern = "wixa.dev", custom_domain = true },
   { pattern = "www.wixa.dev", custom_domain = true },
 ]
 
+# Static site (public/) is served first; these paths go to the Worker.
+[assets]
+directory = "./public"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/", "/index.html", "/api/*", "/health", "/robots.txt", "/sitemap.xml"]
+
+# Abuse protection: per-IP limits, counted per Cloudflare location.
+[[ratelimits]]
+name = "CONTACT_LIMITER"
+namespace_id = "1001"
+simple = { limit = 5, period = 60 }
+
+[[ratelimits]]
+name = "TRACK_LIMITER"
+namespace_id = "1002"
+simple = { limit = 30, period = 60 }
+
 [vars]
 SITE_ENV = "production"
+TURNSTILE_SITE_KEY = "0x4AAAAAAF18CPavg0KnYszj"
 SUPABASE_URL = "https://oswetqychjhfrwulzkjy.supabase.co"
 SUPABASE_PUBLISHABLE_KEY = "sb_publishable_m6oe17fpFQvF1huyQ_8U_g_4NLmHiAm"
 
@@ -34,7 +49,18 @@ routes = [
   { pattern = "staging.wixa.dev", custom_domain = true },
 ]
 
+[[env.staging.ratelimits]]
+name = "CONTACT_LIMITER"
+namespace_id = "2001"
+simple = { limit = 5, period = 60 }
+
+[[env.staging.ratelimits]]
+name = "TRACK_LIMITER"
+namespace_id = "2002"
+simple = { limit = 30, period = 60 }
+
 [env.staging.vars]
 SITE_ENV = "staging"
+TURNSTILE_SITE_KEY = "0x4AAAAAAF18CPavg0KnYszj"
 SUPABASE_URL = "https://zwusczwhlshdgnoyesde.supabase.co"
 SUPABASE_PUBLISHABLE_KEY = "sb_publishable_bw5DNoKlh5foR4Ibq0PljQ_BvVa6fFn"
