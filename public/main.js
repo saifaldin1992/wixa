@@ -207,7 +207,18 @@
       <path class="lg-glow" d="${logoD}" fill-rule="evenodd"/>
       <path class="lg-fill" d="${logoD}" fill-rule="evenodd"/>
       <g clip-path="url(#lgClip)"><rect class="lg-shine lg-shine-bar" x="0" y="-100" width="700" height="1200" transform="skewX(-18)"/></g>
-      <path class="lg-stroke" d="${logoD}" pathLength="1"/>`;
+      <path class="lg-stroke" d="${logoD}" pathLength="1"/>
+      ${runnerDot(logoD)}`;
+  }
+
+  // A glowing dot that travels along the logo's outer outline (the longest sub-path).
+  function runnerDot(d) {
+    const outer = d.split(/(?=M)/).sort((a, b) => b.length - a.length)[0];
+    const motion = anim ? `<animateMotion dur="11s" begin="2.8s" repeatCount="indefinite" rotate="auto" path="${outer}"/>` : "";
+    // without animation the dot simply rests at the start of the outline
+    const start = outer.match(/M\s*([-\d.]+)[ ,]([-\d.]+)/) || [0, 0, 0];
+    return `<g class="lg-runner" ${anim ? "" : `transform="translate(${start[1]} ${start[2]})"`}>
+      <circle class="lg-runner__halo" r="60"/><circle class="lg-runner__dot" r="22"/>${motion}</g>`;
   }
 
   // ---------- hero: floating particles ----------

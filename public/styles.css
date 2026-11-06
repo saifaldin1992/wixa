@@ -158,6 +158,13 @@ html[data-theme="dark"] .hero__logo .lg-shine { mix-blend-mode: screen; }
 .orbit-ring { position: absolute; left: 50%; top: 50%; border: 1px dashed rgba(var(--fg-rgb), .2); border-radius: 50%; translate: -50% -50%; pointer-events: none; opacity: 0; }
 .orbit-ring--1 { width: 150%; height: 190%; animation: spin 40s linear infinite; }
 .orbit-ring--2 { width: 196%; height: 250%; border-style: solid; border-color: rgba(var(--fg-rgb), .1); animation: spin 60s linear infinite reverse; }
+.orbit-ring--1 i { display: none; } /* the cyan dot now travels along the logo itself */
+.lg-runner { opacity: 0; }
+.hero.in .lg-runner { animation: lgRunnerIn .8s var(--ease-out) 2.8s forwards; }
+.no-anim .lg-runner { opacity: 1; }
+.lg-runner__dot { fill: var(--accent); }
+.lg-runner__halo { fill: var(--accent); opacity: .25; filter: blur(10px); }
+@keyframes lgRunnerIn { to { opacity: 1; } }
 .orbit-ring i { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); top: -5px; left: 50%; box-shadow: 0 0 0 6px rgba(var(--accent-rgb), .18), 0 0 18px rgba(var(--accent-rgb), .8); }
 .orbit-ring--2 i { background: var(--fg); top: auto; bottom: 12%; left: 4%; box-shadow: 0 0 0 5px rgba(var(--fg-rgb), .15); width: 7px; height: 7px; }
 .hero.in .orbit-ring { animation-name: spin, ringIn; animation-duration: 40s, 1.4s; animation-delay: 0s, 2.4s; animation-fill-mode: none, forwards; animation-timing-function: linear, var(--ease-out); animation-iteration-count: infinite, 1; }
