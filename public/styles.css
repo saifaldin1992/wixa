@@ -124,7 +124,7 @@ section { position: relative; }
 .hero__bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
 .hero__grid { position: absolute; inset: 0; background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 64px 64px; mask-image: radial-gradient(ellipse 60% 55% at 50% 42%, #000 15%, transparent 75%); -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 42%, #000 15%, transparent 75%); }
 .aurora { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .55; will-change: transform; }
-.aurora--1 { width: 46vw; height: 46vw; max-width: 640px; max-height: 640px; left: 50%; top: 34%; translate: -50% -50%; background: radial-gradient(circle, rgba(var(--primary-rgb), .38), transparent 65%); animation: drift1 16s ease-in-out infinite alternate; }
+.aurora--1 { width: 46vw; height: 46vw; max-width: 640px; max-height: 640px; left: calc(50% - min(23vw, 320px)); top: calc(34% - min(23vw, 320px)); background: radial-gradient(circle, rgba(var(--primary-rgb), .38), transparent 65%); animation: drift1 16s ease-in-out infinite alternate; }
 .aurora--2 { width: 30vw; height: 30vw; max-width: 420px; max-height: 420px; left: 22%; top: 60%; background: radial-gradient(circle, rgba(var(--accent-rgb), .32), transparent 65%); animation: drift2 19s ease-in-out infinite alternate; }
 .aurora--3 { width: 28vw; height: 28vw; max-width: 380px; max-height: 380px; right: 14%; top: 18%; background: radial-gradient(circle, rgba(var(--fg-rgb), .26), transparent 65%); animation: drift3 22s ease-in-out infinite alternate; }
 html[data-theme="dark"] .aurora { opacity: .8; }

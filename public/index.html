@@ -59,14 +59,14 @@
     <div class="header__bar">
       <a href="#top" class="brand" aria-label="WIXA">
         <span class="brand__mark" id="brandMark"><svg viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg></span>
-        <span class="brand__name" data-t="brand"></span>
+        <span class="brand__name" data-t="brand"><svg class="wm" viewBox="0 0 716.6 150" aria-hidden="true"><use href="/brand/wordmark.svg#wm"/></svg><span class="sr-only">ويكسا</span></span>
       </a>
       <nav class="header__nav" aria-label="main">
-        <a href="#top" data-t="nav_home"></a>
-        <a href="#projects" data-t="nav_projects" data-sec="projects"></a>
-        <a href="#services" data-t="nav_services" data-sec="services"></a>
-        <a href="#partners" data-t="nav_partners" data-sec="partners"></a>
-        <a href="#contact" data-t="nav_contact" data-sec="contact"></a>
+        <a href="#top" data-t="nav_home">الرئيسية</a>
+        <a href="#projects" data-t="nav_projects" data-sec="projects">حلولنا</a>
+        <a href="#services" data-t="nav_services" data-sec="services">خدماتنا</a>
+        <a href="#partners" data-t="nav_partners" data-sec="partners">شركاؤنا</a>
+        <a href="#contact" data-t="nav_contact" data-sec="contact">تواصل معنا</a>
       </nav>
       <div class="header__end">
         <button class="theme-btn" id="themeBtn" type="button" aria-label="الوضع الليلي">
@@ -78,11 +78,11 @@
       </div>
     </div>
     <div class="header__menu" id="menu">
-      <a href="#top" data-t="nav_home"></a>
-      <a href="#projects" data-t="nav_projects" data-sec="projects"></a>
-      <a href="#services" data-t="nav_services" data-sec="services"></a>
-      <a href="#partners" data-t="nav_partners" data-sec="partners"></a>
-      <a href="#contact" data-t="nav_contact" data-sec="contact"></a>
+      <a href="#top" data-t="nav_home">الرئيسية</a>
+      <a href="#projects" data-t="nav_projects" data-sec="projects">حلولنا</a>
+      <a href="#services" data-t="nav_services" data-sec="services">خدماتنا</a>
+      <a href="#partners" data-t="nav_partners" data-sec="partners">شركاؤنا</a>
+      <a href="#contact" data-t="nav_contact" data-sec="contact">تواصل معنا</a>
     </div>
   </header>
   <div class="scrim" id="scrim"></div>
@@ -101,9 +101,9 @@
           <span class="orbit-ring orbit-ring--1"><i></i></span>
           <div class="hero__logo-float"><svg id="heroLogoSvg" viewBox="0 0 2021 982"></svg></div>
         </div>
-        <span class="badge reveal-up"><i class="pulse"></i><span data-c="hero_badge"></span></span>
-        <h1 class="hero__title" id="heroTitle" data-c="hero_title"></h1>
-        <p class="hero__sub reveal-up" data-c="hero_sub"></p>
+        <span class="badge reveal-up"><i class="pulse"></i><span data-c="hero_badge">الشريك التقني لمشاريعك</span></span>
+        <h1 class="hero__title" id="heroTitle" data-c="hero_title"><span class="word"><span style="transition-delay:0ms">نبني</span></span> <span class="word"><span style="transition-delay:70ms">المستقبل</span></span> <span class="word"><span style="transition-delay:140ms">الرقمي</span></span></h1>
+        <p class="hero__sub reveal-up" data-c="hero_sub">ويكسا تصمم وتطور منصات وتطبيقات وأنظمة رقمية سريعة وآمنة تختصر الوقت على عملائك — من الفكرة حتى التشغيل.</p>
         <div class="hero__ctas reveal-up">
           <a href="#projects" class="btn btn--primary magnetic"><span data-c="hero_cta"></span><svg class="arr" viewBox="0 0 24 24"><path d="M19 12H5m0 0l6-6m-6 6l6 6"/></svg></a>
           <a href="#contact" class="btn btn--ghost"><span data-c="hero_cta2"></span></a>
@@ -214,17 +214,17 @@
       <form class="form" id="contactForm" novalidate>
        <div class="form__inner">
         <div class="form__grid">
-          <label class="field"><span data-t="f_name"></span><input name="name" required maxlength="120" autocomplete="name"></label>
-          <label class="field"><span data-t="f_email"></span><input name="email" type="email" required maxlength="200" autocomplete="email" dir="ltr"></label>
-          <label class="field"><span data-t="f_phone"></span><input name="phone" type="tel" maxlength="40" autocomplete="tel" dir="ltr"></label>
-          <label class="field"><span data-t="f_service"></span><select name="service" id="serviceSelect"></select></label>
-          <label class="field field--full"><span data-t="f_message"></span><textarea name="message" required maxlength="4000" rows="4"></textarea></label>
+          <label class="field"><span data-t="f_name">الاسم</span><input name="name" required maxlength="120" autocomplete="name"></label>
+          <label class="field"><span data-t="f_email">البريد الإلكتروني</span><input name="email" type="email" required maxlength="200" autocomplete="email" dir="ltr"></label>
+          <label class="field"><span data-t="f_phone">رقم الهاتف (اختياري)</span><input name="phone" type="tel" maxlength="40" autocomplete="tel" dir="ltr"></label>
+          <label class="field"><span data-t="f_service">الخدمة المطلوبة</span><select name="service" id="serviceSelect"></select></label>
+          <label class="field field--full"><span data-t="f_message">حدّثنا عن مشروعك</span><textarea name="message" required maxlength="4000" rows="4"></textarea></label>
         </div>
         <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
         <div id="turnstile" class="turnstile"></div>
         <div class="form__end">
           <p class="form__status" id="formStatus" role="status"></p>
-          <button class="btn btn--primary" type="submit"><span data-t="f_send"></span></button>
+          <button class="btn btn--primary" type="submit"><span data-t="f_send">إرسال</span></button>
         </div>
        </div>
       </form>
@@ -234,13 +234,13 @@
   <footer class="footer">
     <svg class="footer__wave" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
     <div class="footer__top">
-      <a href="#top" class="brand"><span class="brand__mark"><svg viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg></span><span class="brand__name" data-t="brand"></span></a>
+      <a href="#top" class="brand"><span class="brand__mark"><svg viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg></span><span class="brand__name" data-t="brand"><svg class="wm" viewBox="0 0 716.6 150" aria-hidden="true"><use href="/brand/wordmark.svg#wm"/></svg><span class="sr-only">ويكسا</span></span></a>
       <nav class="footer__nav">
-        <a href="#top" data-t="nav_home"></a>
-        <a href="#projects" data-t="nav_projects" data-sec="projects"></a>
-        <a href="#partners" data-t="nav_partners" data-sec="partners"></a>
-        <a href="#contact" data-t="nav_contact" data-sec="contact"></a>
-        <a href="/brand/" data-t="nav_brand"></a>
+        <a href="#top" data-t="nav_home">الرئيسية</a>
+        <a href="#projects" data-t="nav_projects" data-sec="projects">حلولنا</a>
+        <a href="#partners" data-t="nav_partners" data-sec="partners">شركاؤنا</a>
+        <a href="#contact" data-t="nav_contact" data-sec="contact">تواصل معنا</a>
+        <a href="/brand/" data-t="nav_brand">الهوية البصرية</a>
       </nav>
     </div>
     <div class="footer__bottom">
