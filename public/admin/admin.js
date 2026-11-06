@@ -10,6 +10,13 @@ let sb, user, settings, savedJSON;
 const cache = {};
 
 // ---------------- boot ----------------
+// links from Supabase emails (password reset, email change) land here with details in the URL hash
+const LINK = (() => {
+  const h = new URLSearchParams(location.hash.slice(1)), q = new URLSearchParams(location.search);
+  return { recovery: h.get("type") === "recovery" || q.get("type") === "recovery", emailChange: h.get("type") === "email_change",
+    message: h.get("message"), error: h.get("error_description") || q.get("error_description") };
+})();
+
 (async function boot() {
   try {
     const cfg = await fetch("/api/config").then((r) => r.json());
@@ -20,47 +27,101 @@ const cache = {};
     document.body.innerHTML = '<p style="padding:40px;text-align:center">تعذّر الاتصال بالخادم. حدّث الصفحة.</p>';
     return;
   }
+  sb.auth.onAuthStateChange((evt) => {
+    if (evt === "PASSWORD_RECOVERY") { LINK.recovery = true; showAuth("reset"); }
+    else if (evt === "SIGNED_OUT") showAuth();
+  });
   const { data } = await sb.auth.getSession();
-  if (data.session) await enter(data.session.user); else showAuth();
-  sb.auth.onAuthStateChange((evt, session) => { if (evt === "SIGNED_OUT") showAuth(); else if (evt === "SIGNED_IN" && session && !user) enter(session.user); });
+  if (LINK.message || LINK.emailChange || LINK.error) history.replaceState(null, "", location.pathname);
+  if (LINK.recovery && data.session) return showAuth("reset");
+  if (data.session) await afterSignIn(data.session.user); else showAuth();
+  if (LINK.error) authMsg(/expired|invalid/i.test(LINK.error) ? "انتهت صلاحية الرابط. اطلب رابطاً جديداً." : LINK.error, "err");
+  if (LINK.message) toast("تم قبول الرابط. أكّد أيضاً الرابط المرسل إلى البريد الآخر لإتمام التغيير.");
+  if (LINK.emailChange) toast("تم تغيير البريد الإلكتروني ✓");
 })();
 
 // ---------------- auth ----------------
-let signup = false;
-function showAuth() {
+// modes: login · forgot (send reset link) · reset (set a new password from the link) · mfa (6-digit code)
+const authMsg = (text, type = "") => { const m = $("#authMsg"); m.className = `auth__msg ${type}`; m.textContent = text; };
+const needsCode = async () => { const { data } = await sb.auth.mfa.getAuthenticatorAssuranceLevel(); return data?.nextLevel === "aal2" && data.currentLevel !== "aal2"; };
+async function verifyCode(code) {
+  const { data } = await sb.auth.mfa.listFactors();
+  const f = data?.totp?.find((x) => x.status === "verified");
+  if (!f) throw new Error("no factor");
+  const { error } = await sb.auth.mfa.challengeAndVerify({ factorId: f.id, code: code.replace(/\s/g, "") });
+  if (error) throw new Error("bad code");
+}
+const codeField = `<label class="f"><span>رمز التحقق من تطبيق المصادقة</span><input name="code" inputmode="numeric" pattern="[0-9 ]{6,7}" maxlength="7" required autocomplete="one-time-code" dir="ltr" placeholder="000000"></label>`;
+
+async function showAuth(mode = "login") {
   user = null;
   $("#app").hidden = true; $("#auth").hidden = false;
-  const form = $("#authForm"), msg = $("#authMsg");
-  const sync = () => {
-    $("#authTitle").textContent = signup ? "إنشاء حساب المدير" : "تسجيل الدخول";
-    $("#authHint").textContent = signup ? "أول حساب يُنشأ يصبح مدير الموقع. استخدم كلمة مرور قوية (8 أحرف على الأقل)." : "أدخل بريدك وكلمة المرور للدخول إلى لوحة التحكم.";
-    $("#authSubmit").textContent = signup ? "إنشاء الحساب" : "دخول";
-    $("#authSwitch").textContent = signup ? "لديك حساب؟ سجّل الدخول" : "أول مرة؟ أنشئ حساب المدير";
-    form.password.autocomplete = signup ? "new-password" : "current-password";
-    msg.textContent = ""; msg.className = "auth__msg";
+  const form = $("#authForm"), sw = $("#authSwitch");
+  const withCode = mode === "reset" && (await needsCode().catch(() => false));
+  const M = {
+    login: ["تسجيل الدخول", "أدخل بريدك وكلمة المرور للدخول إلى لوحة التحكم.", "دخول", "نسيت كلمة المرور؟",
+      `<label class="f"><span>البريد الإلكتروني</span><input name="email" type="email" required autocomplete="email" dir="ltr"></label>
+       <label class="f"><span>كلمة المرور</span><input name="password" type="password" required minlength="8" autocomplete="current-password" dir="ltr"></label>`],
+    forgot: ["استعادة كلمة المرور", "أدخل بريدك وسنرسل لك رابطاً لتعيين كلمة مرور جديدة.", "إرسال الرابط", "رجوع لتسجيل الدخول",
+      `<label class="f"><span>البريد الإلكتروني</span><input name="email" type="email" required autocomplete="email" dir="ltr"></label>`],
+    reset: ["كلمة مرور جديدة", "اختر كلمة مرور قوية (8 أحرف على الأقل).", "حفظ والدخول", "إلغاء",
+      `<label class="f"><span>كلمة المرور الجديدة</span><input name="p1" type="password" required minlength="8" autocomplete="new-password" dir="ltr"></label>
+       <label class="f"><span>تأكيد كلمة المرور</span><input name="p2" type="password" required minlength="8" autocomplete="new-password" dir="ltr"></label>${withCode ? codeField : ""}`],
+    mfa: ["التحقق بخطوتين", "افتح تطبيق المصادقة في هاتفك وأدخل الرمز المكوّن من 6 أرقام.", "تحقق", "تسجيل الخروج", codeField],
+  }[mode];
+  $("#authTitle").textContent = M[0]; $("#authHint").textContent = M[1];
+  $("#authSubmit").textContent = M[2]; sw.textContent = M[3];
+  $("#authFields").innerHTML = M[4];
+  authMsg("");
+  setTimeout(() => $("#authFields input")?.focus(), 30);
+  sw.onclick = async () => {
+    if (mode === "login") return showAuth("forgot");
+    if (mode === "forgot") return showAuth("login");
+    await sb.auth.signOut(); showAuth("login");
   };
-  sync();
-  $("#authSwitch").onclick = () => { signup = !signup; sync(); };
   form.onsubmit = async (e) => {
     e.preventDefault();
-    const email = form.email.value.trim(), password = form.password.value;
-    $("#authSubmit").disabled = true; msg.className = "auth__msg"; msg.textContent = "لحظة…";
+    const v = (n) => form.elements[n]?.value || "";
+    $("#authSubmit").disabled = true; authMsg("لحظة…");
     try {
-      if (signup) {
-        const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: `${location.origin}/admin/` } });
+      if (mode === "login") {
+        const { data, error } = await sb.auth.signInWithPassword({ email: v("email").trim(), password: v("password") });
         if (error) throw error;
-        if (!data.session) { msg.className = "auth__msg ok"; msg.textContent = "تم إنشاء الحساب. افتح بريدك واضغط رابط التأكيد، ثم سجّل الدخول هنا."; signup = false; setTimeout(sync, 6000); return; }
-        await enter(data.session.user);
-      } else {
-        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        await afterSignIn(data.user);
+      } else if (mode === "forgot") {
+        const { error } = await sb.auth.resetPasswordForEmail(v("email").trim(), { redirectTo: `${location.origin}/admin/` });
         if (error) throw error;
+        authMsg("إذا كان البريد مسجّلاً فسيصلك رابط خلال دقائق. افتحه من نفس الجهاز.", "ok");
+      } else if (mode === "reset") {
+        if (v("p1") !== v("p2")) throw new Error("mismatch");
+        if (withCode) await verifyCode(v("code"));
+        const { data, error } = await sb.auth.updateUser({ password: v("p1") });
+        if (error) throw error;
+        LINK.recovery = false;
+        toast("تم تعيين كلمة المرور الجديدة ✓");
+        await afterSignIn(data.user);
+      } else if (mode === "mfa") {
+        await verifyCode(v("code"));
+        const { data } = await sb.auth.getUser();
         await enter(data.user);
       }
     } catch (err) {
-      msg.className = "auth__msg err";
-      msg.textContent = /Invalid login/i.test(err.message) ? "البريد أو كلمة المرور غير صحيحة." : /not confirmed/i.test(err.message) ? "لم يتم تأكيد البريد بعد. افتح رسالة التأكيد في بريدك." : /already registered/i.test(err.message) ? "هذا البريد مسجّل مسبقاً. سجّل الدخول." : err.message;
+      const t = err.message || "";
+      authMsg(/Invalid login/i.test(t) ? "البريد أو كلمة المرور غير صحيحة."
+        : /not confirmed/i.test(t) ? "لم يتم تأكيد البريد بعد. افتح رسالة التأكيد في بريدك."
+        : /bad code|invalid totp|code/i.test(t) ? "الرمز غير صحيح أو انتهت مدته. جرّب الرمز الحالي."
+        : t === "mismatch" ? "كلمتا المرور غير متطابقتين."
+        : /rate limit|too many|seconds/i.test(t) ? "محاولات كثيرة. انتظر قليلاً ثم أعد المحاولة."
+        : /same.*password|different from the old/i.test(t) ? "اختر كلمة مرور مختلفة عن السابقة."
+        : t, "err");
     } finally { $("#authSubmit").disabled = false; }
   };
+}
+
+// after a password sign-in: ask for the 2FA code when the account has it turned on
+async function afterSignIn(u) {
+  if (await needsCode().catch(() => false)) return showAuth("mfa");
+  await enter(u);
 }
 
 async function enter(u) {
@@ -775,21 +836,73 @@ async function exportBackup(btn) {
 }
 
 async function viewAccount(view) {
-  view.innerHTML = `<div class="card" style="max-width:560px"><div class="card__head"><div><h3>نسخة احتياطية للمحتوى</h3><p>نزّل كل النصوص والمشاريع والخدمات والشركاء والآراء في ملف واحد. يُنصح بتنزيلها بعد كل تعديل كبير.</p></div>
-      <button class="b b--primary" id="backupBtn">${I.upload}تنزيل</button></div></div>
-    <div class="card" style="max-width:560px"><div class="card__head"><div><h3>الحساب</h3><p dir="ltr" style="text-align:right">${esc(user.email)}</p></div>
-      <button class="b b--danger" id="logout">${I.out}تسجيل الخروج</button></div></div>
-    <div class="card" style="max-width:560px"><div class="card__head"><h3>تغيير كلمة المرور</h3></div>
+  const { data: { user: u } } = await sb.auth.getUser();
+  if (u) user = u;
+  const { data: fx } = await sb.auth.mfa.listFactors();
+  const totp = fx?.totp?.find((x) => x.status === "verified");
+  const card = (body) => `<div class="card" style="max-width:560px">${body}</div>`;
+  view.innerHTML = card(`<div class="card__head"><div><h3>الحساب</h3><p dir="ltr" style="text-align:right">${esc(user.email)}</p></div>
+      <button class="b b--danger" id="logout">${I.out}تسجيل الخروج</button></div>`)
+    + card(`<div class="card__head"><div><h3>تغيير البريد الإلكتروني</h3><p>سنرسل رابط تأكيد إلى البريد الحالي والجديد، ويتم التغيير بعد تأكيدهما.</p></div></div>
+      ${user.new_email ? `<p class="muted" style="margin:0 0 12px">بانتظار التأكيد: <b dir="ltr">${esc(user.new_email)}</b></p>` : ""}
+      <form id="emailForm" class="stack"><label class="f"><span>البريد الجديد</span><input name="email" type="email" required autocomplete="email" dir="ltr"></label>
+      <button class="b b--primary" style="justify-self:start">${I.mail}إرسال رابط التأكيد</button></form>`)
+    + card(`<div class="card__head"><div><h3>التحقق بخطوتين ${totp ? '<span class="pill ok">مفعّل</span>' : ""}</h3>
+      <p>${totp ? "عند الدخول يُطلب رمز من تطبيق المصادقة في هاتفك، فلا يكفي معرفة كلمة المرور وحدها." : "حماية إضافية: بعد كلمة المرور يُطلب رمز من تطبيق في هاتفك مثل Google Authenticator أو Microsoft Authenticator."}</p></div>
+      <button class="b ${totp ? "b--danger" : "b--primary"}" id="mfaBtn">${totp ? "إيقاف" : "تفعيل"}</button></div><div id="mfaSetup"></div>`)
+    + card(`<div class="card__head"><h3>تغيير كلمة المرور</h3></div>
       <form id="pwForm" class="stack"><label class="f"><span>كلمة المرور الجديدة</span><input name="p1" type="password" minlength="8" required autocomplete="new-password" dir="ltr"></label>
       <label class="f"><span>تأكيد كلمة المرور</span><input name="p2" type="password" minlength="8" required autocomplete="new-password" dir="ltr"></label>
-      <button class="b b--primary" style="justify-self:start">${I.save}تحديث</button></form></div>`;
+      <button class="b b--primary" style="justify-self:start">${I.save}تحديث</button></form>`)
+    + card(`<div class="card__head"><div><h3>نسخة احتياطية للمحتوى</h3><p>نزّل كل النصوص والمشاريع والخدمات والشركاء والآراء في ملف واحد. يُنصح بتنزيلها بعد كل تعديل كبير.</p></div>
+      <button class="b b--primary" id="backupBtn">${I.upload}تنزيل</button></div>`);
+
   $("#backupBtn").onclick = (e) => exportBackup(e.currentTarget);
   $("#logout").onclick = async () => { await sb.auth.signOut(); location.hash = ""; };
   $("#pwForm").onsubmit = async (e) => {
     e.preventDefault(); const f = e.target;
     if (f.p1.value !== f.p2.value) return toast("كلمتا المرور غير متطابقتين", "err");
     const { error } = await sb.auth.updateUser({ password: f.p1.value });
-    if (error) return toast(error.message, "err");
+    if (error) return toast(/different from the old/i.test(error.message) ? "اختر كلمة مرور مختلفة عن السابقة" : error.message, "err");
     f.reset(); toast("تم تحديث كلمة المرور ✓");
+  };
+  $("#emailForm").onsubmit = async (e) => {
+    e.preventDefault(); const f = e.target, email = f.email.value.trim();
+    if (email.toLowerCase() === user.email.toLowerCase()) return toast("هذا هو بريدك الحالي", "err");
+    const btn = f.querySelector("button"); btn.disabled = true;
+    const { error } = await sb.auth.updateUser({ email }, { emailRedirectTo: `${location.origin}/admin/` });
+    btn.disabled = false;
+    if (error) return toast(/rate limit|seconds/i.test(error.message) ? "محاولات كثيرة، انتظر قليلاً" : /already/i.test(error.message) ? "هذا البريد مستخدم في حساب آخر" : error.message, "err");
+    toast("أرسلنا رابط التأكيد. افتح البريدين واضغط الرابط في كل منهما.");
+    route();
+  };
+  $("#mfaBtn").onclick = async () => {
+    if (totp) {
+      if (!(await confirmBox("إيقاف التحقق بخطوتين", "سيصبح الدخول بكلمة المرور فقط. هل أنت متأكد؟", "إيقاف"))) return;
+      const { error } = await sb.auth.mfa.unenroll({ factorId: totp.id });
+      if (error) return toast(error.message, "err");
+      await sb.auth.refreshSession();
+      toast("تم إيقاف التحقق بخطوتين"); return route();
+    }
+    // clear any half-finished setup, then start a new one
+    for (const x of fx?.all || []) if (x.status !== "verified") await sb.auth.mfa.unenroll({ factorId: x.id });
+    const { data, error } = await sb.auth.mfa.enroll({ factorType: "totp", friendlyName: `WIXA ${Date.now()}`, issuer: "WIXA" });
+    if (error) return toast(error.message, "err");
+    $("#mfaBtn").hidden = true;
+    $("#mfaSetup").innerHTML = `<ol class="mfa">
+        <li>ثبّت تطبيق مصادقة في هاتفك (Google Authenticator أو Microsoft Authenticator).</li>
+        <li>امسح هذا الرمز من التطبيق:<div class="mfa__qr"><img alt="رمز QR" src="${esc(data.totp.qr_code)}" width="180" height="180"></div>
+          أو أدخل المفتاح يدوياً: <code dir="ltr" class="mfa__secret">${esc(data.totp.secret)}</code></li>
+        <li>أدخل الرمز الذي يظهر في التطبيق:</li></ol>
+      <form id="mfaForm" class="stack">${codeField}
+        <div class="row" style="gap:8px"><button class="b b--primary">${I.save}تأكيد التفعيل</button><button class="b" type="button" id="mfaCancel">إلغاء</button></div></form>`;
+    $("#mfaSetup input").focus();
+    $("#mfaCancel").onclick = async () => { await sb.auth.mfa.unenroll({ factorId: data.id }); route(); };
+    $("#mfaForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const { error } = await sb.auth.mfa.challengeAndVerify({ factorId: data.id, code: e.target.code.value.replace(/\s/g, "") });
+      if (error) return toast("الرمز غير صحيح، جرّب الرمز الحالي في التطبيق", "err");
+      toast("تم تفعيل التحقق بخطوتين ✓"); route();
+    };
   };
 }

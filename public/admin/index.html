@@ -21,12 +21,11 @@
       <h1 id="authTitle">تسجيل الدخول</h1>
       <p class="muted" id="authHint">أدخل بريدك وكلمة المرور للدخول إلى لوحة التحكم.</p>
       <form id="authForm" class="stack">
-        <label class="f"><span>البريد الإلكتروني</span><input name="email" type="email" required autocomplete="email" dir="ltr"></label>
-        <label class="f"><span>كلمة المرور</span><input name="password" type="password" required minlength="8" autocomplete="current-password" dir="ltr"></label>
+        <div class="stack" id="authFields"></div>
         <button class="b b--primary b--block" type="submit" id="authSubmit">دخول</button>
         <p class="auth__msg" id="authMsg" role="status"></p>
       </form>
-      <button class="link" id="authSwitch" type="button">أول مرة؟ أنشئ حساب المدير</button>
+      <button class="link" id="authSwitch" type="button">نسيت كلمة المرور؟</button>
     </div>
     <div class="auth__art" aria-hidden="true">
       <div class="auth__art-inner">

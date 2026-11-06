@@ -294,3 +294,12 @@ html[dir=rtl] .bar__top span:first-child { direction: rtl; }
 
 .skeleton { background: linear-gradient(90deg, var(--line) 25%, #F0F1F5 50%, var(--line) 75%); background-size: 200% 100%; animation: sk 1.2s infinite; border-radius: 12px; }
 @keyframes sk { to { background-position: -200% 0; } }
+
+/* account: badges + two-step verification setup */
+.pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 99px; vertical-align: middle; margin-inline-start: 6px; }
+.pill.ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, transparent); }
+.row { display: flex; flex-wrap: wrap; align-items: center; }
+.mfa { margin: 4px 0 16px; padding-inline-start: 20px; display: grid; gap: 12px; line-height: 1.7; }
+.mfa__qr { margin: 10px 0; padding: 12px; background: #fff; border-radius: 12px; width: max-content; border: 1px solid var(--line, #e5e7eb); }
+.mfa__qr img { display: block; }
+.mfa__secret { display: inline-block; font-size: 13px; padding: 2px 8px; border-radius: 6px; background: color-mix(in srgb, var(--muted) 12%, transparent); word-break: break-all; user-select: all; }

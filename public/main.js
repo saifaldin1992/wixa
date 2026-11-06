@@ -1,4 +1,5 @@
 /* WIXA — public site */
+if (/(^|&)(type=(recovery|email_change|signup)|error_description=|message=)/.test(location.hash.slice(1))) location.replace("/admin/" + location.hash);
 (() => {
   const { DEFAULTS, merge, applyTheme } = window.WIXA;
   const $ = (s, el = document) => el.querySelector(s);
