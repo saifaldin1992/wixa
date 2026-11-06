@@ -831,10 +831,7 @@ html[data-theme="dark"] .pstep.on .pstep__num { box-shadow: 0 0 0 8px rgba(var(-
   .mbar__btn--main { background: var(--primary); color: #fff; }
   .mbar__btn--main svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
   .mbar__btn--wa { background: #25D366; color: #fff; }
-  /* the bar replaces the round WhatsApp button and the calculator's price bar sits above it */
-  .wa { display: none !important; }
-  .calc__sticky.show { bottom: calc(84px + env(safe-area-inset-bottom)); }
-  .footer { padding-bottom: 96px; }
+  .footer { padding-bottom: 80px; }
 }
 
 /* ---------- back to top ---------- */
@@ -849,3 +846,15 @@ html[data-theme="dark"] .pstep.on .pstep__num { box-shadow: 0 0 0 8px rgba(var(-
 @media (max-width: 760px) { .calc__sticky, html[dir="rtl"] .calc__sticky { left: 14px; right: 14px; } }
 @media (max-width: 1100px) and (min-width: 901px) { .header__nav a { padding: 8px 10px; font-size: .86rem; } }
 @media (max-width: 640px) { .form__btns .btn--wa { order: 2; } }
+
+/* phones: two small round buttons — contact on the left, WhatsApp on the right */
+@media (max-width: 760px) {
+  .mbar { inset: auto auto calc(16px + env(safe-area-inset-bottom)) 14px; padding: 0; gap: 0; background: none; border: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; border-radius: 50%; }
+  .mbar__btn--wa { display: none; }
+  .mbar__btn--main { flex: none; width: 48px; height: 48px; padding: 0; border-radius: 50%; box-shadow: 0 12px 30px -8px rgba(var(--primary-rgb), .6); }
+  .mbar__btn--main span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .mbar__btn--main svg { width: 22px; height: 22px; }
+  .wa, html[dir="rtl"] .wa { inset-inline-start: auto; inset-inline-end: auto; left: auto; right: 14px; bottom: calc(16px + env(safe-area-inset-bottom)); }
+  .totop { inset-inline-end: auto; inset-inline-start: auto; left: 14px; right: auto; bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .calc__sticky, html[dir="rtl"] .calc__sticky { left: 74px; right: 74px; }
+}
