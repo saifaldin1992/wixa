@@ -699,3 +699,24 @@ html[dir="rtl"] .partners__track { animation-name: tstScrollRtl; }
 /* hero: never taller than it needs to be on tall tablet screens */
 @media (min-width: 761px) { .hero { min-height: min(100svh, 920px); } }
 
+
+/* partners: columns can't be pushed wider by a large logo file; logos always fit their card */
+.partners__grid:not(.is-marquee) { grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; box-sizing: border-box; }
+.partner img { max-width: 100%; height: auto; }
+.partners__grid:not(.is-marquee) .partner { padding: 10% 12%; min-width: 0; }
+/* calculator: two extra features per row on phones */
+@media (max-width: 600px) {
+  .calc__feats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .cfeat { padding: 9px 10px; font-size: .84rem; text-align: center; line-height: 1.4; }
+}
+/* readability and touch: nothing under 12px, footer links easy to tap */
+@media (max-width: 1024px) { .project__stats span { font-size: .78rem; } }
+.footer__nav a { padding: 8px 4px; }
+.footer__brand .brand { padding: 6px 8px; }
+/* short laptop screens (e.g. 1366×768): the logo shrinks so the buttons stay on the first screen */
+@media (min-width: 761px) and (max-height: 860px) {
+  .hero { padding-top: 84px; padding-bottom: 48px; }
+  .hero__logo { width: min(400px, 72vw, 26vh); margin: 4px 0 22px; }
+  .hero__title { font-size: clamp(2.4rem, calc(8vh * var(--scale)), 4.6rem); margin: 22px auto 20px; }
+  .hero__sub { margin-bottom: 22px; }
+}
