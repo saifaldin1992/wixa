@@ -39,7 +39,9 @@ simple = { limit = 30, period = 60 }
 SITE_ENV = "production"
 CF_ACCOUNT_ID = "1816dc735005fa354d10dfef69ac1450"
 CF_SITE_TAG = "a4d140ea04cf4d6f8cb3117d66cb91e8"
-CF_BEACON_TOKEN = "091acec747554b91b55fdb1703fd6fb6"
+# Production: Cloudflare injects the Web Analytics beacon automatically (zone rule: host wixa.dev),
+# so the Worker adds none here. Staging is excluded from that rule and uses its own site below.
+CF_BEACON_TOKEN = ""
 TURNSTILE_SITE_KEY = "0x4AAAAAAF18CPavg0KnYszj"
 SUPABASE_URL = "https://oswetqychjhfrwulzkjy.supabase.co"
 SUPABASE_PUBLISHABLE_KEY = "sb_publishable_m6oe17fpFQvF1huyQ_8U_g_4NLmHiAm"
