@@ -78,7 +78,7 @@ export function render() {
         <h3>${esc(L(p, "title"))}</h3>
         <p>${esc(L(p, "summary"))}</p>
         ${link ? `<a class="project__link" href="${esc(link)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg>${esc(link.replace(/^https?:\/\//, "").replace(/\/$/, ""))}</a>` : ""}
-        <button type="button" class="project__more" data-open="${i}">${esc(C().details || "")}<svg viewBox="0 0 24 24"><path d="M19 12H5m0 0l6-6m-6 6l6 6"/></svg></button>
+        <a class="project__more" href="/projects/${encodeURIComponent(p.slug || p.id)}" data-open="${i}">${esc(C().details || "")}<svg viewBox="0 0 24 24"><path d="M19 12H5m0 0l6-6m-6 6l6 6"/></svg></a>
         ${stats.length ? `<div class="project__stats">${stats.map((st) => `<div><b>${esc(st.value)}</b><span>${esc(st[`label_${lang}`] || st.label_ar || "")}</span></div>`).join("")}</div>` : ""}
       </div>
       <div class="project__media" data-open="${i}">
@@ -91,8 +91,11 @@ export function render() {
   }).join("") : `<p class="empty">${ui.no_projects}</p>`;
 
   // services
+  const waNum = (s.contact.whatsapp || "").replace(/\D/g, "");
+  const waLink = (title) => `https://wa.me/${waNum}?text=${encodeURIComponent(lang === "ar" ? `مرحباً ويكسا، أريد الاستفسار عن: ${title}` : `Hello WIXA, I'd like to ask about: ${title}`)}`;
   $("#servicesGrid").innerHTML = state.services.map((sv) => `
-    <article class="svc reveal-up"><div class="svc__ico">${ICONS[sv.icon] || ICONS.code}</div><h3>${esc(L(sv, "title"))}</h3><p>${esc(L(sv, "summary"))}</p></article>`).join("");
+    <article class="svc reveal-up"><div class="svc__ico">${ICONS[sv.icon] || ICONS.code}</div><h3>${esc(L(sv, "title"))}</h3><p>${esc(L(sv, "summary"))}</p>
+      ${waNum ? `<a class="svc__wa" href="${esc(waLink(L(sv, "title")))}" target="_blank" rel="noopener"><svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16 3a13 13 0 00-11.2 19.6L3 29l6.6-1.7A13 13 0 1016 3zm0 23.6a10.6 10.6 0 01-5.4-1.5l-.4-.2-3.9 1 1-3.8-.2-.4A10.6 10.6 0 1116 26.6z"/></svg>${esc(c.wa_ask || "")}</a>` : ""}</article>`).join("");
   $$(".svc").forEach((el) => el.addEventListener("pointermove", (e) => {
     const r = el.getBoundingClientRect(); el.style.setProperty("--mx", `${e.clientX - r.left}px`); el.style.setProperty("--my", `${e.clientY - r.top}px`);
   }));
@@ -126,6 +129,20 @@ export function render() {
     let base = partnerCards.slice(); while (base.length < 8) base = base.concat(partnerCards);
     $("#partnersGrid").innerHTML = `<div class="partners__track" style="--dur:${Math.max(20, base.length * 3)}s">${base.join("") + base.join("")}</div>`;
   } else $("#partnersGrid").innerHTML = partnerCards.join("");
+
+  // careers
+  const jobs = (s.careers?.jobs || []).filter((j) => j.open !== false);
+  $("#careersList").innerHTML = (jobs.length ? jobs.map((j, i) => `
+    <article class="job reveal-up"><div class="job__main"><h3>${esc(L(j, "title"))}</h3>
+      <div class="job__tags">${[L(j, "type"), L(j, "location")].filter(Boolean).map((t) => `<span>${esc(t)}</span>`).join("")}</div>
+      ${L(j, "desc") ? `<p>${esc(L(j, "desc")).replace(/\n/g, "<br>")}</p>` : ""}</div>
+      <button type="button" class="btn btn--primary" data-job="${i}">${esc(c.careers_apply || "")}</button></article>`).join("") : `<p class="careers__empty reveal-up">${esc(c.careers_empty || "")}</p>`)
+    + `<div class="careers__general reveal-up"><button type="button" class="btn btn--ghost" data-job="-1">${esc(c.careers_general || "")}</button></div>`;
+
+  // frequently asked questions
+  const faq = (c.faq || []).filter((x) => x.q && x.a);
+  $("#faqList").innerHTML = faq.map((x) => `<details class="faq__item reveal-up"><summary>${esc(x.q)}<i aria-hidden="true"></i></summary><p>${esc(x.a).replace(/\n/g, "<br>")}</p></details>`).join("");
+  if (!faq.length) $$('[data-section="faq"]').forEach((el) => (el.hidden = true));
 
   // contact
   const ct = s.contact;

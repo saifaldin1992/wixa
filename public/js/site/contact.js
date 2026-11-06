@@ -1,11 +1,13 @@
-/* Contact form: lazy bot protection (Turnstile), open + prefill, submit */
-import { $, PREVIEW, UI, state, lang } from "./core.js";
+/* Contact form and job applications: lazy bot protection (Turnstile), open + prefill, submit */
+import { $, PREVIEW, UI, esc, state, lang, L } from "./core.js";
 
-// ---------- Turnstile (bot protection), loaded lazily ----------
-let tsWidget = null, tsLoading = null;
-function ensureTurnstile() {
+// ---------- Turnstile (bot protection), loaded lazily; one widget per form ----------
+const widgets = {};
+let tsLoading = null;
+function ensureTurnstile(sel = "#turnstile") {
   const key = state.turnstile;
-  if (!key || tsWidget !== null || PREVIEW) return;
+  if (!key || widgets[sel] !== undefined || PREVIEW) return;
+  widgets[sel] = null;
   tsLoading ??= new Promise((res) => {
     window.onWixaTurnstile = res;
     const sc = document.createElement("script");
@@ -13,15 +15,44 @@ function ensureTurnstile() {
     sc.async = true; document.head.appendChild(sc);
   });
   tsLoading.then(() => {
-    if (tsWidget !== null) return;
-    tsWidget = window.turnstile.render("#turnstile", {
+    widgets[sel] = window.turnstile.render(sel, {
       sitekey: key, language: lang, appearance: "interaction-only",
       theme: document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light",
     });
   });
 }
-const turnstileToken = () => { try { return tsWidget !== null ? window.turnstile.getResponse(tsWidget) || "" : ""; } catch { return ""; } };
-const resetTurnstile = () => { try { if (tsWidget !== null) window.turnstile.reset(tsWidget); } catch {} };
+const turnstileToken = (sel) => { try { return widgets[sel] != null ? window.turnstile.getResponse(widgets[sel]) || "" : ""; } catch { return ""; } };
+const resetTurnstile = (sel) => { try { if (widgets[sel] != null) window.turnstile.reset(widgets[sel]); } catch {} };
+
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const phoneOk = (v) => String(v || "").replace(/\D/g, "").length >= 7;
+
+// marks empty / wrong fields; returns the first problem's message or ""
+function check(form, names) {
+  const ui = UI[lang];
+  let msg = "";
+  names.forEach((n) => {
+    const f = form.elements[n], v = f.value.trim();
+    const bad = !v || (n === "email" && !EMAIL.test(v)) || (n === "phone" && !phoneOk(v));
+    f.closest(".field").classList.toggle("bad", bad);
+    if (bad && !msg) msg = n === "phone" && v ? ui.bad_phone : ui.invalid;
+  });
+  return msg;
+}
+
+async function send(form, statusEl, sel, body, okText) {
+  const ui = UI[lang], btn = form.querySelector("[type=submit]");
+  btn.disabled = true;
+  statusEl.className = "form__status"; statusEl.textContent = ui.sending;
+  try {
+    const res = await fetch("/api/contact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...body, lang, website: form.elements.website.value, turnstile: turnstileToken(sel) }) });
+    if (!res.ok) throw new Error(res.status);
+    form.reset(); statusEl.className = "form__status ok"; statusEl.textContent = okText;
+    dispatchEvent(new Event("wixa:lead")); // counted by any analytics switched on in the dashboard
+    return true;
+  } catch { statusEl.className = "form__status err"; statusEl.textContent = ui.err; return false; }
+  finally { btn.disabled = false; resetTurnstile(sel); }
+}
 
 export function openContact(message = "") {
   const f = $("#contactForm");
@@ -33,35 +64,48 @@ export function openContact(message = "") {
   setTimeout(() => { f.elements.name.focus({ preventScroll: true }); window.ScrollTrigger && ScrollTrigger.refresh(); }, 900);
 }
 
+// ---------- job application window ----------
+export function openJob(index = -1) {
+  const ui = UI[lang], m = $("#jmodal"), sel = $("#jobSelect");
+  const jobs = (state.settings.careers?.jobs || []).filter((j) => j.open !== false);
+  sel.innerHTML = jobs.map((j, i) => `<option value="${esc(L(j, "title"))}" ${i === index ? "selected" : ""}>${esc(L(j, "title"))}</option>`).join("") + `<option value="" ${index < 0 ? "selected" : ""}>${esc(ui.j_general)}</option>`;
+  $("#jobStatus").textContent = "";
+  m.hidden = false; document.body.style.overflow = "hidden"; window.__lenis?.stop();
+  ensureTurnstile("#turnstileJob");
+  setTimeout(() => $("#jobForm").elements.name.focus(), 60);
+}
+function closeJob() { $("#jmodal").hidden = true; document.body.style.overflow = ""; window.__lenis?.start(); }
+
 export function setupContact() {
   $("#openForm").addEventListener("click", () => {
     const f = $("#contactForm"); f.classList.add("open"); ensureTurnstile();
     setTimeout(() => { f.querySelector("input").focus({ preventScroll: true }); window.ScrollTrigger && ScrollTrigger.refresh(); }, 500);
   });
 
-  // form
   const form = $("#contactForm"), status = $("#formStatus");
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const ui = UI[lang];
-    let ok = true;
-    ["name", "email", "message"].forEach((n) => {
-      const f = form.elements[n]; const bad = !f.value.trim() || (n === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.value));
-      f.closest(".field").classList.toggle("bad", bad); if (bad) ok = false;
-    });
-    if (!ok) { status.className = "form__status err"; status.textContent = ui.invalid; return; }
-    if (PREVIEW) { status.className = "form__status ok"; status.textContent = ui.ok; return; }
-    const btnS = form.querySelector("[type=submit]"); btnS.disabled = true;
-    status.className = "form__status"; status.textContent = ui.sending;
-    try {
-      const svc = form.elements.service.value;
-      const res = await fetch("/api/contact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({
-        name: form.elements.name.value, email: form.elements.email.value, phone: form.elements.phone.value,
-        message: form.elements.message.value, services: svc ? [svc] : [], lang, website: form.elements.website.value, turnstile: turnstileToken() }) });
-      if (!res.ok) throw new Error(res.status);
-      form.reset(); status.className = "form__status ok"; status.textContent = ui.ok;
-      dispatchEvent(new Event("wixa:lead")); // counted by any analytics switched on in the dashboard
-    } catch { status.className = "form__status err"; status.textContent = ui.err; }
-    finally { btnS.disabled = false; resetTurnstile(); }
+    const bad = check(form, ["name", "email", "phone", "message"]);
+    if (bad) { status.className = "form__status err"; status.textContent = bad; return; }
+    if (PREVIEW) { status.className = "form__status ok"; status.textContent = UI[lang].ok; return; }
+    const svc = form.elements.service.value;
+    await send(form, status, "#turnstile", { name: form.elements.name.value, email: form.elements.email.value, phone: form.elements.phone.value,
+      message: form.elements.message.value, services: svc ? [svc] : [] }, UI[lang].ok);
+  });
+
+  // job applications
+  $("#careersList").addEventListener("click", (e) => { const b = e.target.closest("[data-job]"); if (b) openJob(+b.dataset.job); });
+  const jm = $("#jmodal");
+  jm.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) closeJob(); });
+  addEventListener("keydown", (e) => { if (e.key === "Escape" && !jm.hidden) closeJob(); });
+  const jf = $("#jobForm"), js = $("#jobStatus");
+  jf.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const bad = check(jf, ["name", "email", "phone", "message"]);
+    if (bad) { js.className = "form__status err"; js.textContent = bad; return; }
+    if (PREVIEW) { js.className = "form__status ok"; js.textContent = UI[lang].j_ok; return; }
+    const ok = await send(jf, js, "#turnstileJob", { kind: "job", job: jf.elements.job.value, cv: jf.elements.cv.value, name: jf.elements.name.value,
+      email: jf.elements.email.value, phone: jf.elements.phone.value, message: jf.elements.message.value }, UI[lang].j_ok);
+    if (ok) setTimeout(closeJob, 2600);
   });
 }

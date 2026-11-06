@@ -365,3 +365,10 @@ html[dir=rtl] .bar__top span:first-child { direction: rtl; }
 .ints code { font-size: 12px; background: var(--soft, rgba(91,33,182,.08)); padding: 1px 6px; border-radius: 6px; }
 .pill.warn { color: #B45309; background: color-mix(in srgb, #B45309 14%, transparent); }
 .pill:not(.ok):not(.warn) { color: var(--muted); background: color-mix(in srgb, var(--muted) 12%, transparent); }
+
+/* messages: follow-up status and notes */
+.msg__follow { display: grid; grid-template-columns: 180px 1fr auto; gap: 10px; align-items: end; margin: 12px 0; padding: 12px; border-radius: 12px; background: color-mix(in srgb, var(--muted) 7%, transparent); }
+.msg__follow textarea { min-height: 42px; }
+@media (max-width: 720px) { .msg__follow { grid-template-columns: 1fr; } }
+.pill.off { color: var(--muted); background: color-mix(in srgb, var(--muted) 14%, transparent); }
+.sec-title > span { display: inline-flex; gap: 4px; align-items: center; order: 2; }

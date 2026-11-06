@@ -46,7 +46,7 @@ async function loadFromSupabase(env) {
     env: env.SITE_ENV || "production",
     turnstile: env.TURNSTILE_SITE_KEY || "",
     settings: settings[0]?.data || {},
-    projects, services, partners, testimonials,
+    projects: withSlugs(projects), services, partners, testimonials,
   });
 }
 
@@ -105,6 +105,7 @@ const CONFIG_DEFAULTS = {
   },
   spam: { turnstile: true, blocked: "" },
   tags: { ga4: "", meta_pixel: "", clarity: "", tiktok: "" },
+  reports: { weekly: true, monitor: true },
   maintenance: {
     on: false,
     message_ar: "نعمل على تحديث الموقع وسنعود قريباً. للتواصل العاجل راسلنا عبر البريد أو واتساب.",
@@ -137,6 +138,7 @@ function cleanConfig(prev, body) {
       subject_ar: str(a.subject_ar, 120).replace(/\n/g, " ").trim() || d.subject_ar, body_ar: str(a.body_ar, 2000).trim() || d.body_ar,
       subject_en: str(a.subject_en, 120).replace(/\n/g, " ").trim() || d.subject_en, body_en: str(a.body_en, 2000).trim() || d.body_en };
   }
+  if (b.reports) next.reports = { weekly: b.reports.weekly !== false, monitor: b.reports.monitor !== false };
   if (b.spam) next.spam = { turnstile: b.spam.turnstile !== false, blocked: str(b.spam.blocked, 3000) };
   if (b.tags) {
     next.tags = {};
@@ -220,7 +222,7 @@ async function handleAdminTest(request, env) {
   if (!env.RESEND_API_KEY || !to) return json({ error: "email_not_configured" }, 503);
   const cfg = await getConfig(env);
   const sample = { name: "زائر تجريبي", email: to, phone: null, message: "هذه رسالة تجريبية من لوحة التحكم.", services: [], lang: body.lang === "en" ? "en" : "ar" };
-  const ok = body.kind === "autoreply" ? await sendAutoReply(env, cfg, sample, true) : await notifyOwner(env, sample, true);
+  const ok = body.kind === "weekly" ? await runWeeklyReport(env, true) : body.kind === "autoreply" ? await sendAutoReply(env, cfg, sample, true) : await notifyOwner(env, sample, true);
   return ok ? json({ ok: true, to }) : json({ error: "send_failed" }, 502);
 }
 
@@ -264,6 +266,14 @@ function pickLang(request, setting) {
   return "en";
 }
 
+// Questions & answers for search engines (only when the FAQ section is shown)
+function faqLd(st, lang) {
+  const list = (st.content?.[lang]?.faq || []).filter((x) => x?.q && x?.a);
+  if (st.sections?.faq === false || !list.length) return "";
+  const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: list.map((x) => ({ "@type": "Question", name: x.q, acceptedAnswer: { "@type": "Answer", text: x.a } })) };
+  return `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>`;
+}
+
 // GET / — static HTML with the content embedded (no flash of default text, one request per visit).
 async function handleHome(request, env, ctx) {
   const [page, raw, cfg] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx), getConfig(env)]);
@@ -289,6 +299,7 @@ async function handleHome(request, env, ctx) {
     seo.google_verification && `<meta name="google-site-verification" content="${esc(seo.google_verification)}">`,
     seo.bing_verification && `<meta name="msvalidate.01" content="${esc(seo.bing_verification)}">`,
     seo.index === false && `<meta name="robots" content="noindex, nofollow">`,
+    faqLd(st, lang),
     // one address, two languages: tell search engines about both versions
     `<link rel="alternate" hreflang="ar" href="${origin}/?lang=ar"><link rel="alternate" hreflang="en" href="${origin}/?lang=en"><link rel="alternate" hreflang="x-default" href="${origin}/">`,
   ].filter(Boolean).join("");
@@ -612,7 +623,7 @@ async function notifyOwner(env, row, test = false) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
-    body: JSON.stringify({ from: `${cfg.alerts.from_name} <notify@wixa.dev>`, to: [to], reply_to: row.email, subject: `${test ? "[اختبار] " : ""}${staging ? "[تجريبي] " : ""}رسالة جديدة من ${row.name}`, html }),
+    body: JSON.stringify({ from: `${cfg.alerts.from_name} <notify@wixa.dev>`, to: [to], reply_to: row.email, subject: `${test ? "[اختبار] " : ""}${staging ? "[تجريبي] " : ""}${row.services?.[0]?.startsWith("طلب توظيف") ? `${row.services[0]} — ${row.name}` : `رسالة جديدة من ${row.name}`}`, html }),
   });
   if (!res.ok) console.error("notify failed", res.status, await res.text());
   return res.ok;
@@ -654,6 +665,7 @@ async function handleContact(request, env, ctx) {
   if (cfg.spam.turnstile && !(await turnstileOk(env, body.turnstile, ip))) return json({ error: "captcha" }, 403);
 
   const clean = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+  const isJob = body.kind === "job";
   const row = {
     name: clean(body.name, 120),
     email: clean(body.email, 200),
@@ -663,6 +675,12 @@ async function handleContact(request, env, ctx) {
     lang: body.lang === "en" ? "en" : "ar",
   };
   if (!row.name || !row.message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) return json({ error: "validation" }, 422);
+  if (!row.phone || row.phone.replace(/\D/g, "").length < 7) return json({ error: "phone_required" }, 422);
+  if (isJob) {
+    const cv = safeHref(clean(body.cv, 300));
+    row.services = [`طلب توظيف: ${clean(body.job, 120) || "تقديم عام"}`];
+    row.message = `${row.message}${cv ? `\n\nالسيرة الذاتية / الأعمال: ${cv}` : ""}`.slice(0, 4300);
+  }
   // words or addresses blocked in the dashboard: accepted quietly, never stored
   const blocked = cfg.spam.blocked.split(/[\n,،]/).map((w) => w.trim().toLowerCase()).filter((w) => w.length >= 2);
   const hay = `${row.name} ${row.email} ${row.phone || ""} ${row.message}`.toLowerCase();
@@ -675,11 +693,265 @@ async function handleContact(request, env, ctx) {
   }
   ctx.waitUntil(notifyOwner(env, row).catch((e) => console.error("notify", e)));
   ctx.waitUntil(sendAutoReply(env, cfg, row).catch((e) => console.error("autoreply", e)));
+  ctx.waitUntil(countMessage(env, row, isJob).catch((e) => console.error("count", e)));
   return json({ ok: true }, 201);
+}
+
+// ---------------------------------------------------------------- simple pages (project pages, privacy policy)
+// Readable URLs for each project: from the English title (or the Arabic one), unique within the list.
+function withSlugs(projects) {
+  const seen = new Set();
+  return projects.map((p) => {
+    let base = String(p.title_en || p.title_ar || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "").slice(0, 60) || String(p.id);
+    let slug = base, n = 2;
+    while (seen.has(slug)) slug = `${base}-${n++}`;
+    seen.add(slug);
+    return { ...p, slug };
+  });
+}
+
+// Project details text: blank-line separated blocks; a short first line becomes a heading, "•" lines a list (same as the site's window).
+function detailsHtml(raw) {
+  return String(raw || "").split(/\n\s*\n/).map((block) => {
+    const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
+    let html = "";
+    if (lines.length > 1 && lines[0].length < 40 && !lines[0].startsWith("•")) html += `<h2>${esc(lines.shift())}</h2>`;
+    const bullets = lines.filter((l) => /^[•\-–]/.test(l)), text = lines.filter((l) => !/^[•\-–]/.test(l));
+    if (text.length) html += `<p>${text.map(esc).join("<br>")}</p>`;
+    if (bullets.length) html += `<ul>${bullets.map((l) => `<li>${esc(l.replace(/^[•\-–]\s*/, ""))}</li>`).join("")}</ul>`;
+    return html;
+  }).join("");
+}
+
+const safeHref = (u) => { try { const x = new URL(String(u || "")); return ["http:", "https:"].includes(x.protocol) ? x.href : ""; } catch { return ""; } };
+
+// One light page layout shared by project pages and the privacy policy: brand colours and font from the dashboard.
+function simplePage(request, st, { lang, title, description, path, image, body, jsonld, status = 200 }) {
+  const ar = lang === "ar";
+  const origin = new URL(request.url).origin;
+  const t = st.theme || {};
+  const color = /^#[0-9a-f]{3,8}$/i.test(t.primary || "") ? t.primary : "#5B21B6";
+  const font = String(st.font?.family || "Alexandria").replace(/[^\w\s-]/g, "");
+  const brand = (ar ? st.brand?.name_ar : st.brand?.name_en) || (ar ? "ويكسا" : "WIXA");
+  const c = st.contact || {};
+  const wa = String(c.whatsapp || "").replace(/\D/g, "");
+  const other = ar ? "en" : "ar";
+  const html = `<!doctype html><html lang="${lang}" dir="${ar ? "rtl" : "ltr"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(title)} — ${esc(brand)}</title><meta name="description" content="${esc(description)}">
+<link rel="canonical" href="${origin}${path}?lang=${lang}"><link rel="alternate" hreflang="ar" href="${origin}${path}?lang=ar"><link rel="alternate" hreflang="en" href="${origin}${path}?lang=en">
+<meta property="og:type" content="website"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${origin}${path}">
+${image ? `<meta property="og:image" content="${esc(image)}"><meta name="twitter:card" content="summary_large_image">` : ""}
+<link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;600;800&display=swap">
+${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld).replace(/</g, "\\u003c")}</script>` : ""}
+<style>
+:root{--p:${color};--bg:#FBFAFE;--s:#fff;--t:#140F1F;--m:#625C70;--l:#ECE8F3;color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root{--bg:#0F0B1A;--s:#17122A;--t:#F1EEF8;--m:#A9A3BC;--l:#2A2340;--p:#A574F1}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font-family:"${font}",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;line-height:1.8}
+a{color:var(--p)}.wrap{max-width:900px;margin:0 auto;padding:0 20px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0}
+header .home{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--t);font-weight:800;font-size:1.15rem}header .home img{width:38px;height:38px}
+header nav{display:flex;gap:8px}header nav a{padding:8px 14px;border-radius:99px;border:1px solid var(--l);text-decoration:none;color:var(--t);font-size:.9rem;background:var(--s)}
+main{padding:20px 0 60px}h1{font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.3;margin:6px 0 12px}h2{font-size:1.2rem;margin:28px 0 8px}
+.cat{display:inline-block;font-size:.8rem;font-weight:600;padding:3px 12px;border-radius:99px;background:color-mix(in srgb,var(--p) 12%,transparent);color:var(--p)}
+.lead{font-size:1.1rem;color:var(--m)}p,li{color:var(--m)}ul{padding-inline-start:20px}
+.gallery{display:grid;gap:12px;margin:24px 0}.gallery img{width:100%;border-radius:18px;border:1px solid var(--l);display:block}
+.gallery .mob{max-width:300px;justify-self:center}
+.stats{display:flex;flex-wrap:wrap;gap:28px;margin:24px 0;padding:20px 0;border-top:1px solid var(--l);border-bottom:1px solid var(--l)}
+.stats b{display:block;font-size:1.6rem;color:var(--t)}.stats span{color:var(--m);font-size:.9rem}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border-radius:99px;text-decoration:none;font-weight:600;background:var(--p);color:#fff}
+.btn--ghost{background:var(--s);color:var(--t);border:1px solid var(--l)}.btn--wa{background:#25D366;color:#fff}
+footer{border-top:1px solid var(--l);padding:22px 0;font-size:.85rem;color:var(--m);display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between}
+footer a{color:var(--m)}
+</style></head><body><div class="wrap">
+<header><a class="home" href="/?lang=${lang}"><img src="/icons/icon-96.png" alt="">${esc(brand)}</a>
+<nav><a href="${path}?lang=${other}" hreflang="${other}">${ar ? "English" : "العربية"}</a><a href="/?lang=${lang}">${ar ? "الرئيسية" : "Home"}</a></nav></header>
+<main>${body}
+<div class="actions"><a class="btn" href="/?lang=${lang}#contact">${ar ? "تواصل معنا" : "Contact us"}</a>${wa ? `<a class="btn btn--wa" href="https://wa.me/${wa}" target="_blank" rel="noopener">${ar ? "واتساب" : "WhatsApp"}</a>` : ""}</div></main>
+<footer><span>© ${new Date().getFullYear()} ${esc(brand)}</span><span><a href="/privacy?lang=${lang}">${ar ? "سياسة الخصوصية" : "Privacy policy"}</a> · <a href="/?lang=${lang}">${origin.replace(/^https?:\/\//, "")}</a></span></footer>
+</div></body></html>`;
+  return new Response(request.method === "HEAD" ? null : html, { status, headers: { ...SECURITY_HEADERS, "content-type": "text/html; charset=utf-8", "cache-control": "no-cache", "content-language": lang, vary: "Accept-Language, Cookie" } });
+}
+
+// GET /projects/<slug> — one page per project (shareable, and findable in search engines)
+async function handleProjectPage(request, env, ctx, slug) {
+  const [raw, cfg] = await Promise.all([getSiteData(env, ctx), getConfig(env)]);
+  let d = {};
+  try { d = JSON.parse(raw); } catch {}
+  const st = d.settings || {};
+  if (cfg.maintenance.on && !hasBypass(request, cfg)) return maintenancePage(request, cfg, st);
+  const lang = pickLang(request, st.default_lang);
+  const p = (d.projects || []).find((x) => x.slug === slug || String(x.id) === slug);
+  if (!p) return env.ASSETS.fetch(new Request(new URL("/404.html", request.url), request)).then((r) => new Response(r.body, { status: 404, headers: r.headers }));
+  const T = (f) => p[`${f}_${lang}`] || p[`${f}_ar`] || p[`${f}_en`] || "";
+  const imgs = [p.image_url, ...(Array.isArray(p.gallery) ? p.gallery : [])].map(safeHref).filter(Boolean);
+  const mob = safeHref(p.mobile_image_url);
+  const stats = Array.isArray(p.stats) ? p.stats.filter((x) => String(x.value || "").trim()) : [];
+  const link = safeHref(p.link);
+  const origin = new URL(request.url).origin;
+  const body = `${T("category") ? `<span class="cat">${esc(T("category"))}</span>` : ""}<h1>${esc(T("title"))}</h1>
+    ${T("summary") ? `<p class="lead">${esc(T("summary"))}</p>` : ""}
+    ${imgs.length || mob ? `<div class="gallery">${imgs.map((u) => `<img src="${esc(u)}" alt="${esc(T("title"))}" loading="lazy">`).join("")}${mob ? `<img class="mob" src="${esc(mob)}" alt="" loading="lazy">` : ""}</div>` : ""}
+    ${stats.length ? `<div class="stats">${stats.map((x) => `<div><b>${esc(x.value)}</b><span>${esc(x[`label_${lang}`] || x.label_ar || "")}</span></div>`).join("")}</div>` : ""}
+    ${detailsHtml(T("details"))}
+    ${link ? `<p><a href="${esc(link)}" target="_blank" rel="noopener">${esc(link.replace(/^https?:\/\//, "").replace(/\/$/, ""))} ↗</a></p>` : ""}`;
+  return simplePage(request, st, {
+    lang, title: T("title"), description: (T("summary") || T("details")).slice(0, 160), path: `/projects/${encodeURIComponent(p.slug)}`,
+    image: imgs[0] || mob || "", body,
+    jsonld: { "@context": "https://schema.org", "@type": "CreativeWork", name: T("title"), description: T("summary"), url: `${origin}/projects/${encodeURIComponent(p.slug)}`, ...(imgs[0] ? { image: imgs[0] } : {}), creator: { "@type": "Organization", name: "WIXA", url: origin } },
+  });
+}
+
+// GET /privacy — privacy policy (Arabic / English)
+async function handlePrivacy(request, env, ctx) {
+  const [raw, cfg] = await Promise.all([getSiteData(env, ctx), getConfig(env)]);
+  let st = {};
+  try { st = JSON.parse(raw).settings || {}; } catch {}
+  const lang = pickLang(request, st.default_lang), ar = lang === "ar";
+  const email = st.contact?.email || "info@wixa.dev";
+  const tagsOn = Object.values(cfg.tags || {}).some(Boolean);
+  const updated = "2026-11-06";
+  const S = ar ? [
+    ["من نحن", `هذا الموقع تديره ويكسا (WIXA). توضح هذه الصفحة البيانات التي نجمعها عند زيارتك للموقع أو تواصلك معنا، وكيف نستخدمها.`],
+    ["البيانات التي ترسلها لنا", `عند استخدام نموذج «تواصل معنا» أو التقديم على وظيفة نستلم ما تكتبه: الاسم، البريد الإلكتروني، رقم الهاتف، الخدمة أو الوظيفة، نص رسالتك، ورابط سيرتك الذاتية إن أضفته. نستخدمها فقط للرد عليك ومتابعة طلبك، ولا نبيعها ولا نشاركها لأغراض تسويقية.`],
+    ["الرسائل التلقائية", `قد يصلك بريد تأكيد تلقائي بعد إرسال النموذج. لا نضيف بريدك إلى أي قائمة بريدية دون موافقتك.`],
+    ["إحصاءات الزيارات", `نستخدم Cloudflare Web Analytics لقياس عدد الزيارات وسرعة الموقع، وهي لا تستخدم ملفات تعريف الارتباط (Cookies) ولا تتتبعك بين المواقع.${tagsOn ? " كما نستخدم أدوات قياس وإعلانات من جهات أخرى (مثل Google أو Meta أو Microsoft أو TikTok) لفهم أداء الموقع وحملاتنا، وقد تستخدم هذه الأدوات ملفات تعريف الارتباط وفق سياساتها." : ""}`],
+    ["ملفات تعريف الارتباط", `يحفظ الموقع اختيارك للغة والوضع الليلي على جهازك فقط لتسهيل زيارتك القادمة.`],
+    ["الحماية", `نحمي النموذج من البرامج الآلية عبر Cloudflare Turnstile، وتُنقل كل البيانات عبر اتصال مشفّر (HTTPS) وتُحفظ لدى مزوّدي خدمات موثوقين (Cloudflare وSupabase لقاعدة البيانات وResend لإرسال البريد).`],
+    ["مدة الاحتفاظ وحقوقك", `نحتفظ برسائلك طوال المدة اللازمة للرد عليك ومتابعة طلبك. يمكنك في أي وقت طلب الاطلاع على بياناتك أو تصحيحها أو حذفها عبر مراسلتنا على <a href="mailto:${esc(email)}">${esc(email)}</a>.`],
+    ["التعديلات", `قد نحدّث هذه السياسة عند الحاجة، ويظهر تاريخ آخر تحديث أعلى الصفحة.`],
+  ] : [
+    ["Who we are", `This site is operated by WIXA. This page explains what data we collect when you visit the site or contact us, and how we use it.`],
+    ["Data you send us", `When you use the contact form or apply for a job we receive what you enter: your name, email, phone number, the service or role, your message, and a link to your CV if you add one. We use it only to reply to you and follow up on your request. We never sell it or share it for marketing.`],
+    ["Automatic emails", `You may receive an automatic confirmation email after sending the form. We never add your address to a mailing list without your consent.`],
+    ["Visit statistics", `We use Cloudflare Web Analytics to count visits and measure site speed. It uses no cookies and does not track you across sites.${tagsOn ? " We also use third-party analytics and advertising tools (such as Google, Meta, Microsoft or TikTok) to understand how the site and our campaigns perform; these tools may use cookies under their own policies." : ""}`],
+    ["Cookies", `The site stores your language and dark-mode choice on your device only, to make your next visit easier.`],
+    ["Security", `The form is protected from bots by Cloudflare Turnstile. All data travels over an encrypted connection (HTTPS) and is stored with trusted providers (Cloudflare, Supabase for the database and Resend for email delivery).`],
+    ["Retention and your rights", `We keep your messages for as long as needed to reply and follow up on your request. You can ask to see, correct or delete your data at any time by emailing <a href="mailto:${esc(email)}">${esc(email)}</a>.`],
+    ["Changes", `We may update this policy when needed; the date of the last update is shown at the top of this page.`],
+  ];
+  const body = `<h1>${ar ? "سياسة الخصوصية" : "Privacy policy"}</h1><p class="lead">${ar ? "آخر تحديث:" : "Last updated:"} ${updated}</p>${S.map(([h, p]) => `<h2>${h}</h2><p>${p}</p>`).join("")}`;
+  return simplePage(request, st, { lang, title: ar ? "سياسة الخصوصية" : "Privacy policy", description: ar ? "كيف تجمع ويكسا بياناتك وتستخدمها وتحميها." : "How WIXA collects, uses and protects your data.", path: "/privacy", body });
+}
+
+// ---------------------------------------------------------------- message counters (for the weekly report)
+const dayKey = (d = new Date()) => d.toISOString().slice(0, 10);
+async function countMessage(env, row, isJob) {
+  if (!env.PRIVATE) return;
+  const key = `count:${dayKey()}`;
+  const c = (await env.PRIVATE.get(key, { type: "json" }).catch(() => null)) || { total: 0, jobs: 0, services: {} };
+  c.total++;
+  if (isJob) c.jobs++;
+  else { const s = row.services?.[0] || "استشارة عامة"; c.services[s] = (c.services[s] || 0) + 1; }
+  await env.PRIVATE.put(key, JSON.stringify(c), { expirationTtl: 60 * 864e2 });
+}
+
+// ---------------------------------------------------------------- message status + notes (dashboard)
+// Kept in the private store by message id: { status: new|working|won|lost, note }.
+async function handleAdminMsgMeta(request, env) {
+  const { error } = await adminSession(request, env);
+  if (error) return error;
+  if (!env.PRIVATE) return json({ error: "storage_not_configured" }, 503);
+  const all = (await env.PRIVATE.get("msgmeta", { type: "json" })) || {};
+  if (request.method === "GET") return json(all, 200, { "cache-control": "no-store" });
+  let b = {};
+  try { b = await request.json(); } catch {}
+  const id = String(b.id || "").slice(0, 64);
+  if (!id) return json({ error: "missing_id" }, 422);
+  if (b.remove) delete all[id];
+  else all[id] = { status: ["new", "working", "won", "lost"].includes(b.status) ? b.status : "new", note: String(b.note || "").slice(0, 2000), at: new Date().toISOString() };
+  await env.PRIVATE.put("msgmeta", JSON.stringify(all));
+  return json(all[id] || { ok: true });
+}
+
+// ---------------------------------------------------------------- scheduled jobs: monitoring + weekly report
+async function sendOwnerMail(env, subject, html) {
+  const to = await notifyAddress(env);
+  if (!env.RESEND_API_KEY || !to) return false;
+  const cfg = await getConfig(env);
+  const r = await fetch("https://api.resend.com/emails", {
+    method: "POST", headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
+    body: JSON.stringify({ from: `${cfg.alerts.from_name} <notify@wixa.dev>`, to: [to], subject, html }),
+  });
+  if (!r.ok) console.error("owner mail failed", r.status, await r.text());
+  return r.ok;
+}
+const mailBox = (title, inner, color = "#5B21B6") => `<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;background:#F6F3F2;padding:24px"><div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #ECE6E8">
+  <div style="background:${color};color:#fff;padding:18px 22px;font-size:18px;font-weight:bold">${title}</div><div style="padding:22px;color:#1A0E12;font-size:15px;line-height:1.9">${inner}</div></div></div>`;
+
+// Every 15 minutes: is the database answering, and does the site have its content? Emails only when the state changes
+// (two failed checks in a row before "down", to ignore a single hiccup).
+async function runMonitor(env) {
+  const cfg = await getConfig(env);
+  if (!cfg.reports.monitor || !env.PRIVATE) return;
+  const problems = [];
+  try {
+    const r = await fetch(`${env.SUPABASE_URL}/rest/v1/site_settings?select=id&id=eq.1`, { headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY }, signal: AbortSignal.timeout(10_000) });
+    if (!r.ok) problems.push(`قاعدة البيانات (Supabase) ترد بخطأ ${r.status}`);
+  } catch (e) { problems.push(`قاعدة البيانات (Supabase) لا ترد: ${e.message}`); }
+  try {
+    const page = await env.ASSETS.fetch(new Request("https://wixa.dev/index.html"));
+    if (!page.ok) problems.push(`ملفات الموقع ترد بخطأ ${page.status}`);
+  } catch (e) { problems.push(`ملفات الموقع لا ترد: ${e.message}`); }
+  const prev = (await env.PRIVATE.get("monitor", { type: "json" })) || { state: "ok", fails: 0 };
+  const fails = problems.length ? prev.fails + 1 : 0;
+  const state = problems.length ? (fails >= 2 ? "down" : prev.state) : "ok";
+  const site = env.SITE_ENV === "staging" ? "staging.wixa.dev" : "wixa.dev";
+  const when = new Date().toLocaleString("ar-IQ", { timeZone: "Asia/Baghdad", dateStyle: "medium", timeStyle: "short" });
+  if (state === "down" && prev.state !== "down") {
+    await sendOwnerMail(env, `⚠️ مشكلة في ${site}`, mailBox(`⚠️ تنبيه: مشكلة في ${site}`, `<p>رصد الفحص التلقائي مشكلة (${when} بتوقيت بغداد):</p><ul>${problems.map((p) => `<li>${esc(p)}</li>`).join("")}</ul><p>الموقع يعرض آخر نسخة محفوظة من المحتوى قدر الإمكان. سيصلك بريد آخر عند عودة كل شيء للعمل.</p>`, "#B42318"));
+  } else if (state === "ok" && prev.state === "down") {
+    await sendOwnerMail(env, `✅ عاد ${site} للعمل`, mailBox(`✅ عاد ${site} للعمل`, `<p>عادت كل الفحوص سليمة (${when} بتوقيت بغداد).</p>`, "#067647"));
+  }
+  await env.PRIVATE.put("monitor", JSON.stringify({ state, fails, at: new Date().toISOString(), problems }));
+}
+
+// Visits in the last 7 days from Cloudflare Web Analytics (public pages only)
+async function weeklyVisits(env, since) {
+  if (!env.CF_ANALYTICS_TOKEN || !env.CF_SITE_TAG) return null;
+  const q = `query($acc: String!, $tag: String!, $hosts: [string!], $since: Date!) { viewer { accounts(filter: {accountTag: $acc}) {
+    total: rumPageloadEventsAdaptiveGroups(limit: 1, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since}) { count sum { visits } }
+    countries: rumPageloadEventsAdaptiveGroups(limit: 3, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since}, orderBy: [sum_visits_DESC]) { sum { visits } dimensions { countryName } }
+  } } }`;
+  try {
+    const r = await fetch("https://api.cloudflare.com/client/v4/graphql", { method: "POST", headers: { authorization: `Bearer ${env.CF_ANALYTICS_TOKEN}`, "content-type": "application/json" },
+      body: JSON.stringify({ query: q, variables: { acc: env.CF_ACCOUNT_ID, tag: env.CF_SITE_TAG, hosts: env.SITE_ENV === "staging" ? ["staging.wixa.dev"] : ["wixa.dev", "www.wixa.dev"], since } }) });
+    const a = (await r.json())?.data?.viewer?.accounts?.[0];
+    if (!a) return null;
+    return { views: a.total?.[0]?.count || 0, visitors: a.total?.[0]?.sum?.visits || 0, countries: (a.countries || []).map((x) => [x.dimensions.countryName, x.sum.visits]) };
+  } catch { return null; }
+}
+
+async function runWeeklyReport(env, force = false) {
+  const cfg = await getConfig(env);
+  if (!cfg.reports.weekly && !force) return false;
+  const days = [...Array(7)].map((_, i) => dayKey(new Date(Date.now() - (i + 1) * 864e5)));
+  const counts = await Promise.all(days.map((d) => (env.PRIVATE ? env.PRIVATE.get(`count:${d}`, { type: "json" }).catch(() => null) : null)));
+  const sum = { total: 0, jobs: 0, services: {} };
+  for (const c of counts) if (c) { sum.total += c.total || 0; sum.jobs += c.jobs || 0; for (const [k, v] of Object.entries(c.services || {})) sum.services[k] = (sum.services[k] || 0) + v; }
+  const v = await weeklyVisits(env, days[6]);
+  const top = Object.entries(sum.services).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const site = env.SITE_ENV === "staging" ? "https://staging.wixa.dev" : "https://wixa.dev";
+  const row = (k, val) => `<tr><td style="padding:8px 0;color:#625C70">${k}</td><td style="padding:8px 0;text-align:left;font-weight:bold">${val}</td></tr>`;
+  const inner = `<p style="margin-top:0">ملخص آخر ٧ أيام (${days[6]} — ${days[0]}):</p>
+    <table style="width:100%;border-collapse:collapse">
+      ${v ? row("الزوار", v.visitors.toLocaleString("en")) + row("مشاهدات الصفحات", v.views.toLocaleString("en")) : row("الزوار", "غير متاح")}
+      ${row("رسائل جديدة", sum.total - sum.jobs)}${row("طلبات توظيف", sum.jobs)}
+    </table>
+    ${top.length ? `<p style="margin-bottom:4px"><b>أكثر ما طُلب:</b></p><ul style="margin-top:0">${top.map(([k, n]) => `<li>${esc(k)} — ${n}</li>`).join("")}</ul>` : ""}
+    ${v?.countries?.length ? `<p style="margin-bottom:4px"><b>أكثر الدول زيارة:</b></p><ul style="margin-top:0">${v.countries.map(([k, n]) => `<li>${esc(k)} — ${n}</li>`).join("")}</ul>` : ""}
+    <p><a href="${site}/admin/" style="color:#5B21B6">فتح لوحة التحكم ←</a></p>`;
+  return sendOwnerMail(env, `${force ? "[اختبار] " : ""}تقرير ويكسا الأسبوعي`, mailBox("تقرير ويكسا الأسبوعي", inner));
 }
 
 // ---------------------------------------------------------------- router
 export default {
+  // "*/15 * * * *" → health check; "17 6 * * 0" → weekly report (Sunday 09:17 Baghdad)
+  async scheduled(event, env, ctx) {
+    if (event.cron === "17 6 * * 0") ctx.waitUntil(runWeeklyReport(env).catch((e) => console.error("weekly", e)));
+    else ctx.waitUntil(runMonitor(env).catch((e) => console.error("monitor", e)));
+  },
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     // one address for search engines: www.wixa.dev → wixa.dev (permanent)
@@ -710,6 +982,12 @@ export default {
         case "GET /api/admin/notify":
         case "PUT /api/admin/notify":
           return await handleAdminNotify(request, env);
+        case "GET /privacy":
+        case "HEAD /privacy":
+          return await handlePrivacy(request, env, ctx);
+        case "GET /api/admin/msgmeta":
+        case "PUT /api/admin/msgmeta":
+          return await handleAdminMsgMeta(request, env);
         case "GET /api/admin/integrations":
         case "PUT /api/admin/integrations":
           return await handleAdminIntegrations(request, env);
@@ -722,7 +1000,9 @@ export default {
           return json({ env: env.SITE_ENV || "production", supabaseUrl: env.SUPABASE_URL, supabaseKey: env.SUPABASE_PUBLISHABLE_KEY });
         case "GET /sitemap.xml": {
           const today = new Date().toISOString().slice(0, 10);
-          const urls = ["/"].map((p) => `<url><loc>https://wixa.dev${p}</loc><lastmod>${today}</lastmod></url>`).join("");
+          let projects = [];
+          try { projects = JSON.parse(await getSiteData(env, ctx)).projects || []; } catch {}
+          const urls = ["/", "/privacy", ...projects.map((x) => `/projects/${encodeURIComponent(x.slug)}`)].map((p) => `<url><loc>https://wixa.dev${p}</loc><lastmod>${today}</lastmod></url>`).join("");
           return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>\n`, {
             headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" },
           });
@@ -748,6 +1028,8 @@ export default {
           return json({ worker: "ok", env: env.SITE_ENV || "production", supabase: health.supabase }, 200, { "cache-control": "no-store" });
         }
       }
+      const proj = url.pathname.match(/^\/projects\/([^/]+)\/?$/);
+      if (proj && (request.method === "GET" || request.method === "HEAD")) return await handleProjectPage(request, env, ctx, decodeURIComponent(proj[1]));
       if (url.pathname.startsWith("/api/")) return json({ error: "not_found" }, 404);
     } catch (err) {
       console.error(err);

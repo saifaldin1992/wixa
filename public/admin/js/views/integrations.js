@@ -46,6 +46,14 @@ export async function viewIntegrations(view) {
         <div class="row-btns">${save()}<button class="b" data-test="autoreply">${I.mail}أرسل لي نسخة تجريبية</button></div>
       </div></div>
 
+    <div class="card" id="cReports"><div class="card__head"><div><h3>التقارير والمراقبة</h3>
+      <p>تصل على بريد التنبيهات نفسه.</p></div></div>
+      <div class="stack">
+        ${sw("weeklyOn", cfg.reports?.weekly !== false, "تقرير أسبوعي كل أحد صباحاً: الزوار والرسائل وطلبات التوظيف وأكثر خدمة طُلبت")}
+        ${sw("monitorOn", cfg.reports?.monitor !== false, "مراقبة الموقع كل ١٥ دقيقة: بريد فوري إذا توقفت قاعدة البيانات أو الموقع، وآخر عند العودة")}
+        <div class="row-btns">${save()}<button class="b" data-test="weekly">${I.mail}أرسل لي التقرير الآن</button></div>
+      </div></div>
+
     <div class="card" id="cTags"><div class="card__head"><div><h3>أدوات القياس والإعلانات</h3>
       <p>الصق المعرّف فقط وتعمل الأداة على الموقع. اتركه فارغاً لإيقافها. إرسال نموذج التواصل يُحسب «عميلاً محتملاً» (Lead) في كل أداة مفعّلة.</p></div></div>
       <div class="grid2">${TAGS.map(([k, label, ph, hint]) => `<label class="f"><span>${label}</span>
@@ -80,6 +88,7 @@ export async function viewIntegrations(view) {
   const bodyFor = {
     cAlerts: () => ({ alerts: { on: chk("alertsOn"), from_name: val("fromName") } }),
     cReply: () => ({ autoreply: { on: chk("replyOn"), subject_ar: val("subAr"), subject_en: val("subEn"), body_ar: val("bodyAr"), body_en: val("bodyEn") } }),
+    cReports: () => ({ reports: { weekly: chk("weeklyOn"), monitor: chk("monitorOn") } }),
     cTags: () => ({ tags: Object.fromEntries($$("[data-tag]").map((i) => [i.dataset.tag, i.value.trim()])) }),
     cSpam: () => ({ spam: { turnstile: chk("tsOn"), blocked: val("blocked") } }),
     cMaint: () => ({ maintenance: { on: chk("maintOn"), message_ar: val("mAr"), message_en: val("mEn") } }),

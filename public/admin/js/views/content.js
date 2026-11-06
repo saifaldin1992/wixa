@@ -8,20 +8,22 @@ export let contentTab = "texts", contentLang = "ar";
 export const TEXT_FIELDS = [
   ["القسم الرئيسي (أعلى الصفحة)", [["hero_badge", "الشارة الصغيرة"], ["hero_title", "العنوان الرئيسي"], ["hero_sub", "الوصف", true], ["hero_cta", "زر 1"], ["hero_cta2", "زر 2"]]],
   ["قسم الإنجازات", [["projects_title", "العنوان"], ["projects_sub", "الوصف", true]]],
-  ["قسم الخدمات", [["services_title", "العنوان"], ["services_sub", "الوصف", true]]],
+  ["قسم الخدمات", [["services_title", "العنوان"], ["services_sub", "الوصف", true], ["wa_ask", "زر «اسأل عبر واتساب» تحت كل خدمة"]]],
   ["قسم كيف نعمل", [["process_title", "العنوان"], ["process_sub", "الوصف", true]]],
   ["قسم الأرقام", [["stats_title", "العنوان"]]],
   ["قسم آراء العملاء", [["testimonials_title", "العنوان"], ["testimonials_sub", "الوصف", true]]],
   ["حاسبة التكلفة", [["calc_title", "العنوان"], ["calc_sub", "الوصف", true], ["calc_type", "عنوان نوع المشروع"], ["calc_features", "عنوان الميزات"], ["calc_speed", "عنوان المدة"], ["calc_normal", "مدة عادية"], ["calc_rush", "مدة مستعجلة"], ["calc_result", "عنوان النتيجة"], ["calc_note", "الملاحظة", true], ["calc_cta", "نص الزر"]]],
   ["تفاصيل المشاريع", [["details", "زر عرض التفاصيل"], ["similar", "زر طلب مشروع مشابه"]]],
   ["قسم الشركاء", [["partners_title", "العنوان"], ["partners_sub", "الوصف", true]]],
+  ["قسم الوظائف", [["careers_title", "العنوان"], ["careers_sub", "الوصف", true], ["careers_empty", "النص عند عدم وجود شواغر", true], ["careers_apply", "زر التقديم"], ["careers_general", "زر إرسال السيرة الذاتية"]]],
+  ["قسم الأسئلة الشائعة", [["faq_title", "العنوان"], ["faq_sub", "الوصف", true]]],
   ["قسم التواصل", [["cta_title", "العنوان"], ["cta_sub", "الوصف", true], ["cta_button", "نص الزر"]]],
   ["التذييل", [["footer_text", "النص"]]],
 ];
 
 export async function viewContent(view) {
   settingsActions();
-  const tabs = [["texts", "النصوص"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
+  const tabs = [["texts", "النصوص"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
   view.innerHTML = `<div class="split"><div><div class="card">
       <div class="tabs" id="ctTabs">${tabs.map(([k, l]) => `<button data-k="${k}" class="${k === contentTab ? "on" : ""}">${l}</button>`).join("")}</div>
       <div id="ctBody"></div></div></div>${previewPane()}</div>`;
@@ -83,6 +85,33 @@ export function renderContentTab() {
       $("#addStep").onclick = () => { items.push({ title: "", text: "" }); changed(); draw(); };
     };
     draw(); return;
+  } else if (contentTab === "faq") {
+    const draw = () => {
+      const items = settings.content[L].faq || (settings.content[L].faq = []);
+      body.innerHTML = langSeg() + `<p class="muted" style="margin-top:0">أسئلة وأجوبة تظهر قبل قسم التواصل، ويقرؤها Google أيضاً. راجع الإجابات لتطابق طريقة عملكم.</p><div class="stack">${items.map((_, i) => `<div class="sec-title">السؤال ${i + 1} <span><button class="b b--sm b--ghost" data-mv="${i}" data-d="-1" ${i ? "" : "disabled"} title="أعلى">${I.up}</button><button class="b b--sm b--ghost" data-mv="${i}" data-d="1" ${i < items.length - 1 ? "" : "disabled"} title="أسفل">${I.down}</button><button class="b b--sm b--ghost b--danger" data-del="${i}">${I.trash}</button></span></div>${input(`content.${L}.faq.${i}.q`, "السؤال", false, `dir="${dir}"`)}${input(`content.${L}.faq.${i}.a`, "الإجابة", true, `dir="${dir}"`)}`).join("")}</div>
+        <button class="b b--sm" id="addFaq" style="margin-top:12px">${I.plus}إضافة سؤال</button>`;
+      bindLangSeg(); bindPathInputs(body);
+      $$("[data-del]", body).forEach((b) => (b.onclick = () => { items.splice(+b.dataset.del, 1); changed(); draw(); }));
+      $$("[data-mv]", body).forEach((b) => (b.onclick = () => { const i = +b.dataset.mv, j = i + +b.dataset.d; [items[i], items[j]] = [items[j], items[i]]; changed(); draw(); }));
+      $("#addFaq").onclick = () => { items.push({ q: "", a: "" }); changed(); draw(); };
+    };
+    draw(); return;
+  } else if (contentTab === "careers") {
+    const draw = () => {
+      settings.careers ??= { jobs: [] };
+      const jobs = settings.careers.jobs || (settings.careers.jobs = []);
+      body.innerHTML = `<p class="muted" style="margin-top:0">الشواغر التي تظهر في قسم «انضم إلى فريقنا». إن لم تضف أي وظيفة يظهر زر «أرسل سيرتك الذاتية» فقط. الطلبات تصلك في صفحة الرسائل ← طلبات التوظيف.</p>
+        <div class="stack">${jobs.map((j, i) => `<div class="sec-title">الوظيفة ${i + 1} <span><label class="switch" style="font-size:13px"><input type="checkbox" data-path="careers.jobs.${i}.open" ${j.open !== false ? "checked" : ""}><i></i>معروضة</label> <button class="b b--sm b--ghost b--danger" data-del="${i}">${I.trash}</button></span></div>
+          <div class="grid2">${input(`careers.jobs.${i}.title_ar`, "المسمى الوظيفي (عربي)", false, 'placeholder="مثال: مطوّر واجهات أمامية"')}${input(`careers.jobs.${i}.title_en`, "Job title (English)", false, 'dir="ltr" placeholder="e.g. Frontend developer"')}
+          ${input(`careers.jobs.${i}.type_ar`, "نوع الدوام (عربي)", false, 'placeholder="دوام كامل / جزئي / عن بُعد"')}${input(`careers.jobs.${i}.type_en`, "Type (English)", false, 'dir="ltr" placeholder="Full-time / Part-time / Remote"')}
+          ${input(`careers.jobs.${i}.location_ar`, "المكان (عربي)", false, 'placeholder="بغداد"')}${input(`careers.jobs.${i}.location_en`, "Location (English)", false, 'dir="ltr" placeholder="Baghdad"')}
+          ${input(`careers.jobs.${i}.desc_ar`, "الوصف والمتطلبات (عربي)", true)}${input(`careers.jobs.${i}.desc_en`, "Description (English)", true, 'dir="ltr"')}</div>`).join("")}</div>
+        <button class="b b--sm" id="addJob" style="margin-top:12px">${I.plus}إضافة وظيفة</button>`;
+      bindPathInputs(body);
+      $$("[data-del]", body).forEach((b) => (b.onclick = () => { jobs.splice(+b.dataset.del, 1); changed(); draw(); }));
+      $("#addJob").onclick = () => { jobs.push({ title_ar: "", title_en: "", type_ar: "", type_en: "", location_ar: "", location_en: "", desc_ar: "", desc_en: "", open: true }); changed(); draw(); };
+    };
+    draw(); return;
   } else if (contentTab === "calc") {
     const c = settings.calculator;
     const draw = () => {
@@ -114,7 +143,7 @@ export function renderContentTab() {
     };
     draw(); return;
   } else if (contentTab === "sections") {
-    const names = { iraq_map: "خريطة العراق في الواجهة الرئيسية", story: "القصة (المميزات)", projects: "الإنجازات (المشاريع)", services: "الخدمات", process: "كيف نعمل", stats: "الأرقام", testimonials: "آراء العملاء", calculator: "حاسبة التكلفة", partners: "الشركاء", contact: "التواصل" };
+    const names = { iraq_map: "خريطة العراق في الواجهة الرئيسية", story: "القصة (المميزات)", projects: "الإنجازات (المشاريع)", services: "الخدمات", process: "كيف نعمل", stats: "الأرقام", testimonials: "آراء العملاء", calculator: "حاسبة التكلفة", partners: "الشركاء", careers: "الوظائف (انضم إلى فريقنا)", faq: "الأسئلة الشائعة", contact: "التواصل" };
     body.innerHTML = `<p class="muted" style="margin-top:0">أخفِ أي قسم لا تحتاجه. (قسما الشركاء وآراء العملاء يختفيان تلقائياً إذا كانا فارغين.)</p><div class="stack">${Object.entries(names).map(([k, l]) => `<label class="switch"><input type="checkbox" data-path="sections.${k}" ${settings.sections[k] ? "checked" : ""}><i></i>${l}</label>`).join("")}</div>
       <label class="f" style="margin-top:18px;max-width:360px"><span>لغة الموقع عند أول زيارة</span><select data-path="default_lang">
         <option value="auto" ${(settings.default_lang || "auto") === "auto" ? "selected" : ""}>حسب لغة جهاز الزائر (عربي ← عربي، غيره ← إنجليزي)</option>

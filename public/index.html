@@ -214,6 +214,24 @@
       <div class="partners__grid" id="partnersGrid"></div>
     </section>
 
+    <!-- Careers -->
+    <section class="careers" id="careers" data-section="careers">
+      <div class="head">
+        <h2 class="head__title reveal-up" data-c="careers_title"></h2>
+        <p class="head__sub reveal-up" data-c="careers_sub"></p>
+      </div>
+      <div class="careers__list" id="careersList"></div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq" id="faq" data-section="faq">
+      <div class="head head--center">
+        <h2 class="head__title reveal-up" data-c="faq_title"></h2>
+        <p class="head__sub reveal-up" data-c="faq_sub"></p>
+      </div>
+      <div class="faq__list" id="faqList"></div>
+    </section>
+
     <!-- CTA + Contact -->
     <section class="cta" id="contact" data-section="contact">
       <div class="cta__glow" aria-hidden="true"></div>
@@ -229,7 +247,7 @@
         <div class="form__grid">
           <label class="field"><span data-t="f_name">الاسم</span><input name="name" required maxlength="120" autocomplete="name"></label>
           <label class="field"><span data-t="f_email">البريد الإلكتروني</span><input name="email" type="email" required maxlength="200" autocomplete="email" dir="ltr"></label>
-          <label class="field"><span data-t="f_phone">رقم الهاتف (اختياري)</span><input name="phone" type="tel" maxlength="40" autocomplete="tel" dir="ltr"></label>
+          <label class="field"><span data-t="f_phone">رقم الهاتف</span><input name="phone" type="tel" required maxlength="40" autocomplete="tel" dir="ltr" placeholder="07XX XXX XXXX"></label>
           <label class="field"><span data-t="f_service">الخدمة المطلوبة</span><select name="service" id="serviceSelect"></select></label>
           <label class="field field--full"><span data-t="f_message">حدّثنا عن مشروعك</span><textarea name="message" required maxlength="4000" rows="4"></textarea></label>
         </div>
@@ -250,7 +268,9 @@
         <a href="#top" data-t="nav_home">الرئيسية</a>
         <a href="#projects" data-t="nav_projects" data-sec="projects">حلولنا</a>
         <a href="#partners" data-t="nav_partners" data-sec="partners">شركاؤنا</a>
+        <a href="#careers" data-t="nav_careers" data-sec="careers">الوظائف</a>
         <a href="#contact" data-t="nav_contact" data-sec="contact">تواصل معنا</a>
+        <a href="/privacy" data-t="privacy">سياسة الخصوصية</a>
       </nav>
     <div class="footer__tools">
       <div class="footer__social" id="social"></div>
@@ -280,9 +300,33 @@
         <h2 id="pmTitle"></h2>
         <div class="pmodal__text" id="pmText"></div>
         <div class="project__stats" id="pmStats"></div>
-        <button type="button" class="btn btn--primary" id="pmCta"><span data-c="similar"></span><svg class="arr" viewBox="0 0 24 24"><path d="M19 12H5m0 0l6-6m-6 6l6 6"/></svg></button>
+        <div class="pmodal__actions"><button type="button" class="btn btn--primary" id="pmCta"><span data-c="similar"></span><svg class="arr" viewBox="0 0 24 24"><path d="M19 12H5m0 0l6-6m-6 6l6 6"/></svg></button>
+          <a class="btn btn--ghost" id="pmPage" href="#"><span data-t="page">صفحة المشروع</span></a></div>
       </div>
     </article>
+  </div>
+
+  <!-- Job application -->
+  <div class="pmodal jmodal" id="jmodal" hidden>
+    <div class="pmodal__scrim" data-close></div>
+    <form class="pmodal__box jmodal__box" id="jobForm" role="dialog" aria-modal="true" aria-labelledby="jmTitle" novalidate>
+      <button class="pmodal__x" type="button" data-close aria-label="close">✕</button>
+      <h2 id="jmTitle" data-t="j_title">التقديم على وظيفة</h2>
+      <div class="form__grid">
+        <label class="field field--full"><span data-t="j_job">الوظيفة</span><select name="job" id="jobSelect"></select></label>
+        <label class="field"><span data-t="f_name">الاسم</span><input name="name" required maxlength="120" autocomplete="name"></label>
+        <label class="field"><span data-t="f_email">البريد الإلكتروني</span><input name="email" type="email" required maxlength="200" autocomplete="email" dir="ltr"></label>
+        <label class="field"><span data-t="f_phone">رقم الهاتف</span><input name="phone" type="tel" required maxlength="40" autocomplete="tel" dir="ltr" placeholder="07XX XXX XXXX"></label>
+        <label class="field"><span data-t="j_cv">رابط السيرة الذاتية</span><input name="cv" type="url" maxlength="300" dir="ltr" placeholder="https://"></label>
+        <label class="field field--full"><span data-t="j_about">نبذة عن خبراتك</span><textarea name="message" required maxlength="4000" rows="4"></textarea></label>
+      </div>
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div id="turnstileJob" class="turnstile"></div>
+      <div class="form__end">
+        <p class="form__status" id="jobStatus" role="status"></p>
+        <button class="btn btn--primary" type="submit"><span data-t="j_send">إرسال الطلب</span></button>
+      </div>
+    </form>
   </div>
 
   <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>

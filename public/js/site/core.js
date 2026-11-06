@@ -9,13 +9,19 @@ export const reducedOS = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 export const UI = {
   ar: { nav_home: "الرئيسية", nav_projects: "حلولنا", nav_services: "خدماتنا", nav_partners: "شركاؤنا", nav_contact: "تواصل معنا", calc_est: "التقدير المبدئي",
-    lang: "English", f_name: "الاسم", f_email: "البريد الإلكتروني", f_phone: "رقم الهاتف (اختياري)", f_service: "الخدمة المطلوبة", f_any: "استشارة عامة",
+    lang: "English", f_name: "الاسم", f_email: "البريد الإلكتروني", f_phone: "رقم الهاتف", f_service: "الخدمة المطلوبة", f_any: "استشارة عامة",
     f_message: "حدّثنا عن مشروعك", f_send: "إرسال", sending: "جارٍ الإرسال…", ok: "شكراً لك! وصلت رسالتك وسنتواصل معك قريباً.", err: "تعذّر الإرسال، حاول مرة أخرى.", invalid: "يرجى تعبئة الحقول المطلوبة بشكل صحيح.",
-    no_projects: "ستُعرض المشاريع هنا قريباً.", step: "٠" },
+    no_projects: "ستُعرض المشاريع هنا قريباً.", step: "٠",
+    nav_careers: "الوظائف", privacy: "سياسة الخصوصية", bad_phone: "يرجى كتابة رقم هاتف صحيح.",
+    j_title: "التقديم على وظيفة", j_job: "الوظيفة", j_general: "تقديم عام (بدون وظيفة محددة)", j_cv: "رابط السيرة الذاتية أو LinkedIn أو أعمالك (اختياري)",
+    j_about: "نبذة عن خبراتك ومهاراتك", j_send: "إرسال الطلب", j_ok: "شكراً لك! وصل طلبك وسنتواصل معك إن كان مناسباً.", page: "صفحة المشروع" },
   en: { nav_home: "Home", nav_projects: "Solutions", nav_services: "Services", nav_partners: "Partners", nav_contact: "Contact", calc_est: "Estimate",
-    lang: "العربية", f_name: "Name", f_email: "Email", f_phone: "Phone (optional)", f_service: "Service", f_any: "General inquiry",
+    lang: "العربية", f_name: "Name", f_email: "Email", f_phone: "Phone", f_service: "Service", f_any: "General inquiry",
     f_message: "Tell us about your project", f_send: "Send", sending: "Sending…", ok: "Thank you! We've received your message and will be in touch soon.", err: "Couldn't send. Please try again.", invalid: "Please fill in the required fields correctly.",
-    no_projects: "Projects will appear here soon.", step: "0" },
+    no_projects: "Projects will appear here soon.", step: "0",
+    nav_careers: "Careers", privacy: "Privacy policy", bad_phone: "Please enter a valid phone number.",
+    j_title: "Apply for a role", j_job: "Role", j_general: "General application (no specific role)", j_cv: "Link to your CV, LinkedIn or portfolio (optional)",
+    j_about: "Tell us about your experience and skills", j_send: "Send application", j_ok: "Thank you! We've received your application and will contact you if it's a fit.", page: "Project page" },
 };
 
 export const ICONS = window.WIXA.ICONS;

@@ -28,6 +28,7 @@ function openProject(i) {
   const stats = Array.isArray(p.stats) ? p.stats : [];
   $("#pmStats").innerHTML = stats.map((st) => `<div><b>${esc(st.value)}</b><span>${esc(st[`label_${lang}`] || st.label_ar || "")}</span></div>`).join("");
   $("#pmStats").hidden = !stats.length;
+  $("#pmPage").href = `/projects/${encodeURIComponent(p.slug || p.id)}`;
   $("#pmCta").onclick = () => { closeProject(); openContact(lang === "ar" ? `أرغب بمشروع مشابه لـ: ${L(p, "title")}` : `I'd like a project similar to: ${L(p, "title")}`); };
   m.hidden = false; document.body.style.overflow = "hidden"; window.__lenis?.stop();
   $(".pmodal__x", m).focus();
@@ -36,7 +37,11 @@ function closeProject() {
   $("#pmodal").hidden = true; document.body.style.overflow = ""; window.__lenis?.start();
 }
 export function setupProjectModal() {
-  $("#projectsList").addEventListener("click", (e) => { const b = e.target.closest("[data-open]"); if (b) openProject(+b.dataset.open); });
+  $("#projectsList").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-open]"); if (!b) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return; // new tab → the project's own page
+    e.preventDefault(); openProject(+b.dataset.open);
+  });
   $("#pmodal").addEventListener("click", (e) => { if (e.target.closest("[data-close]")) closeProject(); });
   addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#pmodal").hidden) closeProject(); });
 }

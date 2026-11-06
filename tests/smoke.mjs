@@ -46,6 +46,13 @@ try {
   const trap = await fetch(`${BASE}/api/contact`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ website: "spam" }) });
   check(trap.status === 200, "honeypot silently accepts bots", String(trap.status));
   check((await fetch(`${BASE}/api/admin/integrations`)).status === 401, "integrations require sign-in");
+  const noPhone = await fetch(`${BASE}/api/contact`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: "Test", email: "t@example.com", message: "hello", phone: "" }) });
+  check(noPhone.status === 422 || noPhone.status === 403, "contact form requires a phone number", String(noPhone.status));
+  const priv = await fetch(`${BASE}/privacy?lang=ar`);
+  check(priv.status === 200 && (await priv.text()).includes("سياسة الخصوصية"), "privacy page responds", String(priv.status));
+  check((await fetch(`${BASE}/projects/no-such-project`)).status === 404, "unknown project pages return 404");
+  check((await (await fetch(`${BASE}/sitemap.xml`)).text()).includes("/privacy"), "sitemap lists the privacy page");
+  check((await fetch(`${BASE}/api/admin/msgmeta`)).status === 401, "message notes require sign-in");
   check((await fetch(`${BASE}/api/admin/refresh`, { method: "POST" })).status === 401, "publish-now requires sign-in");
   const stats = await fetch(`${BASE}/api/admin/stats`);
   check(stats.status === 401, "admin stats require sign-in", String(stats.status));
@@ -96,6 +103,7 @@ try {
     await ctx.route(/supabase-js/, (r) => r.fulfill({ body: readFileSync(new URL("./supabase-stub.js", import.meta.url)), contentType: "application/javascript" }));
     await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.fulfill({ body: "", contentType: "text/css" }));
     // the Worker's admin endpoints would check the stand-in session against the real Supabase: answer them here
+    await ctx.route(/\/api\/admin\/msgmeta$/, (r) => r.fulfill({ contentType: "application/json", body: "{}" }));
     await ctx.route(/\/api\/admin\/integrations$/, (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({
       alerts: { on: true, from_name: "WIXA" }, autoreply: { on: false, subject_ar: "", body_ar: "", subject_en: "", body_en: "" },
       spam: { turnstile: true, blocked: "" }, tags: { ga4: "", meta_pixel: "", clarity: "", tiktok: "" }, maintenance: { on: false, message_ar: "", message_en: "", bypass: "" } }) }));
