@@ -124,7 +124,7 @@ export function render() {
 
   buildHeroLogo();
   // "WIXA wave": the logo's double curve as a signature ornament above every section title
-  $$(".head").forEach((h, i) => { if (!h.querySelector(".wave")) h.insertAdjacentHTML("afterbegin", `<svg class="wave" viewBox="0 0 108 24" aria-hidden="true"><defs><linearGradient id="wv${i}" x1="0" x2="1"><stop offset="0" style="stop-color:var(--fg)"/><stop offset="1" style="stop-color:var(--accent)"/></linearGradient></defs><path pathLength="1" stroke="url(#wv${i})" d="M3 12 C 15 1, 27 1, 39 12 S 63 23, 75 12 S 93 1, 105 12"/></svg>`); });
+  $$(".head").forEach((h, i) => { if (!h.querySelector(".wave")) h.insertAdjacentHTML("afterbegin", `<svg class="wave" viewBox="0 0 252 24" aria-hidden="true"><defs><linearGradient id="wv${i}" x1="0" x2="1"><stop offset="0" style="stop-color:var(--fg)"/><stop offset="1" style="stop-color:var(--accent)"/></linearGradient></defs><path pathLength="1" stroke="url(#wv${i})" d="M3 12 C 15 1, 27 1, 39 12 S 63 23, 75 12 S 99 1, 111 12 S 135 23, 147 12 S 171 1, 183 12 S 207 23, 219 12 S 237 1, 249 12"/></svg>`); });
   renderProcess();
   renderTestimonials();
   renderCalc();

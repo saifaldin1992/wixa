@@ -4,7 +4,7 @@
   --primary: #5B21B6; --primary-rgb: 91,33,182; --primary-ink: #fff;
   --accent: #1FC8E3; --accent-rgb: 31,200,227;
   /* light palette (overridden from the dashboard via applyTheme) */
-  --l-bg: #F7F6FB; --l-surface: #fff; --l-surface-rgb: 255,255,255; --l-text: #140F1F; --l-text-rgb: 20,15,31; --l-muted: #625C70;
+  --l-bg: #FBFAFE; --l-surface: #fff; --l-surface-rgb: 255,255,255; --l-text: #140F1F; --l-text-rgb: 20,15,31; --l-muted: #625C70;
   --l-dark: #120A24; --l-dark-rgb: 18,10,36; --l-fg: #5B21B6; --l-fg-rgb: 91,33,182;
   /* dark palette (derived from the brand color) */
   --dk-bg: #130C1F; --dk-surface: #201731; --dk-surface-rgb: 32,23,49; --dk-text: #F2F0F7; --dk-text-rgb: 242,240,247; --dk-muted: #B2ACBF;
@@ -123,8 +123,8 @@ section { position: relative; }
 /* hero — centered, animated logo */
 .hero { min-height: 100svh; display: grid; place-items: center; text-align: center; padding: 104px var(--gutter) 72px; overflow: hidden; isolation: isolate; }
 .hero__bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
-.hero__grid { position: absolute; inset: 0; background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 64px 64px; mask-image: radial-gradient(ellipse 60% 55% at 50% 42%, #000 15%, transparent 75%); -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 42%, #000 15%, transparent 75%); }
-.aurora { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .55; will-change: transform; }
+.hero__grid { position: absolute; inset: 0; background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 64px 64px; opacity: .55; mask-image: radial-gradient(ellipse 55% 50% at 50% 40%, #000 10%, transparent 70%); -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 42%, #000 15%, transparent 75%); }
+.aurora { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .32; will-change: transform; }
 .aurora--1 { width: 46vw; height: 46vw; max-width: 640px; max-height: 640px; left: calc(50% - min(23vw, 320px)); top: calc(34% - min(23vw, 320px)); background: radial-gradient(circle, rgba(var(--primary-rgb), .38), transparent 65%); animation: drift1 16s ease-in-out infinite alternate; }
 .aurora--2 { width: 30vw; height: 30vw; max-width: 420px; max-height: 420px; left: 22%; top: 60%; background: radial-gradient(circle, rgba(var(--accent-rgb), .32), transparent 65%); animation: drift2 19s ease-in-out infinite alternate; }
 .aurora--3 { width: 28vw; height: 28vw; max-width: 380px; max-height: 380px; right: 14%; top: 18%; background: radial-gradient(circle, rgba(var(--fg-rgb), .26), transparent 65%); animation: drift3 22s ease-in-out infinite alternate; }
@@ -563,7 +563,7 @@ html[dir="ltr"] .progress span { transform-origin: left; }
 }
 
 /* ===== WIXA wave motif ===== */
-.wave { display: block; width: 72px; height: 16px; margin: 0 auto 16px; overflow: visible; }
+.wave { display: block; width: 168px; height: 22px; margin: 0 auto 18px; overflow: visible; }
 .wave path { fill: none; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.4s var(--ease); }
 .wave.in path, .no-anim .wave path { stroke-dashoffset: 0; }
 .footer { position: relative; border-top: 0; }
@@ -587,7 +587,7 @@ html[data-theme="dark"] .hero__title .word:last-child > span { background-image:
 /* map of Iraq behind the logo: the border draws itself, a light travels along it, Baghdad pulses */
 /* the map of Iraq sits right under the badge, behind the title and subtitle */
 .hero__stage { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; isolation: isolate; }
-.hero__stage .iraq { position: absolute; left: 50%; top: 4px; width: min(440px, 78vw); height: auto; aspect-ratio: 1080 / 1096; transform: translateX(-50%); overflow: visible; pointer-events: none; z-index: -1; opacity: .5; }
+.hero__stage .iraq { position: absolute; left: 50%; top: 4px; width: min(530px, 92vw); height: auto; aspect-ratio: 1080 / 1096; transform: translateX(-50%); overflow: visible; pointer-events: none; z-index: -1; opacity: .5; }
 .iraq[hidden] { display: none; }
 .iq-fill { fill: url(#iqFill); opacity: 0; }
 .iq-line { fill: none; stroke: url(#iqStroke); stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; opacity: .55; stroke-dasharray: 1; stroke-dashoffset: 1; }

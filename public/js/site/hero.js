@@ -58,7 +58,7 @@ export function setupParticles() {
     dpr = Math.min(2, devicePixelRatio || 1);
     w = c.clientWidth; h = c.clientHeight;
     c.width = w * dpr; c.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const n = Math.round(Math.min(70, (w * h) / 16000));
+    const n = Math.round(Math.min(44, (w * h) / 26000));
     dots = Array.from({ length: n }, (_, i) => ({ x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.8 + .6,
       vx: (Math.random() - .5) * .25, vy: (Math.random() - .5) * .25, gold: i % 7 === 0 }));
   };
@@ -80,9 +80,9 @@ export function setupParticles() {
     }
     for (let i = 0; i < dots.length; i++) for (let j = i + 1; j < dots.length; j++) {
       const a = dots[i], b = dots[j], dd = Math.hypot(a.x - b.x, a.y - b.y);
-      if (dd < 110) { ctx.strokeStyle = `rgba(${fg},${(1 - dd / 110) * .16})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+      if (dd < 110) { ctx.strokeStyle = `rgba(${fg},${(1 - dd / 110) * .09})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
     }
-    for (const d of dots) { ctx.fillStyle = d.gold ? `rgba(${ac},.85)` : `rgba(${fg},.45)`; ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2); ctx.fill(); }
+    for (const d of dots) { ctx.fillStyle = d.gold ? `rgba(${ac},.6)` : `rgba(${fg},.28)`; ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2); ctx.fill(); }
   };
   tick();
 }

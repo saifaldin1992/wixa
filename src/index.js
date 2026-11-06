@@ -82,6 +82,7 @@ async function handleBrand(request, env) {
   const res = new HTMLRewriter().on("body", { element: (el) => el.append(beacon(env), { html: true }) }).transform(page);
   const headers = new Headers(res.headers);
   for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v);
+  headers.set("x-robots-tag", "noindex, nofollow"); // private page: not linked, not indexed
   return new Response(res.body, { status: res.status, headers });
 }
 
@@ -304,14 +305,14 @@ export default {
           return json({ env: env.SITE_ENV || "production", supabaseUrl: env.SUPABASE_URL, supabaseKey: env.SUPABASE_PUBLISHABLE_KEY });
         case "GET /sitemap.xml": {
           const today = new Date().toISOString().slice(0, 10);
-          const urls = ["/", "/brand/"].map((p) => `<url><loc>https://wixa.dev${p}</loc><lastmod>${today}</lastmod></url>`).join("");
+          const urls = ["/"].map((p) => `<url><loc>https://wixa.dev${p}</loc><lastmod>${today}</lastmod></url>`).join("");
           return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>\n`, {
             headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" },
           });
         }
         case "GET /robots.txt":
           // Keep the staging copy out of search engines.
-          return new Response(env.SITE_ENV === "staging" ? "User-agent: *\nDisallow: /\n" : "User-agent: *\nDisallow: /admin/\nSitemap: https://wixa.dev/sitemap.xml\n", {
+          return new Response(env.SITE_ENV === "staging" ? "User-agent: *\nDisallow: /\n" : "User-agent: *\nDisallow: /admin/\nDisallow: /brand/\nSitemap: https://wixa.dev/sitemap.xml\n", {
             headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" },
           });
         case "GET /health": {

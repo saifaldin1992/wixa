@@ -18,7 +18,7 @@
       primary: "#5B21B6",
       primaryInk: "#FFFFFF",
       accent: "#1FC8E3",
-      bg: "#F7F6FB",
+      bg: "#FBFAFE",
       surface: "#FFFFFF",
       text: "#140F1F",
       muted: "#625C70",
