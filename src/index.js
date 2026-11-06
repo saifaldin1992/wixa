@@ -940,9 +940,9 @@ async function runWeeklyReport(env, force = false) {
 
 // ---------------------------------------------------------------- router
 export default {
-  // "*/15 * * * *" → health check; "17 6 * * 0" → weekly report (Sunday 09:17 Baghdad)
+  // "*/15 * * * *" → health check; "17 6 * * SUN" → weekly report (Sunday 09:17 Baghdad)
   async scheduled(event, env, ctx) {
-    if (event.cron === "17 6 * * 0") ctx.waitUntil(runWeeklyReport(env).catch((e) => console.error("weekly", e)));
+    if (event.cron === "17 6 * * SUN") ctx.waitUntil(runWeeklyReport(env).catch((e) => console.error("weekly", e)));
     else ctx.waitUntil(runMonitor(env).catch((e) => console.error("monitor", e)));
   },
   async fetch(request, env, ctx) {

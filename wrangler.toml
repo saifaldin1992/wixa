@@ -46,7 +46,7 @@ id = "16bfe7325d144e87a3fe12e9a6cbd744"
 
 # scheduled jobs: health check every 15 minutes, weekly report on Sunday 09:17 Baghdad (06:17 UTC)
 [triggers]
-crons = ["*/15 * * * *", "17 6 * * 0"]
+crons = ["*/15 * * * *", "17 6 * * SUN"]
 
 # deploy id and time, shown on the dashboard's Connections page
 [version_metadata]
