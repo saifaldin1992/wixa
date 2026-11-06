@@ -78,7 +78,7 @@
         cta_title: "جاهزون لإنجاز مشروعكم القادم",
         cta_sub: "أخبرنا عن التحدي الذي تواجهه، وسنعود إليك بخطة عمل واضحة.",
         cta_button: "تواصل معنا",
-        footer_text: "صُنع بشغف بواسطة فريق ويكسا",
+        footer_text: "طُوّر بواسطة فريق ويكسا",
         process_title: "كيف نعمل",
         process_sub: "رحلة واضحة من أول اجتماع حتى إطلاق مشروعك — وتبقى معنا بعدها.",
         process: [
@@ -123,7 +123,7 @@
         cta_title: "Ready to deliver your next project",
         cta_sub: "Tell us about the challenge you face and we'll come back with a clear plan.",
         cta_button: "Contact us",
-        footer_text: "Crafted with care by the WIXA team",
+        footer_text: "Developed by the WIXA team",
         process_title: "How we work",
         process_sub: "A clear journey from the first meeting to launch — and we stay with you after.",
         process: [
@@ -213,7 +213,7 @@
     };
     const vars = {
       "--primary": t.primary, "--primary-rgb": hexToRgb(t.primary), "--primary-ink": t.primaryInk,
-      "--accent": t.accent, "--accent-rgb": hexToRgb(t.accent), "--accent-ink": mix(t.accent, "#04222A", 0.45),
+      "--accent": t.accent, "--accent-rgb": hexToRgb(t.accent), "--accent-ink": mix(t.accent, "#04222A", 0.5),
       "--l-bg": t.bg, "--l-surface": t.surface, "--l-surface-rgb": hexToRgb(t.surface), "--l-text": t.text, "--l-text-rgb": hexToRgb(t.text),
       "--l-muted": t.muted, "--l-dark": t.dark, "--l-dark-rgb": hexToRgb(t.dark), "--l-fg": t.primary, "--l-fg-rgb": hexToRgb(t.primary),
       "--dk-bg": dk.bg, "--dk-surface": dk.surface, "--dk-surface-rgb": hexToRgb(dk.surface), "--dk-text": dk.text, "--dk-text-rgb": hexToRgb(dk.text),

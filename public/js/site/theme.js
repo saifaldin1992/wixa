@@ -1,5 +1,5 @@
 /* Light / dark mode */
-import { $, state, lang } from "./core.js";
+import { $$, state, lang } from "./core.js";
 
 // ---------- dark mode ----------
 export function applyDefaultMode() {
@@ -10,15 +10,15 @@ export function applyDefaultMode() {
   document.documentElement.setAttribute("data-theme", t);
 }
 export function setupTheme() {
-  const btn = $("#themeBtn");
-  if (!btn) return;
+  const btns = $$("[data-theme-toggle]");
+  if (!btns.length) return;
   const set = (t) => {
     const root = document.documentElement;
     root.classList.add("theme-anim");
     root.setAttribute("data-theme", t);
     try { localStorage.setItem("wixa-theme", t); } catch {}
-    btn.setAttribute("aria-label", t === "dark" ? (lang === "ar" ? "الوضع النهاري" : "Light mode") : (lang === "ar" ? "الوضع الليلي" : "Dark mode"));
+    btns.forEach((btn) => btn.setAttribute("aria-label", t === "dark" ? (lang === "ar" ? "الوضع النهاري" : "Light mode") : (lang === "ar" ? "الوضع الليلي" : "Dark mode")));
     setTimeout(() => root.classList.remove("theme-anim"), 600);
   };
-  btn.addEventListener("click", () => set(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark"));
+  btns.forEach((btn) => btn.addEventListener("click", () => set(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark")));
 }
