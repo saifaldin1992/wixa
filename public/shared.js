@@ -1,7 +1,7 @@
 /* WIXA — defaults and theme helpers shared by the site and the admin dashboard. */
 (function () {
   const FONTS = {
-    "Alexandria": "300;400;500;700;800",
+    "Alexandria": "400;500;700;800",
     "Cairo": "300;400;500;700;800",
     "Tajawal": "300;400;500;700;800",
     "IBM Plex Sans Arabic": "300;400;500;600;700",

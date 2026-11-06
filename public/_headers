@@ -12,11 +12,10 @@
 /og.jpg
   Cache-Control: public, max-age=604800
 
-# Scripts and styles: short browser cache, revalidated in the background.
-/*.js
-  Cache-Control: public, max-age=300, stale-while-revalidate=86400
-/*.css
-  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+# Built scripts and styles: browsers always check for a newer version (a cheap 304 from the edge),
+# so a fresh page never runs with yesterday's CSS or JS.
+/build/*
+  Cache-Control: public, no-cache
 
 /admin/*
   X-Robots-Tag: noindex, nofollow

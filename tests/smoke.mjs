@@ -49,6 +49,9 @@ try {
   check(stats.status === 401, "admin stats require sign-in", String(stats.status));
   const home = await (await fetch(`${BASE}/`)).text();
   check(home.includes('id="wixa-data"'), "homepage embeds site data");
+  check((await fetch(`${BASE}/no-such-page`)).status === 404, "unknown pages return 404");
+  const built = await Promise.all(["/build/site.js", "/build/site.css", "/build/shared.js", "/build/admin.js"].map((u) => fetch(BASE + u).then((r) => r.ok && !/html/.test(r.headers.get("content-type") || ""))));
+  check(built.every(Boolean), "bundled front end is served");
   const h = (await fetch(`${BASE}/`)).headers;
   check(/frame-ancestors 'self'/.test(h.get("content-security-policy") || ""), "homepage sends CSP");
 

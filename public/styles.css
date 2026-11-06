@@ -124,7 +124,8 @@ section { position: relative; }
 .hero { min-height: 100svh; display: grid; place-items: center; text-align: center; padding: 88px var(--gutter) 64px; overflow: hidden; isolation: isolate; }
 .hero__bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
 .hero__grid { position: absolute; inset: 0; background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 64px 64px; opacity: .55; mask-image: radial-gradient(ellipse 55% 50% at 50% 40%, #000 10%, transparent 70%); -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 42%, #000 15%, transparent 75%); }
-.aurora { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .32; will-change: transform; }
+/* soft colour clouds: the radial gradients are already soft, so no blur filter (blur on large moving layers is costly on phones) */
+.aurora { position: absolute; border-radius: 50%; opacity: .32; will-change: transform; }
 .aurora--1 { width: 46vw; height: 46vw; max-width: 640px; max-height: 640px; left: calc(50% - min(23vw, 320px)); top: calc(34% - min(23vw, 320px)); background: radial-gradient(circle, rgba(var(--primary-rgb), .38), transparent 65%); animation: drift1 16s ease-in-out infinite alternate; }
 .aurora--2 { width: 30vw; height: 30vw; max-width: 420px; max-height: 420px; left: 22%; top: 60%; background: radial-gradient(circle, rgba(var(--accent-rgb), .32), transparent 65%); animation: drift2 19s ease-in-out infinite alternate; }
 .aurora--3 { width: 28vw; height: 28vw; max-width: 380px; max-height: 380px; right: 14%; top: 18%; background: radial-gradient(circle, rgba(var(--fg-rgb), .26), transparent 65%); animation: drift3 22s ease-in-out infinite alternate; }
@@ -141,7 +142,7 @@ html[data-theme="dark"] .aurora { opacity: .8; }
 .hero__logo .lg-fill { fill: var(--fg); opacity: 0; transform-origin: center; transform-box: fill-box; }
 .hero__logo .lg-shine { fill: url(#lgShine); opacity: 0; mix-blend-mode: soft-light; }
 html[data-theme="dark"] .hero__logo .lg-shine { mix-blend-mode: screen; }
-.hero__logo .lg-glow { fill: var(--fg); opacity: 0; filter: blur(26px); }
+.hero__logo .lg-glow { fill: var(--fg); opacity: 0; filter: blur(26px); will-change: opacity; }
 .hero.in .lg-stroke { animation: lgDraw 2.4s cubic-bezier(.65,0,.35,1) .2s forwards; }
 .hero.in .lg-fill { animation: lgFill 1s var(--ease-out) 2.1s forwards; }
 .hero.in .lg-glow { animation: lgGlow 1.6s var(--ease-out) 2.2s forwards, lgBreathe 5s ease-in-out 3.8s infinite; }
@@ -583,7 +584,7 @@ html[data-theme="dark"] .hero__title .word:last-child > span { background-image:
 .hero.in .lg-runner { animation: lgRunnerIn .8s var(--ease-out) 2.8s forwards; }
 .no-anim .lg-runner { opacity: 1; }
 .lg-runner__dot { fill: var(--accent); }
-.lg-runner__halo { fill: var(--accent); opacity: .25; filter: blur(10px); }
+.lg-runner__halo { fill: var(--accent); opacity: .16; }
 @keyframes lgRunnerIn { to { opacity: 1; } }
 /* map of Iraq behind the logo: the border draws itself, a light travels along it, Baghdad pulses */
 /* the map of Iraq sits right under the badge, behind the title and subtitle */
@@ -592,7 +593,7 @@ html[data-theme="dark"] .hero__title .word:last-child > span { background-image:
 .iraq[hidden] { display: none; }
 .iq-fill { fill: url(#iqFill); opacity: 0; }
 .iq-line { fill: none; stroke: url(#iqStroke); stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; opacity: .55; stroke-dasharray: 1; stroke-dashoffset: 1; }
-.iq-flow { fill: none; stroke: var(--accent); stroke-width: 2.6; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-dasharray: 3 97; stroke-dashoffset: 100; opacity: 0; filter: drop-shadow(0 0 4px rgba(var(--accent-rgb), .9)); }
+.iq-flow { fill: none; stroke: var(--accent); stroke-width: 2.6; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-dasharray: 3 97; stroke-dashoffset: 100; opacity: 0; }
 .iq-city { opacity: 0; }
 .iq-dot { fill: var(--accent); }
 .iq-ping { fill: none; stroke: var(--accent); stroke-width: 2; vector-effect: non-scaling-stroke; transform-box: fill-box; transform-origin: center; opacity: 0; }

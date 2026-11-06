@@ -4,8 +4,9 @@
 //  • Site content is read from Supabase at most once a minute per edge location
 //    (isolate memory + Cloudflare edge cache), never once per visitor.
 //  • The homepage HTML gets that content injected, so a visit needs no extra API round trip.
-//  • Writes (contact form, page views) are rate limited per IP and go through
-//    token-checked database functions, so nobody can write to the database directly.
+//  • The contact form is rate limited per IP, checked by Turnstile and written through a
+//    token-checked database function, so nobody can write to the database directly.
+//  • Visits are counted by Cloudflare Web Analytics, not by this Worker.
 
 const SITE_TTL = 60; // seconds the site content may be served from cache
 // Keep in sync with public/_headers. The sha256 is the inline theme script in index.html.
@@ -30,6 +31,7 @@ function sb(env, path, init = {}) {
 
 // ---------------------------------------------------------------- site content (cached)
 let memo = { at: 0, text: null }; // per-isolate copy
+let health = { at: 0, supabase: "unknown" };
 
 async function loadFromSupabase(env) {
   const q = (t) => sb(env, `${t}?select=*&published=eq.true&order=sort.asc,created_at.asc`).then((r) => {
@@ -305,12 +307,16 @@ export default {
             headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" },
           });
         case "GET /health": {
-          let supabase = "unreachable";
-          try {
-            const r = await fetch(`${env.SUPABASE_URL}/auth/v1/health`, { headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY } });
-            supabase = r.ok ? "ok" : `error ${r.status}`;
-          } catch (err) { supabase = `error: ${err.message}`; }
-          return json({ worker: "ok", env: env.SITE_ENV || "production", supabase }, 200, { "cache-control": "no-store" });
+          // the database check is remembered for 30 s, so a flood of /health calls never reaches Supabase
+          if (Date.now() - health.at > 30_000) {
+            let supabase = "unreachable";
+            try {
+              const r = await fetch(`${env.SUPABASE_URL}/auth/v1/health`, { headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY } });
+              supabase = r.ok ? "ok" : `error ${r.status}`;
+            } catch (err) { supabase = `error: ${err.message}`; }
+            health = { at: Date.now(), supabase };
+          }
+          return json({ worker: "ok", env: env.SITE_ENV || "production", supabase: health.supabase }, 200, { "cache-control": "no-store" });
         }
       }
       if (url.pathname.startsWith("/api/")) return json({ error: "not_found" }, 404);

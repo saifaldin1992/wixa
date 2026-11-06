@@ -7,9 +7,10 @@
     "test": "node tests/smoke.mjs"
   },
   "devDependencies": {
-    "wrangler": "^4.0.0",
+    "esbuild": "^0.24.2",
     "playwright": "^1.49.0",
-    "wait-on": "^8.0.1"
+    "wait-on": "^8.0.1",
+    "wrangler": "^4.0.0"
   },
   "type": "module"
 }
