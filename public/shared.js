@@ -204,6 +204,21 @@
   }
 
   // Mix two hex colors: k = share of `b` (0..1).
+  // Same hue as the brand colour, but bright and saturated: reads clearly on dark backgrounds
+  // (mixing with white would wash it out to a pale lavender).
+  function vivid(hex, light = 0.7, minSat = 0.82) {
+    let [r, g, b] = hexToRgb(hex).split(",").map((v) => Number(v) / 255);
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+    let h = 0;
+    if (d) h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    h = (h * 60 + 360) % 360;
+    const l0 = (mx + mn) / 2, s0 = d ? d / (1 - Math.abs(2 * l0 - 1)) : 0;
+    const s = Math.max(s0, minSat), l = light;
+    const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = l - c / 2;
+    [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+    return "#" + [r, g, b].map((v) => Math.round((v + m) * 255).toString(16).padStart(2, "0")).join("");
+  }
+
   function mix(a, b, k) {
     const A = hexToRgb(a).split(",").map(Number), B = hexToRgb(b).split(",").map(Number);
     return "#" + A.map((v, i) => Math.round(v * (1 - k) + B[i] * k).toString(16).padStart(2, "0")).join("");
@@ -220,7 +235,7 @@
       text: "#F2F0F7",
       muted: "#B2ACBF",
       dark: mix(t.primary, "#040309", 0.55),
-      fg: mix(t.primary, "#FFFFFF", 0.62),
+      fg: vivid(t.primary),
     };
     const vars = {
       "--primary": t.primary, "--primary-rgb": hexToRgb(t.primary), "--primary-ink": t.primaryInk,

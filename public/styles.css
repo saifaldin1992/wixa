@@ -8,7 +8,7 @@
   --l-dark: #120A24; --l-dark-rgb: 18,10,36; --l-fg: #5B21B6; --l-fg-rgb: 91,33,182;
   /* dark palette (derived from the brand color) */
   --dk-bg: #130C1F; --dk-surface: #201731; --dk-surface-rgb: 32,23,49; --dk-text: #F2F0F7; --dk-text-rgb: 242,240,247; --dk-muted: #B2ACBF;
-  --dk-dark: #2B1057; --dk-dark-rgb: 43,16,87; --dk-fg: #C1ABE3; --dk-fg-rgb: 193,171,227;
+  --dk-dark: #2B1057; --dk-dark-rgb: 43,16,87; --dk-fg: #A574F1; --dk-fg-rgb: 165,116,241;
   /* active tokens */
   --bg: var(--l-bg); --surface: var(--l-surface); --surface-rgb: var(--l-surface-rgb); --text: var(--l-text); --text-rgb: var(--l-text-rgb);
   --muted: var(--l-muted); --dark: var(--l-dark); --dark-rgb: var(--l-dark-rgb); --fg: var(--l-fg); --fg-rgb: var(--l-fg-rgb);
@@ -726,3 +726,16 @@ html[dir="rtl"] .partners__track { animation-name: tstScrollRtl; }
   .menu-btn { order: -1; margin-inline-end: -4px; }
   .header__end > .theme-btn { margin-inline-start: auto; }
 }
+
+/* dark mode, matched to light mode */
+/* story illustrations: brighter lines, accents in the bright brand violet */
+html[data-theme="dark"] .story-item__art svg { stroke: rgba(var(--text-rgb), .78); }
+html[data-theme="dark"] .story-item__art svg .acc { stroke: var(--fg); }
+html[data-theme="dark"] .story-item__art svg .fillp { fill: rgba(var(--fg-rgb), .16); }
+/* partners: logos sit on a light card, exactly as they look in light mode */
+html[data-theme="dark"] .partner { background: #F4F2F9; border-color: transparent; }
+html[data-theme="dark"] .partner img { filter: grayscale(1); opacity: .7; }
+html[data-theme="dark"] .partner:hover img { filter: none; opacity: 1; }
+html[data-theme="dark"] .partner span { color: #625C70; }
+/* step numbers and selected options use the bright violet edge so they stand out like in light mode */
+html[data-theme="dark"] .pstep.on .pstep__num { box-shadow: 0 0 0 8px rgba(var(--fg-rgb), .16), 0 14px 30px -10px rgba(var(--fg-rgb), .45); }
