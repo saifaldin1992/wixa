@@ -133,38 +133,6 @@ async function turnstileOk(env, token, ip) {
 
 const rpc = (env, fn, p) => sb(env, `rpc/${fn}`, { method: "POST", body: JSON.stringify({ token: env.WRITE_TOKEN || "", p }) });
 
-// ---------------------------------------------------------------- POST /api/track
-// Anonymous page view. The visitor id is a daily-rotating salted hash, never the raw IP.
-async function handleTrack(request, env, ctx) {
-  const ip = clientIp(request);
-  const ua = request.headers.get("user-agent") || "";
-  if (/bot|crawl|spider|slurp|preview|headless|lighthouse/i.test(ua)) return new Response(null, { status: 204 });
-  if (!(await allowed(env.TRACK_LIMITER, ip))) return new Response(null, { status: 204 });
-
-  let body = {};
-  try { body = await request.json(); } catch {}
-  const day = new Date().toISOString().slice(0, 10);
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${env.VISITOR_SALT || "wixa"}|${day}|${ip}|${ua}`));
-  const visitor_hash = [...new Uint8Array(digest)].slice(0, 16).map((b) => b.toString(16).padStart(2, "0")).join("");
-
-  let referrer = null;
-  try {
-    const r = new URL(body.referrer);
-    if (r.host && r.host !== new URL(request.url).host) referrer = r.host.slice(0, 300);
-  } catch {}
-
-  const p = {
-    path: typeof body.path === "string" && body.path.startsWith("/") ? body.path.slice(0, 300) : "/",
-    visitor_hash, referrer,
-    country: request.cf?.country && /^[A-Z]{2}$/.test(request.cf.country) ? request.cf.country : null,
-    device: /ipad|tablet/i.test(ua) ? "tablet" : /mobi|android|iphone/i.test(ua) ? "mobile" : "desktop",
-    lang: body.lang === "en" ? "en" : "ar",
-  };
-  // Respond immediately; the write finishes in the background.
-  ctx.waitUntil(rpc(env, "track_view", p).then(async (r) => { if (!r.ok) console.error("track", r.status, await r.text()); }));
-  return new Response(null, { status: 204 });
-}
-
 // ---------------------------------------------------------------- GET /api/admin/stats
 // Visitor numbers for the dashboard, read from Cloudflare Web Analytics.
 // Counts only this environment's public pages: the dashboard itself (/admin) is excluded.
