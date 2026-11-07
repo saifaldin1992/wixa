@@ -210,11 +210,12 @@ main{max-width:520px}img{width:84px;height:84px;margin-bottom:18px}h1{font-size:
 
 // GET/PUT /api/admin/integrations — read or change the integrations (admins only)
 async function handleAdminIntegrations(request, env) {
-  const { error } = await adminSession(request, env);
+  const { error, role } = await adminSession(request, env, request.method === "GET" ? undefined : ["owner"]);
   if (error) return error;
   if (!env.PRIVATE) return json({ error: "storage_not_configured" }, 503);
   cfgMemo.at = 0; // always read the stored copy here
   const cfg = await getConfig(env);
+  if (request.method === "GET" && role !== "owner") return json({ templates: cfg.templates }, 200, { "cache-control": "no-store" }); // the team sees only the ready replies
   if (request.method === "GET") {
     const last = await env.PRIVATE.get("backup:last", { type: "json" }).catch(() => null);
     return json({ ...cfg, backup_last: last }, 200, { "cache-control": "no-store" });
@@ -229,7 +230,7 @@ async function handleAdminIntegrations(request, env) {
 
 // POST /api/admin/integrations/test — send a sample alert or auto-reply to the alerts address
 async function handleAdminTest(request, env) {
-  const { error } = await adminSession(request, env);
+  const { error } = await adminSession(request, env, ["owner"]);
   if (error) return error;
   let body = {};
   try { body = await request.json(); } catch {}
@@ -244,7 +245,7 @@ async function handleAdminTest(request, env) {
 
 // POST /api/admin/refresh — show the latest content on the site now
 async function handleAdminRefresh(request, env) {
-  const { error } = await adminSession(request, env);
+  const { error } = await adminSession(request, env, ["owner", "editor"]);
   if (error) return error;
   try { await publishNow(env); } catch (e) { console.error("refresh", e); return json({ error: "refresh_failed" }, 502); }
   return json({ ok: true });
@@ -397,17 +398,24 @@ async function handleAdminPage(request, env) {
 }
 
 // Admin-only endpoints: the caller's own Supabase session must belong to an admin.
-async function adminSession(request, env) {
+// Roles: owner (everything) · editor (content and look) · support (messages and appointments).
+// `roles` lists who may use an endpoint; omitted = any dashboard user.
+async function adminSession(request, env, roles) {
   const auth = request.headers.get("authorization") || "";
   if (!auth.startsWith("Bearer ")) return { error: json({ error: "unauthorized" }, 401) };
   const asUser = (path, init = {}) => fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, { ...init, headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, authorization: auth, "content-type": "application/json", ...(init.headers || {}) } });
-  let isAdmin = false;
+  let role = null;
   try {
-    const adm = await asUser("rpc/is_admin", { method: "POST", body: "{}" });
-    isAdmin = adm.ok && (await adm.json()) === true;
+    const r = await asUser("rpc/admin_role", { method: "POST", body: "{}" });
+    if (r.ok) role = await r.json();
+    else if (r.status === 404) { // before the team update is applied: every dashboard user is the owner
+      const adm = await asUser("rpc/is_admin", { method: "POST", body: "{}" });
+      role = adm.ok && (await adm.json()) === true ? "owner" : null;
+    }
   } catch { return { error: json({ error: "auth_unavailable" }, 503) }; }
-  if (!isAdmin) return { error: json({ error: "forbidden" }, 403) };
-  return { asUser };
+  if (!role) return { error: json({ error: "forbidden" }, 403) };
+  if (roles && !roles.includes(role)) return { error: json({ error: "role_forbidden", role }, 403) };
+  return { asUser, role };
 }
 
 async function handleAdminStats(request, env, url, ctx) {
@@ -496,7 +504,7 @@ async function handleAdminStats(request, env, url, ctx) {
 // ---------------------------------------------------------------- GET /api/admin/status
 // Live check of everything the site is connected to, for the dashboard's "Connections" page.
 async function handleAdminStatus(request, env, ctx) {
-  const { error } = await adminSession(request, env);
+  const { error } = await adminSession(request, env, ["owner"]);
   if (error) return error;
   const host = new URL(request.url).host;
   const staging = env.SITE_ENV === "staging";
@@ -594,7 +602,7 @@ async function notifyAddress(env) {
 }
 // GET/PUT /api/admin/notify — read or change where new-message alerts are sent (admins only)
 async function handleAdminNotify(request, env) {
-  const { error } = await adminSession(request, env);
+  const { error } = await adminSession(request, env, ["owner"]);
   if (error) return error;
   if (request.method === "GET") {
     const custom = env.PRIVATE ? await env.PRIVATE.get("notify_email") : null;
@@ -1142,7 +1150,7 @@ async function handleAdminBooking(request, env) {
 // ---------------------------------------------------------------- client review links
 // The owner creates a one-time link in the dashboard; the client's review arrives hidden until published.
 async function handleAdminReviewLink(request, env) {
-  const { error } = await adminSession(request, env);
+  const { error } = await adminSession(request, env, ["owner", "editor"]);
   if (error) return error;
   if (!env.PRIVATE) return json({ error: "storage_not_configured" }, 503);
   let b = {};
@@ -1298,7 +1306,7 @@ async function handleClientError(request, env, ctx) {
 }
 // GET / DELETE /api/admin/errors
 async function handleAdminErrors(request, env) {
-  const { error } = await adminSession(request, env);
+  const { error } = await adminSession(request, env, ["owner"]);
   if (error) return error;
   if (!env.PRIVATE) return json([]);
   if (request.method === "DELETE") { await env.PRIVATE.delete("errors"); errBuf = { list: [], at: 0 }; return json({ ok: true }); }
@@ -1309,7 +1317,7 @@ async function handleAdminErrors(request, env) {
 // ---------------------------------------------------------------- diagnostics
 // GET /api/admin/diagnose — checks every part the site depends on and says, for each problem, where it is and what to do.
 async function handleAdminDiagnose(request, env, ctx) {
-  const { error } = await adminSession(request, env);
+  const { error } = await adminSession(request, env, ["owner"]);
   if (error) return error;
   const origin = new URL(request.url).origin;
   const timed = (p, ms = 8000) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error("لم يرد خلال 8 ثوانٍ")), ms))]);
@@ -1456,9 +1464,94 @@ async function handleAdminDiagnose(request, env, ctx) {
 
 // GET /api/admin/devguide — the developer guide (docs/DEVELOPERS.md), for signed-in admins only
 async function handleAdminDevGuide(request, env) {
-  const { error } = await adminSession(request, env);
+  const { error } = await adminSession(request, env, ["owner", "editor"]);
   if (error) return error;
   return new Response(DEV_GUIDE, { headers: { ...SECURITY_HEADERS, "content-type": "text/markdown; charset=utf-8", "cache-control": "no-store" } });
+}
+
+// ---------------------------------------------------------------- team: invitations and roles
+// owner: everything · editor: content and look · support: messages and appointments
+const ROLE_AR = { owner: "مالك", editor: "محرر محتوى", support: "خدمة العملاء" };
+const rpcToken = (env, fn, body) => sb(env, `rpc/${fn}`, { method: "POST", body: JSON.stringify({ token: env.WRITE_TOKEN || "", ...body }) });
+async function sessionUser(request, env) {
+  const auth = request.headers.get("authorization") || "";
+  if (!auth.startsWith("Bearer ") || auth.length < 20) return null;
+  try {
+    const r = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, { headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, authorization: auth } });
+    return r.ok ? await r.json() : null;
+  } catch { return null; }
+}
+const newCode = () => [...crypto.getRandomValues(new Uint8Array(12))].map((b) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b % 32]).join("").replace(/(.{4})(?=.)/g, "$1-");
+
+// GET /api/admin/team — members and pending invitations (owner)
+// POST /api/admin/team {action: invite|cancel|role|remove, …} (owner)
+async function handleAdminTeam(request, env, ctx) {
+  const s = await adminSession(request, env, ["owner"]);
+  if (s.error) return s.error;
+  const origin = new URL(request.url).origin;
+  if (request.method === "GET") {
+    const r = await rpcToken(env, "team_list", {});
+    if (!r.ok) return json({ error: r.status === 404 ? "migration_missing" : "team_failed" }, r.status === 404 ? 503 : 502);
+    const members = await r.json();
+    const keys = env.PRIVATE ? (await env.PRIVATE.list({ prefix: "invite:" })).keys : [];
+    const invites = (await Promise.all(keys.map(async (k) => ({ code: k.name.slice(7), ...((await env.PRIVATE.get(k.name, { type: "json" })) || {}) })))).filter((x) => x.email);
+    const me = await sessionUser(request, env);
+    return json({ me: me?.id, members, invites }, 200, { "cache-control": "no-store" });
+  }
+  let b = {};
+  try { b = await request.json(); } catch {}
+  if (b.action === "invite") {
+    const email = String(b.email || "").trim().toLowerCase().slice(0, 200), role = ROLE_AR[b.role] ? b.role : "";
+    if (!EMAIL_RE.test(email) || !role) return json({ error: "invalid" }, 422);
+    const code = newCode();
+    const me = await sessionUser(request, env);
+    await env.PRIVATE.put(`invite:${code}`, JSON.stringify({ email, role, by: me?.email || "", at: new Date().toISOString() }), { expirationTtl: 7 * 864e2 });
+    const link = `${origin}/admin/#invite=${code}`;
+    const cfg = await getConfig(env);
+    let sent = false;
+    if (env.RESEND_API_KEY) {
+      const r = await fetch("https://api.resend.com/emails", {
+        method: "POST", headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
+        body: JSON.stringify({ from: `${cfg.alerts.from_name} <noreply@wixa.dev>`, to: [email], subject: "دعوة للانضمام إلى لوحة تحكم ويكسا",
+          html: mailBox("لديك دعوة إلى لوحة تحكم ويكسا", `<p>دعاك ${esc(me?.email || "مالك الموقع")} لإدارة موقع ويكسا بصلاحية <b>${ROLE_AR[role]}</b>.</p>
+            <p>رمز الدعوة:</p><p style="font-size:24px;font-weight:bold;letter-spacing:2px;direction:ltr;text-align:center;background:#F3EEFB;padding:12px;border-radius:12px">${code}</p>
+            <p><a href="${link}" style="display:inline-block;background:#5B21B6;color:#fff;padding:12px 22px;border-radius:99px;text-decoration:none">قبول الدعوة</a></p>
+            <p style="color:#625C70;font-size:13px">افتح الرابط، اختر «لدي دعوة»، واكتب بريدك هذا (${esc(email)}) والرمز وكلمة مرور جديدة. الدعوة صالحة 7 أيام ولمرة واحدة.</p>`),
+          text: `دعوة إلى لوحة تحكم ويكسا (${ROLE_AR[role]}). الرمز: ${code} — ${link}` }),
+      });
+      sent = r.ok;
+    }
+    return json({ code, link, sent, email, role });
+  }
+  if (b.action === "cancel") { await env.PRIVATE.delete(`invite:${String(b.code || "").slice(0, 20)}`); return json({ ok: true }); }
+  if (b.action === "role" || b.action === "remove") {
+    const me = await sessionUser(request, env);
+    if (b.user_id === me?.id) return json({ error: "self" }, 422);
+    const r = b.action === "role"
+      ? await rpcToken(env, "team_grant", { p: { user_id: b.user_id, role: b.role } })
+      : await rpcToken(env, "team_remove", { uid: b.user_id });
+    if (!r.ok) { const t = await r.text(); return json({ error: /last owner/.test(t) ? "last_owner" : "failed" }, 422); }
+    return json({ ok: true });
+  }
+  return json({ error: "unknown_action" }, 400);
+}
+
+// POST /api/invite/claim {code} — a signed-in invitee turns the invitation into dashboard access
+async function handleInviteClaim(request, env, ctx) {
+  if (!(await allowed(env.CONTACT_LIMITER, clientIp(request)))) return json({ error: "rate_limited" }, 429);
+  const u = await sessionUser(request, env);
+  if (!u?.id) return json({ error: "unauthorized" }, 401);
+  let b = {};
+  try { b = await request.json(); } catch {}
+  const code = String(b.code || "").trim().toUpperCase().slice(0, 20);
+  const inv = code && env.PRIVATE ? await env.PRIVATE.get(`invite:${code}`, { type: "json" }) : null;
+  if (!inv) return json({ error: "invalid_code" }, 404);
+  if (String(u.email || "").toLowerCase() !== inv.email) return json({ error: "email_mismatch" }, 403);
+  const r = await rpcToken(env, "team_grant", { p: { user_id: u.id, role: inv.role, email: inv.email } });
+  if (!r.ok) return json({ error: "grant_failed" }, 502);
+  await env.PRIVATE.delete(`invite:${code}`);
+  ctx.waitUntil(sendOwnerMail(env, `${inv.email} قبل الدعوة`, mailBox("عضو جديد في لوحة التحكم", `<p><b>${esc(inv.email)}</b> قبل الدعوة وصار بإمكانه الدخول بصلاحية <b>${ROLE_AR[inv.role]}</b>.</p><p>يمكنك تغيير صلاحيته أو إزالته من لوحة التحكم ← الفريق والصلاحيات.</p>`)).catch(() => {}));
+  return json({ ok: true, role: inv.role });
 }
 
 // ---------------------------------------------------------------- router
@@ -1508,6 +1601,10 @@ export default {
         case "GET /api/slots": return await handleSlots(request, env, ctx, url);
         case "POST /api/event": return await handleEvent(request, env, ctx);
         case "GET /api/admin/funnel": return await handleAdminFunnel(request, env, url);
+        case "GET /api/admin/team":
+        case "POST /api/admin/team":
+          return await handleAdminTeam(request, env, ctx);
+        case "POST /api/invite/claim": return await handleInviteClaim(request, env, ctx);
         case "DELETE /api/admin/booking": return await handleAdminBooking(request, env);
         case "POST /api/admin/review-link": return await handleAdminReviewLink(request, env);
         case "GET /privacy":

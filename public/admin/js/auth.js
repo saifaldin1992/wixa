@@ -1,5 +1,5 @@
 /* Sign-in, two-step verification, password reset and entering the dashboard */
-import { $, adminApi, rememberOwner, sb, setUser, toast } from "./core.js";
+import { $, adminApi, rememberOwner, role, sb, setRole, setUser, toast } from "./core.js";
 import { loadSettings } from "./settings.js";
 import { route, setupShell } from "./shell.js";
 import { refreshMsgCount } from "./views/messages.js";
@@ -8,6 +8,7 @@ import { refreshMsgCount } from "./views/messages.js";
 export const LINK = (() => {
   const h = new URLSearchParams(location.hash.slice(1)), q = new URLSearchParams(location.search);
   return { recovery: h.get("type") === "recovery" || q.get("type") === "recovery", emailChange: h.get("type") === "email_change",
+    invite: (h.get("invite") || q.get("invite") || "").toUpperCase(),
     message: h.get("message"), error: h.get("error_description") || q.get("error_description") };
 })();
 
@@ -39,7 +40,15 @@ export async function showAuth(mode = "login") {
       `<label class="f"><span>كلمة المرور الجديدة</span><input name="p1" type="password" required minlength="8" autocomplete="new-password" dir="ltr"></label>
        <label class="f"><span>تأكيد كلمة المرور</span><input name="p2" type="password" required minlength="8" autocomplete="new-password" dir="ltr"></label>${withCode ? codeField : ""}`],
     mfa: ["التحقق بخطوتين", "افتح تطبيق المصادقة في هاتفك وأدخل الرمز المكوّن من 6 أرقام.", "تحقق", "تسجيل الخروج", codeField],
+    invite: ["قبول دعوة", "اكتب البريد الذي وصلته الدعوة ورمز الدعوة، واختر كلمة مرور لحسابك.", "قبول الدعوة والدخول", "رجوع لتسجيل الدخول",
+      `<label class="f"><span>البريد الإلكتروني</span><input name="email" type="email" required autocomplete="email" dir="ltr"></label>
+       <label class="f"><span>رمز الدعوة</span><input name="code" required autocomplete="off" dir="ltr" placeholder="XXXX-XXXX-XXXX" value="${LINK.invite || ""}" style="text-transform:uppercase;letter-spacing:1px"></label>
+       <label class="f"><span>كلمة مرور جديدة (8 أحرف على الأقل)</span><input name="p1" type="password" required minlength="8" autocomplete="new-password" dir="ltr"></label>
+       <label class="f"><span>تأكيد كلمة المرور</span><input name="p2" type="password" required minlength="8" autocomplete="new-password" dir="ltr"></label>`],
   }[mode];
+  // "or · I have an invitation" only under the sign-in form
+  $("#authOr").hidden = $("#authInvite").hidden = mode !== "login";
+  $("#authInvite").onclick = () => showAuth("invite");
   $("#authTitle").textContent = M[0]; $("#authHint").textContent = M[1];
   $("#authSubmit").textContent = M[2]; sw.textContent = M[3];
   $("#authFields").innerHTML = M[4];
@@ -47,7 +56,7 @@ export async function showAuth(mode = "login") {
   setTimeout(() => $("#authFields input")?.focus(), 30);
   sw.onclick = async () => {
     if (mode === "login") return showAuth("forgot");
-    if (mode === "forgot") return showAuth("login");
+    if (mode === "forgot" || mode === "invite") return showAuth("login");
     await sb.auth.signOut(); showAuth("login");
   };
   form.onsubmit = async (e) => {
@@ -71,6 +80,15 @@ export async function showAuth(mode = "login") {
         LINK.recovery = false;
         toast("تم تعيين كلمة المرور الجديدة ✓");
         await afterSignIn(data.user);
+      } else if (mode === "invite") {
+        if (v("p1") !== v("p2")) throw new Error("mismatch");
+        const email = v("email").trim().toLowerCase(), code = v("code").trim().toUpperCase();
+        try { localStorage.setItem("wixa-invite", JSON.stringify({ email, code })); } catch {}
+        let { data, error } = await sb.auth.signUp({ email, password: v("p1"), options: { emailRedirectTo: `${location.origin}/admin/?invite=${encodeURIComponent(code)}` } });
+        if (error && /already|registered|exists/i.test(error.message)) ({ data, error } = await sb.auth.signInWithPassword({ email, password: v("p1") }));
+        if (error) throw error;
+        if (!data.session) { authMsg("أرسلنا رابط تأكيد إلى بريدك. اضغطه، ثم ادخل هنا ببريدك وكلمة المرور، وسيُفعَّل حسابك تلقائياً.", "ok"); return; }
+        await afterSignIn(data.user);
       } else if (mode === "mfa") {
         await verifyCode(v("code"));
         const { data } = await sb.auth.getUser();
@@ -80,6 +98,7 @@ export async function showAuth(mode = "login") {
       const t = err.message || "";
       authMsg(/Invalid login/i.test(t) ? "البريد أو كلمة المرور غير صحيحة."
         : /not confirmed/i.test(t) ? "لم يتم تأكيد البريد بعد. افتح رسالة التأكيد في بريدك."
+        : /signups not allowed|signup.*disabled/i.test(t) ? "إنشاء الحسابات موقوف في إعدادات الدخول. اطلب من المالك تفعيله (Supabase ← Authentication ← Sign In / Providers ← Allow new users to sign up)."
         : /bad code|invalid totp|code/i.test(t) ? "الرمز غير صحيح أو انتهت مدته. جرّب الرمز الحالي."
         : t === "mismatch" ? "كلمتا المرور غير متطابقتين."
         : /rate limit|too many|seconds/i.test(t) ? "محاولات كثيرة. انتظر قليلاً ثم أعد المحاولة."
@@ -95,9 +114,31 @@ export async function afterSignIn(u) {
   await enter(u);
 }
 
+// a signed-in invitee: turn the invitation into dashboard access (the server checks the code and the email)
+async function claimInvite() {
+  let pending = null;
+  try { pending = JSON.parse(localStorage.getItem("wixa-invite") || "null"); } catch {}
+  const code = pending?.code || LINK.invite;
+  if (!code) return null;
+  const { data: ses } = await sb.auth.getSession();
+  const r = await fetch("/api/invite/claim", { method: "POST", headers: { authorization: `Bearer ${ses.session?.access_token || ""}`, "content-type": "application/json" }, body: JSON.stringify({ code }) });
+  const d = await r.json().catch(() => ({}));
+  if (r.ok || d.error === "invalid_code") { try { localStorage.removeItem("wixa-invite"); } catch {} }
+  return r.ok ? "ok" : d.error || "failed";
+}
+
 export async function enter(u) {
   // the admin check and the site settings load together
-  const [{ data: isAdmin, error }] = await Promise.all([sb.rpc("is_admin"), loadSettings()]);
+  let [{ data: isAdmin, error }] = await Promise.all([sb.rpc("is_admin"), loadSettings()]);
+  if (!error && !isAdmin) {
+    const claim = await claimInvite().catch(() => null);
+    if (claim === "ok") ({ data: isAdmin, error } = await sb.rpc("is_admin"));
+    else if (claim) {
+      await sb.auth.signOut(); showAuth("invite");
+      authMsg(claim === "email_mismatch" ? "هذا البريد ليس البريد الذي وصلته الدعوة." : claim === "invalid_code" ? "رمز الدعوة غير صحيح أو انتهت صلاحيته أو استُخدم من قبل." : "تعذّر قبول الدعوة، حاول مرة أخرى.", "err");
+      return;
+    }
+  }
   if (error || !isAdmin) {
     await sb.auth.signOut();
     showAuth();
@@ -106,9 +147,13 @@ export async function enter(u) {
     return;
   }
   setUser(u);
+  // the role decides which pages show (before the team update is applied, everyone is the owner)
+  const { data: r, error: re } = await sb.rpc("admin_role");
+  setRole(re ? "owner" : r);
+  if (LINK.invite) history.replaceState(null, "", location.pathname + "#overview");
   $("#auth").hidden = true; $("#app").hidden = false;
   setupShell();
   route();
-  adminApi("integrations").then(rememberOwner).catch(() => {}); // keeps the real site visible to the owner during maintenance
+  if (role === "owner") adminApi("integrations").then(rememberOwner).catch(() => {}); // keeps the real site visible to the owner during maintenance
   refreshMsgCount();
 }

@@ -1,6 +1,7 @@
 /* Integrations: new-message alerts, auto-reply to visitors, analytics & ad pixels, spam protection,
    maintenance mode and "publish now". Stored privately on the server (Cloudflare), not in the public site settings. */
 import { $, $$, I, adminApi, esc, rememberOwner, toast } from "../core.js";
+import { restoreDialog } from "../restore.js";
 
 const TAGS = [
   ["ga4", "Google Analytics 4", "G-XXXXXXXXXX", "من Google Analytics ← الإدارة ← مصادر البيانات ← «معرّف القياس»."],
@@ -59,7 +60,7 @@ export async function viewIntegrations(view) {
       <div class="stack">
         <div class="seg seg--wide" id="bkFreq">${[["daily", "يومية"], ["weekly", "أسبوعية (الأحد)"], ["monthly", "شهرية (يوم 1)"], ["off", "متوقفة"]].map(([k, l]) => `<button type="button" data-v="${k}" class="${(cfg.backup?.freq || "weekly") === k ? "on" : ""}">${l}</button>`).join("")}</div>
         <p class="muted" style="margin:0;font-size:12px">تُرسل الساعة 6:23 صباحاً بتوقيت بغداد. ${cfg.backup_last ? `آخر نسخة: ${new Date(cfg.backup_last.at).toLocaleString("ar", { dateStyle: "medium", timeStyle: "short" })} (${Math.round((cfg.backup_last.size || 0) / 1024)} KB)` : "لم تُرسل أي نسخة بعد."}</p>
-        <div class="row-btns">${save()}<button class="b" data-test="backup">${I.mail}أرسل نسخة الآن</button></div>
+        <div class="row-btns">${save()}<button class="b" data-test="backup">${I.mail}أرسل نسخة الآن</button><button class="b" type="button" id="restoreBtn">${I.upload}استرجاع من نسخة احتياطية</button></div>
       </div></div>
 
     <div class="card" id="cTpl"><div class="card__head"><div><h3>الردود الجاهزة</h3>
@@ -108,6 +109,7 @@ export async function viewIntegrations(view) {
     cSpam: () => ({ spam: { turnstile: chk("tsOn"), blocked: val("blocked") } }),
     cMaint: () => ({ maintenance: { on: chk("maintOn"), message_ar: val("mAr"), message_en: val("mEn") } }),
   };
+  $("#restoreBtn").onclick = () => restoreDialog();
   $$("#bkFreq button").forEach((b) => (b.onclick = () => $$("#bkFreq button").forEach((x) => x.classList.toggle("on", x === b))));
   const drawTpl = (list) => {
     $("#tplList").innerHTML = list.map((t) => `<div class="tpl"><input class="tpl__t" maxlength="60" placeholder="عنوان الرد" value="${esc(t.title)}"><textarea class="tpl__b" rows="3" maxlength="2000" placeholder="نص الرد">${esc(t.body)}</textarea><button type="button" class="b b--icon b--ghost b--danger" data-tpldel title="حذف">${I.trash}</button></div>`).join("") || '<p class="muted" style="margin:0">لا توجد ردود جاهزة.</p>';

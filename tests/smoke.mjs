@@ -54,6 +54,8 @@ try {
   check((await (await fetch(`${BASE}/sitemap.xml`)).text()).includes("/privacy"), "sitemap lists the privacy page");
   check((await fetch(`${BASE}/api/admin/msgmeta`)).status === 401, "message notes require sign-in");
   check((await fetch(`${BASE}/api/admin/diagnose`)).status === 401, "diagnostics require sign-in");
+  check((await fetch(`${BASE}/api/admin/team`)).status === 401, "team management requires sign-in");
+  check((await fetch(`${BASE}/api/invite/claim`, { method: "POST", body: "{}" })).status === 401, "accepting an invitation requires an account");
   check((await fetch(`${BASE}/api/admin/devguide`)).status === 401, "developer guide requires sign-in");
   check((await fetch(`${BASE}/api/client-error`, { method: "POST", body: JSON.stringify({ msg: "test" }) })).status === 204, "browser errors are accepted");
   check((await fetch(`${BASE}/blog`)).status === 200, "articles page responds");
@@ -114,6 +116,7 @@ try {
     await ctx.route(/supabase-js/, (r) => r.fulfill({ body: readFileSync(new URL("./supabase-stub.js", import.meta.url)), contentType: "application/javascript" }));
     await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.fulfill({ body: "", contentType: "text/css" }));
     // the Worker's admin endpoints would check the stand-in session against the real Supabase: answer them here
+    await ctx.route(/\/api\/admin\/team/, (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ me: "u1", members: [{ user_id: "u1", email: "owner@example.com", role: "owner", mfa: true }, { user_id: "u2", email: "help@example.com", role: "support", mfa: false }], invites: [{ code: "ABCD-EFGH-JKLM", email: "new@example.com", role: "editor", at: new Date().toISOString() }] }) }));
     await ctx.route(/\/api\/admin\/diagnose/, (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ checked_at: new Date().toISOString(), env: "staging", results: [{ group: "الخادم", title: "test", state: "ok", detail: "ok" }, { group: "البريد", title: "test", state: "fail", detail: "x", where: "y", fix: "z" }] }) }));
     await ctx.route(/\/api\/admin\/errors/, (r) => r.fulfill({ contentType: "application/json", body: '[{"where":"site","msg":"TypeError: x","src":"/build/site.js:1","path":"/","count":2,"last":"2026-11-07T00:00:00Z"}]' }));
     await ctx.route(/\/api\/admin\/devguide/, (r) => r.fulfill({ contentType: "text/markdown", body: "# Guide\n\n## One\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n```\nnpm test\n```" }));
@@ -128,7 +131,7 @@ try {
     p.on("pageerror", (e) => errors.push(e.message));
     await p.goto(`${BASE}/admin/`, { waitUntil: "load" });
     await p.waitForTimeout(1200);
-    for (const v of ["overview", "appearance", "brand", "content", "projects", "services", "partners", "testimonials", "messages", "posts", "seo", "integrations", "diagnose", "devguide", "account"]) {
+    for (const v of ["overview", "appearance", "brand", "content", "projects", "services", "partners", "testimonials", "messages", "posts", "seo", "integrations", "diagnose", "devguide", "team", "account"]) {
       await p.evaluate((h) => (location.hash = h), v);
       await p.waitForTimeout(600);
       const ok = await p.evaluate(() => document.querySelector("#view")?.children.length > 0);

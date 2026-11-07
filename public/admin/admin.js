@@ -28,7 +28,7 @@ import { sb, setSb, toast } from "./js/core.js";
   const { data } = await sb.auth.getSession();
   if (LINK.message || LINK.emailChange || LINK.error) history.replaceState(null, "", location.pathname);
   if (LINK.recovery && data.session) return showAuth("reset");
-  if (data.session) await afterSignIn(data.session.user); else showAuth();
+  if (data.session) await afterSignIn(data.session.user); else showAuth(LINK.invite ? "invite" : "login"); // an invitation link opens the invitation form
   if (LINK.error) authMsg(/expired|invalid/i.test(LINK.error) ? "انتهت صلاحية الرابط. اطلب رابطاً جديداً." : LINK.error, "err");
   if (LINK.message) toast("تم قبول الرابط. أكّد أيضاً الرابط المرسل إلى البريد الآخر لإتمام التغيير.");
   if (LINK.emailChange) toast("تم تغيير البريد الإلكتروني ✓");

@@ -1,5 +1,5 @@
 /* Overview: visitors from Cloudflare Web Analytics, messages */
-import { $, $$, I, esc, fmt, sb, adminApi } from "../core.js";
+import { $, $$, I, esc, fmt, sb, adminApi, role } from "../core.js";
 import { route } from "../shell.js";
 import { textFixesCard } from "../textfixes.js";
 
@@ -29,7 +29,7 @@ export async function viewOverview(view) {
   }
   if (location.hash.slice(1) && location.hash.slice(1) !== "overview") return; // the user moved on
   paintOverview(view, s);
-  if (!sessionStorage.getItem("wixa-fixes-checked")) { textFixesCard(view); try { sessionStorage.setItem("wixa-fixes-checked", "1"); } catch {} }
+  if (role !== "support" && !sessionStorage.getItem("wixa-fixes-checked")) { textFixesCard(view); try { sessionStorage.setItem("wixa-fixes-checked", "1"); } catch {} }
 }
 
 function paintOverview(view, s) {

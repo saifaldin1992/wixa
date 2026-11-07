@@ -14,26 +14,27 @@
 </head>
 <body>
 
-  <!-- Auth -->
+  <!-- Auth: one centred column — logo, form, "forgot password", then "I have an invitation" -->
   <section class="auth" id="auth" hidden>
-    <div class="auth__card">
-      <div class="logo"><span class="logo__mark"><svg viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg></span><b class="logo__wm"><svg class="wm" viewBox="0 0 716.6 150" aria-hidden="true"><use href="/wordmark.svg#wm"/></svg><span class="sr-only">WIXA</span></b><small>لوحة التحكم</small></div>
-      <h1 id="authTitle">تسجيل الدخول</h1>
-      <p class="muted" id="authHint">أدخل بريدك وكلمة المرور للدخول إلى لوحة التحكم.</p>
-      <form id="authForm" class="stack">
-        <div class="stack" id="authFields"></div>
-        <button class="b b--primary b--block" type="submit" id="authSubmit">دخول</button>
-        <p class="auth__msg" id="authMsg" role="status"></p>
-      </form>
-      <button class="link" id="authSwitch" type="button">نسيت كلمة المرور؟</button>
-    </div>
-    <div class="auth__art" aria-hidden="true">
-      <div class="auth__art-inner">
-        <div class="auth__logo"><svg viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg></div>
-        <h2>تحكّم كامل في موقعك</h2>
-        <p>الألوان والخطوط والمحتوى والمشاريع والزوار — كل شيء من مكان واحد.</p>
-        <div class="auth__chips"><span>المظهر</span><span>المشاريع</span><span>الإحصائيات</span><span>الرسائل</span></div>
+    <div class="auth__box">
+      <div class="auth__brand" aria-label="WIXA">
+        <span class="auth__mark"><svg viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg></span>
+        <span class="auth__wm"><svg viewBox="0 0 716.6 150" aria-hidden="true"><use href="/wordmark.svg#wm"/></svg></span>
       </div>
+      <p class="auth__tag">لوحة تحكم الموقع</p>
+      <div class="auth__card">
+        <h1 id="authTitle">تسجيل الدخول</h1>
+        <p class="auth__hint" id="authHint">أدخل بريدك وكلمة المرور.</p>
+        <form id="authForm" class="auth__form">
+          <div class="auth__fields" id="authFields"></div>
+          <button class="auth__btn" type="submit" id="authSubmit">دخول</button>
+          <p class="auth__msg" id="authMsg" role="status"></p>
+        </form>
+        <button class="auth__link" id="authSwitch" type="button">نسيت كلمة المرور؟</button>
+        <div class="auth__or" id="authOr"><span>أو</span></div>
+        <button class="auth__btn auth__btn--outline" id="authInvite" type="button">لدي دعوة</button>
+      </div>
+      <p class="auth__foot"><a href="/">wixa.dev</a></p>
     </div>
   </section>
 
@@ -60,6 +61,7 @@
         <p class="side__group">النظام</p>
         <a href="#diagnose" data-view="diagnose"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>الفحص والتشخيص</a>
         <a href="#devguide" data-view="devguide"><svg viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg>دليل المطوّر</a>
+        <a href="#team" data-view="team"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5"/><path d="M16 4.5a3.5 3.5 0 010 7M21.5 20c0-2.8-1.7-5.2-4.2-6.1"/></svg>الفريق والصلاحيات</a>
         <a href="#account" data-view="account"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>الحساب</a>
       </nav>
       <a class="side__site" href="/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg>عرض الموقع</a>

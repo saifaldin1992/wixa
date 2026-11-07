@@ -1,5 +1,6 @@
 /* Sidebar, top bar and the hash router */
-import { $, $$, DEFAULTS, closeModal, confirmBox, esc, merge, savedJSON, setSettings } from "./core.js";
+import { $, $$, DEFAULTS, ROLE_AR, closeModal, confirmBox, esc, merge, role, savedJSON, setSettings } from "./core.js";
+import { viewTeam } from "./views/team.js";
 import { isDirty } from "./settings.js";
 import { viewAccount } from "./views/account.js";
 import { viewAppearance } from "./views/appearance.js";
@@ -30,9 +31,28 @@ export const VIEWS = {
   diagnose: { title: "الفحص والتشخيص", sub: "فحص كل أجزاء الموقع، مكان أي عطل وطريقة حله، وسجل الأعطال", render: viewDiagnose },
   devguide: { title: "دليل المطوّر", sub: "كيف بُني المشروع وأين يوجد كل جزء — للمطورين", render: viewDevGuide },
   messages: { title: "الرسائل", sub: "رسائل نموذج التواصل", render: viewMessages },
+  team: { title: "الفريق والصلاحيات", sub: "من يدخل إلى لوحة التحكم وماذا يستطيع — بالدعوة فقط", render: viewTeam },
   account: { title: "الحساب", sub: "بيانات الدخول والأمان", render: viewAccount },
 };
 export let current = null;
+
+// which pages each role sees (the server and the database enforce the same rules)
+const ROLE_VIEWS = {
+  owner: null, // everything
+  editor: ["overview", "content", "projects", "services", "partners", "testimonials", "posts", "appearance", "brand", "seo", "devguide", "account"],
+  support: ["overview", "messages", "account"],
+};
+export const canSee = (name) => !ROLE_VIEWS[role] || ROLE_VIEWS[role].includes(name);
+function applyRoleNav() {
+  $$("#sideNav a").forEach((a) => (a.hidden = !canSee(a.dataset.view)));
+  // a group title disappears when none of its pages is available
+  $$("#sideNav .side__group").forEach((g) => {
+    let n = g.nextElementSibling, any = false;
+    while (n && !n.classList.contains("side__group")) { if (n.tagName === "A" && !n.hidden) any = true; n = n.nextElementSibling; }
+    g.hidden = !any;
+  });
+  const tag = $(".side .logo small"); if (tag) tag.textContent = role === "owner" ? "لوحة التحكم" : ROLE_AR[role];
+}
 
 export function setupShell() {
   if (setupShell.done) return; setupShell.done = true;
@@ -50,6 +70,8 @@ export function setupShell() {
 export async function route() {
   let name = location.hash.slice(1) || "overview";
   if (name === "status") { name = "diagnose"; history.replaceState(null, "", "#diagnose"); } // the old Connections page lives inside diagnostics now
+  applyRoleNav();
+  if (!canSee(name)) { name = "overview"; history.replaceState(null, "", "#overview"); }
   const v = VIEWS[name] || VIEWS.overview;
   if (current && ["appearance", "content", "seo"].includes(current) && !["appearance", "content", "seo"].includes(name) && isDirty()) {
     if (!(await confirmBox("لديك تغييرات غير محفوظة", "هل تريد المغادرة دون حفظ؟", "مغادرة"))) { history.replaceState(null, "", `#${current}`); return; }
