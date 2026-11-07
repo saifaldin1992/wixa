@@ -1238,7 +1238,7 @@ html.has-promo .progress { top: 40px; }
 .apoint__n { font-weight: 800; color: var(--primary); font-size: .95rem; padding-top: 3px; }
 [data-theme="dark"] .apoint__n { color: var(--accent, #C4B5FD); }
 .apoint h3 { margin: 0 0 4px; font-size: 1.08rem; } .apoint p { margin: 0; color: var(--muted); line-height: 1.8; }
-.industries__grid { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 14px; }
+.industries__grid { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 14px; }
 .ind { display: flex; flex-direction: column; padding: 26px 24px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); transition: transform .5s var(--ease-out), box-shadow .5s, border-color .4s; }
 .ind:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: rgba(var(--primary-rgb), .3); }
 .ind__ico { width: 50px; height: 50px; border-radius: 15px; display: grid; place-items: center; background: rgba(var(--primary-rgb), .1); color: var(--primary); margin-bottom: 18px; }
@@ -1270,3 +1270,37 @@ html.has-promo .progress { top: 40px; }
 .pricing__note { max-width: 720px; margin: 22px auto 0; padding: 0 var(--gutter); text-align: center; color: var(--muted); font-size: .92rem; line-height: 1.8; }
 .about, .industries, .guarantees, .pricing { padding: clamp(64px, 9vw, 120px) 0 0; }
 @media (max-width: 900px) { .about__wrap { grid-template-columns: 1fr; gap: 24px; } }
+
+/* ===== four pages from one HTML: home · /about · /pricing · /careers ===== */
+html:not([data-page]) [data-pages]:not([data-pages~="home"]),
+html[data-page="home"] [data-pages]:not([data-pages~="home"]),
+html[data-page="about"] [data-pages]:not([data-pages~="about"]),
+html[data-page="pricing"] [data-pages]:not([data-pages~="pricing"]),
+html[data-page="careers"] [data-pages]:not([data-pages~="careers"]) { display: none !important; }
+html[data-page]:not([data-page="home"]) main { padding-top: clamp(96px, 12vw, 140px); }
+html[data-page]:not([data-page="home"]) main > section:first-of-type:not(.hero) { padding-top: 0; }
+/* the top menu: short, with one clear button */
+.header__nav .nav-cta { padding: 9px 18px; border-radius: 99px; background: var(--primary); color: #fff !important; font-weight: 700; }
+.header__nav .nav-cta::after { display: none !important; }
+.header__nav .nav-cta:hover { filter: brightness(1.1); }
+/* services: by service / by field */
+.svc-tabs { max-width: var(--max); margin: -24px auto 28px; padding: 0 var(--gutter); display: flex; gap: 6px; }
+.svc-tabs button { min-height: 44px; padding: 0 20px; border-radius: 99px; border: 1px solid var(--line-2); background: var(--surface); color: var(--text); font: inherit; font-weight: 600; cursor: pointer; touch-action: manipulation; }
+.svc-tabs button.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+.svc-tabs:has([data-tab="industries"][hidden]) { display: none; }
+.industries__panel[hidden] { display: none; }
+/* guarantees as a strip under "how we work" */
+.guar-strip { max-width: var(--max); margin: 56px auto 0; padding: 0 var(--gutter); }
+.guar-strip__title { text-align: center; margin: 0 0 18px; font-size: clamp(1.2rem, 2.2vw, 1.5rem); }
+.guar-strip .guarantees__grid { padding: 0; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.guar-strip .guar { padding: 18px 16px; text-align: start; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: start; }
+.guar-strip .guar__ok { width: 32px; height: 32px; font-size: .95rem; margin: 0; grid-row: span 2; }
+.guar-strip .guar h3 { font-size: 1rem; margin: 3px 0 0; } .guar-strip .guar p { font-size: .88rem; }
+@media (max-width: 1000px) { .guar-strip .guarantees__grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .guar-strip .guarantees__grid { grid-template-columns: 1fr; } }
+.pricing__more { text-align: center; margin-top: 18px; } .pricing__more[hidden] { display: none; }
+/* partners right under the hero on the homepage: a compact strip */
+html[data-page="home"] .partners { padding-top: clamp(32px, 5vw, 56px); }
+html[data-page="home"] .partners .head { margin-bottom: 20px; text-align: center; }
+html[data-page="home"] .partners .head__title { font-size: clamp(1.1rem, 2vw, 1.4rem); color: var(--muted); font-weight: 600; }
+html[data-page="home"] .partners .head__sub { display: none; }

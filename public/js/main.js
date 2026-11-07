@@ -14,6 +14,9 @@ import { setupChat } from "./site/chat.js";
 import { visitSource } from "./site/source.js";
 import { setupPromo, setupExitOffer } from "./site/promo.js";
 visitSource(); // remember where this visit came from (first visit wins)
+// one HTML, four pages: the homepage, /about, /pricing and /careers each show their own sections
+const PAGES = { "/about": "about", "/pricing": "pricing", "/careers": "careers" };
+document.documentElement.dataset.page ||= PAGES[location.pathname.replace(/\/+$/, "")] || "home";
 const { DEFAULTS, merge, applyTheme } = window.WIXA;
 
 // script errors in visitors' browsers go to the dashboard's error log (at most 3 per page view)

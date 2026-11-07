@@ -292,7 +292,9 @@ function faqLd(st, lang) {
 }
 
 // GET / — static HTML with the content embedded (no flash of default text, one request per visit).
-async function handleHome(request, env, ctx) {
+// /about, /pricing and /careers are the homepage's HTML showing only their own sections (html[data-page])
+const PAGE_TITLES = { about: { ar: "من نحن", en: "About us" }, pricing: { ar: "الباقات والأسعار", en: "Packages & pricing" }, careers: { ar: "الوظائف", en: "Careers" } };
+async function handleHome(request, env, ctx, pageName = "home") {
   const [page, raw, cfg] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx), getConfig(env)]);
   const data = cfg.spam.turnstile ? raw : raw.replace(/"turnstile":"[^"]*"/, '"turnstile":""');
   const owner = hasBypass(request, cfg);
@@ -310,20 +312,27 @@ async function handleHome(request, env, ctx) {
   const origin = new URL(request.url).origin;
   const abs = (u) => (/^https?:\/\//.test(u) ? u : `${origin}${u.startsWith("/") ? "" : "/"}${u}`);
   const attr = (sel, name, val) => [sel, { element: (el) => { if (val) el.setAttribute(name, val); } }];
-  const title = seo[`title_${lang}`] || (lang === "en" ? SEO_DEFAULTS.en.title : ""), desc = seo[`description_${lang}`] || (lang === "en" ? SEO_DEFAULTS.en.description : ""), img = seo.og_image ? abs(seo.og_image) : "";
+  const siteTitle = seo[`title_${lang}`] || (lang === "en" ? SEO_DEFAULTS.en.title : ""), siteDesc = seo[`description_${lang}`] || (lang === "en" ? SEO_DEFAULTS.en.description : ""), img = seo.og_image ? abs(seo.og_image) : "";
+  const pc = st.content?.[lang] || {}, brandName = (lang === "en" ? st.brand?.name_en : st.brand?.name_ar) || "WIXA";
+  const pageDesc = { about: pc.about_text, pricing: pc.pricing_sub, careers: pc.careers_sub }[pageName];
+  const title = pageName === "home" ? siteTitle : `${PAGE_TITLES[pageName][lang]} — ${brandName}`;
+  const desc = pageName === "home" ? siteDesc : String(pageDesc || siteDesc || "").replace(/\s+/g, " ").slice(0, 160);
+  const pagePath = pageName === "home" ? "/" : `/${pageName}`;
   const headTags = [
     seo.google_verification && `<meta name="google-site-verification" content="${esc(seo.google_verification)}">`,
     seo.bing_verification && `<meta name="msvalidate.01" content="${esc(seo.bing_verification)}">`,
     seo.index === false && `<meta name="robots" content="noindex, nofollow">`,
     faqLd(st, lang),
     // one address, two languages: tell search engines about both versions
-    `<link rel="alternate" hreflang="ar" href="${origin}/?lang=ar"><link rel="alternate" hreflang="en" href="${origin}/?lang=en"><link rel="alternate" hreflang="x-default" href="${origin}/">`,
+    `<link rel="alternate" hreflang="ar" href="${origin}${pagePath}?lang=ar"><link rel="alternate" hreflang="en" href="${origin}${pagePath}?lang=en"><link rel="alternate" hreflang="x-default" href="${origin}${pagePath}">`,
   ].filter(Boolean).join("");
   const words = (t) => String(t).split(/\s+/).filter(Boolean).map((w, i) => `<span class="word"><span style="transition-delay:${i * 70}ms">${esc(w)}</span></span>`).join(" ");
   const fill = (key, html) => ({ element: (el) => { if (hero[key]) el.setInnerContent(html ? words(hero[key]) : hero[key], { html }); } });
   const res = new HTMLRewriter()
     .on("head", { element: (el) => el.append(`${headTags}<script id="wixa-data" type="application/json">${safe}</script>`, { html: true }) })
-    .on("html", { element: (el) => { el.setAttribute("lang", lang); el.setAttribute("dir", lang === "ar" ? "rtl" : "ltr"); } })
+    .on("html", { element: (el) => { el.setAttribute("lang", lang); el.setAttribute("dir", lang === "ar" ? "rtl" : "ltr"); el.setAttribute("data-page", pageName); } })
+    .on(...attr('link[rel="canonical"]', "href", `${origin}${pagePath}`))
+    .on(...attr('meta[property="og:url"]', "content", `${origin}${pagePath}`))
     .on("title", { element: (el) => { if (title) el.setInnerContent(title); } })
     .on(...attr('meta[property="og:locale"]', "content", lang === "en" ? "en_US" : "ar_IQ"))
     .on(...attr('meta[name="description"]', "content", desc))
@@ -1861,6 +1870,10 @@ export default {
           return await handleAdminPush(request, env);
         case "DELETE /api/admin/booking": return await handleAdminBooking(request, env);
         case "POST /api/admin/review-link": return await handleAdminReviewLink(request, env);
+        case "GET /about":
+        case "GET /pricing":
+        case "GET /careers":
+          return await handleHome(request, env, ctx, url.pathname.slice(1));
         case "GET /privacy":
         case "HEAD /privacy":
           return await handlePrivacy(request, env, ctx);
@@ -1888,7 +1901,7 @@ export default {
           let projects = [], services = [];
           try { const d = JSON.parse(await getSiteData(env, ctx)); projects = d.projects || []; services = d.services || []; } catch {}
           const posts = await getPosts(env);
-          const urls = ["/", "/privacy", "/blog", ...services.map((x) => `/services/${encodeURIComponent(x.slug)}`), ...projects.map((x) => `/projects/${encodeURIComponent(x.slug)}`), ...posts.map((x) => `/blog/${encodeURIComponent(x.slug)}`)].map((p) => `<url><loc>https://wixa.dev${p}</loc><lastmod>${today}</lastmod></url>`).join("");
+          const urls = ["/", "/about", "/pricing", "/careers", "/privacy", "/blog", ...services.map((x) => `/services/${encodeURIComponent(x.slug)}`), ...projects.map((x) => `/projects/${encodeURIComponent(x.slug)}`), ...posts.map((x) => `/blog/${encodeURIComponent(x.slug)}`)].map((p) => `<url><loc>https://wixa.dev${p}</loc><lastmod>${today}</lastmod></url>`).join("");
           return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>\n`, {
             headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" },
           });

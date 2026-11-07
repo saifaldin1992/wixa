@@ -60,19 +60,17 @@
   <!-- Header -->
   <header class="header" id="header">
     <div class="header__bar">
-      <a href="#top" class="brand" aria-label="WIXA">
+      <a href="/" class="brand" aria-label="WIXA">
         <span class="brand__mark" id="brandMark"><svg viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg></span>
         <span class="brand__name" data-t="brand"><svg class="wm" viewBox="0 0 716.6 150" aria-hidden="true"><use href="/wordmark.svg#wm"/></svg><span class="sr-only">ويكسا</span></span>
       </a>
       <nav class="header__nav" aria-label="main">
-        <a href="#top" data-t="nav_home">الرئيسية</a>
-        <a href="#projects" data-t="nav_projects" data-sec="projects">حلولنا</a>
-        <a href="#about" data-t="nav_about" data-sec="about">من نحن</a>
-        <a href="#services" data-t="nav_services" data-sec="services">خدماتنا</a>
-        <a href="#pricing" data-t="nav_pricing" data-sec="pricing">الباقات</a>
-        <a href="#calculator" data-t="nav_calc" data-sec="calculator">احسب تكلفة مشروعك</a>
-        <a href="#partners" data-t="nav_partners" data-sec="partners">شركاؤنا</a>
-        <a href="#contact" data-t="nav_contact" data-sec="contact">تواصل معنا</a>
+        <a href="/#services" data-t="nav_services" data-sec="services">خدماتنا</a>
+        <a href="/#projects" data-t="nav_projects" data-sec="projects">حلولنا</a>
+        <a href="/pricing" data-t="nav_pricing" data-sec="pricing">الباقات</a>
+        <a href="/about" data-t="nav_about" data-sec="about">من نحن</a>
+        <a href="/blog" data-t="nav_blog">المقالات</a>
+        <a href="/#contact" class="nav-cta" data-t="nav_start" data-sec="contact">ابدأ مشروعك</a>
       </nav>
       <div class="header__end">
         <button class="theme-btn" id="themeBtn" data-theme-toggle type="button" aria-label="الوضع الليلي">
@@ -84,16 +82,16 @@
       </div>
     </div>
     <div class="header__menu" id="menu">
-      <a href="#top" data-t="nav_home">الرئيسية</a>
-      <a href="#projects" data-t="nav_projects" data-sec="projects">حلولنا</a>
-      <a href="#about" data-t="nav_about" data-sec="about">من نحن</a>
-      <a href="#services" data-t="nav_services" data-sec="services">خدماتنا</a>
-      <a href="#industries" data-t="nav_industries" data-sec="industries">حلول حسب مجالك</a>
-      <a href="#pricing" data-t="nav_pricing" data-sec="pricing">الباقات</a>
-      <a href="#calculator" data-t="nav_calc" data-sec="calculator">احسب تكلفة مشروعك</a>
-      <a href="#partners" data-t="nav_partners" data-sec="partners">شركاؤنا</a>
-      <a href="#careers" data-t="nav_careers" data-sec="careers">الوظائف</a>
-      <a href="#contact" data-t="nav_contact" data-sec="contact">تواصل معنا</a>
+      <a href="/" data-t="nav_home">الرئيسية</a>
+      <a href="/#services" data-t="nav_services" data-sec="services">خدماتنا</a>
+      <a href="/#industries" data-t="nav_industries" data-sec="industries">حلول حسب مجالك</a>
+      <a href="/#projects" data-t="nav_projects" data-sec="projects">حلولنا</a>
+      <a href="/pricing" data-t="nav_pricing" data-sec="pricing">الباقات</a>
+      <a href="/pricing#calculator" data-t="nav_calc" data-sec="calculator">احسب تكلفة مشروعك</a>
+      <a href="/about" data-t="nav_about" data-sec="about">من نحن</a>
+      <a href="/#partners" data-t="nav_partners" data-sec="partners">شركاؤنا</a>
+      <a href="/careers" data-t="nav_careers" data-sec="careers">الوظائف</a>
+      <a href="/#contact" data-t="nav_contact" data-sec="contact">تواصل معنا</a>
       <a href="/blog" data-t="nav_blog">المقالات</a>
       <a href="/privacy" data-t="privacy">سياسة الخصوصية</a>
     </div>
@@ -101,8 +99,9 @@
   <div class="scrim" id="scrim"></div>
 
   <main id="top">
+
     <!-- Hero -->
-    <section class="hero">
+    <section data-pages="home" class="hero">
       <div class="hero__bg" aria-hidden="true">
         <div class="hero__grid"></div>
         <div class="aurora aurora--1"></div><div class="aurora aurora--2"></div><div class="aurora aurora--3"></div>
@@ -117,7 +116,7 @@
           <h1 class="hero__title" id="heroTitle" data-c="hero_title"><span class="word"><span style="transition-delay:0ms">نبني</span></span> <span class="word"><span style="transition-delay:70ms">المستقبل</span></span> <span class="word"><span style="transition-delay:140ms">الرقمي</span></span></h1>
           <p class="hero__sub reveal-up" data-c="hero_sub">ويكسا تصمم وتطور منصات وتطبيقات وأنظمة رقمية سريعة وآمنة تختصر الوقت على عملائك — من الفكرة حتى التشغيل.</p>
           <div class="hero__ctas reveal-up">
-            <a href="#calculator" class="btn btn--primary magnetic"><span data-c="hero_cta"></span><svg class="arr" viewBox="0 0 24 24"><path d="M19 12H5m0 0l6-6m-6 6l6 6"/></svg></a>
+            <a href="/pricing#calculator" class="btn btn--primary magnetic"><span data-c="hero_cta"></span><svg class="arr" viewBox="0 0 24 24"><path d="M19 12H5m0 0l6-6m-6 6l6 6"/></svg></a>
             <a href="#contact" class="btn btn--ghost"><span data-c="hero_cta2"></span></a>
           </div>
         </div>
@@ -125,22 +124,50 @@
       <a href="#story" class="hero__scroll" aria-label="scroll"><span></span></a>
     </section>
 
-    <!-- Story -->
-    <section class="story" id="story" data-section="story">
-      <h2 class="sr-only">لماذا ويكسا</h2>
-      <div class="story__list" id="storyList"></div>
+
+    <!-- Partners -->
+    <section data-pages="home about" class="partners" id="partners" data-section="partners">
+      <div class="head">
+        <h2 class="head__title reveal-up" data-c="partners_title"></h2>
+        <p class="head__sub reveal-up" data-c="partners_sub"></p>
+      </div>
+      <div class="partners__grid" id="partnersGrid"></div>
     </section>
 
-    <!-- Projects -->
     <!-- About -->
-    <section class="about" id="about" data-section="about">
+    <section data-pages="about" class="about" id="about" data-section="about">
       <div class="about__wrap">
         <div class="about__text"><h2 class="head__title reveal-up" data-c="about_title"></h2><div class="about__body reveal-up" id="aboutBody"></div></div>
         <div class="about__points" id="aboutPoints"></div>
       </div>
     </section>
 
-    <section class="projects" id="projects" data-section="projects">
+
+    <!-- Story -->
+    <section data-pages="about" class="story" id="story" data-section="story">
+      <h2 class="sr-only">لماذا ويكسا</h2>
+      <div class="story__list" id="storyList"></div>
+    </section>
+
+    <!-- Projects -->
+
+
+    <!-- Services -->
+    <section data-pages="home" class="services" id="services" data-section="services">
+      <div class="head">
+        <h2 class="head__title reveal-up" data-c="services_title"></h2>
+        <p class="head__sub reveal-up" data-c="services_sub"></p>
+      </div>
+      <div class="svc-tabs" id="svcTabs" role="tablist">
+        <button type="button" role="tab" class="on" data-tab="services" data-t="tab_services">حسب الخدمة</button>
+        <button type="button" role="tab" data-tab="industries" data-t="tab_fields" data-sec="industries">حسب مجالك</button>
+      </div>
+      <div class="services__grid" id="servicesGrid"></div>
+      <div id="industries" class="industries__panel" hidden><div class="industries__grid" id="industriesGrid"></div></div>
+    </section>
+
+
+    <section data-pages="home" class="projects" id="projects" data-section="projects">
       <div class="head">
         <h2 class="head__title reveal-up" data-c="projects_title"></h2>
         <p class="head__sub reveal-up" data-c="projects_sub"></p>
@@ -148,26 +175,9 @@
       <div class="projects__list" id="projectsList"></div>
     </section>
 
-    <!-- Services -->
-    <section class="services" id="services" data-section="services">
-      <div class="head">
-        <h2 class="head__title reveal-up" data-c="services_title"></h2>
-        <p class="head__sub reveal-up" data-c="services_sub"></p>
-      </div>
-      <div class="services__grid" id="servicesGrid"></div>
-    </section>
-
-    <!-- Industries -->
-    <section class="industries" id="industries" data-section="industries">
-      <div class="head">
-        <h2 class="head__title reveal-up" data-c="industries_title"></h2>
-        <p class="head__sub reveal-up" data-c="industries_sub"></p>
-      </div>
-      <div class="industries__grid" id="industriesGrid"></div>
-    </section>
 
     <!-- Process -->
-    <section class="process" id="process" data-section="process">
+    <section data-pages="home about" class="process" id="process" data-section="process">
       <div class="head head--center">
         <h2 class="head__title reveal-up" data-c="process_title"></h2>
         <p class="head__sub reveal-up" data-c="process_sub"></p>
@@ -176,46 +186,27 @@
         <div class="process__line" aria-hidden="true"><span></span></div>
         <ol class="process__steps" id="processSteps"></ol>
       </div>
+      <div class="guar-strip" data-section="guarantees" id="guarantees">
+        <h3 class="guar-strip__title" data-c="guarantees_title"></h3>
+        <div class="guarantees__grid" id="guaranteesGrid"></div>
+      </div>
     </section>
 
-    <!-- Guarantees -->
-    <section class="guarantees" id="guarantees" data-section="guarantees">
-      <div class="head head--center">
-        <h2 class="head__title reveal-up" data-c="guarantees_title"></h2>
-        <p class="head__sub reveal-up" data-c="guarantees_sub"></p>
-      </div>
-      <div class="guarantees__grid" id="guaranteesGrid"></div>
-    </section>
 
     <!-- Pricing -->
-    <section class="pricing" id="pricing" data-section="pricing">
+    <section data-pages="home pricing" class="pricing" id="pricing" data-section="pricing">
       <div class="head head--center">
         <h2 class="head__title reveal-up" data-c="pricing_title"></h2>
         <p class="head__sub reveal-up" data-c="pricing_sub"></p>
       </div>
       <div class="pricing__grid" id="pricingGrid"></div>
       <p class="pricing__note" data-c="pricing_note"></p>
+      <div class="pricing__more"><a class="btn btn--ghost" href="/pricing" data-t="pkg_all">كل الباقات وحاسبة التكلفة</a></div>
     </section>
 
-    <!-- Stats -->
-    <section class="stats" data-section="stats">
-      <div class="stats__inner">
-        <h2 class="stats__title reveal-up" data-c="stats_title"></h2>
-        <div class="stats__grid" id="statsGrid"></div>
-      </div>
-    </section>
-
-    <!-- Testimonials -->
-    <section class="testimonials" id="testimonials" data-section="testimonials">
-      <div class="head head--center">
-        <h2 class="head__title reveal-up" data-c="testimonials_title"></h2>
-        <p class="head__sub reveal-up" data-c="testimonials_sub"></p>
-      </div>
-      <div class="tst" id="tst"><div class="tst__track" id="tstTrack"></div></div>
-    </section>
 
     <!-- Calculator -->
-    <section class="calc" id="calculator" data-section="calculator">
+    <section data-pages="pricing" class="calc" id="calculator" data-section="calculator">
       <div class="head head--center">
         <h2 class="head__title reveal-up" data-c="calc_title"></h2>
         <p class="head__sub reveal-up" data-c="calc_sub"></p>
@@ -247,17 +238,28 @@
       </div>
     </section>
 
-    <!-- Partners -->
-    <section class="partners" id="partners" data-section="partners">
-      <div class="head">
-        <h2 class="head__title reveal-up" data-c="partners_title"></h2>
-        <p class="head__sub reveal-up" data-c="partners_sub"></p>
+
+    <!-- Stats -->
+    <section data-pages="about" class="stats" data-section="stats">
+      <div class="stats__inner">
+        <h2 class="stats__title reveal-up" data-c="stats_title"></h2>
+        <div class="stats__grid" id="statsGrid"></div>
       </div>
-      <div class="partners__grid" id="partnersGrid"></div>
     </section>
 
+
+    <!-- Testimonials -->
+    <section data-pages="home about" class="testimonials" id="testimonials" data-section="testimonials">
+      <div class="head head--center">
+        <h2 class="head__title reveal-up" data-c="testimonials_title"></h2>
+        <p class="head__sub reveal-up" data-c="testimonials_sub"></p>
+      </div>
+      <div class="tst" id="tst"><div class="tst__track" id="tstTrack"></div></div>
+    </section>
+
+
     <!-- Careers -->
-    <section class="careers" id="careers" data-section="careers">
+    <section data-pages="careers" class="careers" id="careers" data-section="careers">
       <div class="head">
         <h2 class="head__title reveal-up" data-c="careers_title"></h2>
         <p class="head__sub reveal-up" data-c="careers_sub"></p>
@@ -265,8 +267,9 @@
       <div class="careers__list" id="careersList"></div>
     </section>
 
+
     <!-- FAQ -->
-    <section class="faq" id="faq" data-section="faq">
+    <section data-pages="home pricing" class="faq" id="faq" data-section="faq">
       <div class="head head--center">
         <h2 class="head__title reveal-up" data-c="faq_title"></h2>
         <p class="head__sub reveal-up" data-c="faq_sub"></p>
@@ -274,8 +277,9 @@
       <div class="faq__list" id="faqList"></div>
     </section>
 
+
     <!-- CTA + Contact -->
-    <section class="cta" id="contact" data-section="contact">
+    <section data-pages="home about pricing careers" class="cta" id="contact" data-section="contact">
       <div class="cta__glow" aria-hidden="true"></div>
       <h2 class="cta__title reveal-up" data-c="cta_title"></h2>
       <p class="cta__sub reveal-up" data-c="cta_sub"></p>
@@ -319,14 +323,16 @@
     <svg class="footer__wave footer__wave--brand" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="fwv" x1="0" x2="1"><stop offset="0" style="stop-color:var(--fg)"/><stop offset=".5" style="stop-color:var(--accent)"/><stop offset="1" style="stop-color:var(--fg)"/></linearGradient></defs><path pathLength="1" stroke="url(#fwv)" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
     <svg class="footer__wave" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
     <nav class="footer__nav">
-        <a href="#top" data-t="nav_home">الرئيسية</a>
-        <a href="#projects" data-t="nav_projects" data-sec="projects">حلولنا</a>
-        <a href="#about" data-t="nav_about" data-sec="about">من نحن</a>
-        <a href="#pricing" data-t="nav_pricing" data-sec="pricing">الباقات</a>
-        <a href="#calculator" data-t="nav_calc" data-sec="calculator">احسب تكلفة مشروعك</a>
-        <a href="#partners" data-t="nav_partners" data-sec="partners">شركاؤنا</a>
-        <a href="#careers" data-t="nav_careers" data-sec="careers">الوظائف</a>
-        <a href="#contact" data-t="nav_contact" data-sec="contact">تواصل معنا</a>
+        <a href="/" data-t="nav_home">الرئيسية</a>
+        <a href="/#services" data-t="nav_services" data-sec="services">خدماتنا</a>
+        <a href="/#industries" data-t="nav_industries" data-sec="industries">حلول حسب مجالك</a>
+        <a href="/#projects" data-t="nav_projects" data-sec="projects">حلولنا</a>
+        <a href="/pricing" data-t="nav_pricing" data-sec="pricing">الباقات</a>
+        <a href="/pricing#calculator" data-t="nav_calc" data-sec="calculator">احسب تكلفة مشروعك</a>
+        <a href="/about" data-t="nav_about" data-sec="about">من نحن</a>
+        <a href="/#partners" data-t="nav_partners" data-sec="partners">شركاؤنا</a>
+        <a href="/careers" data-t="nav_careers" data-sec="careers">الوظائف</a>
+        <a href="/#contact" data-t="nav_contact" data-sec="contact">تواصل معنا</a>
         <a href="/blog" data-t="nav_blog">المقالات</a>
         <a href="/privacy" data-t="privacy">سياسة الخصوصية</a>
       </nav>

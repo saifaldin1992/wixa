@@ -96,12 +96,19 @@ try {
       check((await p.getAttribute("html", "data-theme")) !== before, "dark-mode toggle works");
       await p.click("#langBtn"); await p.waitForTimeout(800);
       check((await p.getAttribute("html", "lang")) === "en", "language toggle works");
-      // cost calculator: picking a type changes the estimate, the button prefills the contact form
+      // the homepage is short: the calculator, about us and careers live on their own pages
+      check(await p.evaluate(() => !document.querySelector("#calculator").offsetHeight && !document.querySelector("#about").offsetHeight), "homepage keeps the calculator and about us on their own pages");
+      // cost calculator (/pricing): picking a type changes the estimate, the button prefills the contact form
+      await p.goto(BASE + "/pricing", { waitUntil: "load" }); await p.waitForTimeout(1200);
+      check(await p.evaluate(() => document.documentElement.dataset.page === "pricing" && document.querySelector("#calculator").offsetHeight > 0), "/pricing shows the packages and the calculator");
       const price0 = await p.textContent("#calcPrice");
       await p.click("#calcTypes .ctype:last-child"); await p.click("#calcFeats .cfeat"); await p.waitForTimeout(900);
       check((await p.textContent("#calcPrice")) !== price0, "calculator updates the estimate");
       await p.click("#calcCta"); await p.waitForTimeout(1200);
       check((await p.inputValue("#contactForm [name=message]")).length > 10, "calculator prefills the contact form");
+      await p.goto(BASE + "/about", { waitUntil: "load" }); await p.waitForTimeout(800);
+      check(await p.evaluate(() => document.querySelector("#about").offsetHeight > 0 && !document.querySelector("#services").offsetHeight), "/about shows about us");
+      await p.goto(BASE + "/", { waitUntil: "load" }); await p.waitForTimeout(1200);
       if (await p.$("#projectsList [data-open]")) {
         await p.click("#projectsList .project__more"); await p.waitForTimeout(400);
         check(!(await p.$eval("#pmodal", (m) => m.hidden)), "project details open");
