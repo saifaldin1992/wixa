@@ -858,3 +858,13 @@ html[data-theme="dark"] .pstep.on .pstep__num { box-shadow: 0 0 0 8px rgba(var(-
   .totop { inset-inline-end: auto; inset-inline-start: auto; left: 14px; right: auto; bottom: calc(76px + env(safe-area-inset-bottom)); }
   .calc__sticky, html[dir="rtl"] .calc__sticky { left: 74px; right: 74px; }
 }
+
+/* FAQ as buttons: the whole row is one large tap target */
+.faq__q { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; font: inherit; font-weight: 600; color: inherit; text-align: start; background: none; border: 0; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+.faq__q i { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; position: relative; background: color-mix(in srgb, var(--primary) 10%, transparent); pointer-events: none; }
+.faq__q i::before, .faq__q i::after { content: ""; position: absolute; inset: 50% auto auto 50%; width: 10px; height: 2px; background: var(--primary); transform: translate(-50%, -50%); transition: transform .3s; }
+.faq__q i::after { transform: translate(-50%, -50%) rotate(90deg); }
+.faq__item.open .faq__q i::after { transform: translate(-50%, -50%) rotate(0); }
+.faq__q span { pointer-events: none; }
+.faq__a p { margin: 0; padding: 0 22px 20px; color: var(--muted); line-height: 1.9; }
+[data-theme="dark"] .faq__q i::before, [data-theme="dark"] .faq__q i::after { background: var(--accent); }

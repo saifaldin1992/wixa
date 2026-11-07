@@ -26,18 +26,25 @@ export function setupUI() {
   }, { passive: true });
 
   // phones: contact + WhatsApp bar once past the first screen, out of the way at the contact form and the footer
-  const mbar = $("#mbar"), toTop = $("#toTop");
+  const mbar = $("#mbar");
   let atContact = false;
   const io = new IntersectionObserver((es) => { es.forEach((e) => { e.target.dataset.vis = e.isIntersecting ? "1" : ""; }); atContact = !!document.querySelector('#contact[data-vis="1"], .footer[data-vis="1"]'); syncBars(); }, { threshold: 0.15 });
   ["#contact", ".footer"].forEach((s) => { const el = $(s); if (el) io.observe(el); });
   function syncBars() {
     const past = scrollY > innerHeight * 0.8;
     mbar?.classList.toggle("show", past && !atContact);
-    toTop?.classList.toggle("show", scrollY > innerHeight * 1.5);
   }
   addEventListener("scroll", syncBars, { passive: true }); syncBars();
-  toTop?.addEventListener("click", () => { if (window.__lenis) window.__lenis.scrollTo(0); else scrollTo({ top: 0, behavior: "smooth" }); });
   $("#mbarContact")?.addEventListener("click", (e) => { e.preventDefault(); openContact(); });
+
+  // FAQ: one tap opens or closes an answer
+  $("#faqList")?.addEventListener("click", (e) => {
+    const q = e.target.closest(".faq__q"); if (!q) return;
+    const open = q.getAttribute("aria-expanded") !== "true";
+    q.setAttribute("aria-expanded", String(open));
+    q.closest(".faq__item").classList.toggle("open", open);
+    $(`#${q.getAttribute("aria-controls")}`).hidden = !open;
+  });
 
   const switchLang = () => {
     setLang(lang === "ar" ? "en" : "ar");

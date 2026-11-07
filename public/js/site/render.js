@@ -141,7 +141,8 @@ export function render() {
 
   // frequently asked questions
   const faq = (c.faq || []).filter((x) => x.q && x.a);
-  $("#faqList").innerHTML = faq.map((x) => `<details class="faq__item reveal-up"><summary>${esc(x.q)}<i aria-hidden="true"></i></summary><p>${esc(x.a).replace(/\n/g, "<br>")}</p></details>`).join("");
+  $("#faqList").innerHTML = faq.map((x, i) => `<div class="faq__item"><button type="button" class="faq__q" id="faqq${i}" aria-expanded="false" aria-controls="faqa${i}"><span>${esc(x.q)}</span><i aria-hidden="true"></i></button>
+    <div class="faq__a" id="faqa${i}" role="region" aria-labelledby="faqq${i}" hidden><p>${esc(x.a).replace(/\n/g, "<br>")}</p></div></div>`).join("");
   if (!faq.length) $$('[data-section="faq"]').forEach((el) => (el.hidden = true));
 
   // contact
