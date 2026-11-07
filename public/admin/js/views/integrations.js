@@ -54,6 +54,19 @@ export async function viewIntegrations(view) {
         <div class="row-btns">${save()}<button class="b" data-test="weekly">${I.mail}أرسل لي التقرير الآن</button></div>
       </div></div>
 
+    <div class="card" id="cBackup"><div class="card__head"><div><h3>النسخة الاحتياطية التلقائية</h3>
+      <p>ملف فيه كل محتوى الموقع (الإعدادات والنصوص والمشاريع والخدمات والشركاء والآراء والمقالات والرسائل) يصل إلى بريد التنبيهات.</p></div></div>
+      <div class="stack">
+        <div class="seg seg--wide" id="bkFreq">${[["daily", "يومية"], ["weekly", "أسبوعية (الأحد)"], ["monthly", "شهرية (يوم 1)"], ["off", "متوقفة"]].map(([k, l]) => `<button type="button" data-v="${k}" class="${(cfg.backup?.freq || "weekly") === k ? "on" : ""}">${l}</button>`).join("")}</div>
+        <p class="muted" style="margin:0;font-size:12px">تُرسل الساعة 6:23 صباحاً بتوقيت بغداد. ${cfg.backup_last ? `آخر نسخة: ${new Date(cfg.backup_last.at).toLocaleString("ar", { dateStyle: "medium", timeStyle: "short" })} (${Math.round((cfg.backup_last.size || 0) / 1024)} KB)` : "لم تُرسل أي نسخة بعد."}</p>
+        <div class="row-btns">${save()}<button class="b" data-test="backup">${I.mail}أرسل نسخة الآن</button></div>
+      </div></div>
+
+    <div class="card" id="cTpl"><div class="card__head"><div><h3>الردود الجاهزة</h3>
+      <p>نصوص تختارها بضغطة عند الرد على رسالة (بالبريد أو واتساب). اكتب <code>{name}</code> ليُستبدل باسم المرسل.</p></div></div>
+      <div class="stack"><div id="tplList" class="stack"></div>
+        <div class="row-btns"><button class="b b--sm" type="button" id="tplAdd">${I.plus}إضافة رد</button>${save()}</div></div></div>
+
     <div class="card" id="cTags"><div class="card__head"><div><h3>أدوات القياس والإعلانات</h3>
       <p>الصق المعرّف فقط وتعمل الأداة على الموقع. اتركه فارغاً لإيقافها. إرسال نموذج التواصل يُحسب «عميلاً محتملاً» (Lead) في كل أداة مفعّلة.</p></div></div>
       <div class="grid2">${TAGS.map(([k, label, ph, hint]) => `<label class="f"><span>${label}</span>
@@ -89,10 +102,19 @@ export async function viewIntegrations(view) {
     cAlerts: () => ({ alerts: { on: chk("alertsOn"), from_name: val("fromName") } }),
     cReply: () => ({ autoreply: { on: chk("replyOn"), subject_ar: val("subAr"), subject_en: val("subEn"), body_ar: val("bodyAr"), body_en: val("bodyEn") } }),
     cReports: () => ({ reports: { weekly: chk("weeklyOn"), monitor: chk("monitorOn") } }),
+    cBackup: () => ({ backup: { freq: $("#bkFreq .on")?.dataset.v || "weekly" } }),
+    cTpl: () => ({ templates: $$("#tplList .tpl").map((r) => ({ title: $(".tpl__t", r).value, body: $(".tpl__b", r).value })) }),
     cTags: () => ({ tags: Object.fromEntries($$("[data-tag]").map((i) => [i.dataset.tag, i.value.trim()])) }),
     cSpam: () => ({ spam: { turnstile: chk("tsOn"), blocked: val("blocked") } }),
     cMaint: () => ({ maintenance: { on: chk("maintOn"), message_ar: val("mAr"), message_en: val("mEn") } }),
   };
+  $$("#bkFreq button").forEach((b) => (b.onclick = () => $$("#bkFreq button").forEach((x) => x.classList.toggle("on", x === b))));
+  const drawTpl = (list) => {
+    $("#tplList").innerHTML = list.map((t) => `<div class="tpl"><input class="tpl__t" maxlength="60" placeholder="عنوان الرد" value="${esc(t.title)}"><textarea class="tpl__b" rows="3" maxlength="2000" placeholder="نص الرد">${esc(t.body)}</textarea><button type="button" class="b b--icon b--ghost b--danger" data-tpldel title="حذف">${I.trash}</button></div>`).join("") || '<p class="muted" style="margin:0">لا توجد ردود جاهزة.</p>';
+    $$("[data-tpldel]").forEach((b) => (b.onclick = () => b.closest(".tpl").remove()));
+  };
+  drawTpl(cfg.templates || []);
+  $("#tplAdd").onclick = () => { const cur = bodyFor.cTpl().templates; cur.push({ title: "", body: "" }); drawTpl(cur); };
   $$("[data-save]", view).forEach((btn) => (btn.onclick = async () => {
     const card = btn.closest(".card");
     btn.disabled = true;
@@ -111,7 +133,7 @@ export async function viewIntegrations(view) {
     btn.disabled = true;
     try {
       const r = await adminApi("integrations/test", "POST", { kind: btn.dataset.test, lang: "ar" });
-      toast(`أُرسلت إلى ${r.to} ✓`);
+      toast(btn.dataset.test === "backup" ? `أُرسلت النسخة إلى ${r.to} ✓` : `أُرسلت إلى ${r.to} ✓`);
     } catch (e) { toast(e.message === "email_not_configured" ? "البريد غير مُعدّ على الخادم" : "تعذّر الإرسال", "err"); }
     finally { btn.disabled = false; }
   }));

@@ -372,3 +372,20 @@ html[dir=rtl] .bar__top span:first-child { direction: rtl; }
 @media (max-width: 720px) { .msg__follow { grid-template-columns: 1fr; } }
 .pill.off { color: var(--muted); background: color-mix(in srgb, var(--muted) 14%, transparent); }
 .sec-title > span { display: inline-flex; gap: 4px; align-items: center; order: 2; }
+
+/* booking days, backup choice, ready replies, visitor funnel */
+.chip { position: relative; display: inline-flex; cursor: pointer; }
+.chip input { position: absolute; opacity: 0; }
+.chip span { padding: 7px 14px; border-radius: 99px; border: 1px solid var(--line-2); font-size: 13px; }
+.chip input:checked + span { background: var(--brand); color: #fff; border-color: var(--brand); }
+.seg--wide { display: flex; flex-wrap: wrap; width: max-content; max-width: 100%; }
+.tpl { display: grid; grid-template-columns: 180px 1fr auto; gap: 8px; align-items: start; }
+.tpl input, .tpl textarea { width: 100%; min-width: 0; padding: 9px 12px; border: 1px solid var(--line-2); border-radius: 10px; font: inherit; font-size: 14px; background: var(--surface, #fff); color: var(--text); }
+@media (max-width: 720px) { .tpl { grid-template-columns: 1fr auto; } .tpl textarea { grid-column: 1 / -1; grid-row: 2; } }
+.msg__tpl { max-width: 320px; margin-bottom: 10px; }
+.funnel { display: grid; gap: 10px; }
+.funnel__row { display: grid; grid-template-columns: minmax(150px, 220px) 1fr 54px; gap: 12px; align-items: center; font-size: 14px; }
+.funnel__bar { height: 10px; border-radius: 99px; background: color-mix(in srgb, var(--muted) 12%, transparent); overflow: hidden; }
+.funnel__bar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--brand), #1FC8E3); }
+.funnel__row b { text-align: end; }
+@media (max-width: 560px) { .funnel__row { grid-template-columns: 1fr 44px; } .funnel__bar { grid-column: 1 / -1; grid-row: 2; } }

@@ -24,7 +24,7 @@ export const TEXT_FIELDS = [
 
 export async function viewContent(view) {
   settingsActions();
-  const tabs = [["texts", "النصوص"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"], ["privacy", "سياسة الخصوصية"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
+  const tabs = [["texts", "النصوص"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"], ["privacy", "سياسة الخصوصية"], ["booking", "المواعيد"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
   view.innerHTML = `<div class="split"><div><div class="card">
       <div class="tabs" id="ctTabs">${tabs.map(([k, l]) => `<button data-k="${k}" class="${k === contentTab ? "on" : ""}">${l}</button>`).join("")}</div>
       <div id="ctBody"></div></div></div>${previewPane()}</div>`;
@@ -97,6 +97,23 @@ export function renderContentTab() {
       $("#addFaq").onclick = () => { items.push({ q: "", a: "" }); changed(); draw(); };
     };
     draw(); return;
+  } else if (contentTab === "booking") {
+    settings.booking ??= { on: false, days: [0, 1, 2, 3, 4], from: "10:00", to: "16:00", slot: 30, days_ahead: 14 };
+    const b = settings.booking;
+    const names = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+    body.innerHTML = `<p class="muted" style="margin-top:0">زر «احجز موعداً» في قسم التواصل: يختار الزائر يوماً ووقتاً من أوقاتك المتاحة (بتوقيت بغداد)، ويصلك الحجز في الرسائل وبالبريد. الوقت المحجوز لا يظهر لغيره.</p>
+      <div class="stack">
+        <label class="switch"><input type="checkbox" data-path="booking.on" ${b.on ? "checked" : ""}><i></i>تفعيل حجز المواعيد في الموقع</label>
+        <div class="f"><span>أيام العمل</span><div style="display:flex;flex-wrap:wrap;gap:6px">${names.map((n, i) => `<label class="chip"><input type="checkbox" data-day="${i}" ${(b.days || []).includes(i) ? "checked" : ""}><span>${n}</span></label>`).join("")}</div></div>
+        <div class="grid2">${input("booking.from", "من الساعة", false, 'type="time" dir="ltr"')}${input("booking.to", "إلى الساعة", false, 'type="time" dir="ltr"')}</div>
+        <div class="grid2"><label class="f"><span>مدة الموعد</span><select data-path="booking.slot">${[15, 20, 30, 45, 60, 90].map((m) => `<option value="${m}" ${Number(b.slot) === m ? "selected" : ""}>${m} دقيقة</option>`).join("")}</select></label>
+        <label class="f"><span>يمكن الحجز حتى</span><select data-path="booking.days_ahead">${[7, 14, 21, 30, 60].map((d) => `<option value="${d}" ${Number(b.days_ahead) === d ? "selected" : ""}>${d} يوماً قادمة</option>`).join("")}</select></label></div>
+        <p class="muted" style="margin:0;font-size:12px">لا يُعرض وقت يبدأ خلال أقل من ساعة من الآن.</p>
+      </div>`;
+    bindPathInputs(body);
+    $$("[data-path='booking.slot'], [data-path='booking.days_ahead']", body).forEach((el) => el.addEventListener("change", () => { setPath(settings, el.dataset.path, Number(el.value)); changed(); }));
+    $$("[data-day]", body).forEach((el) => (el.onchange = () => { const d = +el.dataset.day; b.days = el.checked ? [...new Set([...(b.days || []), d])].sort() : (b.days || []).filter((x) => x !== d); changed(); }));
+    return;
   } else if (contentTab === "privacy") {
     const draw = () => {
       // first open: start from the current default wording (saved only when you press «حفظ ونشر»)

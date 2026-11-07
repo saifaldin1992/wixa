@@ -53,6 +53,14 @@ try {
   check((await fetch(`${BASE}/projects/no-such-project`)).status === 404, "unknown project pages return 404");
   check((await (await fetch(`${BASE}/sitemap.xml`)).text()).includes("/privacy"), "sitemap lists the privacy page");
   check((await fetch(`${BASE}/api/admin/msgmeta`)).status === 401, "message notes require sign-in");
+  check((await fetch(`${BASE}/blog`)).status === 200, "articles page responds");
+  check((await fetch(`${BASE}/blog/no-such-article`)).status === 404, "unknown articles return 404");
+  check((await fetch(`${BASE}/services/no-such-service`)).status === 404, "unknown service pages return 404");
+  check((await fetch(`${BASE}/review?c=nope`)).status === 410, "invalid review links are refused");
+  check((await fetch(`${BASE}/api/slots?date=2026-01-01`)).status === 200, "booking times respond");
+  check((await fetch(`${BASE}/api/event`, { method: "POST", body: JSON.stringify({ e: ["calc_used"] }) })).status === 204, "visitor actions are accepted");
+  check((await fetch(`${BASE}/api/admin/funnel`)).status === 401, "visitor action totals require sign-in");
+  check((await fetch(`${BASE}/api/admin/review-link`, { method: "POST" })).status === 401, "review links require sign-in");
   check((await fetch(`${BASE}/api/admin/refresh`, { method: "POST" })).status === 401, "publish-now requires sign-in");
   const stats = await fetch(`${BASE}/api/admin/stats`);
   check(stats.status === 401, "admin stats require sign-in", String(stats.status));
@@ -103,6 +111,7 @@ try {
     await ctx.route(/supabase-js/, (r) => r.fulfill({ body: readFileSync(new URL("./supabase-stub.js", import.meta.url)), contentType: "application/javascript" }));
     await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.fulfill({ body: "", contentType: "text/css" }));
     // the Worker's admin endpoints would check the stand-in session against the real Supabase: answer them here
+    await ctx.route(/\/api\/admin\/funnel/, (r) => r.fulfill({ contentType: "application/json", body: '{"days":30,"total":{"calc_used":3}}' }));
     await ctx.route(/\/api\/admin\/msgmeta$/, (r) => r.fulfill({ contentType: "application/json", body: "{}" }));
     await ctx.route(/\/api\/admin\/integrations$/, (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({
       alerts: { on: true, from_name: "WIXA" }, autoreply: { on: false, subject_ar: "", body_ar: "", subject_en: "", body_en: "" },
@@ -112,7 +121,7 @@ try {
     p.on("pageerror", (e) => errors.push(e.message));
     await p.goto(`${BASE}/admin/`, { waitUntil: "load" });
     await p.waitForTimeout(1200);
-    for (const v of ["overview", "appearance", "content", "projects", "services", "partners", "testimonials", "messages", "seo", "integrations", "account"]) {
+    for (const v of ["overview", "appearance", "content", "projects", "services", "partners", "testimonials", "messages", "posts", "seo", "integrations", "account"]) {
       await p.evaluate((h) => (location.hash = h), v);
       await p.waitForTimeout(600);
       const ok = await p.evaluate(() => document.querySelector("#view")?.children.length > 0);

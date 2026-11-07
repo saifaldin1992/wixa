@@ -50,6 +50,8 @@
     careers: { jobs: [] },
     // choices in the contact form's "service" list; empty → the services shown on the site
     contact_services: [],
+    // appointment booking: off until switched on in the dashboard (المحتوى ← المواعيد); days 0 = Sunday … 6 = Saturday, Baghdad time
+    booking: { on: false, days: [0, 1, 2, 3, 4], from: "10:00", to: "16:00", slot: 30, days_ahead: 14 },
     // Cost estimator. Prices are in USD and are only indicative ranges — review them from the dashboard.
     calculator: {
       currency: "$",

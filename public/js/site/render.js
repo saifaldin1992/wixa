@@ -95,6 +95,7 @@ export function render() {
   const waLink = (title) => `https://wa.me/${waNum}?text=${encodeURIComponent(lang === "ar" ? `مرحباً ويكسا، أريد الاستفسار عن: ${title}` : `Hello WIXA, I'd like to ask about: ${title}`)}`;
   $("#servicesGrid").innerHTML = state.services.map((sv) => `
     <article class="svc reveal-up"><div class="svc__ico">${ICONS[sv.icon] || ICONS.code}</div><h3>${esc(L(sv, "title"))}</h3><p>${esc(L(sv, "summary"))}</p>
+      <a class="svc__more" href="/services/${encodeURIComponent(sv.slug || sv.id)}${lang === "en" ? "?lang=en" : ""}">${esc(ui.more)}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m0 0l6-6m-6 6l6 6"/></svg></a>
       ${waNum ? `<a class="svc__wa" href="${esc(waLink(L(sv, "title")))}" target="_blank" rel="noopener"><svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16 3a13 13 0 00-11.2 19.6L3 29l6.6-1.7A13 13 0 1016 3zm0 23.6a10.6 10.6 0 01-5.4-1.5l-.4-.2-3.9 1 1-3.8-.2-.4A10.6 10.6 0 1116 26.6z"/></svg>${esc(c.wa_ask || "")}</a>` : ""}</article>`).join("");
   $$(".svc").forEach((el) => el.addEventListener("pointermove", (e) => {
     const r = el.getBoundingClientRect(); el.style.setProperty("--mx", `${e.clientX - r.left}px`); el.style.setProperty("--my", `${e.clientY - r.top}px`);
@@ -144,6 +145,9 @@ export function render() {
   $("#faqList").innerHTML = faq.map((x, i) => `<div class="faq__item"><button type="button" class="faq__q" id="faqq${i}" aria-expanded="false" aria-controls="faqa${i}"><span>${esc(x.q)}</span><i aria-hidden="true"></i></button>
     <div class="faq__a" id="faqa${i}" role="region" aria-labelledby="faqq${i}" hidden><p>${esc(x.a).replace(/\n/g, "<br>")}</p></div></div>`).join("");
   if (!faq.length) $$('[data-section="faq"]').forEach((el) => (el.hidden = true));
+
+  // appointment booking (switched on in the dashboard)
+  $("#bookBtn").hidden = s.booking?.on !== true;
 
   // contact
   const ct = s.contact;

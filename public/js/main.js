@@ -8,6 +8,7 @@ import { setupParticles, setupLogoTilt } from "./site/hero.js";
 import { setupCalc } from "./site/calculator.js";
 import { setupContact } from "./site/contact.js";
 import { setupProjectModal } from "./site/projects.js";
+import { setupBooking, setupTracking } from "./site/extras.js";
 import { setupProgress, setupCursor, setupMotion, pauseOffscreen } from "./site/effects.js";
 const { DEFAULTS, merge, applyTheme } = window.WIXA;
 
@@ -36,6 +37,8 @@ if (PREVIEW) addEventListener("message", (e) => {
   setupLogoTilt();
   setupCalc();
   setupProjectModal();
+  setupBooking();
+  setupTracking();
   setupProgress();
   setupCursor();
   // reveal right away (the content is already in the page); scroll effects start once everything has loaded

@@ -4,7 +4,7 @@ import { $, PREVIEW, UI, esc, state, lang, L } from "./core.js";
 // ---------- Turnstile (bot protection), loaded lazily; one widget per form ----------
 const widgets = {};
 let tsLoading = null;
-function ensureTurnstile(sel = "#turnstile") {
+export function ensureTurnstile(sel = "#turnstile") {
   const key = state.turnstile;
   if (!key || widgets[sel] !== undefined || PREVIEW) return;
   widgets[sel] = null;
@@ -21,14 +21,14 @@ function ensureTurnstile(sel = "#turnstile") {
     });
   });
 }
-const turnstileToken = (sel) => { try { return widgets[sel] != null ? window.turnstile.getResponse(widgets[sel]) || "" : ""; } catch { return ""; } };
-const resetTurnstile = (sel) => { try { if (widgets[sel] != null) window.turnstile.reset(widgets[sel]); } catch {} };
+export const turnstileToken = (sel) => { try { return widgets[sel] != null ? window.turnstile.getResponse(widgets[sel]) || "" : ""; } catch { return ""; } };
+export const resetTurnstile = (sel) => { try { if (widgets[sel] != null) window.turnstile.reset(widgets[sel]); } catch {} };
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const phoneOk = (v) => String(v || "").replace(/\D/g, "").length >= 7;
 
 // marks empty / wrong fields; returns the first problem's message or ""
-function check(form, names) {
+export function check(form, names) {
   const ui = UI[lang];
   let msg = "";
   names.forEach((n) => {
@@ -41,7 +41,7 @@ function check(form, names) {
 }
 
 // a red field goes back to normal as soon as it is filled in correctly
-function liveCheck(form) {
+export function liveCheck(form) {
   form.addEventListener("input", (e) => {
     const f = e.target.closest(".field.bad"); if (!f) return;
     const el = e.target, v = el.value.trim();

@@ -26,7 +26,7 @@ watch_dir = ["public/js", "public/admin/js", "public/admin/admin.js", "public/ad
 directory = "./public"
 binding = "ASSETS"
 not_found_handling = "404-page"
-run_worker_first = ["/", "/index.html", "/admin/", "/admin/index.html", "/projects/*", "/privacy", "/api/*", "/health", "/robots.txt", "/sitemap.xml"]
+run_worker_first = ["/", "/index.html", "/admin/", "/admin/index.html", "/projects/*", "/services/*", "/blog", "/blog/*", "/review", "/privacy", "/api/*", "/health", "/robots.txt", "/sitemap.xml"]
 
 # Abuse protection: per-IP limits, counted per Cloudflare location.
 [[ratelimits]]
@@ -44,9 +44,10 @@ simple = { limit = 30, period = 60 }
 binding = "PRIVATE"
 id = "16bfe7325d144e87a3fe12e9a6cbd744"
 
-# scheduled jobs: health check every 15 minutes, weekly report on Sunday 09:17 Baghdad (06:17 UTC)
+# scheduled jobs: health check every 15 minutes, weekly report on Sunday 09:17 Baghdad (06:17 UTC),
+# backup check every day 06:23 Baghdad (sent daily, weekly on Sunday or monthly on the 1st, as set in the dashboard)
 [triggers]
-crons = ["*/15 * * * *", "17 6 * * SUN"]
+crons = ["*/15 * * * *", "17 6 * * SUN", "23 3 * * *"]
 
 # deploy id and time, shown on the dashboard's Connections page
 [version_metadata]

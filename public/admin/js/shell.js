@@ -8,6 +8,7 @@ import { viewIntegrations } from "./views/integrations.js";
 import { viewList } from "./views/lists.js";
 import { viewMessages } from "./views/messages.js";
 import { viewOverview } from "./views/overview.js";
+import { viewPosts } from "./views/posts.js";
 import { viewSeo } from "./views/seo.js";
 import { viewStatus } from "./views/status.js";
 
@@ -20,6 +21,7 @@ export const VIEWS = {
   services: { title: "الخدمات", sub: "الخدمات التي تظهر في الموقع", render: () => viewList("services") },
   partners: { title: "الشركاء", sub: "شعارات العملاء والشركاء", render: () => viewList("partners") },
   testimonials: { title: "آراء العملاء", sub: "بطاقات الآراء المتحركة في الموقع", render: () => viewList("testimonials") },
+  posts: { title: "المقالات", sub: "اكتب مقالات تساعد الناس على إيجادك في Google", render: viewPosts },
   seo: { title: "البحث والمشاركة", sub: "كيف يظهر موقعك في Google وعند مشاركة الرابط", render: viewSeo },
   integrations: { title: "التكاملات", sub: "التنبيهات والرد التلقائي وأدوات القياس والحماية ووضع الصيانة", render: viewIntegrations },
   status: { title: "الاتصالات", sub: "النطاق والاستضافة وقاعدة البيانات والبريد والكود — فحص مباشر", render: viewStatus },

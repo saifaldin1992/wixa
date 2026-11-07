@@ -868,3 +868,49 @@ html[data-theme="dark"] .pstep.on .pstep__num { box-shadow: 0 0 0 8px rgba(var(-
 .faq__q span { pointer-events: none; }
 .faq__a p { margin: 0; padding: 0 22px 20px; color: var(--muted); line-height: 1.9; }
 [data-theme="dark"] .faq__q i::before, [data-theme="dark"] .faq__q i::after { background: var(--accent); }
+
+/* ---------- service cards: link to the service page ---------- */
+.svc__more { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; font-size: .88rem; font-weight: 600; color: var(--fg); width: max-content; }
+.svc__more svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+html[dir="ltr"] .svc__more svg { transform: scaleX(-1); }
+.svc__more:hover { text-decoration: underline; }
+@media (max-width: 640px) { .svc .svc__more { grid-column: 1 / -1; margin-top: 4px; } }
+.svc__wa { margin-top: 8px; padding-top: 0; }
+
+/* ---------- calculator: PDF ---------- */
+.calc__result .calc__pdf { background: rgba(255,255,255,.1); color: #fff; border-color: rgba(255,255,255,.3); }
+.calc__pdf svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; }
+
+/* ---------- booking window ---------- */
+.bk__when { margin-bottom: 14px; }
+.bk__when > span:last-of-type { margin-top: 10px; }
+.bk__days, .bk__slots { display: flex; flex-wrap: wrap; gap: 8px; }
+.bk__day, .bk__slot { padding: 9px 14px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--bg); color: var(--text); font: inherit; font-size: .9rem; cursor: pointer; touch-action: manipulation; }
+.bk__day.on, .bk__slot.on { background: var(--primary); color: #fff; border-color: var(--primary); }
+.bk__hint { margin: 0; color: var(--muted); font-size: .9rem; }
+.bk__when.bad .bk__slots { outline: 2px solid #E5484D; outline-offset: 4px; border-radius: 12px; }
+.bk__when > span:first-child::after, .bk__when > span:last-of-type::after { content: " *"; color: #E5484D; font-weight: 700; }
+
+/* ---------- printable quote (only shown when printing / saving as PDF) ---------- */
+.quote-print { display: none; }
+@media print {
+  @page { margin: 16mm; }
+  body > *:not(.quote-print) { display: none !important; }
+  .quote-print { display: block !important; color: #140F1F; font-family: inherit; }
+  .qp__head { display: flex; align-items: center; gap: 14px; border-bottom: 2px solid #5B21B6; padding-bottom: 14px; margin-bottom: 22px; }
+  .qp__head svg { width: 70px; height: auto; fill: #5B21B6; }
+  .qp__head div { display: grid; flex: 1; } .qp__head b { font-size: 22px; } .qp__head span { color: #625C70; }
+  .qp__head time { color: #625C70; font-size: 13px; }
+  .qp__table { width: 100%; border-collapse: collapse; margin-bottom: 22px; }
+  .qp__table th, .qp__table td { text-align: start; padding: 10px 12px; border-bottom: 1px solid #ECE8F3; vertical-align: top; }
+  .qp__table th { width: 32%; color: #625C70; font-weight: 600; }
+  .qp__table ul { margin: 0; padding-inline-start: 18px; }
+  .qp__price { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-radius: 14px; background: #F3EEFB; }
+  .qp__price b { font-size: 26px; color: #5B21B6; }
+  .qp__note { color: #625C70; font-size: 13px; margin: 14px 0 30px; }
+  .qp__foot { border-top: 1px solid #ECE8F3; padding-top: 12px; color: #625C70; font-size: 13px; text-align: center; }
+}
+/* booking: days in one swipeable row */
+.bk__days { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x proximity; scrollbar-width: thin; }
+.bk__day { flex-shrink: 0; scroll-snap-align: start; white-space: nowrap; }
+@media print { .qp__head svg { color: #5B21B6; fill: #5B21B6; } }

@@ -1,5 +1,5 @@
 /* Projects, services, partners and testimonials editors */
-import { $, $$, cache, clone, closeModal, confirmBox, esc, I, ICONS, openModal, publishNow, sb, toast } from "../core.js";
+import { $, $$, adminApi, cache, clone, closeModal, confirmBox, esc, I, ICONS, openModal, publishNow, sb, toast } from "../core.js";
 import { imageField } from "../fields.js";
 
 // ---------------- generic lists: projects / services / partners ----------------
@@ -23,7 +23,9 @@ export const ENTITIES = {
     one: "خدمة", empty: "لا توجد خدمات بعد.",
     title: (r) => r.title_ar || r.title_en, sub: (r) => r.summary_ar, icon: (r) => r.icon,
     blank: { icon: "web", title_ar: "", title_en: "", summary_ar: "", summary_en: "", published: true },
-    fields: [["icon", "icon", "الأيقونة"], ["pair", "title", "اسم الخدمة"], ["pairArea", "summary", "الوصف"], ["toggle", "published", "منشورة"]],
+    fields: [["icon", "icon", "الأيقونة"], ["pair", "title", "اسم الخدمة"], ["pairArea", "summary", "الوصف المختصر (يظهر في بطاقة الخدمة)"],
+      ["sec", "صفحة الخدمة"], ["note", "تظهر في صفحة الخدمة الخاصة (اعرف المزيد). افصل الفقرات بسطر فارغ، السطر القصير في أول الفقرة يصبح عنواناً، وابدأ النقاط بـ •"], ["pairArea", "details", "تفاصيل الخدمة"],
+      ["toggle", "published", "منشورة"]],
   },
   testimonials: {
     one: "رأي", empty: "لا توجد آراء بعد. أضف آراء عملائك لتظهر في شريط متحرك على الموقع.",
@@ -43,6 +45,10 @@ export async function viewList(table) {
   const E = ENTITIES[table];
   $("#topActions").innerHTML = `<button class="b b--primary" id="addBtn">${I.plus}إضافة ${E.one}</button>`;
   $("#addBtn").onclick = () => editItem(table, null);
+  if (table === "testimonials") {
+    $("#topActions").insertAdjacentHTML("afterbegin", `<button class="b" id="reviewLink">${I.mail}رابط رأي لعميل</button>`);
+    $("#reviewLink").onclick = reviewLinkDialog;
+  }
   const { data, error } = await sb.from(table).select("*").order("sort").order("created_at");
   if (error) throw error;
   cache[table] = data;
@@ -169,4 +175,27 @@ export function editItem(table, row) {
     if (res.error) return toast(`فشل الحفظ: ${res.error.message}`, "err");
     publishNow(); closeModal(); toast(row ? "تم حفظ التعديلات ✓" : `تمت إضافة ${E.one} ✓`); viewList(table);
   };
+}
+
+// A one-time link the owner sends to a client; the review arrives hidden until it is published here.
+function reviewLinkDialog() {
+  const body = document.createElement("div"); body.className = "stack";
+  body.innerHTML = `<p class="muted" style="margin:0">أنشئ رابطاً خاصاً وأرسله لعميلك. يكتب رأيه وتقييمه، ويصلك تنبيه بالبريد، ويظهر هنا <b>مخفياً</b> حتى تضغط «نشر». الرابط يعمل مرة واحدة ولمدة 60 يوماً.</p>
+    <div class="grid2"><label class="f"><span>اسم العميل (اختياري — يظهر جاهزاً في النموذج)</span><input id="rlName"></label>
+    <label class="f"><span>لغة الصفحة</span><select id="rlLang"><option value="ar">العربية</option><option value="en">English</option></select></label></div>
+    <button class="b b--primary" id="rlMake" style="justify-self:start">إنشاء الرابط</button>
+    <div id="rlOut" hidden class="stack" style="gap:8px"><input id="rlUrl" readonly dir="ltr">
+      <div style="display:flex;flex-wrap:wrap;gap:8px"><button class="b b--sm" id="rlCopy">نسخ الرابط</button><a class="b b--sm" id="rlWa" target="_blank" rel="noopener">إرسال عبر واتساب</a></div></div>`;
+  openModal("رابط رأي لعميل", body, "", true);
+  $("#rlMake").onclick = async (e) => {
+    e.currentTarget.disabled = true;
+    try {
+      const r = await adminApi("review-link", "POST", { name: $("#rlName").value.trim(), lang: $("#rlLang").value });
+      $("#rlUrl").value = r.url; $("#rlOut").hidden = false;
+      const msg = $("#rlLang").value === "en" ? `Thank you for working with WIXA! We'd love your feedback: ${r.url}` : `شكراً لثقتك بويكسا! يسعدنا أن تكتب رأيك في تجربتك معنا من هنا: ${r.url}`;
+      $("#rlWa").href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    } catch { toast("تعذّر إنشاء الرابط", "err"); }
+    finally { e.currentTarget.disabled = false; }
+  };
+  $("#rlCopy").onclick = async () => { try { await navigator.clipboard.writeText($("#rlUrl").value); toast("تم النسخ ✓"); } catch { $("#rlUrl").select(); } };
 }

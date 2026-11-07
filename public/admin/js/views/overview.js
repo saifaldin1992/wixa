@@ -1,5 +1,5 @@
 /* Overview: visitors from Cloudflare Web Analytics, messages */
-import { $, $$, I, esc, fmt, sb } from "../core.js";
+import { $, $$, I, esc, fmt, sb, adminApi } from "../core.js";
 import { route } from "../shell.js";
 import { textFixesCard } from "../textfixes.js";
 
@@ -59,6 +59,26 @@ function paintOverview(view, s) {
     </div>
     ${speedCard(s.speed, s.source)}`;
   drawChart($("#chart"), s.by_day || []);
+  funnelCard(view, s);
+}
+
+// What visitors did on the site (counted anonymously, once per visit)
+async function funnelCard(view, s) {
+  if ($("#funnel")) return;
+  const days = period;
+  let f;
+  try { f = await adminApi(`funnel?days=${days}`); } catch { return; }
+  const t = f.total || {};
+  const rows = [
+    ["زيارات الموقع", s.visitors ?? null],
+    ["استخدموا حاسبة التكلفة", t.calc_used], ["طلبوا عرض سعر من الحاسبة", t.calc_quote], ["حفظوا التقدير PDF", t.calc_pdf],
+    ["أرسلوا التقدير عبر واتساب", t.calc_wa], ["ضغطوا واتساب", t.wa_click], ["فتحوا نموذج التواصل", t.form_open],
+    ["أرسلوا رسالة", t.form_sent], ["فتحوا حجز موعد", t.booking_open], ["حجزوا موعداً", t.booking_sent],
+    ["فتحوا التقديم على وظيفة", t.job_open], ["قرأوا سؤالاً شائعاً", t.faq_open],
+  ].filter(([, v]) => v != null);
+  const max = Math.max(1, ...rows.map(([, v]) => Number(v) || 0));
+  view.insertAdjacentHTML("beforeend", `<div class="card" id="funnel"><div class="card__head"><div><h3>ماذا فعل الزوار (آخر ${days} يوماً)</h3><p>يُحسب كل فعل مرة واحدة لكل زيارة، دون أي بيانات شخصية. بدأ العدّ مع هذا التحديث.</p></div></div>
+    <div class="funnel">${rows.map(([k, v]) => `<div class="funnel__row"><span>${k}</span><div class="funnel__bar"><i style="width:${Math.round(((Number(v) || 0) / max) * 100)}%"></i></div><b>${fmt(v || 0)}</b></div>`).join("")}</div></div>`);
 }
 
 export function drawChart(el, rows) {

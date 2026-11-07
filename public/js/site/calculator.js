@@ -1,6 +1,7 @@
 /* Cost estimator */
 import { $, $$, esc, ICONS, state, lang, anim } from "./core.js";
 import { openContact } from "./contact.js";
+import { printQuote } from "./extras.js";
 
 // ---------- cost calculator ----------
 const calc = { type: 0, feats: new Set(), rush: false };
@@ -63,6 +64,15 @@ export function setupCalc() {
     e.currentTarget.href = `https://wa.me/${wa}?text=${encodeURIComponent(msg)}`;
   });
   $("#calcCta").addEventListener("click", () => { const msg = estimateText(); if (msg) openContact(msg); });
+  $("#calcPdf").addEventListener("click", () => {
+    const cfg = state.settings.calculator || {}, t = (cfg.types || [])[calc.type], r = calcRange();
+    if (!t || !r) return;
+    printQuote({
+      type: t[`label_${lang}`] || t.label_ar,
+      features: [...calc.feats].map((i) => (cfg.features || [])[i]).filter(Boolean).map((f) => f[`label_${lang}`] || f.label_ar),
+      rush: calc.rush, range: `${r[0].toLocaleString("en")} – ${r[1].toLocaleString("en")} ${cfg.currency || "$"}`,
+    });
+  });
 }
 
 // the chosen project, features and estimate as a ready message

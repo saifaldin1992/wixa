@@ -88,6 +88,7 @@
       <a href="#partners" data-t="nav_partners" data-sec="partners">شركاؤنا</a>
       <a href="#careers" data-t="nav_careers" data-sec="careers">الوظائف</a>
       <a href="#contact" data-t="nav_contact" data-sec="contact">تواصل معنا</a>
+      <a href="/blog" data-t="nav_blog">المقالات</a>
       <a href="/privacy" data-t="privacy">سياسة الخصوصية</a>
     </div>
   </header>
@@ -206,6 +207,7 @@
           <p class="calc__note" data-c="calc_note"></p>
           <div class="calc__btns">
             <button type="button" class="btn btn--primary" id="calcCta"><span data-c="calc_cta"></span><svg class="arr" viewBox="0 0 24 24"><path d="M19 12H5m0 0l6-6m-6 6l6 6"/></svg></button>
+            <button type="button" class="btn btn--ghost calc__pdf" id="calcPdf"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 14h6M10 17h4"/></svg><span data-t="calc_pdf">حفظ التقدير PDF</span></button>
             <a class="btn btn--wa" id="calcWa" href="#" target="_blank" rel="noopener" hidden><svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16 3a13 13 0 00-11.2 19.6L3 29l6.6-1.7A13 13 0 1016 3zm0 23.6a10.6 10.6 0 01-5.4-1.5l-.4-.2-3.9 1 1-3.8-.2-.4A10.6 10.6 0 1116 26.6zm5.8-7.9c-.3-.2-1.9-.9-2.2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7 0a8.7 8.7 0 01-4.3-3.8c-.3-.6.3-.5.9-1.7.1-.2 0-.4 0-.6l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6a1.2 1.2 0 00-.9.4 3.7 3.7 0 00-1.2 2.8 6.5 6.5 0 001.4 3.4 14.8 14.8 0 005.7 5c2.1.9 2.9 1 4 .8a3.4 3.4 0 002.2-1.6 2.8 2.8 0 00.2-1.6c-.1-.1-.3-.2-.6-.4z"/></svg><span data-t="calc_wa">أرسل التقدير عبر واتساب</span></a>
           </div>
         </div>
@@ -247,6 +249,7 @@
       <div class="cta__actions reveal-up">
         <a class="icon-btn" id="ctaPhone" href="#" aria-label="phone"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2"/></svg></a>
         <button class="btn btn--primary magnetic" id="openForm" type="button"><span data-c="cta_button"></span><svg class="arr" viewBox="0 0 24 24"><path d="M19 12H5m0 0l6-6m-6 6l6 6"/></svg></button>
+        <button class="btn btn--ghost" id="bookBtn" type="button" data-book hidden><svg viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span data-t="bk_btn">احجز موعداً</span></button>
       </div>
 
       <form class="form" id="contactForm" novalidate>
@@ -287,6 +290,7 @@
         <a href="#partners" data-t="nav_partners" data-sec="partners">شركاؤنا</a>
         <a href="#careers" data-t="nav_careers" data-sec="careers">الوظائف</a>
         <a href="#contact" data-t="nav_contact" data-sec="contact">تواصل معنا</a>
+        <a href="/blog" data-t="nav_blog">المقالات</a>
         <a href="/privacy" data-t="privacy">سياسة الخصوصية</a>
       </nav>
     <div class="footer__tools">
@@ -324,6 +328,32 @@
       </div>
     </article>
   </div>
+
+  <!-- Appointment booking -->
+  <div class="pmodal jmodal" id="bkmodal" hidden>
+    <div class="pmodal__scrim" data-close></div>
+    <form class="pmodal__box jmodal__box" id="bkForm" role="dialog" aria-modal="true" aria-labelledby="bkTitle" novalidate>
+      <button class="pmodal__x" type="button" data-close aria-label="close">✕</button>
+      <h2 id="bkTitle" data-t="bk_title">احجز موعداً معنا</h2>
+      <div class="field field--full bk__when" id="bkWhen">
+        <span data-t="bk_day">اختر اليوم</span><div class="bk__days" id="bkDays"></div>
+        <span data-t="bk_time">اختر الوقت</span><div class="bk__slots" id="bkSlots"></div>
+      </div>
+      <div class="form__grid">
+        <label class="field"><span data-t="f_name">الاسم</span><input name="name" required maxlength="120" autocomplete="name"></label>
+        <label class="field"><span data-t="f_phone">رقم الهاتف</span><input name="phone" type="tel" inputmode="tel" required maxlength="40" autocomplete="tel" dir="ltr" placeholder="07XX XXX XXXX"></label>
+        <label class="field field--full"><span data-t="f_email">البريد الإلكتروني</span><input name="email" type="email" required maxlength="200" autocomplete="email" dir="ltr"></label>
+        <label class="field field--full"><span data-t="bk_notes">ماذا تريد أن نناقش؟</span><textarea name="message" maxlength="2000" rows="3"></textarea></label>
+      </div>
+      <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div id="turnstileBk" class="turnstile"></div>
+      <div class="form__end">
+        <p class="form__status" id="bkStatus" role="status"></p>
+        <button class="btn btn--primary" type="submit"><span data-t="bk_send">تأكيد الحجز</span></button>
+      </div>
+    </form>
+  </div>
+  <div id="quotePrint" class="quote-print" aria-hidden="true"></div>
 
   <!-- Job application -->
   <div class="pmodal jmodal" id="jmodal" hidden>

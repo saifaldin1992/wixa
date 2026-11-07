@@ -48,7 +48,7 @@ async function loadFromSupabase(env) {
     env: env.SITE_ENV || "production",
     turnstile: env.TURNSTILE_SITE_KEY || "",
     settings: settings[0]?.data || {},
-    projects: withSlugs(projects), services, partners, testimonials,
+    projects: withSlugs(projects), services: withSlugs(services), partners, testimonials,
   });
 }
 
@@ -88,6 +88,7 @@ async function getSiteData(env, ctx) {
 
 // Reload the content from the database now and replace the shared copy at this location (dashboard "publish now").
 async function publishNow(env) {
+  await caches.default.delete(new Request(`https://wixa-cache.internal/posts/${env.SITE_ENV || "production"}`)).catch(() => {});
   const text = await loadFromSupabase(env);
   memo = { at: Date.now(), checked: Date.now(), text };
   await caches.default.put(new Request(`https://wixa-cache.internal/site-data/${env.SITE_ENV || "production"}`),
@@ -108,6 +109,12 @@ const CONFIG_DEFAULTS = {
   spam: { turnstile: true, blocked: "" },
   tags: { ga4: "", meta_pixel: "", clarity: "", tiktok: "" },
   reports: { weekly: true, monitor: true },
+  backup: { freq: "weekly" }, // daily | weekly | monthly | off
+  templates: [
+    { title: "شكر واستلام", body: "أهلاً {name}،\nشكراً لتواصلك مع ويكسا. استلمنا طلبك ونراجعه الآن، وسنعود إليك قريباً بالتفاصيل." },
+    { title: "طلب موعد اجتماع", body: "أهلاً {name}،\nشكراً لاهتمامك. نود ترتيب اجتماع قصير لفهم متطلباتك بشكل أدق. ما الوقت المناسب لك هذا الأسبوع؟" },
+    { title: "إرسال عرض السعر", body: "أهلاً {name}،\nمرفق لك عرض السعر الخاص بمشروعك. يسعدنا الإجابة عن أي سؤال." },
+  ],
   maintenance: {
     on: false,
     message_ar: "نعمل على تحديث الموقع وسنعود قريباً. للتواصل العاجل راسلنا عبر البريد أو واتساب.",
@@ -140,6 +147,8 @@ function cleanConfig(prev, body) {
       subject_ar: str(a.subject_ar, 120).replace(/\n/g, " ").trim() || d.subject_ar, body_ar: str(a.body_ar, 2000).trim() || d.body_ar,
       subject_en: str(a.subject_en, 120).replace(/\n/g, " ").trim() || d.subject_en, body_en: str(a.body_en, 2000).trim() || d.body_en };
   }
+  if (b.backup) next.backup = { freq: ["daily", "weekly", "monthly", "off"].includes(b.backup.freq) ? b.backup.freq : "weekly" };
+  if (Array.isArray(b.templates)) next.templates = b.templates.slice(0, 20).map((t) => ({ title: str(t?.title, 60).trim(), body: str(t?.body, 2000) })).filter((t) => t.title || t.body);
   if (b.reports) next.reports = { weekly: b.reports.weekly !== false, monitor: b.reports.monitor !== false };
   if (b.spam) next.spam = { turnstile: b.spam.turnstile !== false, blocked: str(b.spam.blocked, 3000) };
   if (b.tags) {
@@ -205,7 +214,10 @@ async function handleAdminIntegrations(request, env) {
   if (!env.PRIVATE) return json({ error: "storage_not_configured" }, 503);
   cfgMemo.at = 0; // always read the stored copy here
   const cfg = await getConfig(env);
-  if (request.method === "GET") return json(cfg, 200, { "cache-control": "no-store" });
+  if (request.method === "GET") {
+    const last = await env.PRIVATE.get("backup:last", { type: "json" }).catch(() => null);
+    return json({ ...cfg, backup_last: last }, 200, { "cache-control": "no-store" });
+  }
   let body = {};
   try { body = await request.json(); } catch {}
   let next;
@@ -224,6 +236,7 @@ async function handleAdminTest(request, env) {
   if (!env.RESEND_API_KEY || !to) return json({ error: "email_not_configured" }, 503);
   const cfg = await getConfig(env);
   const sample = { name: "زائر تجريبي", email: to, phone: null, message: "هذه رسالة تجريبية من لوحة التحكم.", services: [], lang: body.lang === "en" ? "en" : "ar" };
+  if (body.kind === "backup") return (await runBackup(env, true)) ? json({ ok: true, to }) : json({ error: "send_failed" }, 502);
   const ok = body.kind === "weekly" ? await runWeeklyReport(env, true) : body.kind === "autoreply" ? await sendAutoReply(env, cfg, sample, true) : await notifyOwner(env, sample, true);
   return ok ? json({ ok: true, to }) : json({ error: "send_failed" }, 502);
 }
@@ -625,7 +638,7 @@ async function notifyOwner(env, row, test = false) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
-    body: JSON.stringify({ from: `${cfg.alerts.from_name} <notify@wixa.dev>`, to: [to], reply_to: row.email, subject: `${test ? "[اختبار] " : ""}${staging ? "[تجريبي] " : ""}${row.services?.[0]?.startsWith("طلب توظيف") ? `${row.services[0]} — ${row.name}` : `رسالة جديدة من ${row.name}`}`, html }),
+    body: JSON.stringify({ from: `${cfg.alerts.from_name} <notify@wixa.dev>`, to: [to], reply_to: row.email, subject: `${test ? "[اختبار] " : ""}${staging ? "[تجريبي] " : ""}${/^(طلب توظيف|حجز موعد)/.test(row.services?.[0] || "") ? `${row.services[0]} — ${row.name}` : `رسالة جديدة من ${row.name}`}`, html }),
   });
   if (!res.ok) console.error("notify failed", res.status, await res.text());
   return res.ok;
@@ -676,8 +689,16 @@ async function handleContact(request, env, ctx) {
     services: Array.isArray(body.services) ? body.services.filter((s) => typeof s === "string").slice(0, 10).map((s) => s.slice(0, 80)) : [],
     lang: body.lang === "en" ? "en" : "ar",
   };
+  if (body.kind === "booking" && !row.message) row.message = "حجز موعد";
   if (!row.name || !row.message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) return json({ error: "validation" }, 422);
   if (!row.phone || row.phone.replace(/\D/g, "").length < 7) return json({ error: "phone_required" }, 422);
+  if (body.kind === "booking") {
+    const date = clean(body.date, 10), time = clean(body.time, 5);
+    if (!(await reserveSlot(env, ctx, date, time))) return json({ error: "slot_taken" }, 409);
+    const dayName = new Date(`${date}T00:00:00Z`).toLocaleDateString("ar-IQ", { weekday: "long", timeZone: "UTC" });
+    row.services = [`حجز موعد: ${dayName} ${date} الساعة ${time}`];
+    row.message = row.message || "حجز موعد";
+  }
   if (isJob) {
     const cv = safeHref(clean(body.cv, 300));
     row.services = [`طلب توظيف: ${clean(body.job, 120) || "تقديم عام"}`];
@@ -767,12 +788,21 @@ main{padding:20px 0 60px}h1{font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.3;m
 .sub{display:flex;gap:6px;overflow-x:auto;padding:0 0 6px;scrollbar-width:none}.sub a{flex-shrink:0;padding:6px 12px;border-radius:99px;text-decoration:none;color:var(--m);font-size:.85rem}.sub a:hover{color:var(--t);background:var(--s)}
 .more{margin-top:40px;padding-top:24px;border-top:1px solid var(--l)}.more h2{margin-top:0}.more__grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
 .more__grid a{display:block;padding:16px;border-radius:16px;border:1px solid var(--l);background:var(--s);text-decoration:none;color:var(--t)}.more__grid b{display:block}.more__grid span{color:var(--m);font-size:.85rem}
+.btn--wa{background:#25D366}.hp{position:absolute;left:-9999px;opacity:0}
+.posts{display:grid;gap:14px;margin-top:20px}.post{display:grid;grid-template-columns:160px 1fr;gap:16px;padding:14px;border-radius:18px;border:1px solid var(--l);background:var(--s);text-decoration:none;color:var(--t)}
+.post img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:12px}.post b{display:block;font-size:1.1rem}.post span{font-size:.8rem;color:var(--m)}.post p{margin:6px 0 0;font-size:.92rem}
+@media(max-width:560px){.post{grid-template-columns:1fr}}
+article h2{margin-top:30px}article p,article li{font-size:1.05rem}
+.rv{display:grid;gap:14px;margin-top:20px}.rv label{display:grid;gap:6px;font-weight:600}.rv input,.rv textarea{font:inherit;padding:12px 14px;border-radius:14px;border:1px solid var(--l);background:var(--s);color:var(--t)}
+.rv fieldset{border:0;padding:0;margin:0}.rv legend{font-weight:600;margin-bottom:6px}.stars{display:flex;flex-wrap:wrap;gap:6px}
+.star input{position:absolute;opacity:0}.star span{display:inline-block;padding:6px 12px;border-radius:99px;border:1px solid var(--l);background:var(--s);color:#D9A441;cursor:pointer}
+.star input:checked+span{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 20%,transparent)}.rv .btn{justify-self:start;border:0;font:inherit;font-weight:600;cursor:pointer}
 footer{border-top:1px solid var(--l);padding:22px 0;font-size:.85rem;color:var(--m);display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between}
 footer a{color:var(--m)}
 </style></head><body><div class="wrap">
 <header><a class="home" href="/?lang=${lang}"><img src="/icons/icon-96.png" alt="">${esc(brand)}</a>
 <nav><a href="${path}?lang=${other}" hreflang="${other}">${ar ? "English" : "العربية"}</a><a href="/?lang=${lang}">${ar ? "الرئيسية" : "Home"}</a></nav></header>
-<nav class="sub">${[["#projects", ar ? "حلولنا" : "Solutions"], ["#services", ar ? "خدماتنا" : "Services"], ["#calculator", ar ? "احسب تكلفة مشروعك" : "Estimate your project"], ["#careers", ar ? "الوظائف" : "Careers"], ["#contact", ar ? "تواصل معنا" : "Contact"]].map(([h, t]) => `<a href="/?lang=${lang}${h}">${t}</a>`).join("")}</nav>
+<nav class="sub">${[["#projects", ar ? "حلولنا" : "Solutions"], ["#services", ar ? "خدماتنا" : "Services"], ["#calculator", ar ? "احسب تكلفة مشروعك" : "Estimate your project"], ["#careers", ar ? "الوظائف" : "Careers"], ["#contact", ar ? "تواصل معنا" : "Contact"]].map(([h, t]) => `<a href="/?lang=${lang}${h}">${t}</a>`).join("")}<a href="/blog?lang=${lang}">${ar ? "المقالات" : "Articles"}</a></nav>
 <main>${body}
 <div class="actions"><a class="btn" href="/?lang=${lang}#contact">${ar ? "تواصل معنا" : "Contact us"}</a>${wa ? `<a class="btn btn--wa" href="https://wa.me/${wa}" target="_blank" rel="noopener">${ar ? "واتساب" : "WhatsApp"}</a>` : ""}</div></main>
 <footer><span>© ${new Date().getFullYear()} ${esc(brand)}</span><span><a href="/privacy?lang=${lang}">${ar ? "سياسة الخصوصية" : "Privacy policy"}</a> · <a href="/?lang=${lang}">${origin.replace(/^https?:\/\//, "")}</a></span></footer>
@@ -947,11 +977,275 @@ async function runWeeklyReport(env, force = false) {
   return sendOwnerMail(env, `${force ? "[اختبار] " : ""}تقرير ويكسا الأسبوعي`, mailBox("تقرير ويكسا الأسبوعي", inner));
 }
 
+// ---------------------------------------------------------------- service pages
+// GET /services/<slug> — one page per service, with a few projects and a ready WhatsApp question
+async function handleServicePage(request, env, ctx, slug) {
+  const [raw, cfg] = await Promise.all([getSiteData(env, ctx), getConfig(env)]);
+  let d = {};
+  try { d = JSON.parse(raw); } catch {}
+  const st = d.settings || {};
+  if (cfg.maintenance.on && !hasBypass(request, cfg)) return maintenancePage(request, cfg, st);
+  const lang = pickLang(request, st.default_lang), ar = lang === "ar";
+  const sv = (d.services || []).find((x) => x.slug === slug || String(x.id) === slug);
+  if (!sv) return notFound(request, env);
+  const T = (o, f) => o[`${f}_${lang}`] || o[`${f}_ar`] || o[`${f}_en`] || "";
+  const wa = String(st.contact?.whatsapp || "").replace(/\D/g, "");
+  const ask = ar ? `مرحباً ويكسا، أريد الاستفسار عن: ${T(sv, "title")}` : `Hello WIXA, I'd like to ask about: ${T(sv, "title")}`;
+  const projects = (d.projects || []).slice(0, 3);
+  const others = (d.services || []).filter((x) => x !== sv);
+  const body = `<span class="cat">${ar ? "خدماتنا" : "Our services"}</span><h1>${esc(T(sv, "title"))}</h1>
+    ${T(sv, "summary") ? `<p class="lead">${esc(T(sv, "summary"))}</p>` : ""}
+    ${detailsHtml(T(sv, "details"))}
+    ${wa ? `<p><a class="btn btn--wa" href="https://wa.me/${wa}?text=${encodeURIComponent(ask)}" target="_blank" rel="noopener">${ar ? "اسأل عن هذه الخدمة عبر واتساب" : "Ask about this service on WhatsApp"}</a></p>` : ""}
+    ${projects.length ? `<section class="more"><h2>${ar ? "من أعمالنا" : "From our work"}</h2><div class="more__grid">${projects.map((o) => `<a href="/projects/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(T(o, "category") || T(o, "summary").slice(0, 70))}</span></a>`).join("")}</div></section>` : ""}
+    ${others.length ? `<section class="more"><h2>${ar ? "خدمات أخرى" : "Other services"}</h2><div class="more__grid">${others.map((o) => `<a href="/services/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(T(o, "summary").slice(0, 80))}</span></a>`).join("")}</div></section>` : ""}`;
+  const origin = new URL(request.url).origin;
+  return simplePage(request, st, {
+    lang, title: T(sv, "title"), description: (T(sv, "summary") || T(sv, "details")).slice(0, 160), path: `/services/${encodeURIComponent(sv.slug)}`, body,
+    jsonld: { "@context": "https://schema.org", "@type": "Service", name: T(sv, "title"), description: T(sv, "summary"), areaServed: "IQ", provider: { "@type": "Organization", name: "WIXA", url: origin } },
+  });
+}
+
+const notFound = (request, env) => env.ASSETS.fetch(new Request(new URL("/404.html", request.url), request)).then((r) => new Response(r.body, { status: 404, headers: r.headers }));
+
+// ---------------------------------------------------------------- articles (blog)
+// Published articles, read at most once a minute per location.
+async function getPosts(env) {
+  const cache = caches.default;
+  const key = new Request(`https://wixa-cache.internal/posts/${env.SITE_ENV || "production"}`);
+  const hit = await cache.match(key);
+  if (hit && Date.now() - (Number(hit.headers.get("x-saved-at")) || 0) < SITE_TTL * 1000) return hit.json();
+  try {
+    const r = await sb(env, "posts?select=*&published=eq.true&order=published_at.desc.nullslast,created_at.desc&limit=200");
+    if (!r.ok) throw new Error(`posts ${r.status}`);
+    const list = await r.json();
+    await cache.put(key, new Response(JSON.stringify(list), { headers: { "content-type": "application/json", "cache-control": "public, max-age=86400", "x-saved-at": String(Date.now()) } }));
+    return list;
+  } catch (e) {
+    console.error("posts", e);
+    return hit ? hit.json() : [];
+  }
+}
+
+// Article text: blank lines → paragraphs, "## " → heading, "- " / "• " → list, links become clickable, **bold**.
+function articleHtml(raw) {
+  const inline = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  return String(raw || "").split(/\n\s*\n/).map((block) => {
+    const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
+    if (!lines.length) return "";
+    if (lines.length === 1 && /^#{2,3}\s/.test(lines[0])) return `<h2>${inline(lines[0].replace(/^#+\s*/, ""))}</h2>`;
+    let html = "";
+    if (/^#{2,3}\s/.test(lines[0])) html += `<h2>${inline(lines.shift().replace(/^#+\s*/, ""))}</h2>`;
+    const items = lines.filter((l) => /^[-•]\s?/.test(l)), text = lines.filter((l) => !/^[-•]\s?/.test(l));
+    if (text.length) html += `<p>${text.map(inline).join("<br>")}</p>`;
+    if (items.length) html += `<ul>${items.map((l) => `<li>${inline(l.replace(/^[-•]\s*/, ""))}</li>`).join("")}</ul>`;
+    return html;
+  }).join("");
+}
+
+const fmtDate = (d, lang) => { try { return new Date(d).toLocaleDateString(lang === "ar" ? "ar-IQ" : "en-GB", { dateStyle: "long", timeZone: "Asia/Baghdad" }); } catch { return ""; } };
+
+// GET /blog and /blog/<slug>
+async function handleBlog(request, env, ctx, slug) {
+  const [raw, cfg, posts] = await Promise.all([getSiteData(env, ctx), getConfig(env), getPosts(env)]);
+  let st = {};
+  try { st = JSON.parse(raw).settings || {}; } catch {}
+  if (cfg.maintenance.on && !hasBypass(request, cfg)) return maintenancePage(request, cfg, st);
+  const lang = pickLang(request, st.default_lang), ar = lang === "ar";
+  const T = (o, f) => o[`${f}_${lang}`] || o[`${f}_ar`] || o[`${f}_en`] || "";
+  const origin = new URL(request.url).origin;
+  if (!slug) {
+    const body = `<h1>${ar ? "المقالات" : "Articles"}</h1><p class="lead">${ar ? "أفكار ونصائح عن المواقع والتطبيقات والأنظمة الرقمية." : "Ideas and advice on websites, apps and digital systems."}</p>
+      ${posts.length ? `<div class="posts">${posts.map((p) => `<a class="post" href="/blog/${encodeURIComponent(p.slug)}?lang=${lang}">${safeHref(p.cover_url) ? `<img src="${esc(safeHref(p.cover_url))}" alt="" loading="lazy">` : ""}<div><b>${esc(T(p, "title"))}</b><span>${esc(fmtDate(p.published_at || p.created_at, lang))}</span><p>${esc(T(p, "excerpt"))}</p></div></a>`).join("")}</div>` : `<p>${ar ? "ستُنشر المقالات هنا قريباً." : "Articles will appear here soon."}</p>`}`;
+    return simplePage(request, st, { lang, title: ar ? "المقالات" : "Articles", description: ar ? "مقالات ويكسا عن تطوير المواقع والتطبيقات والأنظمة." : "WIXA articles on building websites, apps and systems.", path: "/blog", body });
+  }
+  const p = posts.find((x) => x.slug === slug);
+  if (!p) return notFound(request, env);
+  const cover = safeHref(p.cover_url);
+  const others = posts.filter((x) => x !== p).slice(0, 3);
+  const body = `<span class="cat">${esc(fmtDate(p.published_at || p.created_at, lang))}</span><h1>${esc(T(p, "title"))}</h1>
+    ${T(p, "excerpt") ? `<p class="lead">${esc(T(p, "excerpt"))}</p>` : ""}
+    ${cover ? `<div class="gallery"><img src="${esc(cover)}" alt=""></div>` : ""}
+    <article>${articleHtml(T(p, "body"))}</article>
+    ${others.length ? `<section class="more"><h2>${ar ? "مقالات أخرى" : "More articles"}</h2><div class="more__grid">${others.map((o) => `<a href="/blog/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(T(o, "excerpt").slice(0, 80))}</span></a>`).join("")}</div></section>` : ""}`;
+  return simplePage(request, st, {
+    lang, title: T(p, "title"), description: (T(p, "excerpt") || T(p, "body")).slice(0, 160), path: `/blog/${encodeURIComponent(p.slug)}`, image: cover, body,
+    jsonld: { "@context": "https://schema.org", "@type": "Article", headline: T(p, "title"), description: T(p, "excerpt"), datePublished: p.published_at || p.created_at, dateModified: p.updated_at, ...(cover ? { image: cover } : {}), author: { "@type": "Organization", name: "WIXA" }, publisher: { "@type": "Organization", name: "WIXA", url: origin }, mainEntityOfPage: `${origin}/blog/${encodeURIComponent(p.slug)}` },
+  });
+}
+
+// ---------------------------------------------------------------- appointments
+// Opening hours come from the dashboard (settings.booking); booked times are kept in the private store.
+const BAGHDAD_OFFSET = 3 * 3600e3; // Iraq: UTC+3, no daylight saving
+const baghdadNow = () => new Date(Date.now() + BAGHDAD_OFFSET); // read with getUTC* = Baghdad wall clock
+const toMin = (hm) => { const [h, m] = String(hm || "").split(":").map(Number); return (h || 0) * 60 + (m || 0); };
+const toHM = (n) => `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`;
+function bookingRules(st) {
+  const b = st.booking || {};
+  return { on: b.on === true, days: Array.isArray(b.days) ? b.days.map(Number) : [0, 1, 2, 3, 4], from: b.from || "10:00", to: b.to || "16:00", slot: Math.min(240, Math.max(15, Number(b.slot) || 30)), ahead: Math.min(60, Math.max(1, Number(b.days_ahead) || 14)) };
+}
+function slotsFor(rules, date) {
+  const now = baghdadNow(), today = now.toISOString().slice(0, 10);
+  const d = new Date(`${date}T00:00:00Z`);
+  if (Number.isNaN(d.getTime()) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return [];
+  const diff = Math.round((d - new Date(`${today}T00:00:00Z`)) / 864e5);
+  if (diff < 0 || diff > rules.ahead || !rules.days.includes(d.getUTCDay())) return [];
+  const out = [], nowMin = now.getUTCHours() * 60 + now.getUTCMinutes();
+  for (let m = toMin(rules.from); m + rules.slot <= toMin(rules.to); m += rules.slot) if (diff > 0 || m > nowMin + 60) out.push(toHM(m));
+  return out;
+}
+// GET /api/slots?date=YYYY-MM-DD → free times that day
+async function handleSlots(request, env, ctx, url) {
+  let st = {};
+  try { st = JSON.parse(await getSiteData(env, ctx)).settings || {}; } catch {}
+  const rules = bookingRules(st);
+  if (!rules.on) return json({ slots: [] });
+  const date = url.searchParams.get("date") || "";
+  const all = slotsFor(rules, date);
+  const taken = env.PRIVATE ? ((await env.PRIVATE.get(`book:${date}`, { type: "json" }).catch(() => null)) || []) : [];
+  return json({ slots: all.filter((t) => !taken.includes(t)) }, 200, { "cache-control": "no-store" });
+}
+async function reserveSlot(env, ctx, date, time) {
+  let st = {};
+  try { st = JSON.parse(await getSiteData(env, ctx)).settings || {}; } catch {}
+  const rules = bookingRules(st);
+  if (!rules.on || !slotsFor(rules, date).includes(time) || !env.PRIVATE) return false;
+  const key = `book:${date}`;
+  const taken = (await env.PRIVATE.get(key, { type: "json" }).catch(() => null)) || [];
+  if (taken.includes(time)) return false;
+  taken.push(time);
+  await env.PRIVATE.put(key, JSON.stringify(taken), { expirationTtl: 90 * 864e2 });
+  return true;
+}
+
+// ---------------------------------------------------------------- client review links
+// The owner creates a one-time link in the dashboard; the client's review arrives hidden until published.
+async function handleAdminReviewLink(request, env) {
+  const { error } = await adminSession(request, env);
+  if (error) return error;
+  if (!env.PRIVATE) return json({ error: "storage_not_configured" }, 503);
+  let b = {};
+  try { b = await request.json(); } catch {}
+  const code = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+  await env.PRIVATE.put(`review:${code}`, JSON.stringify({ name: String(b.name || "").slice(0, 120), at: new Date().toISOString() }), { expirationTtl: 60 * 864e2 });
+  const origin = new URL(request.url).origin;
+  return json({ url: `${origin}/review?c=${code}${b.lang === "en" ? "&lang=en" : ""}`, days: 60 });
+}
+
+async function handleReview(request, env, ctx, url) {
+  let st = {};
+  try { st = JSON.parse(await getSiteData(env, ctx)).settings || {}; } catch {}
+  const lang = pickLang(request, st.default_lang), ar = lang === "ar";
+  const page = (body, status = 200) => simplePage(request, st, { lang, title: ar ? "رأيك يهمنا" : "Your feedback", description: "", path: "/review", body, status });
+  const done = (msg) => page(`<h1>${ar ? "شكراً لك" : "Thank you"}</h1><p class="lead">${msg}</p>`);
+  if (request.method === "POST") {
+    if (!(await allowed(env.CONTACT_LIMITER, clientIp(request)))) return page(`<h1>${ar ? "حاول بعد قليل" : "Please try again shortly"}</h1>`, 429);
+    const f = await request.formData().catch(() => null);
+    if (!f || f.get("website")) return done(ar ? "وصل رأيك." : "We received your review.");
+    const code = String(f.get("c") || "").slice(0, 32);
+    const link = code && env.PRIVATE ? await env.PRIVATE.get(`review:${code}`) : null;
+    if (!link) return page(`<h1>${ar ? "الرابط غير صالح" : "This link is not valid"}</h1><p class="lead">${ar ? "ربما استُخدم من قبل أو انتهت صلاحيته." : "It may have been used already or expired."}</p>`, 410);
+    const name = String(f.get("name") || "").trim().slice(0, 120), quote = String(f.get("quote") || "").trim().slice(0, 1500);
+    if (!name || !quote) return page(`<h1>${ar ? "يرجى كتابة اسمك ورأيك" : "Please enter your name and review"}</h1><p><a href="/review?c=${esc(code)}&lang=${lang}">${ar ? "رجوع" : "Back"}</a></p>`, 422);
+    const p = { name, role: String(f.get("role") || "").trim().slice(0, 120), quote, rating: Math.min(5, Math.max(1, Number(f.get("rating")) || 5)), lang };
+    const r = await sb(env, "rpc/submit_testimonial", { method: "POST", body: JSON.stringify({ token: env.WRITE_TOKEN || "", p }) });
+    if (!r.ok) { console.error("review", r.status, await r.text()); return page(`<h1>${ar ? "تعذّر الإرسال" : "Couldn't send"}</h1><p class="lead">${ar ? "حاول مرة أخرى لاحقاً." : "Please try again later."}</p>`, 502); }
+    await env.PRIVATE.delete(`review:${code}`);
+    ctx.waitUntil(sendOwnerMail(env, `رأي جديد من ${name}`, mailBox("رأي عميل جديد بانتظار موافقتك", `<p><b>${esc(name)}</b>${p.role ? ` — ${esc(p.role)}` : ""}</p><p style="color:#D9A441;font-size:20px">${"★".repeat(p.rating)}</p><div style="padding:14px;background:#F8EEF1;border-radius:12px;white-space:pre-wrap">${esc(quote)}</div><p>الرأي مخفي حتى تنشره من لوحة التحكم ← آراء العملاء.</p>`)).catch(() => {}));
+    return done(ar ? "وصل رأيك، ونقدّر وقتك وثقتك بنا." : "We've received your review. We appreciate your time and trust.");
+  }
+  const code = (url.searchParams.get("c") || "").slice(0, 32);
+  const link = code && env.PRIVATE ? await env.PRIVATE.get(`review:${code}`, { type: "json" }) : null;
+  if (!link) return page(`<h1>${ar ? "الرابط غير صالح" : "This link is not valid"}</h1><p class="lead">${ar ? "ربما استُخدم من قبل أو انتهت صلاحيته. تواصل معنا لنرسل لك رابطاً جديداً." : "It may have been used already or expired. Contact us for a new one."}</p>`, 410);
+  const stars = [5, 4, 3, 2, 1].map((n) => `<label class="star"><input type="radio" name="rating" value="${n}" ${n === 5 ? "checked" : ""}><span>${"★".repeat(n)}</span></label>`).join("");
+  return page(`<h1>${ar ? "رأيك يهمنا" : "We'd love your feedback"}</h1><p class="lead">${ar ? "شكراً لثقتك بويكسا. اكتب رأيك في تجربتك معنا، وقد نعرضه في موقعنا بعد موافقتك." : "Thank you for trusting WIXA. Tell us about your experience; we may show it on our site."}</p>
+    <form class="rv" method="post" action="/review?lang=${lang}">
+      <input type="hidden" name="c" value="${esc(code)}"><input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label>${ar ? "اسمك" : "Your name"} *<input name="name" required maxlength="120" value="${esc(link.name || "")}"></label>
+      <label>${ar ? "منصبك أو اسم شركتك" : "Your role or company"}<input name="role" maxlength="120"></label>
+      <fieldset><legend>${ar ? "تقييمك" : "Your rating"}</legend><div class="stars">${stars}</div></fieldset>
+      <label>${ar ? "رأيك" : "Your review"} *<textarea name="quote" required maxlength="1500" rows="5"></textarea></label>
+      <button class="btn" type="submit">${ar ? "إرسال" : "Send"}</button>
+    </form>`);
+}
+
+// ---------------------------------------------------------------- visitor actions (calculator, WhatsApp, forms…)
+// Counted per day in the private store. Each visit sends one small batch; counts are merged in memory and saved
+// at most every 30 s per instance, so busy days stay far below the store's write limits.
+const EVENTS = ["calc_used", "calc_quote", "calc_wa", "calc_pdf", "wa_click", "form_open", "form_sent", "booking_open", "booking_sent", "job_open", "faq_open"];
+let evBuf = { day: "", counts: {}, at: 0 };
+async function flushEvents(env) {
+  if (!env.PRIVATE || !Object.keys(evBuf.counts).length) return;
+  const { day, counts } = evBuf;
+  evBuf = { day: dayKey(), counts: {}, at: Date.now() };
+  const key = `ev:${day}`;
+  const cur = (await env.PRIVATE.get(key, { type: "json" }).catch(() => null)) || {};
+  for (const [k, v] of Object.entries(counts)) cur[k] = (cur[k] || 0) + v;
+  await env.PRIVATE.put(key, JSON.stringify(cur), { expirationTtl: 120 * 864e2 });
+}
+async function handleEvent(request, env, ctx) {
+  if (!(await allowed(env.TRACK_LIMITER, clientIp(request)))) return new Response(null, { status: 204 });
+  let b = {};
+  try { b = JSON.parse(await request.text()); } catch {}
+  const list = Array.isArray(b.e) ? b.e.slice(0, 30) : [];
+  const day = dayKey();
+  if (evBuf.day && evBuf.day !== day) ctx.waitUntil(flushEvents(env));
+  if (!evBuf.day) evBuf.day = day;
+  for (const e of new Set(list)) if (EVENTS.includes(e)) evBuf.counts[e] = (evBuf.counts[e] || 0) + 1;
+  if (Date.now() - evBuf.at > 30_000) { evBuf.at = Date.now(); ctx.waitUntil(flushEvents(env).catch((e) => console.error("events", e))); }
+  return new Response(null, { status: 204 });
+}
+// GET /api/admin/funnel?days=30 — totals for the dashboard
+async function handleAdminFunnel(request, env, url) {
+  const { error } = await adminSession(request, env);
+  if (error) return error;
+  const days = Math.min(90, Math.max(1, parseInt(url.searchParams.get("days") || "30", 10) || 30));
+  const keys = [...Array(days)].map((_, i) => dayKey(new Date(Date.now() - i * 864e5)));
+  const rows = await Promise.all(keys.map((d) => (env.PRIVATE ? env.PRIVATE.get(`ev:${d}`, { type: "json" }).catch(() => null) : null)));
+  const total = {};
+  for (const r of rows) if (r) for (const [k, v] of Object.entries(r)) total[k] = (total[k] || 0) + v;
+  for (const [k, v] of Object.entries(evBuf.counts)) total[k] = (total[k] || 0) + v; // not saved yet
+  return json({ days, total }, 200, { "cache-control": "no-store" });
+}
+
+// ---------------------------------------------------------------- scheduled backup (daily / weekly / monthly / off)
+async function runBackup(env, force = false) {
+  const cfg = await getConfig(env);
+  const freq = cfg.backup.freq;
+  const now = baghdadNow();
+  const due = force || freq === "daily" || (freq === "weekly" && now.getUTCDay() === 0) || (freq === "monthly" && now.getUTCDate() === 1);
+  if (!due || freq === "off" && !force) return false;
+  const r = await sb(env, "rpc/export_backup", { method: "POST", body: JSON.stringify({ token: env.WRITE_TOKEN || "" }) });
+  if (!r.ok) { console.error("backup export", r.status, await r.text()); return false; }
+  const text = await r.text();
+  const bytes = new TextEncoder().encode(text);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  const to = await notifyAddress(env);
+  if (!env.RESEND_API_KEY || !to) return false;
+  const site = env.SITE_ENV === "staging" ? "staging.wixa.dev" : "wixa.dev";
+  const date = now.toISOString().slice(0, 10);
+  const label = { daily: "يومية", weekly: "أسبوعية", monthly: "شهرية", off: "يدوية" }[freq] || "";
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST", headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
+    body: JSON.stringify({
+      from: `${cfg.alerts.from_name} <notify@wixa.dev>`, to: [to],
+      subject: `${force ? "[يدوي] " : ""}نسخة احتياطية ${label} — ${site} — ${date}`,
+      html: mailBox("نسخة احتياطية من موقع ويكسا", `<p>مرفق ملف فيه كل محتوى الموقع (${(bytes.length / 1024).toFixed(0)} KB): الإعدادات والنصوص والمشاريع والخدمات والشركاء والآراء والمقالات والرسائل.</p><p>احتفظ به في مكان آمن؛ يمكن استرجاع الموقع منه عند الحاجة.</p>`),
+      attachments: [{ filename: `wixa-backup-${site}-${date}.json`, content: btoa(bin) }],
+    }),
+  });
+  if (!res.ok) { console.error("backup mail", res.status, await res.text()); return false; }
+  if (env.PRIVATE) await env.PRIVATE.put("backup:last", JSON.stringify({ at: new Date().toISOString(), size: bytes.length, manual: force }));
+  return true;
+}
+
 // ---------------------------------------------------------------- router
 export default {
   // "*/15 * * * *" → health check; "17 6 * * SUN" → weekly report (Sunday 09:17 Baghdad)
   async scheduled(event, env, ctx) {
     if (event.cron === "17 6 * * SUN") ctx.waitUntil(runWeeklyReport(env).catch((e) => console.error("weekly", e)));
+    else if (event.cron === "23 3 * * *") ctx.waitUntil(runBackup(env).catch((e) => console.error("backup", e)));
     else ctx.waitUntil(runMonitor(env).catch((e) => console.error("monitor", e)));
   },
   async fetch(request, env, ctx) {
@@ -984,6 +1278,16 @@ export default {
         case "GET /api/admin/notify":
         case "PUT /api/admin/notify":
           return await handleAdminNotify(request, env);
+        case "GET /blog":
+        case "HEAD /blog":
+          return await handleBlog(request, env, ctx, "");
+        case "GET /review":
+        case "POST /review":
+          return await handleReview(request, env, ctx, url);
+        case "GET /api/slots": return await handleSlots(request, env, ctx, url);
+        case "POST /api/event": return await handleEvent(request, env, ctx);
+        case "GET /api/admin/funnel": return await handleAdminFunnel(request, env, url);
+        case "POST /api/admin/review-link": return await handleAdminReviewLink(request, env);
         case "GET /privacy":
         case "HEAD /privacy":
           return await handlePrivacy(request, env, ctx);
@@ -1002,9 +1306,10 @@ export default {
           return json({ env: env.SITE_ENV || "production", supabaseUrl: env.SUPABASE_URL, supabaseKey: env.SUPABASE_PUBLISHABLE_KEY });
         case "GET /sitemap.xml": {
           const today = new Date().toISOString().slice(0, 10);
-          let projects = [];
-          try { projects = JSON.parse(await getSiteData(env, ctx)).projects || []; } catch {}
-          const urls = ["/", "/privacy", ...projects.map((x) => `/projects/${encodeURIComponent(x.slug)}`)].map((p) => `<url><loc>https://wixa.dev${p}</loc><lastmod>${today}</lastmod></url>`).join("");
+          let projects = [], services = [];
+          try { const d = JSON.parse(await getSiteData(env, ctx)); projects = d.projects || []; services = d.services || []; } catch {}
+          const posts = await getPosts(env);
+          const urls = ["/", "/privacy", "/blog", ...services.map((x) => `/services/${encodeURIComponent(x.slug)}`), ...projects.map((x) => `/projects/${encodeURIComponent(x.slug)}`), ...posts.map((x) => `/blog/${encodeURIComponent(x.slug)}`)].map((p) => `<url><loc>https://wixa.dev${p}</loc><lastmod>${today}</lastmod></url>`).join("");
           return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>\n`, {
             headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" },
           });
@@ -1030,6 +1335,10 @@ export default {
           return json({ worker: "ok", env: env.SITE_ENV || "production", supabase: health.supabase }, 200, { "cache-control": "no-store" });
         }
       }
+      const svc = url.pathname.match(/^\/services\/([^/]+)\/?$/);
+      if (svc && (request.method === "GET" || request.method === "HEAD")) return await handleServicePage(request, env, ctx, decodeURIComponent(svc[1]));
+      const post = url.pathname.match(/^\/blog\/([^/]+)\/?$/);
+      if (post && (request.method === "GET" || request.method === "HEAD")) return await handleBlog(request, env, ctx, decodeURIComponent(post[1]));
       const proj = url.pathname.match(/^\/projects\/([^/]+)\/?$/);
       if (proj && (request.method === "GET" || request.method === "HEAD")) return await handleProjectPage(request, env, ctx, decodeURIComponent(proj[1]));
       if (url.pathname.startsWith("/api/")) return json({ error: "not_found" }, 404);
