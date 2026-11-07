@@ -11,7 +11,7 @@ const T = {
     open: "فتح الدردشة", close: "إغلاق", you: "أنت", team: "فريق ويكسا", busy: "رسائل كثيرة، انتظر قليلاً",
     pick: "بماذا نساعدك؟", svc: "أي خدمة تهمك؟", change: "تغيير", typing: "يكتب…", joined: "انضم إلى المحادثة", closed: "انتهت هذه المحادثة. شكراً لتواصلك معنا.", again: "بدء محادثة جديدة", consent: "أرغب باستلام العروض والأخبار",
     hoursOut: "نحن خارج أوقات الدوام — نعود", today: "اليوم", tomorrow: "غداً", at: "الساعة",
-    rateQ: "كيف كانت خدمتنا؟", rateNote: "ملاحظة (اختياري)", rateSend: "إرسال التقييم", rateThanks: "شكراً لتقييمك! 💜",
+    rateQ: "كيف كانت خدمتنا؟", ratePub: "انشر رأيي في موقع ويكسا (بعد المراجعة)", rateHint: "احكِ للآخرين عن تجربتك معنا…", rateNote: "ملاحظة (اختياري)", rateSend: "إرسال التقييم", rateThanks: "شكراً لتقييمك! 💜",
     nudge: { calculator: "حسبت التكلفة؟ اسألنا عن التفاصيل 👋", services: "تبحث عن خدمة معينة؟ اسألنا هنا 👋", projects: "أعجبك مشروع؟ نصنع لك مثله 👋" },
     topics: [["svc", "استفسار عن خدمة"], ["quote", "طلب عرض سعر"], ["project", "متابعة مشروع قائم"], ["meet", "حجز موعد أو اجتماع"], ["other", "سؤال آخر"]],
     hints: { svc: "اكتب سؤالك عن الخدمة…", quote: "صف مشروعك باختصار: ماذا تريد أن تبني؟", project: "اذكر اسم المشروع وما تريد متابعته…", meet: "متى يناسبك الاجتماع؟", other: "اكتب سؤالك…" } },
@@ -20,7 +20,7 @@ const T = {
     open: "Open chat", close: "Close", you: "You", team: "WIXA team", busy: "Too many messages, please wait",
     pick: "How can we help?", svc: "Which service?", change: "Change", typing: "is typing…", joined: "joined the chat", closed: "This chat has ended. Thanks for reaching out.", again: "Start a new chat", consent: "Send me offers and news",
     hoursOut: "We're outside working hours — back", today: "today", tomorrow: "tomorrow", at: "at",
-    rateQ: "How was our service?", rateNote: "A note (optional)", rateSend: "Send rating", rateThanks: "Thanks for your rating! 💜",
+    rateQ: "How was our service?", rateNote: "A note (optional)", ratePub: "Share my review on the WIXA site (after review)", rateHint: "Tell others about your experience…", rateSend: "Send rating", rateThanks: "Thanks for your rating! 💜",
     nudge: { calculator: "Worked out a cost? Ask us about the details 👋", services: "Looking for a specific service? Ask us here 👋", projects: "Like a project? We can build yours 👋" },
     topics: [["svc", "Ask about a service"], ["quote", "Request a quote"], ["project", "Follow up on a project"], ["meet", "Book a meeting"], ["other", "Something else"]],
     hints: { svc: "Type your question about the service…", quote: "Briefly describe your project…", project: "Which project, and what would you like to follow up?", meet: "When suits you?", other: "Type your question…" } },
@@ -151,17 +151,22 @@ export function setupChat() {
       foot.hidden = false;
       if (!conv.rated) {
         foot.innerHTML = `<div class="chatw__rate"><p>${t("rateQ")}</p><div class="chatw__stars">${[1, 2, 3, 4, 5].map((n) => `<button type="button" data-r="${n}" aria-label="${n}">★</button>`).join("")}</div>
-          <textarea name="note" rows="2" maxlength="500" placeholder="${t("rateNote")}" hidden></textarea><button class="chatw__go" type="button" data-send hidden>${t("rateSend")}</button></div>
+          <textarea name="note" rows="2" maxlength="500" placeholder="${t("rateNote")}" hidden></textarea>
+          <label class="chatw__consent chatw__pub" hidden><input type="checkbox" name="publish"><span>${t("ratePub")}</span></label><button class="chatw__go" type="button" data-send hidden>${t("rateSend")}</button></div>
           <button class="chatw__link" type="button" data-new>${t("again")}</button>`;
         let r = 0;
         $$("[data-r]", foot).forEach((b) => (b.onclick = () => {
           r = +b.dataset.r;
           $$("[data-r]", foot).forEach((x) => x.classList.toggle("on", +x.dataset.r <= r));
           $("textarea", foot).hidden = $("[data-send]", foot).hidden = false;
+          $(".chatw__pub", foot).hidden = r < 4; // only a happy customer is asked to share their words
+          $("textarea", foot).placeholder = r >= 4 ? t("rateHint") : t("rateNote");
         }));
         $("[data-send]", foot).onclick = async (e) => {
           e.target.disabled = true;
-          try { await api("rate", { ...conv, rating: r, note: $("textarea", foot).value }); conv.rated = r; save(); footer(); }
+          let me = {}; try { me = JSON.parse(localStorage.getItem("wixa-chat-me") || "{}"); } catch {}
+          const publish = r >= 4 && $("[name=publish]", foot).checked;
+          try { await api("rate", { ...conv, rating: r, note: $("textarea", foot).value, publish, name: me.name || "", lang }); conv.rated = r; save(); footer(); }
           catch { e.target.disabled = false; }
         };
       } else foot.innerHTML = `<p class="chatw__thanks">${t("rateThanks")}</p><button class="chatw__go" type="button" data-new>${t("again")}</button>`;

@@ -48,9 +48,10 @@ h1, h2, h3 { font-weight: var(--hw); line-height: 1.2; margin: 0; letter-spacing
 html[dir="rtl"] h1, html[dir="rtl"] h2, html[dir="rtl"] h3 { letter-spacing: 0; line-height: 1.38; }
 
 /* loader */
-.loader { position: fixed; inset: 0; z-index: 200; background: var(--bg); display: grid; place-items: center; transition: opacity .6s var(--ease), visibility .6s; }
+.loader { position: fixed; inset: 0; z-index: 200; background: var(--bg); display: grid; place-items: center; transition: opacity .3s var(--ease), visibility .3s; }
 .loader.done { opacity: 0; visibility: hidden; }
-.loader__mark { width: 150px; color: var(--fg); animation: lreveal 1.4s var(--ease) infinite; }
+/* the mark only shows if opening takes longer than a moment, so a fast open never looks like a loading screen */
+.loader__mark { width: 150px; color: var(--fg); opacity: 0; animation: lreveal 1.4s var(--ease) .35s infinite; }
 .loader__mark svg { width: 100%; height: auto; }
 @keyframes lreveal { 0% { clip-path: inset(0 100% 0 0); opacity: 1; } 55% { clip-path: inset(0 0 0 0); opacity: 1; } 85%, 100% { clip-path: inset(0 0 0 0); opacity: 0; } }
 
@@ -1335,3 +1336,32 @@ html[data-page="contact"] .cta .form { margin-top: 0; }
 /* "send" on top, WhatsApp under it, on every screen */
 .form__btns { flex-direction: column; align-items: stretch; width: 100%; max-width: 420px; margin-inline: auto; }
 .form__btns .btn { width: 100%; }
+
+/* ===== UX audit (Nov 2026): tap targets, WhatsApp contrast, service actions, floating buttons ===== */
+:root { --wa: #25D366; --wa-ink: #0E7C47; } /* --wa for the round icon button; --wa-ink behind white text (5.3:1) */
+.btn--wa, .calc__result .btn--wa, .mbar__btn--wa { background: var(--wa-ink); }
+.btn--wa:hover, .calc__result .btn--wa:hover { filter: brightness(1.12); }
+/* every tap target at least 44px (WCAG 2.5.5 / Apple HIG) */
+.footer__social a { width: 44px; height: 44px; }
+.header .brand { min-height: 44px; }
+.hero__scroll { width: 28px; height: 44px; }
+.hero__scroll::before { content: ""; position: absolute; inset: -8px; }
+/* service cards: "learn more" and "ask us" always on one line */
+.svc__links { flex-wrap: nowrap; justify-content: space-between; gap: 8px; }
+.svc .svc__chat { color: var(--muted); font-weight: 600; }
+.svc .svc__chat:hover { color: var(--fg); }
+.svc .svc__chat svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; margin-inline-end: 6px; }
+@media (max-width: 600px) {
+  .svc .svc__chat { width: 40px; height: 40px; min-height: 40px; justify-content: center; border-radius: 50%; background: color-mix(in srgb, var(--primary) 10%, transparent); color: var(--fg); font-size: 0; flex-shrink: 0; }
+  .svc .svc__chat svg { margin: 0; width: 19px; height: 19px; }
+}
+/* phones: the round buttons step aside while the hero's buttons are at the bottom of the screen */
+html.fab-clear .wa, html.fab-clear .chatw__btn { transform: translateY(140%); opacity: 0; pointer-events: none; }
+.chatw__btn { transition: transform .4s var(--ease-out), opacity .3s; }
+/* project figures: one line each so the highlight never breaks across lines */
+.project__stats b, .project__stat b { white-space: nowrap; }
+
+@media (max-width: 600px) { .svc h3 { font-size: 1rem; line-height: 1.45; } }
+/* partner logos: shown crisp and in their own colours (the grey, half-transparent look made them read as blurry) */
+.partner img, html[data-theme="dark"] .partner img { filter: none; opacity: 1; image-rendering: auto; }
+.partner:hover img { transform: scale(1.04); }

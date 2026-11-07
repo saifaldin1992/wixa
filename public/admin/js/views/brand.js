@@ -69,6 +69,8 @@ export async function viewBrand(view) {
     ["النص الثانوي", "Muted", t.muted, "الوصف والملاحظات"],
     ["الخلفية", "Background", t.bg, "خلفية الصفحة"],
     ["السطح", "Surface", t.surface, "البطاقات والنماذج"],
+    ["واتساب (أيقونة)", "WhatsApp", "#25D366", "للزر الدائري بالأيقونة فقط — لا يوضع عليه نص أبيض (تباين ضعيف)"],
+    ["واتساب (نص)", "WhatsApp ink", "#0E7C47", "خلفية أزرار واتساب التي فيها كتابة بيضاء (5.3:1)"],
   ];
   const sw = ([ar, en, hex, use]) => {
     const onW = ratio(hex, "#FFFFFF"), onD = ratio(hex, t.text);
@@ -127,9 +129,13 @@ export async function viewBrand(view) {
       <ul class="bg-list"><li>خط واحد بسمك <b>2px</b> وتدرج من اللون الأساسي إلى المساعد ثم الأساسي.</li><li>يُستخدم فاصلاً أعلى العناوين أو بين الأقسام، وفي المطبوعات أسفل الترويسة.</li><li>لا يُملأ ولا يُكرر كخلفية ولا يُوضع خلف النص.</li></ul></div>
 
     <div class="card"><div class="card__head"><div><h3>6. العناصر والمسافات</h3><p>المقاسات المعتمدة في الموقع، مبنية على إرشادات Apple وGoogle.</p></div></div>
-      <div class="bg-btns"><span class="bg-btn" style="background:${t.primary}">زر رئيسي</span><span class="bg-btn bg-btn--ghost" style="color:${t.text};border-color:${t.muted}55">زر ثانوي</span><span class="bg-btn" style="background:#25D366">واتساب</span></div>
-      <ul class="bg-list"><li>الأزرار: ارتفاع <b>48px</b> (جوال وتابلت) و<b>50px</b> (كمبيوتر)، حواف دائرية كاملة.</li><li>أي عنصر يُلمس لا يقل عن <b>44×44px</b>.</li><li>زوايا البطاقات: <b>${Number(t.radius) || 22}px</b>.</li><li>المسافة بين الأقسام: 56 / 80 / 104px (جوال / تابلت / كمبيوتر).</li></ul>
+      <div class="bg-btns"><span class="bg-btn" style="background:${t.primary}">زر رئيسي</span><span class="bg-btn bg-btn--ghost" style="color:${t.text};border-color:${t.muted}55">زر ثانوي</span><span class="bg-btn" style="background:#0E7C47">راسلنا على واتساب</span></div>
+      <ul class="bg-list"><li>الأزرار: ارتفاع <b>48px</b> (جوال وتابلت) و<b>50px</b> (كمبيوتر)، حواف دائرية كاملة.</li><li>أي عنصر يُلمس لا يقل عن <b>44×44px</b>، والمسافة بين عنصرين متجاورين لا تقل عن <b>8px</b>.</li><li>الأزرار العائمة (المحادثة وواتساب) تختفي تلقائياً عندما تكون فوق أزرار الواجهة على الجوال.</li><li>شعارات الشركاء تُعرض بألوانها الأصلية وبدقة لا تقل عن <b>ضعف</b> حجم ظهورها (مثلاً 400px عرضاً لشعار يظهر بعرض 200px).</li><li>زوايا البطاقات: <b>${Number(t.radius) || 22}px</b>.</li><li>المسافة بين الأقسام: 56 / 80 / 104px (جوال / تابلت / كمبيوتر).</li></ul>
       <div class="bg-space">${space.map((s) => `<span><i style="width:${s}px;height:${s}px;background:${t.primary}"></i>${s}</span>`).join("")}</div></div>
+
+    <div class="card"><div class="card__head"><div><h3>الظلال والطبقات</h3><p>ظلال ناعمة بلون النص نفسه وليست سوداء، حتى تبقى الواجهة صافية.</p></div></div>
+      <div class="bg-shadows">${[["البطاقة", `0 1px 2px ${t.text}0A, 0 12px 40px -12px ${t.text}1F`], ["الزر الرئيسي", `0 12px 30px -8px ${t.primary}99`], ["النوافذ والقوائم", `0 24px 60px -20px ${t.text}40`]].map(([n, sh]) => `<span style="box-shadow:${sh}">${n}</span>`).join("")}</div>
+      <ul class="bg-list"><li>ثلاثة مستويات فقط: البطاقة، الزر الرئيسي (بلون الهوية)، النوافذ المنبثقة.</li><li>في الوضع الليلي تقل الظلال وتُستبدل بحدود رفيعة.</li><li>لا ظلال على النصوص أو الشعار.</li></ul></div>
 
     <div class="card"><div class="card__head"><div><h3>7. الأيقونات</h3><p>خطية بسيطة بسمك 1.8، بزوايا دائرية، داخل مربع بخلفية فاتحة من لون الهوية.</p></div></div>
       <div class="bg-icons">${Object.entries(ICONS).map(([k, svg]) => `<span title="${k}" style="color:${t.primary};background:${t.primary}14">${svg}</span>`).join("")}</div></div>

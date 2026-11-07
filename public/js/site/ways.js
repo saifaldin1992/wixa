@@ -28,7 +28,7 @@ export function renderWays() {
     <span class="way__ico" aria-hidden="true">${I[k]}</span><div><b>${t[k][0]}</b>${value ? `<span dir="ltr">${esc(value)}</span>` : ""}${t[k][1] ? `<small>${t[k][1]}</small>` : ""}</div></${attrs.startsWith("href") ? "a" : "button"}>`;
   grid.innerHTML = [
     s.chat?.on && card("chat", 'data-way="chat"', ""),
-    wa && card("wa", `href="https://wa.me/${wa}" target="_blank" rel="noopener"`, ct.whatsapp, "way--wa"),
+    wa && card("wa", `href="https://wa.me/${wa}" target="_blank" rel="noopener"`, /^964\d{10}$/.test(wa) ? `+964 ${wa.slice(3, 6)} ${wa.slice(6, 9)} ${wa.slice(9)}` : `+${wa}`, "way--wa"),
     phone && card("phone", `href="tel:${phone}"`, ct.phone),
     ct.email && card("mail", `href="mailto:${esc(ct.email)}"`, ct.email),
     card("form", 'data-way="form"', ""),

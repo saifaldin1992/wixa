@@ -639,3 +639,4 @@ html[dir="rtl"] .chat__back svg { transform: none; }
 /* account page: cards fill the width (two columns on tablets and computers) */
 .acct { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 16px; align-items: start; max-width: 1200px; }
 .acct .card { margin: 0; }
+.bg-shadows { display: flex; flex-wrap: wrap; gap: 18px; padding: 18px 4px 22px; } .bg-shadows span { display: grid; place-items: center; min-width: 150px; height: 84px; padding: 0 18px; border-radius: 18px; background: #fff; color: #140F1F; font-weight: 600; font-size: 14px; }

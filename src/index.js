@@ -65,6 +65,7 @@ async function getSiteData(env, ctx) {
   const refresh = () => (refreshing ??= loadFromSupabase(env)
     .then((text) => {
       memo = { at: Date.now(), checked: Date.now(), text };
+      ctx.waitUntil(saveGlobalCopy(env, text));
       return cache.put(key, new Response(text, { headers: { "content-type": "application/json", "cache-control": "public, max-age=86400", "x-saved-at": String(Date.now()) } })).then(() => text);
     })
     .finally(() => { refreshing = null; }));
@@ -75,6 +76,11 @@ async function getSiteData(env, ctx) {
     if (!memo.text || at > memo.at) memo = { at, checked: now, text: await hit.text() };
   }
   memo.checked = now;
+  if (!memo.text && env.PRIVATE) {
+    // a quiet edge location with nothing cached: serve the global copy (KV, a few ms) instead of waiting on the database
+    const kv = await env.PRIVATE.get("site-data").catch(() => null);
+    if (kv) memo = { at: 0, checked: now, text: kv };
+  }
   if (memo.text) {
     if (now - memo.at >= SITE_TTL * 1000) ctx.waitUntil(refresh().catch((err) => console.error("site data refresh", err)));
     return memo.text;
@@ -87,11 +93,18 @@ async function getSiteData(env, ctx) {
   }
 }
 
+// The last good content, kept in KV so any edge location can open the site at once; written only when it changed.
+async function saveGlobalCopy(env, text) {
+  if (!env.PRIVATE) return;
+  try { if ((await env.PRIVATE.get("site-data")) !== text) await env.PRIVATE.put("site-data", text); } catch (err) { console.error("site data copy", err); }
+}
+
 // Reload the content from the database now and replace the shared copy at this location (dashboard "publish now").
 async function publishNow(env) {
   await caches.default.delete(new Request(`https://wixa-cache.internal/posts/${env.SITE_ENV || "production"}`)).catch(() => {});
   const text = await loadFromSupabase(env);
   memo = { at: Date.now(), checked: Date.now(), text };
+  await saveGlobalCopy(env, text);
   await caches.default.put(new Request(`https://wixa-cache.internal/site-data/${env.SITE_ENV || "production"}`),
     new Response(text, { headers: { "content-type": "application/json", "cache-control": "public, max-age=86400", "x-saved-at": String(Date.now()) } }));
 }
@@ -1728,8 +1741,15 @@ async function handleChatRate(request, env) {
   try { b = await request.json(); } catch {}
   const id = cleanText(b.id, 40), key = cleanText(b.key, 64), rating = parseInt(b.rating, 10);
   if (!/^[0-9a-f-]{36}$/.test(id) || !/^[0-9a-f]{64}$/.test(key) || !(rating >= 1 && rating <= 5)) return json({ error: "invalid" }, 422);
-  const r = await rpcToken(env, "chat_rate", { p: { id, secret: await sha256hex(key), rating, note: cleanText(b.note, 500) } });
-  return r.ok ? json({ ok: true }) : chatError(r);
+  const note = cleanText(b.note, 500);
+  const r = await rpcToken(env, "chat_rate", { p: { id, secret: await sha256hex(key), rating, note } });
+  if (!r.ok) return chatError(r);
+  // a happy customer who agreed to share their words: it lands in "client reviews" hidden until the owner publishes it
+  if (b.publish === true && rating >= 4 && note.length >= 10) {
+    const t = await rpcToken(env, "submit_testimonial", { p: { name: cleanText(b.name, 120) || (b.lang === "en" ? "Customer" : "عميل"), role: "", quote: note, rating, lang: b.lang === "en" ? "en" : "ar" } });
+    if (!t.ok) console.error("chat review", t.status, await t.text());
+  }
+  return json({ ok: true });
 }
 
 // unsubscribe links carry a signature, so nobody can unsubscribe someone else

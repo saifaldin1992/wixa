@@ -51,7 +51,7 @@
       if (t !== "light" && t !== "dark") t = (m === "light" || m === "dark") ? m : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
       document.documentElement.setAttribute("data-theme", t); })();
   </script>
-  <script src="/build/shared.js"></script>
+  <script src="/build/shared.js" defer></script>
 </head>
 <body class="is-loading">
 
@@ -121,18 +121,10 @@
           </div>
         </div>
       </div>
-      <a href="#story" class="hero__scroll" aria-label="scroll"><span></span></a>
+      <a href="#partners" class="hero__scroll" aria-label="scroll"><span></span></a>
     </section>
 
 
-    <!-- Partners -->
-    <section data-pages="home about" class="partners" id="partners" data-section="partners">
-      <div class="head">
-        <h2 class="head__title reveal-up" data-c="partners_title"></h2>
-        <p class="head__sub reveal-up" data-c="partners_sub"></p>
-      </div>
-      <div class="partners__grid" id="partnersGrid"></div>
-    </section>
 
     <!-- About -->
     <section data-pages="about" class="about" id="about" data-section="about">
@@ -147,6 +139,14 @@
     <section data-pages="about" class="story" id="story" data-section="story">
       <h2 class="sr-only">لماذا ويكسا</h2>
       <div class="story__list" id="storyList"></div>
+    </section>
+    <!-- Partners -->
+    <section data-pages="home about" class="partners" id="partners" data-section="partners">
+      <div class="head">
+        <h2 class="head__title reveal-up" data-c="partners_title"></h2>
+        <p class="head__sub reveal-up" data-c="partners_sub"></p>
+      </div>
+      <div class="partners__grid" id="partnersGrid"></div>
     </section>
 
     <!-- Projects -->

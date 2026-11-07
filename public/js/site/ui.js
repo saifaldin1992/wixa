@@ -34,6 +34,14 @@ export function setupUI() {
     mbar?.classList.toggle("show", past && !atContact);
   }
   addEventListener("scroll", syncBars, { passive: true }); syncBars();
+
+  // phones: the round chat/WhatsApp buttons never cover the hero's main buttons
+  const ctas = $(".hero__ctas");
+  const clearFabs = () => {
+    const r = ctas?.getBoundingClientRect();
+    document.documentElement.classList.toggle("fab-clear", !!r && innerWidth <= 760 && r.height > 0 && r.top < innerHeight && r.bottom > innerHeight - 90);
+  };
+  if (ctas) { addEventListener("scroll", clearFabs, { passive: true }); addEventListener("resize", clearFabs); setTimeout(clearFabs, 100); }
   $("#mbarContact")?.addEventListener("click", (e) => { e.preventDefault(); openContact(); });
 
   // FAQ: one tap opens or closes an answer
