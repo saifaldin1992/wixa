@@ -235,7 +235,9 @@
   function loadFont(family) {
     if (!FONTS[family]) family = "Alexandria";
     const id = "wixa-font";
-    const href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g, "+")}:wght@${FONTS[family]}&display=swap`;
+    // Alexandria (the brand font) is hosted on the site; the other choices come from Google Fonts
+    const href = family === "Alexandria" ? new URL("/fonts/alexandria.css", location.href).href
+      : `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g, "+")}:wght@${FONTS[family]}&display=swap`;
     let link = document.getElementById(id);
     if (!link) { link = document.createElement("link"); link.id = id; link.rel = "stylesheet"; document.head.appendChild(link); }
     if (link.href !== href) link.href = href;
@@ -263,19 +265,17 @@
     return "#" + A.map((v, i) => Math.round(v * (1 - k) + B[i] * k).toString(16).padStart(2, "0")).join("");
   }
 
+  // Dark-mode colours derived from the brand colour (also shown in the dashboard's brand guide)
+  function darkPalette(t) {
+    return { bg: mix(t.primary, "#0B0A0E", 0.9), surface: mix(t.primary, "#16151B", 0.86), text: "#F2F0F7", muted: "#B2ACBF", dark: mix(t.primary, "#040309", 0.55), fg: vivid(t.primary) };
+  }
+
   // Light tokens come from the dashboard; the dark palette is derived from the brand color.
   // CSS maps --bg, --surface, … to --l-* or --dk-* depending on html[data-theme].
   function applyTheme(settings, root = document.documentElement) {
     const t = settings.theme, f = settings.font;
     const fam = loadFont(f.family);
-    const dk = {
-      bg: mix(t.primary, "#0B0A0E", 0.9),
-      surface: mix(t.primary, "#16151B", 0.86),
-      text: "#F2F0F7",
-      muted: "#B2ACBF",
-      dark: mix(t.primary, "#040309", 0.55),
-      fg: vivid(t.primary),
-    };
+    const dk = darkPalette(t);
     const vars = {
       "--primary": t.primary, "--primary-rgb": hexToRgb(t.primary), "--primary-ink": t.primaryInk,
       "--accent": t.accent, "--accent-rgb": hexToRgb(t.accent), "--accent-ink": mix(t.accent, "#04222A", 0.5),
@@ -326,5 +326,5 @@
   }
   markEnv();
 
-  window.WIXA = { DEFAULTS, FONTS, ICONS, merge, applyTheme, loadFont, markEnv };
+  window.WIXA = { DEFAULTS, FONTS, ICONS, merge, applyTheme, loadFont, markEnv, darkPalette, vivid, mix };
 })();

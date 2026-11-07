@@ -39,10 +39,11 @@
   <meta name="theme-color" content="#5B21B6">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
   <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- default font loaded with the page (not later from JS) so the hero text does not jump when it arrives -->
-  <link id="wixa-font" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;700;800&display=swap">
+  <!-- the brand font is hosted on this site (faster, and nothing about visitors is sent to a third party);
+       the two weights the first screen uses are fetched right away so the hero text does not jump -->
+  <link rel="preload" href="/fonts/alexandria/alexandria-arabic-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/alexandria/alexandria-arabic-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link id="wixa-font" rel="stylesheet" href="/fonts/alexandria.css">
   <link rel="stylesheet" href="/build/site.css">
   <script>
     // Apply the saved (or system) theme before first paint to avoid a flash.
