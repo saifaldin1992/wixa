@@ -658,3 +658,12 @@ html[dir="rtl"] .chat__back svg { transform: none; }
 .navrow__move { display: flex; gap: 4px; } .navrow__move .b { min-width: 36px; padding: 0; justify-content: center; }
 .navrow select { min-height: 40px; }
 @media (max-width: 520px) { .navrow { grid-template-columns: auto 1fr; } .navrow select { grid-column: 1 / -1; } }
+
+/* phones: the page title's buttons (status tabs, export…) wrap under the title and the tabs scroll inside themselves,
+   so they never stretch the page wider than the screen (it made the page drift sideways and show the side menu) */
+@media (max-width: 960px) {
+  .top { flex-wrap: wrap; row-gap: 10px; }
+  .top__actions { min-width: 0; max-width: 100%; flex: 1 1 100%; justify-content: flex-start; }
+  .top__actions .seg { flex: 0 1 auto; min-width: 0; }
+  .main { overflow-x: clip; }
+}
