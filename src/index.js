@@ -1809,9 +1809,9 @@ async function handleAdminImportMedia(request, env, ctx) {
     for (const o of OLD_MEDIA) { const r = await fetch(`${o}/storage/v1/object/public/media/${p}`); if (r.ok) { src = r; break; } }
     if (!src) { out.missing.push(p); continue; }
     const up = await fetch(`${env.SUPABASE_URL}/storage/v1/object/media/${p}`, { method: "POST",
-      headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, authorization: request.headers.get("authorization"), "content-type": src.headers.get("content-type") || "image/png", "cache-control": "max-age=31536000", "x-upsert": "true" },
+      headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, authorization: request.headers.get("authorization"), "content-type": src.headers.get("content-type") || "image/png", "cache-control": "max-age=31536000" },
       body: await src.arrayBuffer() });
-    if (up.ok) out.copied++; else out.missing.push(`${p} (${up.status})`);
+    if (up.ok) out.copied++; else out.missing.push(`${p} (${up.status} ${(await up.text()).slice(0, 120)})`);
   }
   return json(out);
 }

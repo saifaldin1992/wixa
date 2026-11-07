@@ -21,7 +21,8 @@ export async function viewDiagnose(view) {
     e.target.disabled = true;
     try {
       const r = await adminApi("import-media", "POST", {});
-      toast(r.missing.length ? `نُسخت ${r.copied} صورة · تعذّر ${r.missing.length}` : r.copied ? `نُسخت ${r.copied} صورة ✓` : `كل الصور (${r.present}) موجودة ✓`, r.missing.length ? "err" : "");
+      if (r.missing.length) console.warn("import-media", r.missing);
+      toast(r.missing.length ? `نُسخت ${r.copied} صورة · تعذّر ${r.missing.length}: ${r.missing[0].slice(0, 140)}` : r.copied ? `نُسخت ${r.copied} صورة ✓` : `كل الصور (${r.present}) موجودة ✓`, r.missing.length ? "err" : "");
     } catch (err) { toast(`تعذّر النقل (${err.message})`, "err"); }
     finally { e.target.disabled = false; }
   };
