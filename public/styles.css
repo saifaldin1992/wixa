@@ -920,3 +920,104 @@ html[dir="ltr"] .svc__more svg { transform: scaleX(-1); }
   .hero__title .word:last-child > span { animation: none; background-position: 50% 0; }
   .pmodal__scrim { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(var(--dark-rgb), .7); }
 }
+
+/* =====================================================================================
+   Sizing system — one scale for phones (< 768px), tablets (768–1199px) and computers (≥ 1200px).
+   Touch targets ≥ 44px (Apple HIG) / 48px (Material); body text 16px; inputs 16px (no iOS zoom);
+   line length ≤ ~70 characters; spacing on a 4/8px grid. Sizes are in rem, so the dashboard's
+   font-size setting still scales everything together.
+   ===================================================================================== */
+:root {
+  --fs-h1: 2.25rem; --fs-h2: 1.75rem; --fs-h3: 1.125rem; --fs-h3-lg: 1.375rem;
+  --fs-lead: 1rem; --fs-body: 1rem; --fs-card: .9375rem; --fs-small: .875rem; --fs-btn: .9375rem;
+  --btn-h: 48px; --btn-px: 20px; --field-h: 48px; --tap: 44px;
+  --sec: 56px; --head-gap: 28px; --gutter: 16px; --card-pad: 18px; --stack: 12px;
+}
+@media (min-width: 768px) {
+  :root { --fs-h1: 3rem; --fs-h2: 2.25rem; --fs-h3: 1.25rem; --fs-h3-lg: 1.625rem; --fs-lead: 1.0625rem; --fs-card: 1rem; --fs-btn: 1rem;
+    --btn-px: 24px; --sec: 80px; --head-gap: 36px; --gutter: 24px; --card-pad: 22px; --stack: 14px; }
+}
+@media (min-width: 1200px) {
+  :root { --fs-h1: 4rem; --fs-h2: 2.75rem; --fs-h3: 1.25rem; --fs-h3-lg: 1.875rem; --fs-lead: 1.125rem; --btn-h: 50px; --btn-px: 28px;
+    --sec: 104px; --head-gap: 48px; --gutter: 32px; --card-pad: 26px; --stack: 16px; }
+}
+
+/* text */
+body { font-size: var(--fs-body); }
+.hero__title { font-size: var(--fs-h1); line-height: 1.2; margin: 20px auto 16px; }
+.hero__sub, .head__sub, .cta__sub { font-size: var(--fs-lead); line-height: 1.7; }
+.hero__sub { margin-bottom: 28px; }
+.head__title, .cta__title, .stats__title { font-size: var(--fs-h2); line-height: 1.25; }
+.head__sub { margin-top: 12px; }
+.head { margin-bottom: var(--head-gap); }
+.svc h3, .job h3, .faq__q { font-size: var(--fs-h3); }
+.svc p, .job p, .faq__a p { font-size: var(--fs-card); line-height: 1.7; }
+.story-item h3, .project h3 { font-size: var(--fs-h3-lg); line-height: 1.3; }
+.story-item p, .project p { font-size: var(--fs-card); line-height: 1.75; }
+.pmodal__body h2, .jmodal__box h2 { font-size: calc(var(--fs-h3-lg) * 1.05); }
+.calc__price { font-size: calc(var(--fs-h2) * 1.1); }
+.calc__h { font-size: var(--fs-small); }
+.stat b { font-size: calc(var(--fs-h2) * 1.25); }
+.footer__credit, .form__status, .calc__note { font-size: var(--fs-small); }
+
+/* buttons: one height everywhere, comfortable to tap, never oversized */
+.btn, .calc__result .btn { min-height: var(--btn-h); padding: 0 var(--btn-px); font-size: var(--fs-btn); line-height: 1.2; gap: 8px; }
+.btn svg, .btn .arr { width: 18px; height: 18px; flex-shrink: 0; }
+.job .btn { padding: 0 var(--btn-px); }
+.icon-btn { width: var(--btn-h); height: var(--btn-h); }
+.svc__more, .svc__wa { min-height: var(--tap); display: inline-flex; align-items: center; margin-top: 4px; padding-top: 0; font-size: var(--fs-small); }
+
+/* header controls: 44px touch targets on touch screens, compact with a mouse */
+.theme-btn, .menu-btn { width: 40px; height: 40px; }
+.pill-btn { min-height: 40px; padding: 0 14px; font-size: var(--fs-small); }
+@media (pointer: coarse) {
+  .theme-btn, .menu-btn { width: var(--tap); height: var(--tap); }
+  .pill-btn { min-height: var(--tap); min-width: var(--tap); }
+  .header__menu a { min-height: 48px; display: flex; align-items: center; padding: 0 16px; font-size: var(--fs-body); }
+  .footer__nav a { min-height: var(--tap); display: inline-flex; align-items: center; padding: 0 8px; }
+  .footer__social a { min-width: var(--tap); min-height: var(--tap); display: inline-grid; place-items: center; }
+}
+.header__bar { padding-block: 8px; }
+
+/* form fields: 48px tall, 16px text (stops iPhone from zooming in) */
+.field input, .field select { min-height: var(--field-h); padding: 0 14px; font-size: 1rem; }
+.field textarea { padding: 12px 14px; font-size: 1rem; min-height: 112px; }
+.field { gap: 6px; font-size: var(--fs-small); }
+.form__grid { gap: var(--stack); }
+
+/* calculator choices and other chips: at least 44px */
+.cfeat { min-height: var(--tap); padding: 0 14px; font-size: var(--fs-small); }
+.ctype { min-height: 64px; }
+#calcSpeed button { min-height: var(--tap); padding: 0 18px; }
+.bk__day, .bk__slot { min-height: var(--tap); padding: 0 14px; }
+
+/* FAQ rows */
+.faq__q { min-height: 56px; padding: 14px var(--card-pad); line-height: 1.5; }
+.faq__a p { padding: 0 var(--card-pad) 18px; }
+
+/* cards */
+.svc { padding: var(--card-pad); }
+.job { padding: var(--card-pad); }
+
+/* section rhythm */
+.story, .projects, .services, .process, .testimonials, .calc, .partners, .careers, .faq { padding-bottom: var(--sec); }
+.cta { padding-bottom: var(--sec); }
+.stats { margin-bottom: var(--sec); }
+
+/* phones: full-width main actions are easier to hit with a thumb */
+@media (max-width: 767px) {
+  .hero__ctas { display: grid; gap: 10px; width: 100%; max-width: 360px; margin-inline: auto; }
+  .hero__ctas .btn { width: 100%; }
+  .cta__actions .btn { flex: 1 1 auto; }
+  .svc h3 { font-size: 1.0625rem; }
+  .svc p { font-size: .9375rem; }
+}
+.faq__q { font-size: var(--fs-body); font-weight: 600; }
+@media (min-width: 768px) { .faq__q { font-size: 1.0625rem; } }
+/* calculator result: the three actions stacked, same width */
+.calc__btns { display: grid; gap: 10px; width: 100%; }
+.calc__btns .btn { width: 100%; }
+@media (min-width: 768px) { .calc__btns { max-width: 340px; } }
+/* service cards: the two links sit together at the bottom */
+.svc__more { margin-top: auto; padding-top: 12px; }
+.svc__wa { margin-top: 0; min-height: 40px; }
