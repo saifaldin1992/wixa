@@ -325,7 +325,7 @@ function faqLd(st, lang) {
 
 // GET / — static HTML with the content embedded (no flash of default text, one request per visit).
 // /about, /pricing and /careers are the homepage's HTML showing only their own sections (html[data-page])
-const PAGE_TITLES = { about: { ar: "من نحن", en: "About us" }, pricing: { ar: "الباقات والأسعار", en: "Packages & pricing" }, careers: { ar: "الوظائف", en: "Careers" }, contact: { ar: "تواصل معنا", en: "Contact us" }, faq: { ar: "الأسئلة الشائعة", en: "Frequently asked questions" } };
+const PAGE_TITLES = { about: { ar: "من نحن", en: "About us" }, pricing: { ar: "الباقات والأسعار", en: "Packages & pricing" }, careers: { ar: "الوظائف", en: "Careers" }, contact: { ar: "تواصل معنا", en: "Contact us" }, order: { ar: "اطلب مشروعك", en: "Order your project" }, faq: { ar: "الأسئلة الشائعة", en: "Frequently asked questions" } };
 async function handleHome(request, env, ctx, pageName = "home") {
   const [page, raw, cfg] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx), getConfig(env)]);
   const data = cfg.spam.turnstile ? raw : raw.replace(/"turnstile":"[^"]*"/, '"turnstile":""');
@@ -346,7 +346,7 @@ async function handleHome(request, env, ctx, pageName = "home") {
   const attr = (sel, name, val) => [sel, { element: (el) => { if (val) el.setAttribute(name, val); } }];
   const siteTitle = seo[`title_${lang}`] || (lang === "en" ? SEO_DEFAULTS.en.title : ""), siteDesc = seo[`description_${lang}`] || (lang === "en" ? SEO_DEFAULTS.en.description : ""), img = seo.og_image ? abs(seo.og_image) : "";
   const pc = st.content?.[lang] || {}, brandName = (lang === "en" ? st.brand?.name_en : st.brand?.name_ar) || "WIXA";
-  const pageDesc = { about: pc.about_text, pricing: pc.pricing_sub, careers: pc.careers_sub, contact: pc.cta_sub, faq: pc.faq_sub }[pageName];
+  const pageDesc = { about: pc.about_text, pricing: pc.pricing_sub, careers: pc.careers_sub, contact: pc.cta_sub, faq: pc.faq_sub, order: pc.pricing_sub }[pageName];
   const title = pageName === "home" ? siteTitle : `${PAGE_TITLES[pageName][lang]} — ${brandName}`;
   const desc = pageName === "home" ? siteDesc : String(pageDesc || siteDesc || "").replace(/\s+/g, " ").slice(0, 160);
   const pagePath = pageName === "home" ? "/" : `/${pageName}`;
@@ -688,25 +688,25 @@ async function notifyOwner(env, row, test = false) {
   const to = (await notifyAddress(env)) || ""; // dashboard setting (private store) or the NOTIFY_EMAIL secret
   if (!to) return false;
   const staging = env.SITE_ENV === "staging";
-  const admin = staging ? "https://staging.wixa.dev/admin/#messages" : "https://wixa.dev/admin/#messages";
+  const admin = `${staging ? "https://staging.wixa.dev" : "https://wixa.dev"}/admin/#${row.order ? "orders" : "messages"}`;
   const wa = row.phone ? `https://wa.me/${row.phone.replace(/\D/g, "")}` : "";
   const html = `<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;background:#F6F3F2;padding:24px">
     <div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #ECE6E8">
-      <div style="background:#5B21B6;color:#fff;padding:18px 22px;font-size:18px;font-weight:bold">رسالة جديدة من موقع ويكسا${staging ? " (النسخة التجريبية)" : ""}</div>
+      <div style="background:#5B21B6;color:#fff;padding:18px 22px;font-size:18px;font-weight:bold">${row.order ? `طلب جديد ${esc(row.order)}` : "رسالة جديدة"} من موقع ويكسا${staging ? " (النسخة التجريبية)" : ""}</div>
       <div style="padding:22px;color:#1A0E12;font-size:15px;line-height:1.8">
         <p style="margin:0 0 6px"><b>الاسم:</b> ${esc(row.name)}</p>
-        <p style="margin:0 0 6px"><b>البريد:</b> <a href="mailto:${esc(row.email)}">${esc(row.email)}</a></p>
+        ${row.email ? `<p style="margin:0 0 6px"><b>البريد:</b> <a href="mailto:${esc(row.email)}">${esc(row.email)}</a></p>` : ""}
         ${row.phone ? `<p style="margin:0 0 6px"><b>الهاتف:</b> ${esc(row.phone)}</p>` : ""}
         ${row.services?.length ? `<p style="margin:0 0 6px"><b>الخدمة:</b> ${esc(row.services.join("، "))}</p>` : ""}
         <div style="margin:14px 0;padding:14px;background:#F8EEF1;border-radius:12px;white-space:pre-wrap">${esc(row.message)}</div>
-        <a href="mailto:${esc(row.email)}" style="display:inline-block;background:#5B21B6;color:#fff;padding:10px 18px;border-radius:10px;text-decoration:none;margin-left:6px">رد بالبريد</a>
+        ${row.email ? `<a href="mailto:${esc(row.email)}" style="display:inline-block;background:#5B21B6;color:#fff;padding:10px 18px;border-radius:10px;text-decoration:none;margin-left:6px">رد بالبريد</a>` : ""}
         ${wa ? `<a href="${wa}" style="display:inline-block;background:#25D366;color:#fff;padding:10px 18px;border-radius:10px;text-decoration:none;margin-left:6px">واتساب</a>` : ""}
         <a href="${admin}" style="display:inline-block;color:#5B21B6;padding:10px 4px">فتح لوحة التحكم ←</a>
       </div></div></div>`;
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
-    body: JSON.stringify({ from: `${cfg.alerts.from_name} <notify@wixa.dev>`, to: [to], reply_to: row.email, subject: `${test ? "[اختبار] " : ""}${staging ? "[تجريبي] " : ""}${/^(طلب توظيف|حجز موعد)/.test(row.services?.[0] || "") ? `${row.services[0]} — ${row.name}` : `رسالة جديدة من ${row.name}`}`, html }),
+    body: JSON.stringify({ from: `${cfg.alerts.from_name} <notify@wixa.dev>`, to: [to], ...(row.email ? { reply_to: row.email } : {}), subject: `${test ? "[اختبار] " : ""}${staging ? "[تجريبي] " : ""}${row.order ? `طلب جديد ${row.order} — ${row.name}` : /^(طلب توظيف|حجز موعد)/.test(row.services?.[0] || "") ? `${row.services[0]} — ${row.name}` : `رسالة جديدة من ${row.name}`}`, html }),
   });
   if (!res.ok) console.error("notify failed", res.status, await res.text());
   return res.ok;
@@ -715,7 +715,7 @@ async function notifyOwner(env, row, test = false) {
 // Thank-you email to the visitor (switched on in the dashboard). The name is shortened and stripped of links,
 // so the form cannot be used to send someone else a message of the sender's choosing.
 async function sendAutoReply(env, cfg, row, test = false) {
-  if (!env.RESEND_API_KEY || (!cfg.autoreply.on && !test)) return false;
+  if (!env.RESEND_API_KEY || !row.email || (!cfg.autoreply.on && !test)) return false;
   const lang = row.lang === "en" ? "en" : "ar";
   const name = row.name.replace(/https?:\/\/\S+|www\.\S+|\S+\.(com|net|org|io|dev|me|ly|xyz)\S*/gi, "").replace(/[<>]/g, "").trim().slice(0, 40) || (lang === "ar" ? "بك" : "there");
   const text = cfg.autoreply[`body_${lang}`].split("{name}").join(name);
@@ -759,7 +759,7 @@ async function requestOffer(env, ctx, lang) {
 
 // The client's copy of a project request: its number and what they asked for (always sent, whatever the auto-reply setting)
 async function sendRequestConfirmation(env, cfg, row) {
-  if (!env.RESEND_API_KEY) return false;
+  if (!env.RESEND_API_KEY || !row.email) return false;
   const ar = row.lang !== "en";
   const name = row.name.replace(/https?:\/\/\S+|www\.\S+/gi, "").replace(/[<>]/g, "").trim().slice(0, 40);
   let contact = "", wa = "";
@@ -790,6 +790,57 @@ async function sendRequestConfirmation(env, cfg, row) {
   return res.ok;
 }
 
+// POST /api/order — the one order page (/order): whatever the visitor picked (a package, a field, the estimator,
+// a project like one of ours, a service) + name and phone. Gets a number, the gifts/discount from the dashboard,
+// lands in the dashboard's Orders, alerts the team and emails the client a copy when they gave an email.
+const ORDER_SOURCES = new Set(["package", "field", "calc", "similar", "service", "start"]);
+async function handleOrder(request, env, ctx) {
+  const ip = clientIp(request);
+  if (!(await allowed(env.CONTACT_LIMITER, ip))) return json({ error: "rate_limited" }, 429);
+  let b;
+  try { b = await request.json(); } catch { return json({ error: "invalid_json" }, 400); }
+  if (b.website) return json({ ok: true, number: "" }); // honeypot
+  const cfg = await getConfig(env);
+  if (cfg.spam.turnstile && !(await turnstileOk(env, b.turnstile, ip))) return json({ error: "captcha" }, 403);
+  const clean = (v, max) => (typeof v === "string" ? v.replace(/[\u0000-\u001f]/g, " ").trim().slice(0, max) : "");
+  const lang = b.lang === "en" ? "en" : "ar", ar = lang === "ar";
+  const name = clean(b.name, 120), phone = clean(b.phone, 40), email = clean(b.email, 200), note = typeof b.note === "string" ? b.note.trim().slice(0, 3000) : "";
+  if (!name || phone.replace(/\D/g, "").length < 7) return json({ error: "validation" }, 422);
+  if (email && !EMAIL_RE.test(email)) return json({ error: "validation" }, 422);
+  const source = ORDER_SOURCES.has(b.source) ? b.source : "start";
+  const item = clean(b.item, 200), price = clean(b.price, 80);
+  const list = (v) => (Array.isArray(v) ? v.filter((x) => typeof x === "string").slice(0, 15).map((x) => x.trim().slice(0, 80)).filter(Boolean) : []);
+  const details = { features: list(b.details?.features), timeline: clean(b.details?.timeline, 60) };
+  const blocked = cfg.spam.blocked.split(/[\n,،]/).map((w) => w.trim().toLowerCase()).filter((w) => w.length >= 2);
+  if (blocked.some((w) => `${name} ${email} ${phone} ${note}`.toLowerCase().includes(w))) return json({ ok: true, number: "" }, 201);
+
+  const d = new Date(), pad = (n) => String(n).padStart(2, "0");
+  const rnd = [...crypto.getRandomValues(new Uint8Array(4))].map((x) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[x % 32]).join("");
+  const number = `WX-${String(d.getUTCFullYear()).slice(2)}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}-${rnd}`;
+  const offer = await requestOffer(env, ctx, lang);
+  const until = (offer.discount.match(/\d{4}-\d{2}-\d{2}/) || [""])[0];
+  const r = await rpc(env, "submit_order", { number, source, item, details, price_hint: price, name, phone, email, note, lang,
+    marketing: b.marketing === true, visit_source: clean(b.visit, 60), gifts: offer.gifts, discount: offer.discount, discount_until: until });
+  if (!r.ok) { console.error("order insert", r.status, await r.text()); return json({ error: r.status === 404 ? "migration_missing" : "storage" }, 502); }
+
+  const SRC = { package: ["الباقة", "Package"], field: ["حل لمجال", "Solution for"], calc: ["تقدير الحاسبة", "Estimator"], similar: ["مشروع مشابه لـ", "Similar to"], service: ["الخدمة", "Service"], start: ["طلب مشروع", "Project request"] };
+  const lines = [
+    [ar ? "رقم الطلب" : "Order no.", number],
+    [SRC[source][ar ? 0 : 1], item],
+    [ar ? "السعر التقريبي" : "Price guide", price],
+    [ar ? "الميزات" : "Features", details.features.join("، ")],
+    [ar ? "المدة" : "Timeline", details.timeline],
+    [ar ? "ملاحظة" : "Note", note],
+    ...(offer.gifts.length ? [[ar ? "🎁 الهدايا" : "🎁 Gifts", offer.gifts.join(" + ")]] : []),
+    ...(offer.discount ? [[ar ? "💸 الخصم" : "💸 Discount", offer.discount]] : []),
+  ].filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("\n");
+  const row = { name, email, phone, lang, message: lines, services: [`${SRC[source][0]}: ${item || "-"}`], order: number, request_no: number, offer };
+  ctx.waitUntil(notifyOwner(env, row).catch((e) => console.error("notify", e)));
+  ctx.waitUntil(sendRequestConfirmation(env, cfg, row).catch((e) => console.error("order mail", e)));
+  ctx.waitUntil(countMessage(env, { services: ["طلب مشروع"] }, false).catch(() => {}));
+  return json({ ok: true, number }, 201);
+}
+
 async function handleContact(request, env, ctx) {
   const ip = clientIp(request);
   if (!(await allowed(env.CONTACT_LIMITER, ip))) return json({ error: "rate_limited" }, 429);
@@ -814,7 +865,7 @@ async function handleContact(request, env, ctx) {
   };
   if (body.kind === "booking" && !row.message) row.message = "حجز موعد";
   if (body.kind === "project" && !row.message) row.message = "-";
-  if (!row.name || !row.message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) return json({ error: "validation" }, 422);
+  if (!row.name || !row.message || (row.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email))) return json({ error: "validation" }, 422); // email is optional
   if (!row.phone || row.phone.replace(/\D/g, "").length < 7) return json({ error: "phone_required" }, 422);
   if (body.kind === "booking") {
     const date = clean(body.date, 10), time = clean(body.time, 5);
@@ -901,7 +952,7 @@ function detailsHtml(raw) {
 const safeHref = (u) => { try { const x = new URL(String(u || "")); return ["http:", "https:"].includes(x.protocol) ? x.href : ""; } catch { return ""; } };
 
 // One light page layout shared by project pages and the privacy policy: brand colours and font from the dashboard.
-function simplePage(request, st, { lang, title, description, path, image, body, jsonld, status = 200 }) {
+function simplePage(request, st, { lang, title, description, path, image, body, jsonld, status = 200, orderQ = "" }) {
   const ar = lang === "ar";
   const origin = new URL(request.url).origin;
   const t = st.theme || {};
@@ -962,9 +1013,9 @@ footer a{color:var(--m)}
 </style></head><body><div class="wrap">
 <header><a class="home" href="/?lang=${lang}"><img src="/icons/icon-96.png" alt="">${esc(brand)}</a>
 <nav><a href="${path}?lang=${other}" hreflang="${other}">${ar ? "English" : "العربية"}</a><a href="/?lang=${lang}">${ar ? "الرئيسية" : "Home"}</a></nav></header>
-<nav class="sub">${[["#projects", ar ? "حلولنا" : "Solutions"], ["#services", ar ? "خدماتنا" : "Services"], ["#calculator", ar ? "احسب تكلفة مشروعك" : "Estimate your project"], ["#careers", ar ? "الوظائف" : "Careers"], ["#contact", ar ? "تواصل معنا" : "Contact"]].map(([h, t]) => `<a href="/?lang=${lang}${h}">${t}</a>`).join("")}<a href="/blog?lang=${lang}">${ar ? "المقالات" : "Articles"}</a></nav>
+<nav class="sub">${[["/?lang=LANG#projects", ar ? "حلولنا" : "Solutions"], ["/?lang=LANG#services", ar ? "خدماتنا" : "Services"], ["/pricing?lang=LANG", ar ? "الباقات" : "Packages"], ["/careers?lang=LANG", ar ? "الوظائف" : "Careers"], ["/contact?lang=LANG", ar ? "تواصل معنا" : "Contact"]].map(([h, t]) => `<a href="${h.replace("LANG", lang)}">${t}</a>`).join("")}<a href="/blog?lang=${lang}">${ar ? "المقالات" : "Articles"}</a></nav>
 <main>${body}
-<div class="actions"><a class="btn" href="/?lang=${lang}#contact">${ar ? "تواصل معنا" : "Contact us"}</a>${wa ? `<a class="btn btn--wa" href="https://wa.me/${wa}" target="_blank" rel="noopener">${ar ? "واتساب" : "WhatsApp"}</a>` : ""}</div></main>
+<div class="actions"><a class="btn" href="/order?lang=${lang}${orderQ}">${ar ? "اطلب مشروعك" : "Order your project"}</a><a class="btn btn--ghost" href="/contact?lang=${lang}">${ar ? "تواصل معنا" : "Contact us"}</a>${wa ? `<a class="btn btn--wa" href="https://wa.me/${wa}" target="_blank" rel="noopener">${ar ? "واتساب" : "WhatsApp"}</a>` : ""}</div></main>
 <footer><span>© ${new Date().getFullYear()} ${esc(brand)}</span><span><a href="/privacy?lang=${lang}">${ar ? "سياسة الخصوصية" : "Privacy policy"}</a> · <a href="/?lang=${lang}">${origin.replace(/^https?:\/\//, "")}</a></span></footer>
 </div></body></html>`;
   return new Response(request.method === "HEAD" ? null : html, { status, headers: { ...SECURITY_HEADERS, "content-type": "text/html; charset=utf-8", "cache-control": "no-cache", "content-language": lang, vary: "Accept-Language, Cookie" } });
@@ -1001,7 +1052,7 @@ async function handleProjectPage(request, env, ctx, slug) {
       const t = (f) => o[`${f}_${lang}`] || o[`${f}_ar`] || o[`${f}_en`] || "";
       return `<a href="/projects/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(t("title"))}</b><span>${esc(t("category") || t("summary").slice(0, 70))}</span></a>`;
     }).join("")}</div></section>` : ""}`;
-  return simplePage(request, st, {
+  return simplePage(request, st, { orderQ: `&project=${encodeURIComponent(slug)}`,
     lang, title: T("title"), description: (T("summary") || T("details")).slice(0, 160), path: `/projects/${encodeURIComponent(p.slug)}`,
     image: imgs[0] || mob || "", body,
     jsonld: { "@context": "https://schema.org", "@type": "CreativeWork", name: T("title"), description: T("summary"), url: `${origin}/projects/${encodeURIComponent(p.slug)}`, ...(imgs[0] ? { image: imgs[0] } : {}), creator: { "@type": "Organization", name: "WIXA", url: origin } },
@@ -1164,7 +1215,7 @@ async function handleServicePage(request, env, ctx, slug) {
     ${projects.length ? `<section class="more"><h2>${ar ? "من أعمالنا" : "From our work"}</h2><div class="more__grid">${projects.map((o) => `<a href="/projects/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(T(o, "category") || T(o, "summary").slice(0, 70))}</span></a>`).join("")}</div></section>` : ""}
     ${others.length ? `<section class="more"><h2>${ar ? "خدمات أخرى" : "Other services"}</h2><div class="more__grid">${others.map((o) => `<a href="/services/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(T(o, "summary").slice(0, 80))}</span></a>`).join("")}</div></section>` : ""}`;
   const origin = new URL(request.url).origin;
-  return simplePage(request, st, {
+  return simplePage(request, st, { orderQ: `&svc=${encodeURIComponent(slug)}`,
     lang, title: T(sv, "title"), description: (T(sv, "summary") || T(sv, "details")).slice(0, 160), path: `/services/${encodeURIComponent(sv.slug)}`, body,
     jsonld: { "@context": "https://schema.org", "@type": "Service", name: T(sv, "title"), description: T(sv, "summary"), areaServed: "IQ", provider: { "@type": "Organization", name: "WIXA", url: origin } },
   });
@@ -1999,6 +2050,7 @@ export default {
         case "POST /api/chat/start": return await handleChat(request, env, ctx, "start");
         case "POST /api/chat/send": return await handleChat(request, env, ctx, "send");
         case "POST /api/chat/poll": return await handleChat(request, env, ctx, "poll");
+        case "POST /api/order": return await handleOrder(request, env, ctx);
         case "POST /api/chat/rate": return await handleChatRate(request, env);
         case "GET /unsubscribe":
         case "POST /unsubscribe":
@@ -2015,6 +2067,7 @@ export default {
         case "GET /about":
         case "GET /pricing":
         case "GET /careers":
+        case "GET /order":
         case "GET /contact":
         case "GET /faq":
           return await handleHome(request, env, ctx, url.pathname.slice(1));

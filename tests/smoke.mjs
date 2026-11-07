@@ -104,8 +104,11 @@ try {
       const price0 = await p.textContent("#calcPrice");
       await p.click("#calcTypes .ctype:last-child"); await p.click("#calcFeats .cfeat"); await p.waitForTimeout(900);
       check((await p.textContent("#calcPrice")) !== price0, "calculator updates the estimate");
-      await p.click("#calcCta"); await p.waitForTimeout(1200);
-      check((await p.inputValue("#contactForm [name=message]")).length > 10, "calculator prefills the contact form");
+      await p.click("#calcCta"); await p.waitForURL(/\/order/); await p.waitForTimeout(1200);
+      check(await p.evaluate(() => document.documentElement.dataset.page === "order" && /\d/.test(document.querySelector(".ord__price")?.textContent || "") && !!document.querySelector("#orderForm")), "calculator opens the order page with its estimate");
+      // the order page with nothing chosen opens on the packages
+      await p.evaluate(() => sessionStorage.clear()); await p.goto(BASE + "/order", { waitUntil: "load" }); await p.waitForTimeout(900);
+      check(await p.evaluate(() => document.querySelectorAll(".ord__pkg").length >= 2), "/order starts with the packages");
       await p.goto(BASE + "/about", { waitUntil: "load" }); await p.waitForTimeout(800);
       check(await p.evaluate(() => document.querySelector("#about").offsetHeight > 0 && !document.querySelector("#services").offsetHeight), "/about shows about us");
       await p.goto(BASE + "/", { waitUntil: "load" }); await p.waitForTimeout(1200);
@@ -145,7 +148,7 @@ try {
     p.on("pageerror", (e) => errors.push(e.message));
     await p.goto(`${BASE}/admin/`, { waitUntil: "load" });
     await p.waitForTimeout(1200);
-    for (const v of ["overview", "appearance", "brand", "content", "projects", "services", "partners", "testimonials", "messages", "chats", "customers", "sales", "campaigns", "posts", "seo", "integrations", "diagnose", "devguide", "team", "account"]) {
+    for (const v of ["overview", "appearance", "brand", "content", "projects", "services", "partners", "testimonials", "orders", "messages", "chats", "customers", "sales", "campaigns", "posts", "seo", "integrations", "diagnose", "devguide", "team", "account"]) {
       await p.evaluate((h) => (location.hash = h), v);
       await p.waitForTimeout(600);
       const ok = await p.evaluate(() => document.querySelector("#view")?.children.length > 0);

@@ -5,6 +5,7 @@ import { viewChats } from "./views/chats.js";
 import { viewCustomers } from "./views/customers.js";
 import { viewSales } from "./views/sales.js";
 import { viewCampaigns } from "./views/campaigns.js";
+import { viewOrders } from "./views/orders.js";
 import { isDirty } from "./settings.js";
 import { viewAccount } from "./views/account.js";
 import { viewAppearance } from "./views/appearance.js";
@@ -34,6 +35,7 @@ export const VIEWS = {
   integrations: { title: "التكاملات", sub: "التنبيهات والرد التلقائي وأدوات القياس والحماية ووضع الصيانة", render: viewIntegrations },
   diagnose: { title: "الفحص والتشخيص", sub: "فحص كل أجزاء الموقع، مكان أي عطل وطريقة حله، وسجل الأعطال", render: viewDiagnose },
   devguide: { title: "دليل المطوّر", sub: "كيف بُني المشروع وأين يوجد كل جزء — للمطورين", render: viewDevGuide },
+  orders: { title: "الطلبات", sub: "كل طلبات المشاريع من الموقع في مكان واحد: ماذا اختار الزبون، ومن أين، وهداياه وخصمه", render: viewOrders },
   messages: { title: "الرسائل", sub: "رسائل نموذج التواصل", render: viewMessages },
   sales: { title: "لوحة المبيعات", sub: "من تواصل، ومن اشترى، ومن أين جاؤوا، وكيف نخدمهم", render: viewSales },
   campaigns: { title: "العروض والهدايا", sub: "هدايا وخصم طلب المشروع، شريط العروض، عرض الحاسبة، والحملات البريدية", render: viewCampaigns },
@@ -48,7 +50,7 @@ export let current = null;
 const ROLE_VIEWS = {
   owner: null, // everything
   editor: ["overview", "content", "projects", "services", "partners", "testimonials", "posts", "appearance", "brand", "seo", "devguide", "account"],
-  support: ["overview", "messages", "chats", "customers", "account"],
+  support: ["overview", "orders", "messages", "chats", "customers", "account"],
 };
 export const canSee = (name) => !ROLE_VIEWS[role] || ROLE_VIEWS[role].includes(name);
 function applyRoleNav() {

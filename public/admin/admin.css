@@ -641,3 +641,13 @@ html[dir="rtl"] .chat__back svg { transform: none; }
 .acct .card { margin: 0; }
 .bg-shadows { display: flex; flex-wrap: wrap; gap: 18px; padding: 18px 4px 22px; } .bg-shadows span { display: grid; place-items: center; min-width: 150px; height: 84px; padding: 0 18px; border-radius: 18px; background: #fff; color: #140F1F; font-weight: 600; font-size: 14px; }
 .giftrow { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; } .giftrow [data-del] { justify-self: start; }
+
+/* orders */
+.ord-top { display: grid; gap: 10px; margin-bottom: 12px; }
+.ord-search { width: 100%; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; }
+.ord-src { display: flex; flex-wrap: wrap; gap: 6px; }
+.ord-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; margin-top: 12px; }
+.ord-grid h4 { margin: 0 0 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.ord-grid p { margin: 0 0 8px; }
+@media (max-width: 700px) { .ord-grid { grid-template-columns: 1fr; } }
+#of small { opacity: .7; margin-inline-start: 4px; }

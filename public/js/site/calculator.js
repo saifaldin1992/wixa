@@ -1,6 +1,6 @@
 /* Cost estimator */
 import { $, $$, esc, ICONS, state, lang, anim } from "./core.js";
-import { openContact } from "./contact.js";
+import { goOrder } from "./order.js";
 import { printQuote } from "./extras.js";
 
 // ---------- cost calculator ----------
@@ -65,7 +65,13 @@ export function setupCalc() {
     if (!msg || !wa) { e.preventDefault(); return; }
     e.currentTarget.href = `https://wa.me/${wa}?text=${encodeURIComponent(msg)}`;
   });
-  $("#calcCta").addEventListener("click", () => { const msg = estimateText(); if (msg) openContact(msg); });
+  $("#calcCta").addEventListener("click", () => {
+    const cfg = state.settings.calculator || {}, t = (cfg.types || [])[calc.type], r = calcRange();
+    if (!t || !r) return;
+    goOrder({ source: "calc", item: t[`label_${lang}`] || t.label_ar, price: `${r[0].toLocaleString("en")} – ${r[1].toLocaleString("en")} ${cfg.currency || "$"}`,
+      features: [...calc.feats].map((i) => (cfg.features || [])[i]).filter(Boolean).map((f) => f[`label_${lang}`] || f.label_ar),
+      timeline: calc.rush ? (lang === "ar" ? "تنفيذ مستعجل" : "Rush delivery") : "" });
+  });
   $("#calcPdf").addEventListener("click", () => {
     const cfg = state.settings.calculator || {}, t = (cfg.types || [])[calc.type], r = calcRange();
     if (!t || !r) return;

@@ -1,7 +1,7 @@
 /* Sales sections: about us, solutions by field, guarantees and packages — all edited in the dashboard
    (المحتوى ← من نحن / المجالات / الضمانات / الباقات). A section with nothing in it stays hidden. */
 import { $, $$, ICONS, UI, C, esc, lang } from "./core.js";
-import { openContact } from "./contact.js";
+import { goOrder, pkgSel } from "./order.js";
 import { openChat } from "./chat.js";
 
 const para = (t) => esc(t).split(/\n\s*\n/).map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`).join("");
@@ -53,12 +53,12 @@ export function renderSales() {
     $("#pricingGrid").addEventListener("click", (e) => {
       const b = e.target.closest("[data-pkg]"); if (!b) return;
       const p = (C().packages || []).filter((x) => x.name)[+b.dataset.pkg]; // the teaser shows the first ones, so indexes match
-      openContact(lang === "ar" ? `أرغب بباقة: ${p.name}` : `I'd like the package: ${p.name}`);
+      goOrder(pkgSel(p));
     });
     $("#industriesGrid").addEventListener("click", (e) => {
       const b = e.target.closest("[data-ind]"); if (!b) return;
       const x = (C().industries || []).filter((y) => y.title)[+b.dataset.ind];
-      openContact(lang === "ar" ? `أريد حلاً لمجالي: ${x.title}` : `I'd like a solution for: ${x.title}`);
+      goOrder({ source: "field", item: x.title, price: x.price || "" });
     });
   }
 }

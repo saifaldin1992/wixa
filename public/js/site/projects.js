@@ -1,7 +1,7 @@
 /* Project details window */
 import { $, esc, safeUrl, L, state, lang } from "./core.js";
 import { mockUI } from "./render.js";
-import { openContact } from "./contact.js";
+import { goOrder } from "./order.js";
 
 // ---------- project details modal ----------
 function openProject(i) {
@@ -32,7 +32,7 @@ function openProject(i) {
   $("#pmStats").innerHTML = stats.map((st) => `<div><b>${esc(st.value)}</b><span>${esc(st[`label_${lang}`] || st.label_ar || "")}</span></div>`).join("");
   $("#pmStats").hidden = !stats.length;
   $("#pmPage").href = `/projects/${encodeURIComponent(p.slug || p.id)}`;
-  $("#pmCta").onclick = () => { closeProject(); openContact(lang === "ar" ? `أرغب بمشروع مشابه لـ: ${L(p, "title")}` : `I'd like a project similar to: ${L(p, "title")}`); };
+  $("#pmCta").onclick = () => { closeProject(); goOrder({ source: "similar", item: L(p, "title") }); };
   m.hidden = false; document.body.style.overflow = "hidden"; window.__lenis?.stop();
   $(".pmodal__x", m).focus();
 }

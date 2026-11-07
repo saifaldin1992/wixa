@@ -34,7 +34,7 @@ export function check(form, names) {
   let msg = "";
   names.forEach((n) => {
     const f = form.elements[n], v = f.value.trim();
-    const bad = !v || (n === "email" && !EMAIL.test(v)) || (n === "phone" && !phoneOk(v));
+    const bad = n === "email" ? !!v && !EMAIL.test(v) : !v || (n === "phone" && !phoneOk(v)); // email is optional, but must be valid when given
     f.closest(".field").classList.toggle("bad", bad);
     if (bad && !msg) msg = n === "phone" && v ? ui.bad_phone : ui.invalid;
   });
@@ -46,7 +46,7 @@ export function liveCheck(form) {
   form.addEventListener("input", (e) => {
     const f = e.target.closest(".field.bad"); if (!f) return;
     const el = e.target, v = el.value.trim();
-    const ok = v && (el.name !== "email" || EMAIL.test(v)) && (el.name !== "phone" || phoneOk(v));
+    const ok = el.name === "email" ? !v || EMAIL.test(v) : v && (el.name !== "phone" || phoneOk(v));
     if (ok) f.classList.remove("bad");
   });
 }
