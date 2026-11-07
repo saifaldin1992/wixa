@@ -35,7 +35,7 @@ h1, h2, h3 { margin: 0; line-height: 1.3; }
 .b:hover { border-color: #B9BECB; }
 .b:active { transform: scale(.98); }
 .b:disabled { opacity: .5; pointer-events: none; }
-.b svg { width: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.b svg { width: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
 .b--primary { background: var(--brand); border-color: var(--brand); color: #fff; }
 .b--primary:hover { background: #3F0418; border-color: #3F0418; }
 .b--danger { color: var(--danger); }
@@ -503,7 +503,7 @@ html[dir=rtl] .bar__top span:first-child { direction: rtl; }
 /* dashboard sizing: 40px controls with a mouse, 44px on touch screens; fields at 16px on touch (no zoom on iPhone) */
 @media (pointer: coarse) {
   .b { height: 44px; padding: 0 18px; font-size: 15px; }
-  .b--sm { height: 40px; } .b--icon { width: 44px; } .b--block { height: 50px; }
+  .b--sm { height: 40px; padding: 0 14px; } .b--icon { width: 44px; height: 44px; padding: 0; } .b--block { height: 50px; }
   .f input:not([type=checkbox]):not([type=color]):not([type=range]), .f select { height: 48px; font-size: 16px; }
   .f textarea { font-size: 16px; }
   .side__nav a { min-height: 44px; }
