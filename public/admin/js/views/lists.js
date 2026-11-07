@@ -45,8 +45,7 @@ export const ENTITIES = {
 
 export async function viewList(table) {
   const E = ENTITIES[table];
-  $("#topActions").innerHTML = `<button class="b b--primary" id="addBtn">${I.plus}إضافة ${E.one}</button>`;
-  $("#addBtn").onclick = () => editItem(table, null);
+  $("#topActions").innerHTML = "";
   if (table === "testimonials") {
     $("#topActions").insertAdjacentHTML("afterbegin", `<button class="b" id="reviewLink">${I.mail}رابط رأي لعميل</button>`);
     $("#reviewLink").onclick = reviewLinkDialog;
@@ -59,7 +58,8 @@ export async function viewList(table) {
     view.innerHTML = `<div class="empty">${I.img}<p>${E.empty}</p><button class="b b--primary" id="addFirst">${I.plus}إضافة ${E.one}</button></div>`;
     $("#addFirst").onclick = () => editItem(table, null); return;
   }
-  view.innerHTML = `<div class="toolbar"><div class="search">${I.search}<input id="q" placeholder="بحث…"></div><span class="muted" style="font-size:13px">${data.length} عنصر · رتّب بالأسهم</span></div>
+  view.innerHTML = `<div class="toolbar"><div class="search">${I.search}<input id="q" placeholder="بحث…"></div><button type="button" class="add-fab" id="addBtn" aria-label="إضافة ${E.one}" title="إضافة ${E.one}">${I.plus}</button></div>
+    <p class="muted toolbar__hint">${data.length} عنصر · رتّب بالأسهم</p>
     <div class="items" id="items">${data.map((r, i) => {
       const th = E.thumb?.(r);
       return `<div class="item" data-id="${r.id}" data-q="${esc((E.title(r) + " " + (r.title_en || r.name || "")).toLowerCase())}">
@@ -70,6 +70,7 @@ export async function viewList(table) {
           <button class="b b--icon b--ghost" data-pub="${r.id}" title="${r.published ? "إخفاء" : "نشر"}">${I.eye}</button>
           <button class="b b--icon b--ghost" data-edit="${r.id}" title="تعديل">${I.edit}</button>
           <button class="b b--icon b--ghost b--danger" data-del="${r.id}" title="حذف">${I.trash}</button></div></div>`;
+  $("#addBtn").onclick = () => editItem(table, null);
     }).join("")}</div>`;
   $("#q").oninput = (e) => { const q = e.target.value.trim().toLowerCase(); $$(".item").forEach((it) => (it.hidden = q && !it.dataset.q.includes(q))); };
   $$("[data-edit]").forEach((b) => (b.onclick = () => editItem(table, data.find((r) => r.id === b.dataset.edit))));

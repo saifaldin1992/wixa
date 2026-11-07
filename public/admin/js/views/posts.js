@@ -5,8 +5,7 @@ import { imageField } from "../fields.js";
 const slugify = (t) => String(t || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 
 export async function viewPosts(view) {
-  $("#topActions").innerHTML = `<a class="b" href="/blog" target="_blank" rel="noopener">عرض صفحة المقالات</a><button class="b b--primary" id="addPost">${I.plus}مقال جديد</button>`;
-  $("#addPost").onclick = () => editPost(null);
+  $("#topActions").innerHTML = `<a class="b" href="/blog" target="_blank" rel="noopener">عرض صفحة المقالات</a>`;
   const { data, error } = await sb.from("posts").select("*").order("created_at", { ascending: false });
   if (error) throw error;
   if (!data.length) {
@@ -14,7 +13,8 @@ export async function viewPosts(view) {
     return;
   }
   const when = (d) => (d ? new Date(d).toLocaleDateString("ar", { dateStyle: "medium" }) : "");
-  view.innerHTML = `<div class="items">${data.map((p) => `<div class="item">
+  view.innerHTML = `<div class="toolbar"><p class="muted toolbar__hint" style="margin:0">${data.length} مقال</p><button type="button" class="add-fab" id="addPost" aria-label="مقال جديد" title="مقال جديد">${I.plus}</button></div>
+    <div class="items">${data.map((p) => `<div class="item">
       <div class="item__thumb" style="${p.cover_url ? `background-image:url('${esc(p.cover_url)}')` : ""}">${p.cover_url ? "" : I.edit}</div>
       <div class="item__main"><b>${esc(p.title_ar || p.title_en || "بدون عنوان")}</b><span>${p.published ? `منشور · ${when(p.published_at)}` : "مسودة"} · <span dir="ltr">/blog/${esc(p.slug)}</span></span></div>
       <div class="item__actions">
@@ -22,6 +22,7 @@ export async function viewPosts(view) {
         <button class="b b--sm" data-pub="${p.id}">${p.published ? "إخفاء" : "نشر"}</button>
         <button class="b b--icon b--ghost" data-edit="${p.id}" title="تعديل">${I.edit}</button>
         <button class="b b--icon b--ghost b--danger" data-del="${p.id}" title="حذف">${I.trash}</button></div></div>`).join("")}</div>`;
+  $("#addPost").onclick = () => editPost(null);
   $$("[data-edit]", view).forEach((b) => (b.onclick = () => editPost(data.find((x) => x.id === b.dataset.edit))));
   $$("[data-pub]", view).forEach((b) => (b.onclick = async () => {
     const p = data.find((x) => x.id === b.dataset.pub);
