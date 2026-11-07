@@ -26,8 +26,8 @@ function svgArt(kind, color, bg = "") {
   let w, h, body;
   if (kind === "mark") { w = 2021; h = 982; body = markPath(0, 0, 982); }
   else if (kind === "word") { w = 716.6; h = 150; body = wordPath(0, 0, 150); }
-  else { // horizontal lockup: mark, then the wordmark at 42% of the mark's height, with half a mark-height between
-    const mh = 200, mw = 2021 * mh / 982, gap = mh * 0.28, wh = mh * 0.42, ww = 716.6 * wh / 150;
+  else { // horizontal lockup — the same proportions as on the site: wordmark 58% of the mark's height, 46% between
+    const mh = 200, mw = 2021 * mh / 982, gap = mh * 0.46, wh = mh * 0.58, ww = 716.6 * wh / 150;
     w = mw + gap + ww; h = mh; body = markPath(0, 0, mh) + wordPath(mw + gap, (mh - wh) / 2, wh);
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w.toFixed(1)} ${h}" width="${w.toFixed(1)}" height="${h}">${bg ? `<rect width="100%" height="100%" fill="${bg}"/>` : ""}${body}</svg>`;
@@ -77,7 +77,7 @@ export async function viewBrand(view) {
       <span class="muted" style="font-size:12px">${use}</span>
       <span class="bg-ct">نص أبيض فوقه: <b>${onW.toFixed(1)}:1</b> ${grade(onW)} · نص داكن فوقه: <b>${onD.toFixed(1)}:1</b> ${grade(onD)}</span></div></div>`;
   };
-  const scale = [["H1 — العنوان الرئيسي", "36", "48", "64", 800, "1.2"], ["H2 — عنوان القسم", "28", "36", "44", 800, "1.25"], ["H3 — عنوان البطاقة", "17", "20", "20", 700, "1.35"], ["نص المقدمة", "16", "17", "18", 400, "1.7"], ["النص الأساسي", "16", "16", "16", 400, "1.7"], ["نص البطاقات", "15", "16", "16", 400, "1.7"], ["الملاحظات الصغيرة", "14", "14", "14", 400, "1.6"], ["الأزرار", "15", "16", "16", 500, "1.2"]];
+  const scale = [["H1 — العنوان الرئيسي", "36", "48", "64", 800, "1.2"], ["H2 — عنوان القسم", "28", "36", "44", 800, "1.25"], ["عنوان بارز (القصة، المشاريع)", "20", "24", "28", 800, "1.3"], ["H3 — عنوان البطاقة", "17", "20", "20", 700, "1.35"], ["الأرقام البارزة (السعر)", "32", "40", "48", 800, "1.1"], ["نص المقدمة", "16", "17", "18", 400, "1.7"], ["النص الأساسي", "16", "16", "16", 400, "1.7"], ["نص البطاقات", "15", "16", "16", 400, "1.7"], ["الملاحظات الصغيرة", "14", "14", "14", 400, "1.6"], ["الأزرار", "15", "16", "16", 500, "1.2"]];
   const space = [4, 8, 12, 16, 24, 32, 48, 56, 80, 104];
 
   view.innerHTML = `<div class="brand-doc" id="brandDoc">
@@ -96,8 +96,8 @@ export async function viewBrand(view) {
       </div>
       <div class="bg-rules">
         <div><h4>المساحة الحرة</h4><div class="bg-clear" style="--p:${t.primary}">${svgArt("lockup", t.primary)}</div><p>اترك حول الشعار مساحة فارغة لا تقل عن <b>ربع ارتفاع الرمز</b> من كل جهة، لا يدخلها نص أو صورة.</p></div>
-        <div><h4>أصغر حجم</h4><p>الشعار الكامل: <b>120px</b> عرضاً على الشاشة و<b>30mm</b> في الطباعة.<br>الرمز وحده: <b>24px</b> على الشاشة و<b>8mm</b> في الطباعة. أصغر من ذلك يفقد وضوحه.</p></div>
-        <div><h4>ممنوع</h4><ul class="bg-dont"><li>تمديد الشعار أو ضغطه أو تدويره</li><li>تغيير ألوانه خارج الألوان أدناه</li><li>إضافة ظل أو حدود أو توهج</li><li>وضعه فوق صورة مزدحمة دون طبقة لون</li><li>إعادة كتابة الاسم بخط آخر</li><li>تغيير المسافة بين الرمز والاسم</li></ul></div>
+        <div><h4>أصغر حجم</h4><p>الشعار الكامل: <b>120px</b> عرضاً على الشاشة و<b>30mm</b> في الطباعة.<br>الرمز وحده: <b>24px</b> ارتفاعاً على الشاشة و<b>8mm</b> في الطباعة. أصغر من ذلك يفقد وضوحه.<br><b>النِّسَب:</b> ارتفاع الاسم = 58٪ من ارتفاع الرمز، والمسافة بينهما = 46٪ منه. في الموقع: الرمز 26px في الأعلى و30px في التذييل.</p></div>
+        <div><h4>ممنوع</h4><ul class="bg-dont"><li>تمديد الشعار أو ضغطه أو تدويره</li><li>تغيير ألوانه خارج الألوان أدناه</li><li>إضافة ظل أو حدود أو توهج</li><li>وضعه فوق صورة مزدحمة دون طبقة لون</li><li>إعادة كتابة الاسم بخط آخر</li><li>تغيير المسافة بين الرمز والاسم</li><li>إضافة حركة دوران أو تشويه — الحركة المسموحة: رسم الشعار وطفوه الهادئ</li></ul></div>
       </div></div>
 
     <div class="card"><div class="card__head"><div><h3>2. الألوان</h3><p>اضغط على أي لون لنسخ رمزه. النسب: نحو <b>60٪</b> خلفيات فاتحة، <b>30٪</b> اللون الأساسي والداكن، <b>10٪</b> اللون المساعد.</p></div></div>
@@ -119,7 +119,7 @@ export async function viewBrand(view) {
       <h4 style="margin:18px 0 8px">سلّم الأحجام (بكسل)</h4>
       <div class="table-wrap"><table class="bg-table"><thead><tr><th>العنصر</th><th>جوال</th><th>تابلت</th><th>كمبيوتر</th><th>الوزن</th><th>ارتفاع السطر</th></tr></thead>
         <tbody>${scale.map(([n, a, b, c, w, lh]) => `<tr><td>${n}</td><td>${a}</td><td>${b}</td><td>${c}</td><td>${w}</td><td>${lh}</td></tr>`).join("")}</tbody></table></div>
-      <p class="muted" style="font-size:12px">الأرقام بالإنجليزية (123) في الأسعار وأرقام الهواتف لوضوحها. لا تستخدم أكثر من وزنين في نفس السطر.</p>
+      <p class="muted" style="font-size:12px">الأوزان المستخدمة أربعة فقط: 400 و500 و700 و800. كل الأحجام من هذا السلّم، والأصغر 14px. الأرقام بالإنجليزية (123) في الأسعار وأرقام الهواتف لوضوحها. لا تستخدم أكثر من وزنين في نفس السطر.</p>
       ${font === "Alexandria" ? `<p style="margin:0"><a href="/fonts/alexandria/OFL.txt" target="_blank" rel="noopener">ترخيص الخط</a> · <a href="https://fonts.google.com/specimen/Alexandria" target="_blank" rel="noopener">تنزيل الخط للتصميم (Google Fonts)</a></p>` : ""}</div>
 
     <div class="card"><div class="card__head"><div><h3>5. منحنى WIXA</h3><p>الموجة المأخوذة من منحنيي الشعار. علامة مميزة تفتتح كل قسم في الموقع.</p></div></div>

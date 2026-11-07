@@ -203,7 +203,7 @@ function maintenancePage(request, cfg, st) {
 <title>${ar ? "ويكسا — نعود قريباً" : "WIXA — Back soon"}</title><meta name="robots" content="noindex"><link rel="icon" href="/favicon.svg">
 <style>:root{color-scheme:light dark;--bg:#F7F5FB;--fg:#1B1530;--mut:#5E5873;--brand:#5B21B6}@media(prefers-color-scheme:dark){:root{--bg:#0F0B1A;--fg:#F1EEF8;--mut:#A9A3BC;--brand:#A574F1}}
 body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;text-align:center;padding:24px;box-sizing:border-box}
-main{max-width:520px}img{width:84px;height:84px;margin-bottom:18px}h1{font-size:28px;margin:0 0 12px}p{color:var(--mut);line-height:1.9;margin:0 0 18px;font-size:16px}a{color:var(--brand);font-weight:600;text-decoration:none}</style></head>
+main{max-width:520px}img{width:84px;height:84px;margin-bottom:18px}h1{font-size:28px;margin:0 0 12px}p{color:var(--mut);line-height:1.9;margin:0 0 18px;font-size:16px}a{color:var(--brand);font-weight:700;text-decoration:none}</style></head>
 <body><main><img src="/icons/icon-192.png" alt="WIXA"><h1>${ar ? "نعود قريباً" : "Back soon"}</h1><p>${esc(msg)}</p>${links ? `<p>${links}</p>` : ""}</main></body></html>`;
   return new Response(request.method === "HEAD" ? null : html, { status: 503, headers: { ...SECURITY_HEADERS, "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "retry-after": "3600" } });
 }
@@ -764,7 +764,7 @@ function simplePage(request, st, { lang, title, description, path, image, body, 
 <meta property="og:type" content="website"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${origin}${path}">
 ${image ? `<meta property="og:image" content="${esc(image)}"><meta name="twitter:card" content="summary_large_image">` : ""}
 <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
-${font === "Alexandria" ? '<link rel="preload" href="/fonts/alexandria/alexandria-arabic-800-normal.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="/fonts/alexandria.css">' : `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;600;800&display=swap">`}
+${font === "Alexandria" ? '<link rel="preload" href="/fonts/alexandria/alexandria-arabic-800-normal.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="/fonts/alexandria.css">' : `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;500;700;800&display=swap">`}
 ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld).replace(/</g, "\\u003c")}</script>` : ""}
 <style>
 :root{--p:${color};--bg:#FBFAFE;--s:#fff;--t:#140F1F;--m:#625C70;--l:#ECE8F3;color-scheme:light dark}
@@ -775,14 +775,14 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 header .home{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--t);font-weight:800;font-size:1.15rem}header .home img{width:38px;height:38px}
 header nav{display:flex;gap:8px}header nav a{padding:8px 14px;border-radius:99px;border:1px solid var(--l);text-decoration:none;color:var(--t);font-size:.9rem;background:var(--s)}
 main{padding:20px 0 60px}h1{font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.3;margin:6px 0 12px}h2{font-size:1.2rem;margin:28px 0 8px}
-.cat{display:inline-block;font-size:.8rem;font-weight:600;padding:3px 12px;border-radius:99px;background:color-mix(in srgb,var(--p) 12%,transparent);color:var(--p)}
+.cat{display:inline-block;font-size:.8rem;font-weight:700;padding:3px 12px;border-radius:99px;background:color-mix(in srgb,var(--p) 12%,transparent);color:var(--p)}
 .lead{font-size:1.1rem;color:var(--m)}p,li{color:var(--m)}ul{padding-inline-start:20px}
 .gallery{display:grid;gap:12px;margin:24px 0}.gallery img{width:100%;border-radius:18px;border:1px solid var(--l);display:block}
 .gallery .mob{max-width:300px;justify-self:center}
 .stats{display:flex;flex-wrap:wrap;gap:28px;margin:24px 0;padding:20px 0;border-top:1px solid var(--l);border-bottom:1px solid var(--l)}
 .stats b{display:block;font-size:1.6rem;color:var(--t)}.stats span{color:var(--m);font-size:.9rem}
 .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border-radius:99px;text-decoration:none;font-weight:600;background:var(--p);color:#fff}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border-radius:99px;text-decoration:none;font-weight:700;background:var(--p);color:#fff}
 .btn--ghost{background:var(--s);color:var(--t);border:1px solid var(--l)}.btn--wa{background:#25D366;color:#fff}
 .sub{display:flex;gap:6px;overflow-x:auto;padding:0 0 6px;scrollbar-width:none}.sub a{flex-shrink:0;padding:6px 12px;border-radius:99px;text-decoration:none;color:var(--m);font-size:.85rem}.sub a:hover{color:var(--t);background:var(--s)}
 .more{margin-top:40px;padding-top:24px;border-top:1px solid var(--l)}.more h2{margin-top:0}.more__grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
@@ -792,10 +792,10 @@ main{padding:20px 0 60px}h1{font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.3;m
 .post img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:12px}.post b{display:block;font-size:1.1rem}.post span{font-size:.8rem;color:var(--m)}.post p{margin:6px 0 0;font-size:.92rem}
 @media(max-width:560px){.post{grid-template-columns:1fr}}
 article h2{margin-top:30px}article p,article li{font-size:1.05rem}
-.rv{display:grid;gap:14px;margin-top:20px}.rv label{display:grid;gap:6px;font-weight:600}.rv input,.rv textarea{font:inherit;padding:12px 14px;border-radius:14px;border:1px solid var(--l);background:var(--s);color:var(--t)}
-.rv fieldset{border:0;padding:0;margin:0}.rv legend{font-weight:600;margin-bottom:6px}.stars{display:flex;flex-wrap:wrap;gap:6px}
+.rv{display:grid;gap:14px;margin-top:20px}.rv label{display:grid;gap:6px;font-weight:700}.rv input,.rv textarea{font:inherit;padding:12px 14px;border-radius:14px;border:1px solid var(--l);background:var(--s);color:var(--t)}
+.rv fieldset{border:0;padding:0;margin:0}.rv legend{font-weight:700;margin-bottom:6px}.stars{display:flex;flex-wrap:wrap;gap:6px}
 .star input{position:absolute;opacity:0}.star span{display:inline-block;padding:6px 12px;border-radius:99px;border:1px solid var(--l);background:var(--s);color:#D9A441;cursor:pointer}
-.star input:checked+span{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 20%,transparent)}.rv .btn{justify-self:start;border:0;font:inherit;font-weight:600;cursor:pointer}
+.star input:checked+span{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 20%,transparent)}.rv .btn{justify-self:start;border:0;font:inherit;font-weight:700;cursor:pointer}
 footer{border-top:1px solid var(--l);padding:22px 0;font-size:.85rem;color:var(--m);display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between}
 footer a{color:var(--m)}
 </style></head><body><div class="wrap">

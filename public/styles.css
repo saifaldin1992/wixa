@@ -414,7 +414,7 @@ html[dir="rtl"] .tst__track { animation-name: tstScrollRtl; }
 .ctype { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 16px; border: 1.5px solid var(--line-2); text-align: start; transition: all .35s var(--ease-out); }
 .ctype i { width: 42px; height: 42px; border-radius: 12px; flex: none; display: grid; place-items: center; background: rgba(var(--fg-rgb), .1); color: var(--fg); transition: all .35s; }
 .ctype i svg { width: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.ctype b { font-size: .95rem; font-weight: 600; }
+.ctype b { font-size: .95rem; font-weight: 700; }
 .ctype:hover { border-color: rgba(var(--fg-rgb), .45); }
 .ctype[aria-checked="true"] { border-color: var(--primary); background: rgba(var(--fg-rgb), .06); box-shadow: 0 0 0 4px rgba(var(--fg-rgb), .1); }
 .ctype[aria-checked="true"] i { background: var(--primary); color: var(--primary-ink); transform: rotate(-8deg) scale(1.06); }
@@ -478,7 +478,7 @@ html[dir="ltr"] .progress span { transform-origin: left; }
 @media (hover: hover) and (pointer: fine) { html.has-cursor .cursor { display: block; } }
 .cursor__dot, .cursor__ring { position: absolute; top: 0; left: 0; border-radius: 50%; will-change: transform; }
 .cursor__dot { width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; background: var(--fg); }
-.cursor__ring { width: 36px; height: 36px; margin: -18px 0 0 -18px; border: 1.5px solid rgba(var(--fg-rgb), .45); transition: width .35s var(--ease-out), height .35s var(--ease-out), margin .35s var(--ease-out), background .35s, border-color .35s; display: grid; place-items: center; font-size: 11px; font-weight: 600; color: var(--primary-ink); overflow: hidden; }
+.cursor__ring { width: 36px; height: 36px; margin: -18px 0 0 -18px; border: 1.5px solid rgba(var(--fg-rgb), .45); transition: width .35s var(--ease-out), height .35s var(--ease-out), margin .35s var(--ease-out), background .35s, border-color .35s; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: var(--primary-ink); overflow: hidden; }
 .cursor.hover .cursor__ring { width: 64px; height: 64px; margin: -32px 0 0 -32px; background: rgba(var(--fg-rgb), .14); border-color: transparent; }
 .cursor.view .cursor__ring { width: 86px; height: 86px; margin: -43px 0 0 -43px; background: var(--primary); border-color: transparent; }
 .cursor.hover .cursor__dot, .cursor.view .cursor__dot { opacity: 0; }
@@ -743,7 +743,7 @@ html[data-theme="dark"] .pstep.on .pstep__num { box-shadow: 0 0 0 8px rgba(var(-
 .loader { transition-duration: .35s; }
 
 /* ---------- services: ask on WhatsApp ---------- */
-.svc__wa { display: inline-flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 14px; font-size: .86rem; font-weight: 600; color: #128C4A; width: max-content; }
+.svc__wa { display: inline-flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 14px; font-size: .86rem; font-weight: 700; color: #128C4A; width: max-content; }
 .svc__wa svg { width: 18px; height: 18px; }
 .svc__wa:hover { text-decoration: underline; }
 [data-theme="dark"] .svc__wa { color: #3DDC84; }
@@ -756,7 +756,7 @@ html[data-theme="dark"] .pstep.on .pstep__num { box-shadow: 0 0 0 8px rgba(var(-
 .job h3 { margin: 0 0 8px; font-size: 1.15rem; }
 .job p { margin: 10px 0 0; color: var(--muted); line-height: 1.8; font-size: .93rem; }
 .job__tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.job__tags span { font-size: .78rem; padding: 3px 10px; border-radius: 99px; background: color-mix(in srgb, var(--primary) 10%, transparent); color: var(--primary); font-weight: 600; }
+.job__tags span { font-size: .78rem; padding: 3px 10px; border-radius: 99px; background: color-mix(in srgb, var(--primary) 10%, transparent); color: var(--primary); font-weight: 700; }
 [data-theme="dark"] .job__tags span { color: var(--fg, #A574F1); }
 .job .btn { flex-shrink: 0; padding: 11px 22px; }
 .careers__empty { text-align: center; color: var(--muted); line-height: 1.9; margin: 0 auto; max-width: 620px; }
@@ -766,7 +766,7 @@ html[data-theme="dark"] .pstep.on .pstep__num { box-shadow: 0 0 0 8px rgba(var(-
 /* ---------- FAQ ---------- */
 .faq__list { max-width: 820px; margin: 0 auto; padding: 0 var(--gutter); display: grid; gap: 10px; }
 .faq__item { border-radius: calc(var(--radius) - 6px); background: var(--surface); border: 1px solid var(--line); overflow: hidden; }
-.faq__item summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; font-weight: 600; }
+.faq__item summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; font-weight: 700; }
 .faq__item summary::-webkit-details-marker { display: none; }
 .faq__item summary i { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; position: relative; background: color-mix(in srgb, var(--primary) 10%, transparent); }
 .faq__item summary i::before, .faq__item summary i::after { content: ""; position: absolute; inset: 50% auto auto 50%; width: 10px; height: 2px; background: var(--primary); transform: translate(-50%, -50%); transition: transform .3s; }
@@ -810,7 +810,7 @@ html[data-theme="dark"] .pstep.on .pstep__num { box-shadow: 0 0 0 8px rgba(var(-
 @media (max-width: 760px) {
   .mbar { display: flex; gap: 8px; position: fixed; inset: auto 12px calc(12px + env(safe-area-inset-bottom)) 12px; z-index: 60; padding: 8px; border-radius: 20px; background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); box-shadow: 0 16px 40px -14px rgba(0,0,0,.35); transform: translateY(140%); opacity: 0; transition: transform .45s var(--ease-out), opacity .3s; pointer-events: none; }
   .mbar.show { transform: none; opacity: 1; pointer-events: auto; }
-  .mbar__btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; border-radius: 14px; font-weight: 600; font-size: .95rem; text-decoration: none; }
+  .mbar__btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; border-radius: 14px; font-weight: 700; font-size: .95rem; text-decoration: none; }
   .mbar__btn svg { width: 20px; height: 20px; }
   .mbar__btn--main { background: var(--primary); color: #fff; }
   .mbar__btn--main svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
@@ -844,7 +844,7 @@ html[data-theme="dark"] .pstep.on .pstep__num { box-shadow: 0 0 0 8px rgba(var(-
 }
 
 /* FAQ as buttons: the whole row is one large tap target */
-.faq__q { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; font: inherit; font-weight: 600; color: inherit; text-align: start; background: none; border: 0; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+.faq__q { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; font: inherit; font-weight: 700; color: inherit; text-align: start; background: none; border: 0; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
 .faq__q i { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; position: relative; background: color-mix(in srgb, var(--primary) 10%, transparent); pointer-events: none; }
 .faq__q i::before, .faq__q i::after { content: ""; position: absolute; inset: 50% auto auto 50%; width: 10px; height: 2px; background: var(--primary); transform: translate(-50%, -50%); transition: transform .3s; }
 .faq__q i::after { transform: translate(-50%, -50%) rotate(90deg); }
@@ -854,7 +854,7 @@ html[data-theme="dark"] .pstep.on .pstep__num { box-shadow: 0 0 0 8px rgba(var(-
 [data-theme="dark"] .faq__q i::before, [data-theme="dark"] .faq__q i::after { background: var(--accent); }
 
 /* ---------- service cards: link to the service page ---------- */
-.svc__more { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; font-size: .88rem; font-weight: 600; color: var(--fg); width: max-content; }
+.svc__more { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; font-size: .88rem; font-weight: 700; color: var(--fg); width: max-content; }
 .svc__more svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
 html[dir="ltr"] .svc__more svg { transform: scaleX(-1); }
 .svc__more:hover { text-decoration: underline; }
@@ -887,7 +887,7 @@ html[dir="ltr"] .svc__more svg { transform: scaleX(-1); }
   .qp__head time { color: #625C70; font-size: 13px; }
   .qp__table { width: 100%; border-collapse: collapse; margin-bottom: 22px; }
   .qp__table th, .qp__table td { text-align: start; padding: 10px 12px; border-bottom: 1px solid #ECE8F3; vertical-align: top; }
-  .qp__table th { width: 32%; color: #625C70; font-weight: 600; }
+  .qp__table th { width: 32%; color: #625C70; font-weight: 700; }
   .qp__table ul { margin: 0; padding-inline-start: 18px; }
   .qp__price { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-radius: 14px; background: #F3EEFB; }
   .qp__price b { font-size: 26px; color: #5B21B6; }
@@ -1012,7 +1012,7 @@ body { font-size: var(--fs-body); }
   .svc h3 { font-size: 1.0625rem; }
   .svc p { font-size: .9375rem; }
 }
-.faq__q { font-size: var(--fs-body); font-weight: 600; }
+.faq__q { font-size: var(--fs-body); font-weight: 700; }
 @media (min-width: 768px) { .faq__q { font-size: 1.0625rem; } }
 /* calculator result: the three actions stacked, same width */
 .calc__btns { display: grid; gap: 10px; width: 100%; }
@@ -1021,3 +1021,30 @@ body { font-size: var(--fs-body); }
 /* service cards: the two links sit together at the bottom */
 .svc__more { margin-top: auto; padding-top: 12px; }
 .svc__wa { margin-top: 0; min-height: 40px; }
+
+/* =====================================================================================
+   Brand guide compliance (الهوية البصرية): one logo lockup everywhere, only the four font weights,
+   every text size on the type scale, and no added effects on the logo.
+   ===================================================================================== */
+/* logo lockup: wordmark = 58% of the mark's height, space between = 46% (same as the guide's downloads) */
+.brand { --lh: 26px; gap: calc(var(--lh) * .46); }
+.brand__mark { height: var(--lh); width: calc(var(--lh) * 2.058); }
+.brand__name .wm, .footer .brand__name .wm { height: calc(var(--lh) * .58); }
+.footer .brand { --lh: 30px; }
+.brand:hover .brand__mark { transform: none; } /* the guide: never rotate or distort the logo */
+/* the big logo on the first screen: drawn and floating, without glow, shine or extra marks */
+.hero__logo .lg-glow, .hero__logo .lg-shine, .hero__logo .lg-runner { display: none !important; }
+
+/* type scale: 14 · 15 · 16 · 17 · 18 · 20 · 24 · 28 · 36 · 44 · 48 · 64 */
+:root { --fs-h3-lg: 1.25rem; --fs-num: 2rem; }
+@media (min-width: 768px) { :root { --fs-h3-lg: 1.5rem; --fs-num: 2.5rem; } }
+@media (min-width: 1200px) { :root { --fs-h3-lg: 1.75rem; --fs-num: 3rem; } }
+.header__nav a, .footer__nav a, .ctype b { font-size: .9375rem; }
+.badge, .calc__speed button, .calc__label, .story-item__num, .calc__sticky span { font-size: .875rem; }
+.header__menu a { font-size: 1rem; }
+.pstep__num, .process h3, .pstep h3 { font-size: 1.25rem; }
+.pstep p { font-size: var(--fs-card); }
+.calc__price { font-size: var(--fs-num); }
+.calc__price small { font-size: var(--fs-lead); }
+@media (max-width: 1100px) and (min-width: 901px) { .header__nav a { font-size: .875rem; } }
+.calc__sticky b { font-size: 1rem; }
