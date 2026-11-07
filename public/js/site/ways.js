@@ -1,5 +1,6 @@
 /* The contact page (/contact): every way to reach WIXA, each opening its own channel —
    the live chat, WhatsApp, a phone call, email, the project form, an appointment, and social accounts. */
+import { openRequest } from "./request.js";
 import { $, $$, SOCIAL, UI, esc, lang, state } from "./core.js";
 import { openContact } from "./contact.js";
 import { openChat } from "./chat.js";
@@ -44,7 +45,7 @@ export function renderWays() {
     grid.addEventListener("click", (e) => {
       const b = e.target.closest("[data-way]"); if (!b) return;
       if (b.dataset.way === "chat") openChat();
-      if (b.dataset.way === "form") openContact();
+      if (b.dataset.way === "form") openRequest();
     });
   }
   // on the contact page the project form is already open

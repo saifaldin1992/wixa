@@ -349,8 +349,13 @@
   // Light tokens come from the dashboard; the dark palette is derived from the brand color.
   // CSS maps --bg, --surface, … to --l-* or --dk-* depending on html[data-theme].
   function applyTheme(settings, root = document.documentElement) {
+    const vars = themeVars(settings, loadFont(settings.font.family));
+    for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v);
+  }
+  // The CSS variables of the theme — also used by the server to paint the right colours on the first frame
+  function themeVars(settings, fam) {
     const t = settings.theme, f = settings.font;
-    const fam = loadFont(f.family);
+    if (!FONTS[fam]) fam = "Alexandria";
     const dk = darkPalette(t);
     const vars = {
       "--primary": t.primary, "--primary-rgb": hexToRgb(t.primary), "--primary-ink": t.primaryInk,
@@ -364,7 +369,7 @@
       "--scale": String(Math.min(1.4, Math.max(0.8, Number(f.scale) || 1))),
       "--hw": String(f.headingWeight || 800),
     };
-    for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v);
+    return vars;
   }
 
   // Red "trial version" bar shown only on the staging copy (staging.wixa.dev).
@@ -400,7 +405,7 @@
     const add = () => document.body.prepend(bar);
     document.body ? add() : addEventListener("DOMContentLoaded", add, { once: true });
   }
-  markEnv();
+  if (typeof document !== "undefined") markEnv();
 
-  window.WIXA = { DEFAULTS, FONTS, ICONS, merge, applyTheme, loadFont, markEnv, darkPalette, vivid, mix };
+  window.WIXA = { DEFAULTS, FONTS, ICONS, merge, applyTheme, themeVars, loadFont, markEnv, darkPalette, vivid, mix };
 })();

@@ -1,7 +1,8 @@
 // Bundles and minifies the front end into public/build/ (run automatically before every deploy and `wrangler dev`).
 // Source stays split into small modules (public/js/site/*, public/admin/js/*); visitors download one small file each.
 import { build } from "esbuild";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync, readFileSync, readdirSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { execSync } from "node:child_process";
 
 const out = "public/build";
@@ -26,4 +27,9 @@ writeFileSync(`${out}/version.json`, JSON.stringify({
   commit, branch: process.env.WORKERS_CI_BRANCH || git("rev-parse --abbrev-ref HEAD"),
   message: git(`log -1 --format=%s ${commit}`).slice(0, 90), built_at: new Date().toISOString(),
 }));
+// a short fingerprint of every built file: pages ask for /build/site.js?v=<fingerprint>, so browsers keep each file
+// for a year and fetch it again only when its content really changed
+const manifest = {};
+for (const f of readdirSync(out)) if (/\.(js|css)$/.test(f)) manifest[`/build/${f}`] = createHash("sha256").update(readFileSync(`${out}/${f}`)).digest("hex").slice(0, 10);
+writeFileSync(`${out}/manifest.json`, JSON.stringify(manifest));
 console.log("front end built → public/build/");

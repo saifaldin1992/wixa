@@ -13,6 +13,7 @@ import { setupProgress, setupCursor, setupMotion, pauseOffscreen } from "./site/
 import { setupChat } from "./site/chat.js";
 import { visitSource } from "./site/source.js";
 import { setupPromo, setupExitOffer } from "./site/promo.js";
+import { setupRequest } from "./site/request.js";
 visitSource(); // remember where this visit came from (first visit wins)
 // one HTML, four pages: the homepage, /about, /pricing and /careers each show their own sections
 const PAGES = { "/about": "about", "/pricing": "pricing", "/careers": "careers", "/contact": "contact" };
@@ -48,6 +49,7 @@ if (PREVIEW) addEventListener("message", (e) => {
   render();
   setupUI();
   setupContact();
+  setupRequest();
   setupTheme();
   setupParticles();
   setupLogoTilt();
@@ -60,7 +62,7 @@ if (PREVIEW) addEventListener("message", (e) => {
   try { setupChat(); } catch (e) { reportError(`chat: ${e.message}`, "chat.js", 0); } // the chat can never stop the site from opening
   try { setupPromo(); setupExitOffer(); } catch (e) { reportError(`promo: ${e.message}`, "promo.js", 0); }
   // reveal right away (the content is already in the page); scroll effects start once everything has loaded
-  $(".loader").classList.add("done");
+  $(".loader")?.classList.add("done");
   document.body.classList.remove("is-loading");
   requestAnimationFrame(() => $(".hero").classList.add("in", "in-hero"));
   let moving = false;

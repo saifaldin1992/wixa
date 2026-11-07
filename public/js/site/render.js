@@ -10,6 +10,7 @@ const { applyTheme } = window.WIXA;
 
 // ---------- render ----------
 function splitWords(el, text) {
+  if (el.textContent.replace(/\s+/g, " ").trim() === String(text).replace(/\s+/g, " ").trim()) return; // already painted by the server
   el.innerHTML = String(text).split(/\s+/).filter(Boolean)
     .map((w, i) => `<span class="word"><span style="transition-delay:${i * 70}ms">${esc(w)}</span></span>`).join(" ");
 }

@@ -270,3 +270,10 @@ node scripts/build.mjs                # بناء الواجهة يدوياً
 - النصوص الظاهرة للمستخدم بالعربية والإنجليزية دائماً (`*_ar` / `*_en`).
 - لا أرقام أو آراء أو مشاريع وهمية في المحتوى.
 - التعليقات في الكود تشرح **السبب** وليس ما يفعله السطر.
+
+## First paint, caching and the project request (Nov 2026)
+- **Server-rendered page:** `handleHome` fills every `[data-c]` / `[data-t]` text, the theme colours (`WIXA.themeVars`) and hidden sections in the HTML itself, using `public/shared.js` (loaded in the Worker through `src/window-shim.js`). There is no loading screen; the hero plays its entrance from CSS (`.hero.in-hero`).
+- **Site content copy in KV:** `site-data` in the PRIVATE namespace holds the last good content, so a cold edge location never waits for the database. Written only when the content changed.
+- **Built files:** `scripts/build.mjs` writes `public/build/manifest.json` (a fingerprint per file). Pages ask for `/build/site.js?v=<fingerprint>`; the Worker serves those with a one-year immutable cache, anything else with `no-cache`.
+- **Project request:** `public/js/site/request.js` (opened by `.nav-cta`, `[data-start]`, `#start`, and the contact page's “request a project” card) posts to `/api/contact` with `kind: "project"`. The Worker gives it a number `WX-YYMMDD-XXXX`, stores a readable summary as a message, alerts the team and emails the client a confirmation (`sendRequestConfirmation`).
+- **Chat reviews:** a 4–5★ chat rating with “share my review” ticked arrives in client reviews **hidden** until the owner publishes it.

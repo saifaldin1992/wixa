@@ -9,6 +9,25 @@
 //  • Visits are counted by Cloudflare Web Analytics, not by this Worker.
 
 import { PRIVACY_DEFAULTS } from "../public/js/privacy-defaults.js";
+import "./window-shim.js";
+import "../public/shared.js";
+import { UI_DEFAULTS } from "../public/js/ui-strings.js";
+const WIXA = globalThis.WIXA;
+import BUILD_MANIFEST from "../public/build/manifest.json";
+// /build/site.js → /build/site.js?v=<fingerprint of its content> (see scripts/build.mjs)
+const versioned = (path) => (BUILD_MANIFEST[path] ? `${path}?v=${BUILD_MANIFEST[path]}` : path);
+const versionAssets = (rw) => rw
+  .on('link[href^="/build/"]', { element: (el) => el.setAttribute("href", versioned(el.getAttribute("href"))) })
+  .on('script[src^="/build/"]', { element: (el) => el.setAttribute("src", versioned(el.getAttribute("src"))) });
+// Built files: kept for a year when asked for by their fingerprint, otherwise always re-checked
+async function serveBuild(request, env, url) {
+  const res = await env.ASSETS.fetch(request);
+  if (!res.ok) return res;
+  const headers = new Headers(res.headers);
+  const exact = BUILD_MANIFEST[url.pathname] && url.searchParams.get("v") === BUILD_MANIFEST[url.pathname];
+  headers.set("cache-control", exact ? "public, max-age=31536000, immutable" : "public, no-cache");
+  return new Response(res.body, { status: res.status, headers });
+}
 import DEV_GUIDE from "../docs/DEVELOPERS.md";
 
 const SITE_TTL = 60; // seconds the site content may be served from cache
@@ -340,8 +359,21 @@ async function handleHome(request, env, ctx, pageName = "home") {
     `<link rel="alternate" hreflang="ar" href="${origin}${pagePath}?lang=ar"><link rel="alternate" hreflang="en" href="${origin}${pagePath}?lang=en"><link rel="alternate" hreflang="x-default" href="${origin}${pagePath}">`,
   ].filter(Boolean).join("");
   const words = (t) => String(t).split(/\s+/).filter(Boolean).map((w, i) => `<span class="word"><span style="transition-delay:${i * 70}ms">${esc(w)}</span></span>`).join(" ");
-  const fill = (key, html) => ({ element: (el) => { if (hero[key]) el.setInnerContent(html ? words(hero[key]) : hero[key], { html }); } });
-  const res = new HTMLRewriter()
+  // The whole page is painted from the server with the same texts, colours and sections the script would set,
+  // so the first frame is the finished page and no loading screen is needed.
+  const full = WIXA.merge(WIXA.DEFAULTS, st);
+  const C = full.content?.[lang] || full.content?.ar || {};
+  const ui = { ...UI_DEFAULTS[lang] };
+  for (const [k, v] of Object.entries(st.ui?.[lang] || {})) if (typeof v === "string" && v.trim() && k in ui) ui[k] = v;
+  let parsed = {}; try { parsed = JSON.parse(data); } catch {}
+  const hide = new Set(Object.entries(full.sections || {}).filter(([, on]) => !on).map(([k]) => k));
+  if (!(parsed.partners || []).length) hide.add("partners");
+  if (!(parsed.testimonials || []).length) hide.add("testimonials");
+  const vars = WIXA.themeVars(full, full.font?.family);
+  const themeCss = `<style id="wixa-theme">:root{${Object.entries(vars).map(([k, v]) => `${k}:${String(v).replace(/[<>{};]/g, "")}`).join(";")}}</style>`;
+  const fontHref = full.font?.family && full.font.family !== "Alexandria" && WIXA.FONTS[full.font.family]
+    ? `https://fonts.googleapis.com/css2?family=${encodeURIComponent(full.font.family).replace(/%20/g, "+")}:wght@${WIXA.FONTS[full.font.family]}&display=swap` : "";
+  const res = versionAssets(new HTMLRewriter())
     .on("head", { element: (el) => el.append(`${headTags}<script id="wixa-data" type="application/json">${safe}</script>`, { html: true }) })
     .on("html", { element: (el) => { el.setAttribute("lang", lang); el.setAttribute("dir", lang === "ar" ? "rtl" : "ltr"); el.setAttribute("data-page", pageName); } })
     .on(...attr('link[rel="canonical"]', "href", `${origin}${pagePath}`))
@@ -359,12 +391,19 @@ async function handleHome(request, env, ctx, pageName = "home") {
     .on(...attr('link[rel="icon"][type="image/svg+xml"]', "href", seo.icon_url))
     .on(...attr('link[rel="icon"][sizes]', "href", seo.icon_url))
     .on(...attr('link[rel="apple-touch-icon"]', "href", seo.icon_url))
-    .on("#heroTitle", fill("hero_title", true))
-    .on('[data-c="hero_badge"]', fill("hero_badge", false))
-    .on('.hero__sub[data-c="hero_sub"]', fill("hero_sub", false))
+    .on("head", { element: (el) => el.append(themeCss, { html: true }) })
+    .on("#wixa-font", { element: (el) => { if (fontHref) el.setAttribute("href", fontHref); } })
+    .on("#heroTitle", { element: (el) => el.setInnerContent(words(C.hero_title ?? hero.hero_title), { html: true }) })
+    .on("[data-c]", { element: (el) => { const k = el.getAttribute("data-c"); if (el.getAttribute("id") !== "heroTitle" && k in C) el.setInnerContent(String(C[k] ?? "")); } })
+    .on("[data-t]", { element: (el) => { const k = el.getAttribute("data-t"); if (k !== "brand" && typeof ui[k] === "string") el.setInnerContent(ui[k]); } })
+    .on("[data-section], [data-sec]", { element: (el) => { if (hide.has(el.getAttribute("data-section") || el.getAttribute("data-sec"))) el.setAttribute("hidden", ""); } })
+    .on("#langBtn", { element: (el) => el.setInnerContent(lang === "ar" ? "EN" : "ع") })
+    .on(".hero", { element: (el) => el.setAttribute("class", `${el.getAttribute("class") || ""} in in-hero`) })
+    .on("body", { element: (el) => el.removeAttribute("class") })
+    .on(".loader", { element: (el) => el.remove() })
     .on("body", { element: (el) => {
       if (!preview) el.append(beacon(env), { html: true });
-      if (Object.keys(tags).length) el.append(`<script id="wixa-tags" type="application/json">${JSON.stringify(tags)}</script><script type="module" src="/build/tags.js"></script>`, { html: true });
+      if (Object.keys(tags).length) el.append(`<script id="wixa-tags" type="application/json">${JSON.stringify(tags)}</script><script type="module" src="${versioned("/build/tags.js")}"></script>`, { html: true });
       if (cfg.maintenance.on && owner && !preview) el.append('<div style="position:fixed;inset:auto 12px 12px auto;z-index:99999;background:#B45309;color:#fff;padding:8px 14px;border-radius:10px;font:600 13px system-ui,Tahoma,sans-serif">وضع الصيانة مفعّل — الزوار يرون صفحة «نعود قريباً»</div>', { html: true });
     } })
     .transform(page);
@@ -411,7 +450,7 @@ const rpc = (env, fn, p) => sb(env, `rpc/${fn}`, { method: "POST", body: JSON.st
 async function handleAdminPage(request, env) {
   const page = await env.ASSETS.fetch(new Request(new URL("/admin/", request.url), request));
   const cfg = JSON.stringify({ env: env.SITE_ENV || "production", supabaseUrl: env.SUPABASE_URL, supabaseKey: env.SUPABASE_PUBLISHABLE_KEY }).replace(/</g, "\\u003c");
-  const res = new HTMLRewriter().on("head", { element: (el) => el.append(`<link rel="preconnect" href="${esc(env.SUPABASE_URL)}" crossorigin><script id="wixa-config" type="application/json">${cfg}</script>`, { html: true }) }).transform(page);
+  const res = versionAssets(new HTMLRewriter()).on("head", { element: (el) => el.append(`<link rel="preconnect" href="${esc(env.SUPABASE_URL)}" crossorigin><script id="wixa-config" type="application/json">${cfg}</script>`, { html: true }) }).transform(page);
   const headers = new Headers(res.headers);
   for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v);
   headers.set("cache-control", "no-cache");
@@ -698,6 +737,38 @@ async function sendAutoReply(env, cfg, row, test = false) {
   return res.ok;
 }
 
+// The client's copy of a project request: its number and what they asked for (always sent, whatever the auto-reply setting)
+async function sendRequestConfirmation(env, cfg, row) {
+  if (!env.RESEND_API_KEY) return false;
+  const ar = row.lang !== "en";
+  const name = row.name.replace(/https?:\/\/\S+|www\.\S+/gi, "").replace(/[<>]/g, "").trim().slice(0, 40);
+  let contact = "", wa = "";
+  try { const c = JSON.parse(memo.text || (await loadFromSupabase(env)))?.settings?.contact || {}; contact = c.email || ""; wa = String(c.whatsapp || "").replace(/\D/g, ""); } catch {}
+  const site = env.SITE_ENV === "staging" ? "https://staging.wixa.dev" : "https://wixa.dev";
+  const intro = ar ? `أهلاً ${name}،\nوصلنا طلب مشروعك ورقمه ${row.request_no}. سيراجعه فريقنا ونعود إليك خلال يوم عمل بالخطوة التالية أو بأسئلة لتوضيح التفاصيل.`
+    : `Hi ${name},\nWe've received your project request, number ${row.request_no}. Our team will review it and get back to you within one working day with the next step or a few questions.`;
+  const keep = ar ? "احتفظ برقم الطلب، واذكره عند تواصلك معنا." : "Keep this number and mention it when you contact us.";
+  const html = `<div dir="${ar ? "rtl" : "ltr"}" style="font-family:Tahoma,Arial,sans-serif;background:#F6F3FB;padding:24px">
+    <div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E9E4F2">
+      <div style="background:#5B21B6;color:#fff;padding:18px 22px;font-size:18px;font-weight:bold">${ar ? "ويكسا" : "WIXA"}</div>
+      <div style="padding:22px;color:#140F1F;font-size:15px;line-height:1.9">
+        <p style="margin:0 0 14px;white-space:pre-wrap">${esc(intro)}</p>
+        <div style="background:#F3EEFC;border-radius:12px;padding:14px 16px;text-align:center;margin:0 0 16px"><div style="color:#625C70;font-size:13px">${ar ? "رقم الطلب" : "Request number"}</div><div style="font-size:22px;font-weight:bold;letter-spacing:1px;color:#5B21B6" dir="ltr">${esc(row.request_no)}</div></div>
+        <div style="white-space:pre-wrap;color:#3A3446;font-size:14px;border-top:1px solid #EEE;padding-top:12px">${esc(row.message)}</div>
+        <p style="margin:16px 0 0;color:#625C70;font-size:13px">${esc(keep)}</p>
+        ${wa ? `<p style="margin:14px 0 0"><a href="https://wa.me/${wa}?text=${encodeURIComponent((ar ? "مرحباً، بخصوص طلبي رقم " : "Hello, about my request ") + row.request_no)}" style="display:inline-block;background:#0E7C47;color:#fff;text-decoration:none;padding:10px 18px;border-radius:99px;font-weight:bold">${ar ? "تابع طلبك على واتساب" : "Follow up on WhatsApp"}</a></p>` : ""}
+      </div>
+      <div style="padding:0 22px 20px"><a href="${site}" style="color:#5B21B6;text-decoration:none">${site.replace("https://", "")}</a></div></div></div>`;
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
+    body: JSON.stringify({ from: `${cfg.alerts.from_name} <noreply@wixa.dev>`, to: [row.email], ...(EMAIL_RE.test(contact) ? { reply_to: contact } : {}),
+      subject: ar ? `استلمنا طلب مشروعك — ${row.request_no}` : `We received your project request — ${row.request_no}`, html, text: `${intro}\n\n${row.message}\n\n${keep}` }),
+  });
+  if (!res.ok) console.error("request mail failed", res.status, await res.text());
+  return res.ok;
+}
+
 async function handleContact(request, env, ctx) {
   const ip = clientIp(request);
   if (!(await allowed(env.CONTACT_LIMITER, ip))) return json({ error: "rate_limited" }, 429);
@@ -721,6 +792,7 @@ async function handleContact(request, env, ctx) {
     source: clean(body.source, 60), // where the visitor came from (Google, Instagram…)
   };
   if (body.kind === "booking" && !row.message) row.message = "حجز موعد";
+  if (body.kind === "project" && !row.message) row.message = "-";
   if (!row.name || !row.message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) return json({ error: "validation" }, 422);
   if (!row.phone || row.phone.replace(/\D/g, "").length < 7) return json({ error: "phone_required" }, 422);
   if (body.kind === "booking") {
@@ -729,6 +801,28 @@ async function handleContact(request, env, ctx) {
     const dayName = new Date(`${date}T00:00:00Z`).toLocaleDateString("ar-IQ", { weekday: "long", timeZone: "UTC" });
     row.services = [`حجز موعد: ${dayName} ${date} الساعة ${time}`];
     row.message = row.message || "حجز موعد";
+  }
+  // the smart project request: answers become a readable summary with a request number
+  let reqNo = "";
+  if (body.kind === "project") {
+    const p = body.project && typeof body.project === "object" ? body.project : {};
+    const ar = row.lang === "ar";
+    const d = new Date(), pad = (n) => String(n).padStart(2, "0");
+    const rnd = [...crypto.getRandomValues(new Uint8Array(4))].map((b) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b % 32]).join("");
+    reqNo = `WX-${String(d.getUTCFullYear()).slice(2)}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}-${rnd}`;
+    const list = (v) => (Array.isArray(v) ? v.filter((x) => typeof x === "string").slice(0, 12).map((x) => x.slice(0, 80)) : []);
+    const lines = [
+      [ar ? "رقم الطلب" : "Request no.", reqNo],
+      [ar ? "نوع المشروع" : "Project type", clean(p.type, 80)],
+      [ar ? "المجال" : "Field", clean(p.field, 80)],
+      [ar ? "الميزات" : "Features", list(p.features).join("، ")],
+      [ar ? "الميزانية" : "Budget", clean(p.budget, 60)],
+      [ar ? "المدة" : "Timeline", clean(p.timeline, 60)],
+      [ar ? "ملفات / أمثلة" : "Files / examples", safeHref(clean(p.link, 300))],
+    ].filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`);
+    row.services = [`طلب مشروع ${reqNo}`, clean(p.type, 80)].filter(Boolean);
+    row.message = `${lines.join("\n")}\n\n${row.message}`.slice(0, 4300);
+    row.request_no = reqNo;
   }
   if (isJob) {
     const cv = safeHref(clean(body.cv, 300));
@@ -740,15 +834,17 @@ async function handleContact(request, env, ctx) {
   const hay = `${row.name} ${row.email} ${row.phone || ""} ${row.message}`.toLowerCase();
   if (blocked.some((w) => hay.includes(w))) return json({ ok: true }, 201);
 
-  const res = await rpc(env, "submit_contact", row);
+  const { request_no: _no, ...stored } = row;
+  const res = await rpc(env, "submit_contact", stored);
   if (!res.ok) {
     console.error("contact insert failed", res.status, await res.text());
     return json({ error: "storage" }, 502);
   }
   ctx.waitUntil(notifyOwner(env, row).catch((e) => console.error("notify", e)));
-  ctx.waitUntil(sendAutoReply(env, cfg, row).catch((e) => console.error("autoreply", e)));
+  if (reqNo) ctx.waitUntil(sendRequestConfirmation(env, cfg, row).catch((e) => console.error("request mail", e)));
+  else ctx.waitUntil(sendAutoReply(env, cfg, row).catch((e) => console.error("autoreply", e)));
   ctx.waitUntil(countMessage(env, row, isJob).catch((e) => console.error("count", e)));
-  return json({ ok: true }, 201);
+  return json({ ok: true, ...(reqNo ? { number: reqNo } : {}) }, 201);
 }
 
 // ---------------------------------------------------------------- simple pages (project pages, privacy policy)
@@ -1835,6 +1931,7 @@ export default {
     // one address for search engines: www.wixa.dev → wixa.dev (permanent)
     if (url.hostname === "www.wixa.dev") { url.hostname = "wixa.dev"; return Response.redirect(url.toString(), 301); }
     const route = `${request.method} ${url.pathname}`;
+    if (url.pathname.startsWith("/build/") && (request.method === "GET" || request.method === "HEAD")) return serveBuild(request, env, url);
 
     try {
       switch (route) {
