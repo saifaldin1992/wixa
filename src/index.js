@@ -39,6 +39,7 @@ const SECURITY_HEADERS = {
   "x-content-type-options": "nosniff",
   "referrer-policy": "strict-origin-when-cross-origin",
   "x-frame-options": "SAMEORIGIN",
+  "strict-transport-security": "max-age=31536000; includeSubDomains", // browsers always use https for wixa.dev and its subdomains
 };
 
 const json = (data, status = 200, headers = {}) =>
@@ -1103,7 +1104,7 @@ async function countMessage(env, row, isJob) {
 // ---------------------------------------------------------------- message status + notes (dashboard)
 // Kept in the private store by message id: { status: new|working|won|lost, note }.
 async function handleAdminMsgMeta(request, env) {
-  const { error } = await adminSession(request, env);
+  const { error } = await adminSession(request, env, ["owner", "support"]); // customer data: never the content editor
   if (error) return error;
   if (!env.PRIVATE) return json({ error: "storage_not_configured" }, 503);
   const all = (await env.PRIVATE.get("msgmeta", { type: "json" })) || {};
@@ -1341,7 +1342,7 @@ async function reserveSlot(env, ctx, date, time) {
 
 // DELETE /api/admin/booking {date, time} — cancel an appointment: its time becomes free to book again
 async function handleAdminBooking(request, env) {
-  const { error } = await adminSession(request, env);
+  const { error } = await adminSession(request, env, ["owner", "support"]); // customer data: never the content editor
   if (error) return error;
   if (!env.PRIVATE) return json({ error: "storage_not_configured" }, 503);
   let b = {};
