@@ -1279,6 +1279,7 @@ html[data-page="about"] [data-pages]:not([data-pages~="about"]),
 html[data-page="pricing"] [data-pages]:not([data-pages~="pricing"]),
 html[data-page="careers"] [data-pages]:not([data-pages~="careers"]),
 html[data-page="contact"] [data-pages]:not([data-pages~="contact"]) { display: none !important; }
+html[data-page="faq"] [data-pages]:not([data-pages~="faq"]) { display: none !important; }
 html[data-page]:not([data-page="home"]) main { padding-top: clamp(96px, 12vw, 140px); }
 html[data-page]:not([data-page="home"]) main > section:first-of-type:not(.hero) { padding-top: 0; }
 /* the top menu: short, with one clear button */
@@ -1358,8 +1359,6 @@ html[data-page="contact"] .cta .form { margin-top: 0; }
 /* phones: the round buttons step aside while the hero's buttons are at the bottom of the screen */
 html.fab-clear .wa, html.fab-clear .chatw__btn { transform: translateY(140%); opacity: 0; pointer-events: none; }
 .chatw__btn { transition: transform .4s var(--ease-out), opacity .3s; }
-/* project figures: one line each so the highlight never breaks across lines */
-.project__stats b, .project__stat b { white-space: nowrap; }
 
 @media (max-width: 600px) { .svc h3 { font-size: 1rem; line-height: 1.45; } }
 /* partner logos: shown crisp and in their own colours (the grey, half-transparent look made them read as blurry) */
@@ -1443,3 +1442,22 @@ html.fab-clear .wa, html.fab-clear .chatw__btn { transform: translateY(140%); op
 .rq__ticket { margin: 16px 0 6px; padding: 12px; border-radius: 16px; background: color-mix(in srgb, var(--primary) 6%, var(--surface)); }
 .rq__ticket .rq__no { margin: 2px 0 8px; }
 @media (prefers-reduced-motion: reduce) { .gcard__in { transition: none; } .gcard__box, .rq__gift-ico { animation: none; } }
+
+/* ===== phones & tablets: packages and projects swipe left/right ===== */
+.cdots { display: none; }
+@media (max-width: 1080px) {
+  .pricing__grid, .projects__list { display: flex; gap: 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); padding: 18px var(--gutter) 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .pricing__grid::-webkit-scrollbar, .projects__list::-webkit-scrollbar { display: none; }
+  .pricing__grid > *, .projects__list > * { flex: 0 0 min(86%, 420px); scroll-snap-align: center; }
+  .projects__list > * { flex-basis: min(88%, 560px); }
+  .pricing__grid .reveal-up { opacity: 1; transform: none; } /* cards to the side are never left invisible */
+  .cdots { display: flex; justify-content: center; gap: 8px; margin: 8px auto 0; }
+  .cdots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 99px; background: var(--line-2); cursor: pointer; transition: width .3s var(--ease-out), background .3s; position: relative; }
+  .cdots button::before { content: ""; position: absolute; inset: -14px -6px; } /* a comfortable tap area around each dot */
+  .cdots button.on { width: 24px; background: var(--primary); }
+  .pricing__more { margin-top: 14px; }
+}
+@media (min-width: 641px) and (max-width: 1080px) {
+  .pricing__grid > * { flex-basis: 44%; }
+  .projects__list > * { flex-basis: 78%; }
+}

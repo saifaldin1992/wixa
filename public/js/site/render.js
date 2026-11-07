@@ -6,6 +6,7 @@ import { renderProcess, renderTestimonials, observe } from "./sections.js";
 import { renderSales } from "./sales.js";
 import { renderWays } from "./ways.js";
 import { renderCalc } from "./calculator.js";
+import { carousels } from "./carousel.js";
 const { applyTheme } = window.WIXA;
 
 // ---------- render ----------
@@ -179,6 +180,7 @@ export function render() {
   renderCalc();
   observe();
   if (window.ScrollTrigger) ScrollTrigger.refresh();
+  requestAnimationFrame(carousels);
 }
 
 export function mockUI() {
