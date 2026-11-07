@@ -70,7 +70,7 @@
       gifts_on: true,
       gifts: [
         { title_ar: "هوية بصرية", text_ar: "تصميم هوية بصرية لمشروعك مجاناً", title_en: "Brand identity", text_en: "Brand identity design for your project, free" },
-        { title_ar: "دعم لمدة سنة", text_ar: "صيانة ودعم فني مجاني لمدة 12 شهراً", title_en: "A year of support", text_en: "Free maintenance and support for 12 months" },
+        { title_ar: "تدريب فريقك", text_ar: "تدريب فريقك مجاناً على استخدام مشروعك وإدارته", title_en: "Team training", text_en: "Free training for your team on using and running your project" },
       ],
       discount: { on: false, type: "percent", value: 10, valid_days: 30, text_ar: "", text_en: "" },
     },

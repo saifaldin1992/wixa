@@ -723,3 +723,11 @@ body { font-size: 14.5px; }
 .add-fab:hover { transform: scale(1.06); }
 .add-fab svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; }
 .toolbar__hint { margin: -6px 0 12px; font-size: 13px; }
+
+/* page title level with the ☰ button (not above it); the description sits under the title */
+.top { align-items: flex-start; }
+.top__menu { flex: none; }
+.top > div:has(> .top__title) { min-height: 40px; display: flex; flex-direction: column; justify-content: center; }
+.top__title { line-height: 40px; }
+.top__sub { margin-top: -4px; }
+.top__actions, .subnav { align-self: center; }
