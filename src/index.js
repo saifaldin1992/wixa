@@ -1397,6 +1397,29 @@ async function handleAdminDiagnose(request, env, ctx) {
       const cfg = await getConfig(env);
       return { state: cfg.spam.turnstile ? "ok" : "warn", detail: cfg.spam.turnstile ? "المفتاح صالح والتحقق مفعّل" : "المفتاح صالح لكن التحقق موقوف من التكاملات", fix: "شغّله من لوحة التحكم ← التكاملات ← الحماية من الرسائل المزعجة." };
     }, "Cloudflare ← Turnstile", ""),
+    // 5b. live chat and team
+    run("الدردشة", "جداول الدردشة ودوالها", async () => {
+      const r = await rpcToken(env, "chat_status", {});
+      if (r.status === 404) return { state: "fail", detail: "تحديث الدردشة غير مطبّق على قاعدة البيانات", fix: "طبّق ملف supabase/migrations/20261109000000_live_chat.sql في محرر SQL." };
+      if (!r.ok) return { state: "fail", detail: `مرفوض (${r.status})` };
+      const d = await r.json();
+      const site = JSON.parse(await getSiteData(env, ctx)).settings?.chat;
+      return { state: site?.on ? "ok" : "warn", detail: `${site?.on ? "الدردشة ظاهرة في الموقع" : "الدردشة موقوفة — الزوار لا يرون زرها"} · ${d.online ? "أحد الفريق متصل الآن" : "لا أحد من الفريق متصل الآن"}`, fix: "فعّلها من لوحة التحكم ← المحادثات ← «تفعيل الدردشة الآن»." };
+    }, "لوحة التحكم ← المحادثات", ""),
+    run("الدردشة", "إشعارات الأجهزة", async () => {
+      if (!env.PRIVATE) return { state: "fail", detail: "التخزين الخاص غير مربوط" };
+      const subs = (await env.PRIVATE.get("push_subs", { type: "json" })) || [];
+      return subs.length ? { detail: `${subs.length} جهاز يستقبل إشعارات الدردشة (${[...new Set(subs.map((x) => x.user).filter(Boolean))].join("، ")})` }
+        : { state: "warn", detail: "لا يوجد جهاز مفعّل لاستقبال الإشعارات — ستصلك الرسائل على البريد فقط", fix: "لوحة التحكم ← المحادثات ← «🔔 فعّل الإشعارات على هذا الجهاز»." };
+    }, "لوحة التحكم ← المحادثات", ""),
+    run("الفريق", "أعضاء لوحة التحكم", async () => {
+      const r = await rpcToken(env, "team_list", {});
+      if (r.status === 404) return { state: "fail", detail: "تحديث الفريق غير مطبّق", fix: "طبّق ملف supabase/migrations/20261108000000_team_roles.sql في محرر SQL." };
+      if (!r.ok) return { state: "fail", detail: `مرفوض (${r.status})` };
+      const list = await r.json();
+      const noMfa = list.filter((m) => !m.mfa).map((m) => m.email);
+      return { state: noMfa.length ? "warn" : "ok", detail: `${list.length} عضو · ${noMfa.length ? `بدون تحقق بخطوتين: ${noMfa.join("، ")}` : "الجميع مفعّل التحقق بخطوتين"}`, fix: "اطلب من العضو تفعيل التحقق بخطوتين من صفحة الحساب." };
+    }, "لوحة التحكم ← الفريق والصلاحيات", ""),
     // 6. analytics
     run("الإحصاءات", "إحصاءات الزوار (Cloudflare)", async () => {
       if (!env.CF_ANALYTICS_TOKEN || !env.CF_SITE_TAG) return { state: "fail", detail: "المفتاح أو معرّف الموقع غير موجود" };
@@ -1531,6 +1554,13 @@ async function handleAdminTeam(request, env, ctx) {
       ? await rpcToken(env, "team_grant", { p: { user_id: b.user_id, role: b.role } })
       : await rpcToken(env, "team_remove", { uid: b.user_id });
     if (!r.ok) { const t = await r.text(); return json({ error: /last owner/.test(t) ? "last_owner" : "failed" }, 422); }
+    // a removed member, or one who no longer answers chats, stops getting chat notifications on their devices
+    if ((b.action === "remove" || b.role === "editor") && env.PRIVATE) {
+      const list = await rpcToken(env, "team_list", {}).then((x) => (x.ok ? x.json() : [])).catch(() => []);
+      const email = b.email || list.find?.((m) => m.user_id === b.user_id)?.email;
+      const subs = (await env.PRIVATE.get("push_subs", { type: "json" })) || [];
+      if (email && subs.some((x) => x.user === email)) await env.PRIVATE.put("push_subs", JSON.stringify(subs.filter((x) => x.user !== email)));
+    }
     return json({ ok: true });
   }
   return json({ error: "unknown_action" }, 400);

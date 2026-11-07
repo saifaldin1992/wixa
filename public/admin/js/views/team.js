@@ -62,7 +62,7 @@ export async function viewTeam(view) {
   }));
   $$("[data-remove]", view).forEach((b) => (b.onclick = async () => {
     if (!(await confirmBox("إزالة عضو", `سيفقد ${b.dataset.email} الدخول إلى لوحة التحكم فوراً.`, "إزالة"))) return;
-    try { await adminApi("team", "POST", { action: "remove", user_id: b.dataset.remove }); toast("أُزيل العضو"); viewTeam(view); }
+    try { await adminApi("team", "POST", { action: "remove", user_id: b.dataset.remove, email: b.dataset.email }); toast("أُزيل العضو"); viewTeam(view); }
     catch (e) { toast(e.data?.error === "last_owner" ? "لا يمكن إزالة آخر مالك" : "تعذّرت الإزالة", "err"); }
   }));
   $$("[data-cancel]", view).forEach((b) => (b.onclick = async () => { await adminApi("team", "POST", { action: "cancel", code: b.dataset.cancel }).catch(() => {}); toast("أُلغيت الدعوة"); viewTeam(view); }));
