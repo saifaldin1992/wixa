@@ -139,7 +139,7 @@ export async function viewBrand(view) {
 
     <div class="card"><div class="card__head"><div><h3>مكوّنات الواجهة</h3><p>أنماط ثابتة تتكرر في الموقع ولوحة التحكم، حتى يبقى كل جزء جديد بنفس الهوية.</p></div></div>
       <h4 style="margin:4px 0 8px">القائمة الفرعية (شريط تحت عنوان الصفحة)</h4>
-      <div class="bg-subnav"><span class="on" style="color:${t.primary};border-color:${t.primary}">المفتوحة <i style="background:${t.primary};color:#fff">3</i></span><span>جديد <i>1</i></span><span>تواصلنا <i>2</i></span><span>مكتمل <i>0</i></span></div>
+      <div class="bg-subnav" data-scroll><span class="on" style="color:${t.primary};border-color:${t.primary}">المفتوحة <i style="background:${t.primary};color:#fff">3</i></span><span>جديد <i>1</i></span><span>تواصلنا <i>2</i></span><span>مكتمل <i>0</i></span></div>
       <ul class="bg-list"><li>كل قوائم الصفحة (الحالات، الفلاتر، الأقسام، الفترة) في <b>شريط واحد تحت العنوان</b> — نفس الشكل على الجوال والتابلت والكمبيوتر.</li><li>المختار: نص بلون الهوية + خط سفلي <b>3px</b>؛ الأعداد في دائرة صغيرة تمتلئ بلون الهوية عند الاختيار.</li><li>إذا كثرت التبويبات تُسحب جانبياً داخل الشريط ولا تمدّ الصفحة. أزرار الصفحة (تصدير، حفظ) بجانب العنوان وليست داخل الشريط.</li></ul>
       <h4 style="margin:18px 0 8px">البطاقات المتحركة (الجوال والتابلت)</h4>
       <div class="bg-dots"><i></i><i class="on" style="background:${t.primary}"></i><i></i><i></i></div>
