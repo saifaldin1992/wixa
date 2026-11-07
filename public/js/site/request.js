@@ -11,9 +11,9 @@ const T = {
     q: ["ماذا تريد أن نبني لك؟", "أخبرنا عن مشروعك", "آخر خطوة: تفاصيلك"],
     hint: ["اختر الأقرب، ويمكن تعديله لاحقاً مع الفريق.", "اختر مجالك، والباقي اختياري يساعدنا على اقتراح الأنسب.", "نرسل لك رقم الطلب على بريدك، ونعود إليك خلال يوم عمل."],
     other: "شيء آخر", field: "مجال عملك", feats: "ميزات تحتاجها (اختياري)", budget: "الميزانية التقريبية (اختياري)", time: "متى تريد الإطلاق؟ (اختياري)",
-    giftTop: "هديتان مع كل طلب مشروع", giftTopSub: "أكمل طلبك واكشف هداياك في النهاية",
-    gifts: [["هوية بصرية", "تصميم هوية بصرية لمشروعك مجاناً"], ["دعم لمدة سنة", "صيانة ودعم فني مجاني لمدة 12 شهراً"]],
-    tap: "اضغط لكشف الهدية", won: "مبروك! حصلت على هديتين", wonSub: "تُضاف الهديتان إلى مشروعك عند البدء بالعمل.", free: "مجاناً",
+    giftTop: (n) => (n === 1 ? "هدية مع كل طلب مشروع" : n === 2 ? "هديتان مع كل طلب مشروع" : `${n} هدايا مع كل طلب مشروع`), giftTopSub: "أكمل طلبك واكشف هداياك في النهاية",
+    tap: "اضغط لكشف الهدية", won: "مبروك! هداياك محفوظة مع رقم طلبك", wonSub: "تُضاف إلى مشروعك عند البدء بالعمل.", free: "مجاناً",
+    disc: (v) => `خصم ${v}`, discTag: "محفوظ لك", discText: (d) => `على السعر النهائي لمشروعك${d ? ` — صالح ${d} يوماً` : ""}`,
     budgets: ["أقل من 1,000$", "1,000$ – 3,000$", "3,000$ – 7,000$", "أكثر من 7,000$", "لم أحدد بعد"],
     times: ["خلال شهر", "خلال 1–3 أشهر", "مرن"],
     details: "صف فكرتك باختصار", detailsPh: "ماذا تريد أن يفعل المشروع؟ من سيستخدمه؟ هل لديك موقع أو تطبيق حالي؟",
@@ -27,9 +27,9 @@ const T = {
     q: ["What would you like us to build?", "Tell us about your project", "Last step: your details"],
     hint: ["Pick the closest — you can refine it with the team later.", "Pick your field; the rest is optional and helps us suggest the right fit.", "We'll email you a request number and reply within one working day."],
     other: "Something else", field: "Your field", feats: "Features you need (optional)", budget: "Rough budget (optional)", time: "When would you like to launch? (optional)",
-    giftTop: "Two gifts with every project request", giftTopSub: "Finish your request and reveal your gifts at the end",
-    gifts: [["Brand identity", "Brand identity design for your project, free"], ["A year of support", "Free maintenance and support for 12 months"]],
-    tap: "Tap to reveal", won: "Congratulations! You've won two gifts", wonSub: "Both gifts are added to your project when work begins.", free: "Free",
+    giftTop: (n) => (n === 1 ? "A gift with every project request" : n === 2 ? "Two gifts with every project request" : `${n} gifts with every project request`), giftTopSub: "Finish your request and reveal your gifts at the end",
+    tap: "Tap to reveal", won: "Congratulations! Your gifts are saved with your request number", wonSub: "They're added to your project when work begins.", free: "Free",
+    disc: (v) => `${v} off`, discTag: "Saved for you", discText: (d) => `on your project's final price${d ? ` — valid for ${d} days` : ""}`,
     budgets: ["Under $1,000", "$1,000 – $3,000", "$3,000 – $7,000", "Over $7,000", "Not sure yet"],
     times: ["Within a month", "In 1–3 months", "Flexible"],
     details: "Describe your idea briefly", detailsPh: "What should it do? Who will use it? Do you have a current site or app?",
@@ -41,13 +41,25 @@ const T = {
 };
 const t = (k) => (T[lang] || T.ar)[k];
 const STEPS = 3;
+// what this request comes with: the gifts and the discount set in the dashboard
+function rewards() {
+  const o = state.settings.request_offer || {}, out = [];
+  if (o.gifts_on !== false) for (const g of o.gifts || []) { const h = L(g, "title"); if (h) out.push({ tag: t("free"), h, p: L(g, "text") }); }
+  const d = o.discount || {};
+  if (d.on && Number(d.value) > 0) {
+    const v = d.type === "amount" ? `${Number(d.value).toLocaleString("en-US")}$` : `${Number(d.value)}%`;
+    out.push({ tag: t("discTag"), h: t("disc")(v), p: L(d, "text") || t("discText")(Number(d.valid_days) || 0) });
+  }
+  return out;
+}
 let step = 0, ans = { type: "", field: "", features: [], budget: "", timeline: "" };
 
 function options() {
   const s = state.settings, c = C();
   const types = (s.calculator?.types || []).map((x) => ({ label: L(x, "label"), icon: x.icon })).filter((x) => x.label);
   const fields = (c.industries || []).map((x) => x.title).filter(Boolean);
-  const feats = (s.calculator?.features || []).map((x) => L(x, "label")).filter((f) => f && !/هوية|identity|صيانة|support/i.test(f)); // both come free
+  const giftOn = s.request_offer?.gifts_on !== false && (s.request_offer?.gifts || []).length;
+  const feats = (s.calculator?.features || []).map((x) => L(x, "label")).filter((f) => f && !(giftOn && /هوية|identity|صيانة|support/i.test(f))); // free gifts aren't offered as paid extras
   return { types, fields, feats };
 }
 
@@ -62,7 +74,8 @@ function paint() {
   $("#rqNext").hidden = step === STEPS - 1; $("#rqSend").hidden = step !== STEPS - 1;
   $("#rqNext").textContent = t("next");
   $("#rqErr").textContent = "";
-  if (step === 0) box.innerHTML = `<div class="rq__gift"><span class="rq__gift-ico" aria-hidden="true">🎁</span><div><b>${t("giftTop")}</b><small>${t("gifts").map((g) => g[0]).join(" + ")} — ${t("giftTopSub")}</small></div></div>
+  const rw = rewards();
+  if (step === 0) box.innerHTML = `${rw.length ? `<div class="rq__gift"><span class="rq__gift-ico" aria-hidden="true">🎁</span><div><b>${esc(t("giftTop")(rw.length))}</b><small>${rw.map((g) => esc(g.h)).join(" + ")} — ${t("giftTopSub")}</small></div></div>` : ""}
     <div class="rq__grid rq__grid--big">${[...o.types.map((x) => chip("type", x.label, x.label, ans.type === x.label, x.icon)), chip("type", t("other"), t("other"), ans.type === t("other"), "code")].join("")}</div>`;
   if (step === 1) box.innerHTML = `<p class="rq__label">${t("field")}</p><div class="rq__grid">${[...o.fields, t("other")].map((f) => chip("field", f, f, ans.field === f)).join("")}</div>
     ${o.feats.length ? `<p class="rq__label">${t("feats")}</p><div class="rq__grid">${o.feats.map((f) => chip("features", f, f, ans.features.includes(f))).join("")}</div>` : ""}
@@ -154,10 +167,11 @@ export function setupRequest() {
     const wa = (state.settings.contact?.whatsapp || "").replace(/\D/g, "");
     $(".rq__main").hidden = true;
     const box = $("#rqDone"); box.hidden = false;
-    box.innerHTML = `<h2>${t("done")}</h2><p class="rq__hint">${t("tap")}</p>
-      <div class="rq__gifts">${t("gifts").map(([h, p], i) => `<button type="button" class="gcard" data-gift="${i}" aria-label="${t("tap")}">
+    const rw = rewards();
+    box.innerHTML = `<h2>${t("done")}</h2>${rw.length ? `<p class="rq__hint">${t("tap")}</p>
+      <div class="rq__gifts${rw.length === 3 ? " rq__gifts--3" : ""}">${rw.map(({ tag, h, p }, i) => `<button type="button" class="gcard" data-gift="${i}" aria-label="${t("tap")}">
         <span class="gcard__in"><span class="gcard__front"><span class="gcard__box" aria-hidden="true">🎁</span><small>${t("tap")}</small></span>
-        <span class="gcard__back"><span class="gcard__tag">${t("free")}</span><b>${esc(h)}</b><small>${esc(p)}</small></span></span></button>`).join("")}</div>
+        <span class="gcard__back"><span class="gcard__tag">${esc(tag)}</span><b>${esc(h)}</b><small>${esc(p)}</small></span></span></button>`).join("")}</div>` : ""}
       <div class="rq__won" hidden><p class="rq__wonT">🎉 ${t("won")}</p><p class="muted">${t("wonSub")}</p></div>
       ${no ? `<div class="rq__ticket"><span class="muted">${t("doneSub")}</span><div class="rq__no" dir="ltr">${esc(no)}</div><button type="button" class="btn btn--ghost rq__copy">${t("copy")}</button></div>` : ""}
       <p class="rq__hint">${t("doneMail")}</p>

@@ -36,7 +36,7 @@ export const VIEWS = {
   devguide: { title: "دليل المطوّر", sub: "كيف بُني المشروع وأين يوجد كل جزء — للمطورين", render: viewDevGuide },
   messages: { title: "الرسائل", sub: "رسائل نموذج التواصل", render: viewMessages },
   sales: { title: "لوحة المبيعات", sub: "من تواصل، ومن اشترى، ومن أين جاؤوا، وكيف نخدمهم", render: viewSales },
-  campaigns: { title: "العروض والحملات", sub: "شريط العروض، وعرض الحاسبة، والحملات البريدية", render: viewCampaigns },
+  campaigns: { title: "العروض والهدايا", sub: "هدايا وخصم طلب المشروع، شريط العروض، عرض الحاسبة، والحملات البريدية", render: viewCampaigns },
   customers: { title: "الزبائن", sub: "كل من تواصل معك من الموقع — للمتابعة والعروض", render: viewCustomers },
   chats: { title: "المحادثات", sub: "دردشة مباشرة مع زوار الموقع", render: viewChats },
   team: { title: "الفريق والصلاحيات", sub: "من يدخل إلى لوحة التحكم وماذا يستطيع — بالدعوة فقط", render: viewTeam },

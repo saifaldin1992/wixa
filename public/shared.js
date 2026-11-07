@@ -58,6 +58,15 @@
     // sales: a promotion bar at the top, and the "send me the estimate on WhatsApp" offer after using the calculator
     promo: { on: false, text_ar: "", text_en: "", link: "", until: "" },
     exit_offer: { on: true },
+    // gifts and a discount promised with every project request ("start your project"); edited in the dashboard (offers)
+    request_offer: {
+      gifts_on: true,
+      gifts: [
+        { title_ar: "هوية بصرية", text_ar: "تصميم هوية بصرية لمشروعك مجاناً", title_en: "Brand identity", text_en: "Brand identity design for your project, free" },
+        { title_ar: "دعم لمدة سنة", text_ar: "صيانة ودعم فني مجاني لمدة 12 شهراً", title_en: "A year of support", text_en: "Free maintenance and support for 12 months" },
+      ],
+      discount: { on: false, type: "percent", value: 10, valid_days: 30, text_ar: "", text_en: "" },
+    },
     // Cost estimator. Prices are in USD and are only indicative ranges — review them from the dashboard.
     calculator: {
       currency: "$",

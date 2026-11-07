@@ -1461,3 +1461,6 @@ html.fab-clear .wa, html.fab-clear .chatw__btn { transform: translateY(140%); op
   .pricing__grid > * { flex-basis: 44%; }
   .projects__list > * { flex-basis: 78%; }
 }
+
+.rq__gifts--3 { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 560px) { .rq__gifts--3 { grid-template-columns: 1fr 1fr; } .rq__gifts--3 .gcard:last-child { grid-column: 1 / -1; } }
