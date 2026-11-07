@@ -5,7 +5,7 @@
   --r: 14px; --r-lg: 20px;
   --shadow: 0 1px 2px rgba(16,20,34,.04), 0 8px 24px -10px rgba(16,20,34,.12);
   --ease: cubic-bezier(.16,1,.3,1);
-  font-family: "IBM Plex Sans Arabic", system-ui, sans-serif;
+  font-family: "Alexandria", system-ui, sans-serif; /* the brand font, same as the website */
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
@@ -695,3 +695,15 @@ html[dir="rtl"] .chat__back svg { transform: none; }
 .bg-gifts span { width: 130px; height: 96px; border-radius: 16px; display: grid; place-content: center; justify-items: center; gap: 4px; font-size: 30px; color: #fff; text-align: center; }
 .bg-gifts span small { font-size: 11px; } .bg-gifts span:last-child { background: #fff; border: 1.5px solid var(--line); font-size: 14px; }
 .bg-gifts em { font-style: normal; color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 700; }
+
+/* Alexandria is wider than the old font: a touch smaller text keeps the same density; phones a little smaller still (never under 13px) */
+body { font-size: 14.5px; }
+.top__title { letter-spacing: 0; }
+@media (max-width: 600px) { body { font-size: 14px; } .top__title { font-size: 22px; } .top__sub { font-size: 13px; } .b { font-size: 14px; } }
+
+/* chats: notifications on top (full width), then "your name" and "chat settings" side by side */
+.top__actions:has(#pushBtn) { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.top__actions:has(#pushBtn) #pushBtn { grid-column: 1 / -1; order: -1; }
+.top__actions:has(#pushBtn) .b { justify-content: center; width: 100%; }
+.top__actions:has(#pushBtn):not(:has(#myName)) #chatCfg, .top__actions:has(#pushBtn):not(:has(#chatCfg)) #myName { grid-column: 1 / -1; }
+@media (min-width: 961px) { .top__actions:has(#pushBtn) { width: min(460px, 100%); } }

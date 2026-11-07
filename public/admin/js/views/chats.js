@@ -1,6 +1,6 @@
 /* Conversations: live chat with site visitors (owner and customer service).
    New messages arrive instantly through chat-live.js; replies are written straight to the database. */
-import { $, $$, I, adminApi, closeModal, confirmBox, esc, openModal, role, sb, settings, toast } from "../core.js";
+import { $, setSubnav, $$, I, adminApi, closeModal, confirmBox, esc, openModal, role, sb, settings, toast } from "../core.js";
 import { saveSettings } from "../settings.js";
 import { openQuote } from "../quote.js";
 import { disablePush, enablePush, isIOS, onChat, pushState, pushSupported, refreshChatCount } from "../chat-live.js";
@@ -30,10 +30,10 @@ export async function viewChats(view) {
   const { data: myName, error: nameErr } = await sb.rpc("my_display_name");
   me = nameErr ? null : myName || "";
   $("#topActions").innerHTML = `${me === null ? "" : `<button class="b" id="myName">👤 ${me ? `اسمك: ${esc(me)}` : "اختر اسمك"}</button>`}<button class="b" id="pushBtn">🔔 الإشعارات على هذا الجهاز</button>${role === "owner" ? `<button class="b" id="chatCfg">⚙️ إعدادات الدردشة</button>` : ""}`;
+  setSubnav(`<div class="seg chat__filter">${[["open", "مفتوحة"], ["closed", "مغلقة"], ["all", "الكل"]].map(([k, n]) => `<button type="button" data-f="${k}" class="${filter === k ? "on" : ""}">${n}</button>`).join("")}</div>`);
   view.innerHTML = `${me === "" ? `<div class="chat-off chat-off--name">اختر الاسم الذي يظهر للزبون عند ردّك (مثل «أحمد»)، بدل «فريق ويكسا». <button class="b b--sm b--primary" id="nameNow">اختيار الاسم</button></div>` : ""}${on ? "" : `<div class="chat-off">الدردشة متوقفة في الموقع — الزوار لا يرون زرها. ${role === "owner" ? '<button class="b b--sm b--primary" id="turnOn">تفعيل الدردشة الآن</button>' : "يستطيع المالك تفعيلها."}</div>`}
     <div class="chat ${current ? "chat--thread" : ""}">
       <aside class="chat__list">
-        <div class="seg chat__filter">${[["open", "مفتوحة"], ["closed", "مغلقة"], ["all", "الكل"]].map(([k, n]) => `<button type="button" data-f="${k}" class="${filter === k ? "on" : ""}">${n}</button>`).join("")}</div>
         <div class="chat__items"></div>
       </aside>
       <section class="chat__thread"></section>
@@ -49,7 +49,7 @@ export async function viewChats(view) {
       : `<p class="muted chat__none">${filter === "open" ? "لا توجد محادثات مفتوحة." : "لا توجد محادثات."}</p>`;
     $$(".chat__item", items).forEach((b) => (b.onclick = () => openChat(b.dataset.id)));
   };
-  $$(".chat__filter button", view).forEach((b) => (b.onclick = () => { filter = b.dataset.f; $$(".chat__filter button", view).forEach((x) => x.classList.toggle("on", x === b)); paintList(); }));
+  $$("#subNav .chat__filter button").forEach((b) => (b.onclick = () => { filter = b.dataset.f; $$("#subNav .chat__filter button").forEach((x) => x.classList.toggle("on", x === b)); paintList(); }));
 
   let msgs = [];
   const paintMsgs = () => {
