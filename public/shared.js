@@ -58,6 +58,13 @@
     // sales: a promotion bar at the top, and the "send me the estimate on WhatsApp" offer after using the calculator
     promo: { on: false, text_ar: "", text_en: "", link: "", until: "" },
     exit_offer: { on: true },
+    // where each site link shows: "both" (menu + footer) · "menu" · "footer" · "hidden"; the list order is the order shown
+    nav: { items: [
+      { k: "services", at: "both" }, { k: "industries", at: "both" }, { k: "projects", at: "both" }, { k: "pricing", at: "both" },
+      { k: "careers", at: "both" }, { k: "contact", at: "both" }, { k: "blog", at: "both" },
+      { k: "home", at: "footer" }, { k: "about", at: "footer" }, { k: "partners", at: "footer" }, { k: "faq", at: "footer" },
+      { k: "privacy", at: "footer" }, { k: "calc", at: "hidden" },
+    ] },
     // gifts and a discount promised with every project request ("start your project"); edited in the dashboard (offers)
     request_offer: {
       gifts_on: true,
@@ -311,6 +318,15 @@
     return out;
   }
 
+  // the saved link list, with any link added to the site later appended in its default place
+  function navPlan(settings) {
+    const def = DEFAULTS.nav.items, saved = (settings && settings.nav && Array.isArray(settings.nav.items)) ? settings.nav.items : [];
+    const known = new Set(def.map((x) => x.k)), seen = new Set(), out = [];
+    for (const x of saved) if (x && known.has(x.k) && !seen.has(x.k) && ["both", "menu", "footer", "hidden"].includes(x.at)) { seen.add(x.k); out.push({ k: x.k, at: x.at }); }
+    for (const x of def) if (!seen.has(x.k)) out.push({ ...x });
+    return out;
+  }
+
   function hexToRgb(hex) {
     const h = String(hex || "").replace("#", "");
     const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
@@ -416,5 +432,5 @@
   }
   if (typeof document !== "undefined") markEnv();
 
-  window.WIXA = { DEFAULTS, FONTS, ICONS, merge, applyTheme, themeVars, loadFont, markEnv, darkPalette, vivid, mix };
+  window.WIXA = { DEFAULTS, FONTS, ICONS, merge, navPlan, applyTheme, themeVars, loadFont, markEnv, darkPalette, vivid, mix };
 })();

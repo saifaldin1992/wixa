@@ -370,6 +370,7 @@ async function handleHome(request, env, ctx, pageName = "home") {
   if (!(parsed.partners || []).length) hide.add("partners");
   if (!(parsed.testimonials || []).length) hide.add("testimonials");
   const vars = WIXA.themeVars(full, full.font?.family);
+  const navAt = Object.fromEntries(WIXA.navPlan(st).map((x, i) => [x.k, { at: x.at, i }]));
   const themeCss = `<style id="wixa-theme">:root{${Object.entries(vars).map(([k, v]) => `${k}:${String(v).replace(/[<>{};]/g, "")}`).join(";")}}</style>`;
   const fontHref = full.font?.family && full.font.family !== "Alexandria" && WIXA.FONTS[full.font.family]
     ? `https://fonts.googleapis.com/css2?family=${encodeURIComponent(full.font.family).replace(/%20/g, "+")}:wght@${WIXA.FONTS[full.font.family]}&display=swap` : "";
@@ -397,6 +398,12 @@ async function handleHome(request, env, ctx, pageName = "home") {
     .on("[data-c]", { element: (el) => { const k = el.getAttribute("data-c"); if (el.getAttribute("id") !== "heroTitle" && k in C) el.setInnerContent(String(C[k] ?? "")); } })
     .on("[data-t]", { element: (el) => { const k = el.getAttribute("data-t"); if (k !== "brand" && typeof ui[k] === "string") el.setInnerContent(ui[k]); } })
     .on("[data-section], [data-sec]", { element: (el) => { if (hide.has(el.getAttribute("data-section") || el.getAttribute("data-sec"))) el.setAttribute("hidden", ""); } })
+    .on("[data-nav]", { element: (el) => {
+      const p = navAt[el.getAttribute("data-nav")]; if (!p) return;
+      el.setAttribute("style", `order:${p.i}`);
+      // the footer copy decides by "footer", the top bar and phone menu by "menu"
+      if (el.getAttribute("data-where") === "footer" ? !["both", "footer"].includes(p.at) : !["both", "menu"].includes(p.at)) el.setAttribute("hidden", ""); else if (!hide.has(el.getAttribute("data-sec") || "")) el.removeAttribute("hidden");
+    } })
     .on("#langBtn", { element: (el) => el.setInnerContent(lang === "ar" ? "EN" : "ع") })
     .on(".hero", { element: (el) => el.setAttribute("class", `${el.getAttribute("class") || ""} in in-hero`) })
     .on("body", { element: (el) => el.removeAttribute("class") })

@@ -651,3 +651,10 @@ html[dir="rtl"] .chat__back svg { transform: none; }
 .ord-grid p { margin: 0 0 8px; }
 @media (max-width: 700px) { .ord-grid { grid-template-columns: 1fr; } }
 #of small { opacity: .7; margin-inline-start: 4px; }
+
+/* content → menus */
+.navrows { display: grid; gap: 6px; }
+.navrow { display: grid; grid-template-columns: auto 1fr minmax(150px, 190px); gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.navrow__move { display: flex; gap: 4px; } .navrow__move .b { min-width: 36px; padding: 0; justify-content: center; }
+.navrow select { min-height: 40px; }
+@media (max-width: 520px) { .navrow { grid-template-columns: auto 1fr; } .navrow select { grid-column: 1 / -1; } }

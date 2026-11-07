@@ -60,6 +60,13 @@ export function render() {
     $$(`[data-sec="${k}"]`).forEach((el) => (el.hidden = !on));
   }
   if (!state.partners.length) { $$('[data-section="partners"], [data-sec="partners"]').forEach((el) => (el.hidden = true)); }
+  // site links: where each one shows (dashboard → content → menus) and in which order
+  window.WIXA.navPlan(s).forEach(({ k, at }, i) => $$(`[data-nav="${k}"]`).forEach((a) => {
+    a.style.order = i;
+    const inFooter = !!a.closest(".footer__nav");
+    const allowed = at === "both" || (at === "menu" && !inFooter) || (at === "footer" && inFooter);
+    if (!allowed) a.hidden = true; else if (!a.dataset.sec) a.hidden = false; // links tied to a section follow that section
+  }));
   if (!(state.testimonials || []).length) $$('[data-section="testimonials"]').forEach((el) => (el.hidden = true));
   if (!(s.stats || []).length) $$('[data-section="stats"]').forEach((el) => (el.hidden = true));
 
@@ -174,6 +181,11 @@ export function render() {
   // "WIXA wave": the logo's double curve as a signature ornament above every section title
   // "WIXA wave": a long wave line opens every section (and the closing call to action), so each part reads as its own block
   $$(".head, .cta").forEach((h, i) => { if (!h.querySelector(":scope > .wave")) h.insertAdjacentHTML("afterbegin", `<svg class="wave" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="wv${i}" x1="0" x2="1"><stop offset="0" style="stop-color:var(--fg)"/><stop offset=".5" style="stop-color:var(--accent)"/><stop offset="1" style="stop-color:var(--fg)"/></linearGradient></defs><path pathLength="1" stroke="url(#wv${i})" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>`); });
+  // a page other than the homepage starts with its title, not with a wave line under the menu
+  if (document.documentElement.dataset.page !== "home") {
+    const first = $$("main > section").find((sec) => sec.offsetHeight > 0);
+    first?.querySelector(".head > .wave")?.remove();
+  }
   renderProcess();
   renderSales();
   renderWays();

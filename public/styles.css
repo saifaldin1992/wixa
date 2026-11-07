@@ -88,7 +88,7 @@ html[dir="rtl"] .header__bar { padding: 10px 18px 10px 12px; }
 .scrim { position: fixed; inset: 0; z-index: 55; background: rgba(var(--dark-rgb), .35); opacity: 0; visibility: hidden; transition: opacity .4s, visibility .4s; }
 .scrim.open { opacity: 1; visibility: visible; }
 @media (max-width: 900px) { .header__nav { display: none; } .menu-btn { display: block; } }
-@media (min-width: 901px) { .header__menu, .scrim { display: none; } }
+@media (min-width: 1240px) { .header__menu, .scrim { display: none; } }
 
 /* buttons */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 26px; border-radius: 99px; font-weight: 500; font-size: 1rem; position: relative; overflow: hidden; isolation: isolate; transition: transform .45s var(--ease-out), box-shadow .45s; will-change: transform; }
@@ -1415,7 +1415,7 @@ html.fab-clear .wa, html.fab-clear .chatw__btn { transform: translateY(140%); op
 }
 /* phone menu: "start your project" as a clear button at the top */
 .header__menu .menu-cta { display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 14px; background: var(--primary); color: #fff !important; font-weight: 700; margin-bottom: 6px; }
-@media (min-width: 901px) { .header__menu .menu-cta { display: none; } }
+@media (min-width: 1240px) { .header__menu .menu-cta { display: none; } }
 /* request: the gift promise at the start, surprise cards at the end */
 .rq__gift { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin: 0 0 16px; border-radius: 16px; border: 1.5px dashed color-mix(in srgb, var(--primary) 45%, transparent); background: color-mix(in srgb, var(--primary) 7%, var(--surface)); }
 .rq__gift-ico { font-size: 28px; line-height: 1; animation: giftWiggle 2.4s ease-in-out infinite; }
@@ -1530,3 +1530,16 @@ html.menu-open, html.menu-open body, html:has(> body[style*="overflow: hidden"])
 @media (min-width: 641px) and (max-width: 1080px) {
   .services__grid > *, .industries__grid > * { flex-basis: 40%; }
 }
+/* site links keep the order set in the dashboard; the "start your project" buttons stay at the ends */
+.header__nav .nav-cta { order: 99; }
+.header__menu .menu-cta { order: -1; }
+.header__nav a[hidden], .header__menu a[hidden], .footer__nav a[hidden] { display: none !important; }
+/* the top bar holds the links on one line; narrower screens (small laptops, tablets) use the menu button instead (7 links + buttons need ~1240px) */
+.header__nav a { white-space: nowrap; }
+@media (max-width: 1239px) {
+  .header__nav { display: none; }
+  .menu-btn { display: block; }
+  .head-start { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: 99px; background: var(--primary); color: #fff; font-weight: 700; font-size: .9rem; white-space: nowrap; order: -2; }
+  .header__menu .menu-cta { display: flex; }
+}
+@media (max-width: 599px) { .head-start { display: none; } }

@@ -28,7 +28,7 @@ export const TEXT_FIELDS = [
 
 export async function viewContent(view) {
   settingsActions();
-  const tabs = [["texts", "النصوص"], ["about", "من نحن"], ["industries", "حلول حسب المجال"], ["pricing", "الباقات والأسعار"], ["guarantees", "الضمانات"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"], ["privacy", "سياسة الخصوصية"], ["booking", "المواعيد"], ["ui", "نصوص الأزرار والقوائم"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
+  const tabs = [["texts", "النصوص"], ["about", "من نحن"], ["industries", "حلول حسب المجال"], ["pricing", "الباقات والأسعار"], ["guarantees", "الضمانات"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"], ["privacy", "سياسة الخصوصية"], ["booking", "المواعيد"], ["ui", "نصوص الأزرار والقوائم"], ["nav", "القوائم"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
   view.innerHTML = `<div class="split"><div><div class="card">
       <div class="tabs" id="ctTabs">${tabs.map(([k, l]) => `<button data-k="${k}" class="${k === contentTab ? "on" : ""}">${l}</button>`).join("")}</div>
       <div id="ctBody"></div></div></div>${previewPane()}</div>`;
@@ -226,6 +226,28 @@ export function renderContentTab() {
       $$("[data-add]", body).forEach((b) => (b.onclick = () => { c[b.dataset.add].push(b.dataset.add === "types" ? { icon: "web", label_ar: "", label_en: "", min: 0, max: 0 } : { label_ar: "", label_en: "", min: 0, max: 0 }); changed(); draw(); }));
     };
     draw(); return;
+  } else if (contentTab === "nav") {
+    // where each site link shows, and in which order
+    const NAMES = { home: "الرئيسية", services: "خدماتنا", industries: "حلول حسب مجالك", projects: "نماذج من عملنا", pricing: "الباقات", calc: "احسب تكلفة مشروعك",
+      about: "من نحن", partners: "شركاؤنا", careers: "الوظائف", contact: "تواصل معنا", faq: "الأسئلة الشائعة", blog: "المقالات", privacy: "سياسة الخصوصية" };
+    const AT = [["both", "القائمة والأسفل"], ["menu", "القائمة فقط"], ["footer", "الأسفل فقط"], ["hidden", "مخفي"]];
+    const draw = () => {
+      const items = window.WIXA.navPlan(settings);
+      const n = (w) => items.filter((x) => x.at === "both" || x.at === w).length;
+      body.innerHTML = `<p class="muted" style="margin-top:0"><b>القائمة</b> = الشريط العلوي على الكمبيوتر وقائمة ☰ على الجوال والتابلت. <b>الأسفل</b> = روابط أسفل كل صفحة. رتّب الروابط بالأسهم. زر «ابدأ مشروعك» ثابت دائماً.</p>
+        <p class="muted" style="font-size:13px">في القائمة الآن <b>${n("menu")}</b> روابط${n("menu") > 7 ? ` — <span style="color:#B45309">نقترح 7 أو أقل حتى تبقى القائمة قصيرة وتتسع في الشريط العلوي</span>` : ""} · في الأسفل <b>${n("footer")}</b>.</p>
+        <div class="navrows">${items.map((x, i) => `<div class="navrow" data-i="${i}">
+          <div class="navrow__move"><button type="button" class="b b--sm" data-up="${i}" ${i ? "" : "disabled"} aria-label="أعلى">↑</button><button type="button" class="b b--sm" data-down="${i}" ${i < items.length - 1 ? "" : "disabled"} aria-label="أسفل">↓</button></div>
+          <b>${NAMES[x.k] || x.k}</b>
+          <select data-at="${i}">${AT.map(([v, l]) => `<option value="${v}" ${v === x.at ? "selected" : ""}>${l}</option>`).join("")}</select></div>`).join("")}</div>
+        <button type="button" class="b" id="navReset" style="margin-top:12px">↺ الترتيب المقترح</button>`;
+      const set = (list) => { settings.nav = { items: list }; changed(); draw(); };
+      body.querySelectorAll("[data-at]").forEach((el) => (el.onchange = () => { const l = window.WIXA.navPlan(settings); l[+el.dataset.at].at = el.value; set(l); }));
+      body.querySelectorAll("[data-up]").forEach((el) => (el.onclick = () => { const l = window.WIXA.navPlan(settings), i = +el.dataset.up; [l[i - 1], l[i]] = [l[i], l[i - 1]]; set(l); }));
+      body.querySelectorAll("[data-down]").forEach((el) => (el.onclick = () => { const l = window.WIXA.navPlan(settings), i = +el.dataset.down; [l[i + 1], l[i]] = [l[i], l[i + 1]]; set(l); }));
+      $("#navReset").onclick = () => set(structuredClone(window.WIXA.DEFAULTS.nav.items));
+    };
+    draw();
   } else if (contentTab === "sections") {
     const names = { about: "من نحن", industries: "حلول حسب مجالك", guarantees: "الضمانات", pricing: "الباقات والأسعار", story: "القصة (المميزات)", projects: "الإنجازات (المشاريع)", services: "الخدمات", process: "كيف نعمل", stats: "الأرقام", testimonials: "آراء العملاء", calculator: "حاسبة التكلفة", partners: "الشركاء", careers: "الوظائف (انضم إلى فريقنا)", faq: "الأسئلة الشائعة", contact: "التواصل" };
     body.innerHTML = `<p class="muted" style="margin-top:0">أخفِ أي قسم لا تحتاجه. (قسما الشركاء وآراء العملاء يختفيان تلقائياً إذا كانا فارغين.)</p><div class="stack">${Object.entries(names).map(([k, l]) => `<label class="switch"><input type="checkbox" data-path="sections.${k}" ${settings.sections[k] ? "checked" : ""}><i></i>${l}</label>`).join("")}</div>
