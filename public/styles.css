@@ -1464,3 +1464,9 @@ html.fab-clear .wa, html.fab-clear .chatw__btn { transform: translateY(140%); op
 
 .rq__gifts--3 { grid-template-columns: repeat(3, 1fr); }
 @media (max-width: 560px) { .rq__gifts--3 { grid-template-columns: 1fr 1fr; } .rq__gifts--3 .gcard:last-child { grid-column: 1 / -1; } }
+
+/* tablets: "start your project" stays visible in the header next to the menu button (phones have it in the hero and menu) */
+.head-start { display: none; }
+@media (min-width: 600px) and (max-width: 900px) {
+  .head-start { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: 99px; background: var(--primary); color: #fff; font-weight: 700; font-size: .9rem; white-space: nowrap; order: -2; }
+}
