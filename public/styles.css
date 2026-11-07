@@ -1505,3 +1505,28 @@ html.fab-clear .wa, html.fab-clear .chatw__btn { transform: translateY(140%); op
 .ord__ok { width: 64px; height: 64px; margin: 0 auto 6px; border-radius: 50%; display: grid; place-items: center; font-size: 30px; color: #fff; background: var(--wa-ink, #0E7C47); }
 .ord__done h2 { margin: 6px 0 4px; }
 @media (max-width: 860px) { .ord { grid-template-columns: 1fr; } .ord__sum { position: static; } }
+
+/* ===== an open menu or window holds the page still (phones scrolled the page underneath) ===== */
+html.menu-open, html.menu-open body, html:has(> body[style*="overflow: hidden"]) { overflow: hidden; }
+.header__menu { max-height: calc(100dvh - 120px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.pmodal__box, .chatw__box, .chatw__msgs { overscroll-behavior: contain; }
+.scrim { touch-action: none; }
+
+/* ===== the order page: room above the footer's wave ===== */
+.order { padding-bottom: clamp(64px, 9vw, 110px); }
+
+/* ===== phones & tablets: services and "by your field" swipe left/right with dots ===== */
+@media (max-width: 1080px) {
+  .services__grid, .industries__grid { display: flex; gap: 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); padding: 6px var(--gutter) 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .services__grid::-webkit-scrollbar, .industries__grid::-webkit-scrollbar { display: none; }
+  .services__grid > *, .industries__grid > * { flex: 0 0 min(80%, 340px); scroll-snap-align: center; }
+  .services__grid[hidden] { display: none; }
+  .services__grid .reveal-up, .industries__grid .reveal-up { opacity: 1; transform: none; }
+  .services__grid .svc { display: flex; flex-direction: column; padding: 20px 18px; }
+  .services__grid .svc__ico { margin: 0 0 12px; grid-row: auto; }
+  .services__grid .svc p { display: block; -webkit-line-clamp: unset; overflow: visible; font-size: .92rem; }
+  .services__grid .svc h3 { font-size: 1.08rem; }
+}
+@media (min-width: 641px) and (max-width: 1080px) {
+  .services__grid > *, .industries__grid > * { flex-basis: 40%; }
+}

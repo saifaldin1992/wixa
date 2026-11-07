@@ -1,6 +1,6 @@
 /* Phones and tablets: packages and projects become swipeable rows with dots under them (desktop keeps the grid). */
 const MQ = matchMedia("(max-width: 1080px)");
-const LISTS = ["#pricingGrid", "#projectsList"];
+const LISTS = ["#pricingGrid", "#projectsList", "#servicesGrid", "#industriesGrid"];
 
 export function carousels() {
   for (const sel of LISTS) {

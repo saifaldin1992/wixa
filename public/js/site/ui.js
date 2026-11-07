@@ -5,7 +5,11 @@ import { openContact } from "./contact.js";
 // ---------- interactions ----------
 export function setupUI() {
   const header = $("#header"), menu = $("#menu"), btn = $("#menuBtn"), scrim = $("#scrim");
-  const toggle = (open) => { btn.setAttribute("aria-expanded", open); menu.classList.toggle("open", open); scrim.classList.toggle("open", open); };
+  const toggle = (open) => {
+    btn.setAttribute("aria-expanded", open); menu.classList.toggle("open", open); scrim.classList.toggle("open", open);
+    document.documentElement.classList.toggle("menu-open", open); // the page underneath stays still
+    open ? window.__lenis?.stop() : window.__lenis?.start();
+  };
   btn.addEventListener("click", () => toggle(btn.getAttribute("aria-expanded") !== "true"));
   scrim.addEventListener("click", () => toggle(false));
   $$("a", menu).forEach((a) => a.addEventListener("click", () => toggle(false)));

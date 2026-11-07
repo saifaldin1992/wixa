@@ -2,6 +2,7 @@
    (المحتوى ← من نحن / المجالات / الضمانات / الباقات). A section with nothing in it stays hidden. */
 import { $, $$, ICONS, UI, C, esc, lang } from "./core.js";
 import { goOrder, pkgSel } from "./order.js";
+import { carousels } from "./carousel.js";
 import { openChat } from "./chat.js";
 
 const para = (t) => esc(t).split(/\n\s*\n/).map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`).join("");
@@ -40,6 +41,7 @@ export function renderSales() {
   const tab = (name) => {
     $$("#svcTabs [data-tab]").forEach((b) => { b.classList.toggle("on", b.dataset.tab === name); b.setAttribute("aria-selected", b.dataset.tab === name); });
     $("#servicesGrid").hidden = name !== "services"; $("#industries").hidden = name !== "industries";
+    requestAnimationFrame(carousels); // dots for the tab now shown
   };
   if (!$("#svcTabs").dataset.bound) {
     $("#svcTabs").dataset.bound = 1;
