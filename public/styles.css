@@ -915,8 +915,7 @@ html[dir="ltr"] .svc__more svg { transform: scaleX(-1); }
 @media (hover: none), (pointer: coarse) {
   .header__bar { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(var(--surface-rgb), .96); }
   .aurora { animation: none !important; }
-  .hero.in .lg-glow { animation: lgGlow 1.6s var(--ease-out) 2.2s forwards !important; }
-  .hero.in .lg-shine-bar, .pulse, .hero__scroll span { animation: none !important; }
+  .pulse, .hero__scroll span { animation: none !important; }
   .hero__title .word:last-child > span { animation: none; background-position: 50% 0; }
   .pmodal__scrim { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(var(--dark-rgb), .7); }
 }
@@ -1033,7 +1032,7 @@ body { font-size: var(--fs-body); }
 .footer .brand { --lh: 30px; }
 .brand:hover .brand__mark { transform: none; } /* the guide: never rotate or distort the logo */
 /* the big logo on the first screen: drawn and floating, without glow, shine or extra marks */
-.hero__logo .lg-glow, .hero__logo .lg-shine, .hero__logo .lg-runner { display: none !important; }
+/* the big logo keeps its signature motion: drawn, glow, shine and the moving dot (the guide's "animated version") */
 
 /* type scale: 14 · 15 · 16 · 17 · 18 · 20 · 24 · 28 · 36 · 44 · 48 · 64 */
 :root { --fs-h3-lg: 1.25rem; --fs-num: 2rem; }
@@ -1066,3 +1065,33 @@ body { font-size: var(--fs-body); }
 .partners__grid:not(.is-marquee) .partner, .partner { position: relative; aspect-ratio: 3 / 2; padding: 0; overflow: hidden; }
 .partner img, .partners__grid:not(.is-marquee) .partner img { position: absolute; inset: 0; margin: auto; width: 80%; height: 72%; max-width: none; max-height: none; object-fit: contain; }
 .partner span { padding: 0 10px; }
+
+/* =====================================================================================
+   Buttons — one system for the whole site
+   · height 48px (50px on computers), pill shape, 15–16px text — set in the sizing system above
+   · never smaller than 160px, so short labels ("إرسال") are not tiny next to long ones
+   · phones (< 768px): a group's buttons are stacked, full width, at most 360px, centred
+   · tablets and computers: side by side, natural width, centred
+   · the calculator's three actions are always stacked, 360px wide, centred
+   ===================================================================================== */
+.btn { min-width: 160px; justify-content: center; }
+.hero__ctas, .cta__actions, .careers__general, .form__done { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; }
+.form__done { flex-direction: column; }
+.calc__btns { display: grid; gap: 10px; width: 100%; max-width: 360px; margin-inline: auto; }
+.calc__btns .btn { width: 100%; }
+.calc__result { align-items: stretch; }
+.calc__result .calc__btns { align-self: center; }
+@media (max-width: 767px) {
+  .hero__ctas, .form__btns, .pmodal__actions, .careers__general { display: grid; grid-template-columns: 1fr; justify-content: stretch; width: 100%; max-width: 360px; margin-inline: auto; gap: 10px; }
+  .hero__ctas .btn, .form__btns .btn, .pmodal__actions .btn, .careers__general .btn { width: 100%; }
+  /* contact section: the round call button beside "تواصل معنا", the booking button under them */
+  .cta__actions { display: flex; flex-wrap: wrap; max-width: 360px; margin-inline: auto; gap: 10px; }
+  .cta__actions .btn { flex: 1 1 0; min-width: 0; }
+  .cta__actions #bookBtn { flex-basis: 100%; }
+  .form__end { flex-direction: column; align-items: stretch; }
+  .form__end .form__status { text-align: center; }
+}
+@media (min-width: 768px) {
+  .form__btns { display: flex; gap: 10px; }
+  .cta__actions .btn, .hero__ctas .btn { min-width: 180px; }
+}
