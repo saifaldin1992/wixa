@@ -1,3 +1,10 @@
+// script errors in the dashboard are logged too (diagnostics page)
+{
+  let n = 0;
+  const report = (msg, src, line) => { if (n++ >= 3 || !msg) return; try { navigator.sendBeacon("/api/client-error", new Blob([JSON.stringify({ where: "admin", msg: String(msg).slice(0, 300), src, line, path: location.pathname + location.hash })], { type: "text/plain" })); } catch {} };
+  addEventListener("error", (e) => { if (e.filename || e.message) report(e.message, e.filename, e.lineno); });
+  addEventListener("unhandledrejection", (e) => report(`Unhandled: ${e.reason?.message || e.reason}`, "", 0));
+}
 /* WIXA admin dashboard — entry. Each part lives in its own module under /admin/js/. */
 import { LINK, afterSignIn, authMsg, showAuth } from "./js/auth.js";
 import { sb, setSb, toast } from "./js/core.js";

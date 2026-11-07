@@ -12,6 +12,15 @@ import { setupBooking, setupTracking } from "./site/extras.js";
 import { setupProgress, setupCursor, setupMotion, pauseOffscreen } from "./site/effects.js";
 const { DEFAULTS, merge, applyTheme } = window.WIXA;
 
+// script errors in visitors' browsers go to the dashboard's error log (at most 3 per page view)
+let errSent = 0;
+const reportError = (msg, src, line) => {
+  if (errSent++ >= 3 || PREVIEW || !msg) return;
+  try { navigator.sendBeacon("/api/client-error", new Blob([JSON.stringify({ where: "site", msg: String(msg).slice(0, 300), src, line, path: location.pathname + location.search })], { type: "text/plain" })); } catch {}
+};
+addEventListener("error", (e) => { if (e.filename || e.message) reportError(e.message, e.filename, e.lineno); });
+addEventListener("unhandledrejection", (e) => reportError(`Unhandled: ${e.reason?.message || e.reason}`, "", 0));
+
 // sign-in links from Supabase emails that land on the homepage belong to the dashboard
 if (/(^|&)(type=(recovery|email_change|signup)|error_description=|message=)/.test(location.hash.slice(1))) location.replace("/admin/" + location.hash);
 

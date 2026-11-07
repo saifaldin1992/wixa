@@ -18,6 +18,12 @@ routes = [
 ]
 
 # Static site (public/) is served first; these paths go to the Worker.
+# the developer guide (docs/DEVELOPERS.md) is bundled as text and shown only inside the dashboard
+[[rules]]
+type = "Text"
+globs = ["**/*.md"]
+fallthrough = true
+
 [build]
 command = "node scripts/build.mjs"
 watch_dir = ["public/js", "public/admin/js", "public/admin/admin.js", "public/admin/admin.css", "public/styles.css", "public/shared.js"]

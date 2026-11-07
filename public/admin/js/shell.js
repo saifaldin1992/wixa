@@ -11,7 +11,8 @@ import { viewMessages } from "./views/messages.js";
 import { viewOverview } from "./views/overview.js";
 import { viewPosts } from "./views/posts.js";
 import { viewSeo } from "./views/seo.js";
-import { viewStatus } from "./views/status.js";
+import { viewDiagnose } from "./views/diagnose.js";
+import { viewDevGuide } from "./views/devguide.js";
 
 // ---------------- shell / router ----------------
 export const VIEWS = {
@@ -26,7 +27,8 @@ export const VIEWS = {
   posts: { title: "المقالات", sub: "اكتب مقالات تساعد الناس على إيجادك في Google", render: viewPosts },
   seo: { title: "البحث والمشاركة", sub: "كيف يظهر موقعك في Google وعند مشاركة الرابط", render: viewSeo },
   integrations: { title: "التكاملات", sub: "التنبيهات والرد التلقائي وأدوات القياس والحماية ووضع الصيانة", render: viewIntegrations },
-  status: { title: "الاتصالات", sub: "النطاق والاستضافة وقاعدة البيانات والبريد والكود — فحص مباشر", render: viewStatus },
+  diagnose: { title: "الفحص والتشخيص", sub: "فحص كل أجزاء الموقع، مكان أي عطل وطريقة حله، وسجل الأعطال", render: viewDiagnose },
+  devguide: { title: "دليل المطوّر", sub: "كيف بُني المشروع وأين يوجد كل جزء — للمطورين", render: viewDevGuide },
   messages: { title: "الرسائل", sub: "رسائل نموذج التواصل", render: viewMessages },
   account: { title: "الحساب", sub: "بيانات الدخول والأمان", render: viewAccount },
 };
@@ -46,7 +48,8 @@ export function setupShell() {
 }
 
 export async function route() {
-  const name = location.hash.slice(1) || "overview";
+  let name = location.hash.slice(1) || "overview";
+  if (name === "status") { name = "diagnose"; history.replaceState(null, "", "#diagnose"); } // the old Connections page lives inside diagnostics now
   const v = VIEWS[name] || VIEWS.overview;
   if (current && ["appearance", "content", "seo"].includes(current) && !["appearance", "content", "seo"].includes(name) && isDirty()) {
     if (!(await confirmBox("لديك تغييرات غير محفوظة", "هل تريد المغادرة دون حفظ؟", "مغادرة"))) { history.replaceState(null, "", `#${current}`); return; }
