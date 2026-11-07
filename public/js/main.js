@@ -10,6 +10,7 @@ import { setupContact } from "./site/contact.js";
 import { setupProjectModal } from "./site/projects.js";
 import { setupBooking, setupTracking } from "./site/extras.js";
 import { setupProgress, setupCursor, setupMotion, pauseOffscreen } from "./site/effects.js";
+import { setupChat } from "./site/chat.js";
 const { DEFAULTS, merge, applyTheme } = window.WIXA;
 
 // script errors in visitors' browsers go to the dashboard's error log (at most 3 per page view)
@@ -50,6 +51,7 @@ if (PREVIEW) addEventListener("message", (e) => {
   setupTracking();
   setupProgress();
   setupCursor();
+  setupChat();
   // reveal right away (the content is already in the page); scroll effects start once everything has loaded
   $(".loader").classList.add("done");
   document.body.classList.remove("is-loading");

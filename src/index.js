@@ -13,7 +13,7 @@ import DEV_GUIDE from "../docs/DEVELOPERS.md";
 
 const SITE_TTL = 60; // seconds the site content may be served from cache
 // Keep in sync with public/_headers. The sha256 is the inline theme script in index.html.
-const CSP = "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://challenges.cloudflare.com 'sha256-NVKT0UrdROLsGcatClpvEhxXytwpjLyEshzIKuByDnE='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://cloudflareinsights.com https://*.supabase.co https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'";
+const CSP = "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://challenges.cloudflare.com 'sha256-NVKT0UrdROLsGcatClpvEhxXytwpjLyEshzIKuByDnE='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://cloudflareinsights.com https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'";
 const SECURITY_HEADERS = {
   "content-security-policy": CSP,
   "permissions-policy": "camera=(), microphone=(), geolocation=()",
@@ -1555,6 +1555,124 @@ async function handleInviteClaim(request, env, ctx) {
 }
 
 // ---------------------------------------------------------------- router
+// ---------- live chat ----------
+// Visitors talk to the Worker only: each conversation has a random key kept in the visitor's browser
+// (the database stores its sha-256). The team reads and replies in the dashboard through Supabase directly.
+const hex = (buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+const sha256hex = async (s) => hex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)));
+const cleanText = (v, n) => String(v ?? "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim().slice(0, n);
+const PHONE_RE = /^\+?[\d\s()-]{6,30}$/;
+
+async function chatError(r) {
+  const t = await r.text().catch(() => "");
+  if (/PGRST202|Could not find the function/.test(t)) return json({ error: "migration_missing" }, 503);
+  if (/not found/.test(t)) return json({ error: "gone" }, 404);
+  console.error("chat rpc", r.status, t.slice(0, 200));
+  return json({ error: "server" }, 502);
+}
+
+async function handleChat(request, env, ctx, action) {
+  const ip = clientIp(request);
+  const limiter = action === "start" ? env.CONTACT_LIMITER : env.TRACK_LIMITER;
+  if (!(await allowed(limiter, `chat-${action}:${ip}`))) return json({ error: "rate_limited" }, 429);
+  let b = {};
+  try { b = await request.json(); } catch {}
+  const noStore = { "cache-control": "no-store" };
+
+  if (action === "status") {
+    const r = await rpcToken(env, "chat_status", {});
+    return r.ok ? json(await r.json(), 200, noStore) : chatError(r);
+  }
+  if (action === "start") {
+    const name = cleanText(b.name, 80), phone = cleanText(b.phone, 30), body = cleanText(b.body, 2000);
+    if (!name || !body || !PHONE_RE.test(phone)) return json({ error: "invalid" }, 422);
+    const key = hex(crypto.getRandomValues(new Uint8Array(32)));
+    const r = await rpcToken(env, "chat_start", { p: { secret: await sha256hex(key), name, phone, body, page: cleanText(b.page, 200) } });
+    if (!r.ok) return chatError(r);
+    const d = await r.json();
+    ctx.waitUntil(notifyChat(env, request, { name, phone, body, isNew: true, push: true, email: true }).catch((e) => console.error("chat notify", e)));
+    return json({ id: d.id, key, online: d.online }, 200, noStore);
+  }
+  const id = cleanText(b.id, 40), key = cleanText(b.key, 64);
+  if (!/^[0-9a-f-]{36}$/.test(id) || !/^[0-9a-f]{64}$/.test(key)) return json({ error: "invalid" }, 422);
+  const secret = await sha256hex(key);
+  if (action === "send") {
+    const body = cleanText(b.body, 2000);
+    if (!body) return json({ error: "invalid" }, 422);
+    const r = await rpcToken(env, "chat_send", { p: { id, secret, body } });
+    if (!r.ok) return chatError(r);
+    const d = await r.json();
+    if (d.push || d.email) ctx.waitUntil(notifyChat(env, request, { name: d.name, phone: d.phone, body, push: d.push, email: d.email }).catch((e) => console.error("chat notify", e)));
+    return json({ id: d.id, online: d.online }, 200, noStore);
+  }
+  // poll
+  const r = await rpcToken(env, "chat_poll", { p: { id, secret, after: Math.max(0, parseInt(b.after, 10) || 0), seen: !!b.seen } });
+  return r.ok ? json(await r.json(), 200, noStore) : chatError(r);
+}
+
+async function notifyChat(env, request, m) {
+  const origin = new URL(request.url).origin;
+  const jobs = [];
+  if (m.push) jobs.push(pushTeam(env));
+  if (m.email) jobs.push(sendOwnerMail(env, m.isNew ? `محادثة جديدة في الموقع — ${m.name}` : `رسالة جديدة في الدردشة — ${m.name}`,
+    mailBox(m.isNew ? "محادثة جديدة في الموقع" : "رسالة جديدة في الدردشة", `<p><b>${esc(m.name)}</b> · <span dir="ltr">${esc(m.phone)}</span></p>
+      <p style="background:#F3EEFB;padding:12px 14px;border-radius:12px;white-space:pre-wrap">${esc(m.body)}</p>
+      <p>الزبون ينتظر ردك في نافذة الدردشة على الموقع.</p>
+      <p><a href="${origin}/admin/#chats" style="display:inline-block;background:#5B21B6;color:#fff;padding:12px 22px;border-radius:99px;text-decoration:none">الرد من لوحة التحكم</a></p>`)));
+  await Promise.allSettled(jobs);
+}
+
+// Web Push to the team's devices. The notification carries no content (the service worker shows a fixed text),
+// so no payload encryption is needed — only a VAPID signature. The key pair is created once and kept in KV.
+const b64u = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const PUSH_HOSTS = /(^|\.)(fcm\.googleapis\.com|push\.services\.mozilla\.com|push\.apple\.com|notify\.windows\.com)$/;
+async function vapidKeys(env) {
+  let v = await env.PRIVATE.get("vapid", { type: "json" });
+  if (!v) {
+    const kp = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
+    v = { pub: b64u(await crypto.subtle.exportKey("raw", kp.publicKey)), jwk: await crypto.subtle.exportKey("jwk", kp.privateKey) };
+    await env.PRIVATE.put("vapid", JSON.stringify(v));
+  }
+  return v;
+}
+async function webPush(env, endpoint) {
+  const v = await vapidKeys(env);
+  const enc = (o) => b64u(new TextEncoder().encode(JSON.stringify(o)));
+  const unsigned = `${enc({ typ: "JWT", alg: "ES256" })}.${enc({ aud: new URL(endpoint).origin, exp: Math.floor(Date.now() / 1000) + 12 * 3600, sub: "mailto:info@wixa.dev" })}`;
+  const key = await crypto.subtle.importKey("jwk", v.jwk, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, new TextEncoder().encode(unsigned));
+  const r = await fetch(endpoint, { method: "POST", headers: { authorization: `vapid t=${unsigned}.${b64u(sig)}, k=${v.pub}`, ttl: "3600", urgency: "high", "content-length": "0" } });
+  return r.status;
+}
+async function pushTeam(env) {
+  if (!env.PRIVATE) return;
+  const subs = (await env.PRIVATE.get("push_subs", { type: "json" })) || [];
+  if (!subs.length) return;
+  const res = await Promise.all(subs.map((x) => webPush(env, x.endpoint).catch(() => 0)));
+  const keep = subs.filter((x, i) => res[i] !== 404 && res[i] !== 410); // the device unsubscribed
+  if (keep.length !== subs.length) await env.PRIVATE.put("push_subs", JSON.stringify(keep));
+}
+async function handleAdminPush(request, env) {
+  const s = await adminSession(request, env, ["owner", "support"]);
+  if (s.error) return s.error;
+  if (!env.PRIVATE) return json({ error: "kv_missing" }, 503);
+  if (request.method === "GET") return json({ key: (await vapidKeys(env)).pub }, 200, { "cache-control": "no-store" });
+  let b = {};
+  try { b = await request.json(); } catch {}
+  const endpoint = String(b.endpoint || "");
+  let host = "";
+  try { host = new URL(endpoint).hostname; } catch {}
+  if (!endpoint.startsWith("https://") || endpoint.length > 1000 || !PUSH_HOSTS.test(host)) return json({ error: "invalid" }, 422);
+  let subs = ((await env.PRIVATE.get("push_subs", { type: "json" })) || []).filter((x) => x.endpoint !== endpoint);
+  if (request.method === "POST") {
+    const me = await sessionUser(request, env);
+    subs = [...subs, { endpoint, user: me?.email || "", at: new Date().toISOString() }].slice(-30);
+  }
+  await env.PRIVATE.put("push_subs", JSON.stringify(subs));
+  const status = request.method === "POST" && b.test ? await webPush(env, endpoint).catch(() => 0) : null;
+  return json({ ok: true, devices: subs.length, test: status });
+}
+
 export default {
   // "*/15 * * * *" → health check; "17 6 * * SUN" → weekly report (Sunday 09:17 Baghdad)
   async scheduled(event, env, ctx) {
@@ -1605,6 +1723,14 @@ export default {
         case "POST /api/admin/team":
           return await handleAdminTeam(request, env, ctx);
         case "POST /api/invite/claim": return await handleInviteClaim(request, env, ctx);
+        case "POST /api/chat/status": return await handleChat(request, env, ctx, "status");
+        case "POST /api/chat/start": return await handleChat(request, env, ctx, "start");
+        case "POST /api/chat/send": return await handleChat(request, env, ctx, "send");
+        case "POST /api/chat/poll": return await handleChat(request, env, ctx, "poll");
+        case "GET /api/admin/push":
+        case "POST /api/admin/push":
+        case "DELETE /api/admin/push":
+          return await handleAdminPush(request, env);
         case "DELETE /api/admin/booking": return await handleAdminBooking(request, env);
         case "POST /api/admin/review-link": return await handleAdminReviewLink(request, env);
         case "GET /privacy":

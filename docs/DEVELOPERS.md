@@ -158,9 +158,18 @@ node scripts/build.mjs                # بناء الواجهة يدوياً
 | `GET /api/slots?date=` | الأوقات المتاحة للحجز |
 | `POST /api/event` | أفعال الزوار (دفعة واحدة لكل زيارة) |
 | `POST /api/client-error` | أخطاء المتصفح ← سجل الأعطال |
+| `POST /api/chat/start` · `/send` · `/poll` · `/status` | الدردشة المباشرة (مفتاح سري لكل محادثة في متصفح الزائر) |
 
 ### واجهات المالك (تتطلب جلسة دخول + `is_admin`)
 `/api/admin/stats` · `/funnel` · `/status` · `/diagnose` · `/errors` · `/devguide` · `/integrations` (+`/test`) · `/notify` · `/msgmeta` · `/refresh` · `/review-link`
+
+`/api/admin/team` (المالك) · `/api/admin/push` (المالك وخدمة العملاء: إشعارات الدردشة) · `/api/invite/claim` (المدعو بعد إنشاء حسابه)
+
+### الدردشة المباشرة
+- الجداول: `chats` · `chat_messages` · `chat_presence` (ملف `20261109000000_live_chat.sql`). الزائر لا يلمسها مباشرة: يمر عبر الخادم بدوال `chat_*` المحمية بـ `WRITE_TOKEN`.
+- اللوحة تقرأ وترد مباشرة (RLS: المالك وخدمة العملاء) وتستقبل الجديد فوراً عبر Supabase Realtime (`js/chat-live.js`)، وتسجّل «متصل» كل 45 ثانية.
+- الإشعارات: Web Push بلا محتوى (توقيع VAPID فقط، المفتاح يُنشأ مرة ويُحفظ في KV باسم `vapid`، والأجهزة في `push_subs`). عامل الخدمة: `public/admin/sw.js`. على iPad/iPhone يلزم تثبيت اللوحة على الشاشة الرئيسية.
+- البريد: عند بدء محادثة، وعند رسالة جديدة إن لم يكن أحد متصلاً (مرة كل 15 دقيقة لكل محادثة). تُحذف المحادثات بعد 180 يوماً من آخر رسالة.
 
 ### المهام المجدولة (`[triggers]` في wrangler.toml)
 | الجدول | المهمة |

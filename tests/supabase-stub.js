@@ -10,7 +10,7 @@
     const q = {
       then: (res, rej) => ok(single ? (rows[table] ?? null) : [], { count: 0 }).then(res, rej),
     };
-    for (const m of ["select", "eq", "neq", "in", "order", "limit", "range", "update", "insert", "upsert", "delete", "match", "is", "gte", "lte"]) q[m] = () => q;
+    for (const m of ["select", "eq", "neq", "in", "order", "limit", "range", "update", "insert", "upsert", "delete", "match", "is", "gte", "lte", "gt", "lt", "not", "or"]) q[m] = () => q;
     q.single = q.maybeSingle = () => { single = true; return q; };
     return q;
   };
@@ -31,6 +31,8 @@
       },
       rpc: (name) => ok(name === "is_admin" ? true : name === "admin_stats" ? stats : null),
       from: query,
+      channel: () => { const c = { on: () => c, subscribe: () => c }; return c; },
+      removeChannel: () => ok(null),
       storage: { from: () => ({ upload: () => ok({ path: "x" }), getPublicUrl: () => ({ data: { publicUrl: "" } }) }) },
     }),
   };

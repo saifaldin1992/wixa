@@ -1,5 +1,6 @@
 /* Sign-in, two-step verification, password reset and entering the dashboard */
 import { $, adminApi, rememberOwner, role, sb, setRole, setUser, toast } from "./core.js";
+import { startChatLive } from "./chat-live.js";
 import { loadSettings } from "./settings.js";
 import { route, setupShell } from "./shell.js";
 import { refreshMsgCount } from "./views/messages.js";
@@ -156,4 +157,5 @@ export async function enter(u) {
   route();
   if (role === "owner") adminApi("integrations").then(rememberOwner).catch(() => {}); // keeps the real site visible to the owner during maintenance
   refreshMsgCount();
+  startChatLive().catch(() => {});
 }

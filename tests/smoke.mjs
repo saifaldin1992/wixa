@@ -57,6 +57,10 @@ try {
   check((await fetch(`${BASE}/api/admin/team`)).status === 401, "team management requires sign-in");
   check((await fetch(`${BASE}/api/invite/claim`, { method: "POST", body: "{}" })).status === 401, "accepting an invitation requires an account");
   check((await fetch(`${BASE}/api/admin/devguide`)).status === 401, "developer guide requires sign-in");
+  const chatPost = (path, body) => fetch(`${BASE}/api/chat/${path}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  check((await chatPost("start", { name: "", phone: "", body: "" })).status === 422, "chat: a conversation needs a name, phone and message");
+  check((await chatPost("poll", { id: "x", key: "y" })).status === 422, "chat: a conversation can only be read with its key");
+  check((await fetch(`${BASE}/api/admin/push`)).status === 401, "chat notifications require sign-in");
   check((await fetch(`${BASE}/api/client-error`, { method: "POST", body: JSON.stringify({ msg: "test" }) })).status === 204, "browser errors are accepted");
   check((await fetch(`${BASE}/blog`)).status === 200, "articles page responds");
   check((await fetch(`${BASE}/blog/no-such-article`)).status === 404, "unknown articles return 404");
@@ -131,7 +135,7 @@ try {
     p.on("pageerror", (e) => errors.push(e.message));
     await p.goto(`${BASE}/admin/`, { waitUntil: "load" });
     await p.waitForTimeout(1200);
-    for (const v of ["overview", "appearance", "brand", "content", "projects", "services", "partners", "testimonials", "messages", "posts", "seo", "integrations", "diagnose", "devguide", "team", "account"]) {
+    for (const v of ["overview", "appearance", "brand", "content", "projects", "services", "partners", "testimonials", "messages", "chats", "posts", "seo", "integrations", "diagnose", "devguide", "team", "account"]) {
       await p.evaluate((h) => (location.hash = h), v);
       await p.waitForTimeout(600);
       const ok = await p.evaluate(() => document.querySelector("#view")?.children.length > 0);
