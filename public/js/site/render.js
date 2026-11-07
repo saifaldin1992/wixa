@@ -45,7 +45,6 @@ export function render() {
   });
   splitWords($("#heroTitle"), c.hero_title);
   $("#langBtn").textContent = lang === "ar" ? "EN" : "ع";
-  $("#langBtn2 span").textContent = ui.lang;
 
   $$(".brand__mark").forEach((m) => {
     if (s.brand.logo_url) { m.classList.add("has-logo"); m.innerHTML = `<img src="${esc(safeUrl(s.brand.logo_url))}" alt="">`; }

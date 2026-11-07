@@ -1,6 +1,5 @@
 /* Header, mobile menu, language switch, magnetic buttons */
-import { $, $$, lang, anim, setLang } from "./core.js";
-import { render } from "./render.js";
+import { $, $$, lang, anim } from "./core.js";
 import { openContact } from "./contact.js";
 
 // ---------- interactions ----------
@@ -46,17 +45,21 @@ export function setupUI() {
     $(`#${q.getAttribute("aria-controls")}`).hidden = !open;
   });
 
+  // the page is opened again in the other language (built by the server, like a first visit), at the same place
   const switchLang = () => {
-    setLang(lang === "ar" ? "en" : "ar");
-    try { localStorage.setItem("wixa-lang", lang); } catch {}
-      document.cookie = `wixa-lang=${lang}; path=/; max-age=31536000; samesite=lax`; // lets the server open the next visit in this language
-    document.body.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: "forwards" }).onfinish = () => {
-      render(); $(".hero").classList.add("in", "in-hero");
-      document.body.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, fill: "forwards" });
-    };
+    const next = lang === "ar" ? "en" : "ar";
+    try { localStorage.setItem("wixa-lang", next); sessionStorage.setItem("wixa-scroll-y", String(scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight))); } catch {}
+    document.cookie = `wixa-lang=${next}; path=/; max-age=31536000; samesite=lax`; // lets the server open the next visit in this language
+    const u = new URL(location.href); u.searchParams.set("lang", next); u.hash = "";
+    location.replace(u.toString());
   };
   $("#langBtn").addEventListener("click", switchLang);
-  $("#langBtn2").addEventListener("click", switchLang);
+  // back at the same place after a language switch
+  try {
+    const f = parseFloat(sessionStorage.getItem("wixa-scroll-y"));
+    sessionStorage.removeItem("wixa-scroll"); sessionStorage.removeItem("wixa-scroll-y");
+    if (f > 0) requestAnimationFrame(() => scrollTo(0, f * (document.documentElement.scrollHeight - innerHeight)));
+  } catch {}
 
   if (matchMedia("(hover: hover)").matches) $$(".magnetic").forEach((el) => {
     el.addEventListener("pointermove", (e) => { if (!anim) return; const r = el.getBoundingClientRect(); el.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * 0.25}px, ${(e.clientY - r.top - r.height / 2) * 0.35}px)`; });
