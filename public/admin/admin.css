@@ -731,3 +731,4 @@ body { font-size: 14.5px; }
 .top__title { line-height: 40px; }
 .top__sub { margin-top: -4px; }
 .top__actions, .subnav { align-self: center; }
+.bg-social { display: flex; gap: 10px; margin: 6px 0 10px; } .bg-social span { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 18px; }
