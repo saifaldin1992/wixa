@@ -1,5 +1,5 @@
 /* Site content: embedded in the page by the Worker, with a cached / API fallback */
-import { PREVIEW, setState } from "./core.js";
+import { PREVIEW, setState, applyUiTexts } from "./core.js";
 const { DEFAULTS, merge } = window.WIXA;
 
 // ---------- data ----------
@@ -23,6 +23,7 @@ export async function load() {
 }
 function setData(d) {
   window.WIXA.markEnv(d.env);
+  applyUiTexts(d.settings);
   setState({
     settings: merge(DEFAULTS, d.settings || {}),
     projects: d.projects || [], services: d.services || [], partners: d.partners || [], testimonials: d.testimonials || [],

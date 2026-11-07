@@ -1,5 +1,5 @@
 /* WIXA — public site entry. Each part lives in its own module under /js/site/. */
-import { $, PREVIEW, state, setLang } from "./site/core.js";
+import { $, PREVIEW, state, setLang, applyUiTexts } from "./site/core.js";
 import { load } from "./site/data.js";
 import { render } from "./site/render.js";
 import { setupUI } from "./site/ui.js";
@@ -28,7 +28,7 @@ if (/(^|&)(type=(recovery|email_change|signup)|error_description=|message=)/.tes
 if (PREVIEW) addEventListener("message", (e) => {
   if (e.origin !== location.origin || e.data?.type !== "wixa-preview") return;
   const d = e.data.payload;
-  if (d.settings) state.settings = merge(DEFAULTS, d.settings);
+  if (d.settings) { state.settings = merge(DEFAULTS, d.settings); applyUiTexts(state.settings); }
   for (const k of ["projects", "services", "partners", "testimonials"]) if (d[k]) state[k] = d[k];
   if (d.lang) setLang(d.lang);
   render(); $(".hero").classList.add("in", "in-hero");

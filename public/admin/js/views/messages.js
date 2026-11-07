@@ -4,11 +4,13 @@ import { route } from "../shell.js";
 
 const STATUS = { new: ["جديد", ""], working: ["قيد المتابعة", "warn"], won: ["تم الاتفاق", "ok"], lost: ["لم يتم", "off"] };
 const isJob = (m) => (m.services?.[0] || "").startsWith("طلب توظيف");
+// "حجز موعد: الأحد 2026-11-09 الساعة 10:30" → { date, time }
+const booking = (m) => { const x = (m.services?.[0] || "").match(/^حجز موعد:.*?(\d{4}-\d{2}-\d{2}).*?(\d{2}:\d{2})/); return x ? { date: x[1], time: x[2] } : null; };
 
 // ---------------- view: messages ----------------
 export let msgFilter = "new";
 export async function viewMessages(view) {
-  const tabs = [["new", "الجديدة"], ["working", "قيد المتابعة"], ["jobs", "طلبات التوظيف"], ["all", "الكل"]];
+  const tabs = [["new", "الجديدة"], ["working", "قيد المتابعة"], ["bookings", "المواعيد"], ["jobs", "طلبات التوظيف"], ["all", "الكل"]];
   $("#topActions").innerHTML = `<div class="seg" id="mf">${tabs.map(([k, l]) => `<button data-v="${k}" class="${msgFilter === k ? "on" : ""}">${l}</button>`).join("")}</div><button class="b" id="csvBtn" title="تنزيل الرسائل المعروضة كملف Excel">تصدير Excel</button>`;
   $$("#mf button").forEach((b) => (b.onclick = () => { msgFilter = b.dataset.v; route(); }));
   let q = sb.from("contact_messages").select("*").order("created_at", { ascending: false }).limit(300);
@@ -17,9 +19,10 @@ export async function viewMessages(view) {
   const templates = cfg.templates || [];
   if (error) throw error;
   const st = (m) => meta[m.id]?.status || "new";
-  const data = rows.filter((m) => msgFilter === "jobs" ? isJob(m) : msgFilter === "working" ? st(m) === "working" : true);
+  const data = rows.filter((m) => msgFilter === "jobs" ? isJob(m) : msgFilter === "bookings" ? !!booking(m) : msgFilter === "working" ? st(m) === "working" : true)
+    .sort((a, b) => msgFilter === "bookings" ? `${booking(a).date} ${booking(a).time}`.localeCompare(`${booking(b).date} ${booking(b).time}`) : 0);
   if (!data.length) {
-    const empty = { new: "لا توجد رسائل جديدة 🎉", working: "لا توجد رسائل قيد المتابعة.", jobs: "لا توجد طلبات توظيف بعد.", all: "لا توجد رسائل بعد." };
+    const empty = { new: "لا توجد رسائل جديدة 🎉", working: "لا توجد رسائل قيد المتابعة.", bookings: "لا توجد مواعيد محجوزة.", jobs: "لا توجد طلبات توظيف بعد.", all: "لا توجد رسائل بعد." };
     view.innerHTML = `<div class="empty">${I.mail}<p>${empty[msgFilter]}</p></div>`; return;
   }
   const when = (d) => new Date(d).toLocaleString("ar", { dateStyle: "medium", timeStyle: "short" });
@@ -42,6 +45,7 @@ export async function viewMessages(view) {
       <div class="msg__actions">
         <a class="b b--sm b--primary" href="mailto:${esc(m.email)}?subject=${encodeURIComponent(isJob(m) ? "بخصوص طلبك للعمل في WIXA" : "رد من WIXA")}">${I.mail}رد بالبريد</a>
         ${m.phone ? `<a class="b b--sm" href="https://wa.me/${esc(m.phone.replace(/\D/g, "").replace(/^0/, "964"))}" target="_blank" rel="noopener">واتساب</a>` : ""}
+        ${booking(m) ? `<button class="b b--sm" data-cancel="${m.id}" title="يصبح هذا الوقت متاحاً للحجز من جديد">إلغاء الموعد</button>` : ""}
         <button class="b b--sm" data-h="${m.id}">${m.handled ? "إرجاع كجديدة" : `${I.save}تمت المعالجة`}</button>
         <button class="b b--sm b--danger" data-d="${m.id}">${I.trash}حذف</button></div></div></div>`;
   }).join("");
@@ -67,6 +71,16 @@ export async function viewMessages(view) {
       toast("تم الحفظ ✓");
     } catch { toast("تعذّر الحفظ", "err"); }
     finally { b.disabled = false; }
+  }));
+  $$("[data-cancel]").forEach((b) => (b.onclick = async () => {
+    const m = data.find((x) => String(x.id) === b.dataset.cancel), bk = booking(m);
+    if (!(await confirmBox("إلغاء الموعد", `سيُلغى موعد ${m.name} يوم ${bk.date} الساعة ${bk.time} ويصبح الوقت متاحاً للحجز. أبلغ الزبون بنفسك (بالبريد أو واتساب).`, "إلغاء الموعد"))) return;
+    try {
+      await adminApi("booking", "DELETE", { date: bk.date, time: bk.time });
+      await adminApi("msgmeta", "PUT", { id: String(m.id), status: "lost", note: `${meta[m.id]?.note ? meta[m.id].note + "\n" : ""}أُلغي الموعد ${bk.date} ${bk.time}` });
+      if (!m.handled) await sb.from("contact_messages").update({ handled: true }).eq("id", m.id);
+      toast("أُلغي الموعد وصار الوقت متاحاً ✓"); refreshMsgCount(); route();
+    } catch { toast("تعذّر الإلغاء", "err"); }
   }));
   $$("[data-h]").forEach((b) => (b.onclick = async () => {
     const m = data.find((x) => String(x.id) === b.dataset.h);

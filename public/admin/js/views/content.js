@@ -1,6 +1,10 @@
 /* Content: texts, story, process, stats, calculator, sections, brand, contact */
 import { $, $$, I, ICONS, esc, savedJSON, sb, setSaved, settings, toast } from "../core.js";
 import { PRIVACY_DEFAULTS } from "../../../js/privacy-defaults.js";
+import { UI_DEFAULTS } from "../../../js/ui-strings.js";
+
+// interface texts the owner can change (button labels, menu, form messages)
+const UI_GROUPS = [["القائمة والتذييل", ["nav_home", "nav_projects", "nav_services", "nav_calc", "nav_partners", "nav_careers", "nav_contact", "nav_blog", "privacy"]], ["نموذج التواصل", ["f_name", "f_email", "f_phone", "f_service", "f_any", "f_message", "f_send", "or_wa", "sending", "invalid", "bad_phone", "err", "done_title", "done_text", "done_again"]], ["الحاسبة والخدمات والمشاريع", ["calc_est", "calc_pdf", "calc_wa", "more", "page", "no_projects"]], ["حجز المواعيد", ["bk_btn", "bk_title", "bk_day", "bk_time", "bk_pick_day", "bk_none", "bk_pick_time", "bk_taken", "bk_notes", "bk_send", "bk_ok"]], ["التقديم على وظيفة", ["j_title", "j_job", "j_general", "j_cv", "j_about", "j_send", "j_ok"]]];
 import { imageField } from "../fields.js";
 import { bindPreview, changed, getPath, previewLang, previewPane, pushPreview, setPath, setPreviewLang, settingsActions } from "../settings.js";
 
@@ -24,7 +28,7 @@ export const TEXT_FIELDS = [
 
 export async function viewContent(view) {
   settingsActions();
-  const tabs = [["texts", "النصوص"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"], ["privacy", "سياسة الخصوصية"], ["booking", "المواعيد"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
+  const tabs = [["texts", "النصوص"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"], ["privacy", "سياسة الخصوصية"], ["booking", "المواعيد"], ["ui", "نصوص الأزرار والقوائم"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
   view.innerHTML = `<div class="split"><div><div class="card">
       <div class="tabs" id="ctTabs">${tabs.map(([k, l]) => `<button data-k="${k}" class="${k === contentTab ? "on" : ""}">${l}</button>`).join("")}</div>
       <div id="ctBody"></div></div></div>${previewPane()}</div>`;
@@ -97,6 +101,17 @@ export function renderContentTab() {
       $("#addFaq").onclick = () => { items.push({ q: "", a: "" }); changed(); draw(); };
     };
     draw(); return;
+  } else if (contentTab === "ui") {
+    settings.ui ??= { ar: {}, en: {} };
+    settings.ui[L] ??= {};
+    const cur = settings.ui[L];
+    body.innerHTML = langSeg() + `<p class="muted" style="margin-top:0">نصوص الأزرار والقائمة ورسائل النماذج. اترك الحقل فارغاً لاستخدام النص الأصلي (الظاهر باهتاً داخله).</p>
+      <div class="stack">${UI_GROUPS.map(([title, keys]) => `<div class="sec-title">${title}</div><div class="grid2">${keys.map((k) => `<label class="f"><span>${esc(UI_DEFAULTS.ar[k] || k)}</span><input data-ui="${k}" value="${esc(cur[k] || "")}" placeholder="${esc(UI_DEFAULTS[L][k] || "")}" dir="${dir}"></label>`).join("")}</div>`).join("")}</div>
+      <button class="b b--sm b--ghost" id="uiReset" style="margin-top:12px">${I.reset}إرجاع كل النصوص الأصلية (${L === "ar" ? "العربي" : "English"})</button>`;
+    bindLangSeg();
+    $$("[data-ui]", body).forEach((el) => (el.oninput = () => { const v = el.value; if (v.trim()) cur[el.dataset.ui] = v; else delete cur[el.dataset.ui]; changed(); }));
+    $("#uiReset").onclick = () => { settings.ui[L] = {}; changed(); renderContentTab(); };
+    return;
   } else if (contentTab === "booking") {
     settings.booking ??= { on: false, days: [0, 1, 2, 3, 4], from: "10:00", to: "16:00", slot: 30, days_ahead: 14 };
     const b = settings.booking;

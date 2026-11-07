@@ -1124,6 +1124,21 @@ async function reserveSlot(env, ctx, date, time) {
   return true;
 }
 
+// DELETE /api/admin/booking {date, time} — cancel an appointment: its time becomes free to book again
+async function handleAdminBooking(request, env) {
+  const { error } = await adminSession(request, env);
+  if (error) return error;
+  if (!env.PRIVATE) return json({ error: "storage_not_configured" }, 503);
+  let b = {};
+  try { b = await request.json(); } catch {}
+  const date = String(b.date || ""), time = String(b.time || "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) return json({ error: "invalid" }, 422);
+  const key = `book:${date}`;
+  const taken = ((await env.PRIVATE.get(key, { type: "json" }).catch(() => null)) || []).filter((t) => t !== time);
+  await env.PRIVATE.put(key, JSON.stringify(taken), { expirationTtl: 90 * 864e2 });
+  return json({ ok: true, free: time });
+}
+
 // ---------------------------------------------------------------- client review links
 // The owner creates a one-time link in the dashboard; the client's review arrives hidden until published.
 async function handleAdminReviewLink(request, env) {
@@ -1493,6 +1508,7 @@ export default {
         case "GET /api/slots": return await handleSlots(request, env, ctx, url);
         case "POST /api/event": return await handleEvent(request, env, ctx);
         case "GET /api/admin/funnel": return await handleAdminFunnel(request, env, url);
+        case "DELETE /api/admin/booking": return await handleAdminBooking(request, env);
         case "POST /api/admin/review-link": return await handleAdminReviewLink(request, env);
         case "GET /privacy":
         case "HEAD /privacy":

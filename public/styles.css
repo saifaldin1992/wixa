@@ -1095,3 +1095,16 @@ body { font-size: var(--fs-body); }
   .form__btns { display: flex; gap: 10px; }
   .cta__actions .btn, .hero__ctas .btn { min-width: 180px; }
 }
+
+/* footer: the WIXA wave in brand colours just above the soft footer line, as a pair */
+.footer__wave--brand { top: -34px; }
+.footer__wave--brand path { stroke-width: 2; opacity: .9; }
+@media (max-width: 767px) { .footer__wave--brand { top: -30px; } }
+
+/* calculator price bar (phones): the label on top, the price under it */
+@media (max-width: 900px) {
+  .calc__sticky { flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 8px 18px; border-radius: 18px; text-align: center; }
+  .calc__sticky span { font-size: .875rem; line-height: 1.3; }
+  .calc__sticky b { font-size: 1.0625rem; line-height: 1.3; }
+}
+.footer__wave--brand path { stroke: url(#fwv); }
