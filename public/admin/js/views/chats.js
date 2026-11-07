@@ -4,7 +4,9 @@ import { $, $$, I, adminApi, closeModal, confirmBox, esc, openModal, role, sb, s
 import { saveSettings } from "../settings.js";
 import { disablePush, enablePush, isIOS, onChat, pushState, pushSupported, refreshChatCount } from "../chat-live.js";
 
-let filter = "open", current = null, unsub = null;
+let filter = "open", current = null, unsub = null, me = null, typingTimer = 0;
+const QUICK = ["أهلاً بك 👋 كيف أقدر أساعدك؟", "شكراً لتواصلك معنا، لحظات وأرد عليك.", "ممكن تعطيني تفاصيل أكثر عن المشروع؟", "سأرسل لك عرض السعر على الواتساب خلال اليوم.", "هل يناسبك اتصال هاتفي قصير لنفهم احتياجك؟", "شكراً لك! إذا احتجت أي شيء آخر نحن هنا."];
+const quick = () => (settings.chat?.quick?.length ? settings.chat.quick : QUICK);
 const when = (t) => {
   const d = new Date(t), now = new Date();
   return d.toDateString() === now.toDateString()
@@ -16,7 +18,7 @@ const BACK = '<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>';
 
 export async function viewChats(view) {
   unsub?.(); unsub = null;
-  const { data: chats, error } = await sb.from("chats").select("id,name,phone,page,status,unread,last_text,last_from,last_at,created_at").order("last_at", { ascending: false }).limit(300);
+  const { data: chats, error } = await sb.from("chats").select("*").order("last_at", { ascending: false }).limit(300);
   if (error) {
     $("#topActions").innerHTML = "";
     view.innerHTML = `<div class="empty"><p>${/does not exist|PGRST205|schema cache/i.test(error.message) ? "يلزم تطبيق تحديث قاعدة البيانات الخاص بالدردشة أولاً (ملف supabase/migrations/20261109000000_live_chat.sql)." : `تعذّر تحميل المحادثات (${esc(error.message)})`}</p></div>`;
@@ -24,8 +26,10 @@ export async function viewChats(view) {
   }
   const list = chats || [];
   const on = !!settings.chat?.on;
-  $("#topActions").innerHTML = `<button class="b" id="pushBtn">🔔 الإشعارات على هذا الجهاز</button>${role === "owner" ? `<button class="b" id="chatCfg">⚙️ إعدادات الدردشة</button>` : ""}`;
-  view.innerHTML = `${on ? "" : `<div class="chat-off">الدردشة متوقفة في الموقع — الزوار لا يرون زرها. ${role === "owner" ? '<button class="b b--sm b--primary" id="turnOn">تفعيل الدردشة الآن</button>' : "يستطيع المالك تفعيلها."}</div>`}
+  const { data: myName, error: nameErr } = await sb.rpc("my_display_name");
+  me = nameErr ? null : myName || "";
+  $("#topActions").innerHTML = `${me === null ? "" : `<button class="b" id="myName">👤 ${me ? `اسمك: ${esc(me)}` : "اختر اسمك"}</button>`}<button class="b" id="pushBtn">🔔 الإشعارات على هذا الجهاز</button>${role === "owner" ? `<button class="b" id="chatCfg">⚙️ إعدادات الدردشة</button>` : ""}`;
+  view.innerHTML = `${me === "" ? `<div class="chat-off chat-off--name">اختر الاسم الذي يظهر للزبون عند ردّك (مثل «أحمد»)، بدل «فريق ويكسا». <button class="b b--sm b--primary" id="nameNow">اختيار الاسم</button></div>` : ""}${on ? "" : `<div class="chat-off">الدردشة متوقفة في الموقع — الزوار لا يرون زرها. ${role === "owner" ? '<button class="b b--sm b--primary" id="turnOn">تفعيل الدردشة الآن</button>' : "يستطيع المالك تفعيلها."}</div>`}
     <div class="chat ${current ? "chat--thread" : ""}">
       <aside class="chat__list">
         <div class="seg chat__filter">${[["open", "مفتوحة"], ["closed", "مغلقة"], ["all", "الكل"]].map(([k, n]) => `<button type="button" data-f="${k}" class="${filter === k ? "on" : ""}">${n}</button>`).join("")}</div>
@@ -39,7 +43,7 @@ export async function viewChats(view) {
     const rows = list.filter((c) => filter === "all" || c.status === filter);
     items.innerHTML = rows.length ? rows.map((c) => `<button type="button" class="chat__item ${current === c.id ? "on" : ""}" data-id="${c.id}">
         <span class="chat__av">${esc((c.name || "?").trim()[0] || "?")}</span>
-        <span class="chat__meta"><b>${esc(c.name)}</b><small>${c.last_from === "staff" ? "أنت: " : ""}${esc(c.last_text)}</small></span>
+        <span class="chat__meta"><b>${esc(c.name)}</b>${c.topic ? `<em class="chat__topic">${esc(c.topic)}</em>` : ""}<small>${c.last_from === "staff" ? "أنت: " : ""}${esc(c.last_text)}</small></span>
         <span class="chat__side"><small>${when(c.last_at)}</small>${c.unread ? `<i class="count">${c.unread}</i>` : ""}</span></button>`).join("")
       : `<p class="muted chat__none">${filter === "open" ? "لا توجد محادثات مفتوحة." : "لا توجد محادثات."}</p>`;
     $$(".chat__item", items).forEach((b) => (b.onclick = () => openChat(b.dataset.id)));
@@ -61,13 +65,15 @@ export async function viewChats(view) {
     const wa = waNum(c.phone);
     thread.innerHTML = `<header class="chat__head">
         <button class="b b--icon b--ghost chat__back" type="button" title="رجوع">${BACK}</button>
-        <div class="chat__who"><b>${esc(c.name)}</b><small class="muted"><a href="tel:${esc(c.phone)}" dir="ltr">${esc(c.phone)}</a>${c.page ? ` · من صفحة <span dir="ltr">${esc(c.page)}</span>` : ""} · بدأت ${when(c.created_at)}</small></div>
+        <div class="chat__who"><b>${esc(c.name)}</b>${c.topic ? `<em class="chat__topic">${esc(c.topic)}</em>` : ""}<small class="muted"><a href="tel:${esc(c.phone)}" dir="ltr">${esc(c.phone)}</a>${c.page ? ` · من صفحة <span dir="ltr">${esc(c.page)}</span>` : ""} · بدأت ${when(c.created_at)}</small></div>
         <div class="chat__acts">${wa ? `<a class="b b--sm" href="https://wa.me/${wa}" target="_blank" rel="noopener">واتساب</a>` : ""}
           <button class="b b--sm" type="button" id="chatStatus">${c.status === "open" ? "إغلاق المحادثة" : "إعادة فتح"}</button>
           ${role === "owner" ? `<button class="b b--icon b--ghost b--danger" type="button" id="chatDel" title="حذف">${I.trash}</button>` : ""}</div>
       </header>
       <div class="chat__msgs"></div>
-      <form class="chat__compose"><textarea name="body" rows="1" maxlength="2000" placeholder="اكتب ردك…" required></textarea><button class="b b--primary" type="submit">إرسال</button></form>`;
+      <p class="chat__typing" hidden>${esc(c.name)} يكتب…</p>
+      <div class="chat__quick" hidden>${quick().map((q) => `<button type="button">${esc(q)}</button>`).join("")}</div>
+      <form class="chat__compose"><button class="b b--icon b--ghost" type="button" id="quickBtn" title="ردود جاهزة">⚡</button><textarea name="body" rows="1" maxlength="2000" placeholder="اكتب ردك…" required></textarea><button class="b b--primary" type="submit">إرسال</button></form>`;
     $(".chat__back", thread).onclick = () => { current = null; $(".chat", view).classList.remove("chat--thread"); thread.innerHTML = ""; paintList(); };
     $("#chatStatus").onclick = async () => {
       const status = c.status === "open" ? "closed" : "open";
@@ -82,7 +88,15 @@ export async function viewChats(view) {
       list.splice(list.indexOf(c), 1); current = null; thread.innerHTML = ""; $(".chat", view).classList.remove("chat--thread"); paintList(); toast("حُذفت المحادثة");
     };
     const f = $(".chat__compose", thread), ta = f.body;
-    ta.addEventListener("input", () => { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight, 160) + "px"; });
+    let typedAt = 0;
+    ta.addEventListener("input", () => {
+      ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight, 160) + "px";
+      // the customer sees "Ahmed is typing…" (sent at most every 4 s)
+      if (ta.value.trim() && Date.now() - typedAt > 4000) { typedAt = Date.now(); sb.from("chats").update({ staff_typing_at: new Date().toISOString(), staff_typing: me || "" }).eq("id", c.id).then(() => {}, () => {}); }
+    });
+    const qbox = $(".chat__quick", thread);
+    $("#quickBtn").onclick = () => { qbox.hidden = !qbox.hidden; };
+    $$("button", qbox).forEach((b) => (b.onclick = () => { ta.value = ta.value ? `${ta.value} ${b.textContent}` : b.textContent; qbox.hidden = true; ta.dispatchEvent(new Event("input")); ta.focus(); }));
     ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing && matchMedia("(pointer: fine)").matches) { e.preventDefault(); f.requestSubmit(); } });
     f.onsubmit = async (e) => {
       e.preventDefault();
@@ -105,9 +119,16 @@ export async function viewChats(view) {
   // instant updates while this page is open
   unsub = onChat(async (kind, row) => {
     if (!document.body.contains(items)) { unsub?.(); unsub = null; return; }
+    if (kind === "chat" && row?.id === current) {
+      const tp = $(".chat__typing", thread);
+      if (tp && row.visitor_typing_at && Date.now() - new Date(row.visitor_typing_at) < 7000) {
+        tp.hidden = false; clearTimeout(typingTimer); typingTimer = setTimeout(() => (tp.hidden = true), 7000);
+      }
+    }
     if (kind === "message") {
+      if (row.sender === "visitor" && row.chat_id === current) { const tp = $(".chat__typing", thread); if (tp) tp.hidden = true; }
       let c = list.find((x) => x.id === row.chat_id);
-      if (!c) { const { data } = await sb.from("chats").select("id,name,phone,page,status,unread,last_text,last_from,last_at,created_at").eq("id", row.chat_id).maybeSingle(); if (!data) return; c = data; list.unshift(c); }
+      if (!c) { const { data } = await sb.from("chats").select("*").eq("id", row.chat_id).maybeSingle(); if (!data) return; c = data; list.unshift(c); }
       c.last_text = row.body.slice(0, 200); c.last_from = row.sender; c.last_at = row.created_at; c.status = "open";
       if (row.sender === "visitor") c.unread = current === c.id && !document.hidden ? 0 : (c.unread || 0) + 1;
       list.sort((a, b) => new Date(b.last_at) - new Date(a.last_at));
@@ -125,6 +146,19 @@ export async function viewChats(view) {
   // settings (owner) and notifications
   const turnOn = async () => { settings.chat = { ...(settings.chat || {}), on: true }; await saveSettings(); viewChats(view); };
   if ($("#turnOn")) $("#turnOn").onclick = turnOn;
+  const askName = () => {
+    const foot = document.createElement("div"); foot.style.cssText = "display:flex;gap:8px";
+    foot.innerHTML = `<button class="b" data-close>إلغاء</button><button class="b b--primary" data-go>${I.save}حفظ</button>`;
+    openModal("اسمك في الدردشة", `<label class="f"><span>الاسم الذي يراه الزبون عند ردّك</span><input id="dn" maxlength="40" value="${esc(me || "")}" placeholder="مثال: أحمد"></label>
+      <p class="muted" style="margin:8px 0 0;font-size:13px">يظهر للزبون: «أحمد انضم إلى المحادثة» و«أحمد يكتب…». اتركه فارغاً ليظهر «فريق ويكسا».</p>`, foot, true);
+    $("[data-go]", foot).onclick = async () => {
+      const { error } = await sb.rpc("set_display_name", { p: $("#dn").value });
+      if (error) return toast("تعذّر الحفظ", "err");
+      closeModal(); toast("حُفظ اسمك ✓"); viewChats(view);
+    };
+  };
+  if ($("#myName")) $("#myName").onclick = askName;
+  if ($("#nameNow")) $("#nameNow").onclick = askName;
   if ($("#chatCfg")) $("#chatCfg").onclick = () => {
     const c = settings.chat || {};
     const foot = document.createElement("div"); foot.style.cssText = "display:flex;gap:8px";
@@ -133,9 +167,10 @@ export async function viewChats(view) {
       <label class="switch"><input type="checkbox" id="cOn" ${c.on ? "checked" : ""}><i></i>إظهار زر الدردشة في الموقع</label>
       <label class="f"><span>رسالة الترحيب (عربي)</span><textarea id="cGa" rows="2">${esc(c.greeting_ar || "")}</textarea></label>
       <label class="f"><span>رسالة الترحيب (English)</span><textarea id="cGe" rows="2" dir="ltr">${esc(c.greeting_en || "")}</textarea></label>
+      <label class="f"><span>الردود الجاهزة (كل رد في سطر) — تظهر عند زر ⚡ أثناء الرد</span><textarea id="cQ" rows="6">${esc(quick().join("\n"))}</textarea></label>
       <p class="muted" style="margin:0;font-size:13px">يظهر للزائر «متصلون الآن» عندما يكون أحد الفريق فاتحاً لوحة التحكم، وإلا يظهر أنكم غير متصلين وسترد لاحقاً. تصلك رسالة على البريد عند بدء محادثة جديدة، وعند كل رسالة جديدة إذا لم يكن أحد متصلاً.</p></div>`, foot, true);
     $("[data-go]", foot).onclick = async () => {
-      settings.chat = { ...c, on: $("#cOn").checked, greeting_ar: $("#cGa").value.trim(), greeting_en: $("#cGe").value.trim() };
+      settings.chat = { ...c, on: $("#cOn").checked, greeting_ar: $("#cGa").value.trim(), greeting_en: $("#cGe").value.trim(), quick: $("#cQ").value.split("\n").map((x) => x.trim()).filter(Boolean).slice(0, 30) };
       await saveSettings(); closeModal(); viewChats(view);
     };
   };

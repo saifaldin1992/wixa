@@ -1166,3 +1166,19 @@ html[dir="rtl"] .chatw__send button svg { transform: scaleX(-1); }
 /* desktop: the back-to-top button sits above the chat button */
 html.has-chat .totop { bottom: 88px; }
 @media (max-width: 760px) { html.has-chat .totop { bottom: calc(76px + env(safe-area-inset-bottom)); } }
+/* live chat: topic chips, system lines, typing dots */
+.chatw__chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
+.chatw__chips button { min-height: 40px; padding: 8px 14px; border-radius: 99px; border: 1.5px solid var(--primary); background: var(--surface); color: var(--primary); font: inherit; font-size: .9rem; font-weight: 600; cursor: pointer; text-align: start; touch-action: manipulation; }
+.chatw__chips button:hover { background: var(--primary); color: #fff; }
+[data-theme="dark"] .chatw__chips button { color: var(--accent, #C4B5FD); border-color: currentColor; }
+.chatw__sys { align-self: center; margin: 4px 0; padding: 4px 12px; border-radius: 99px; background: color-mix(in srgb, var(--primary) 8%, transparent); color: var(--muted); font-size: .76rem; text-align: center; }
+.chatw__typing p { display: flex; gap: 4px; align-items: center; padding: 14px 16px !important; }
+.chatw__typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: chatDot 1.2s infinite ease-in-out; }
+.chatw__typing i:nth-child(2) { animation-delay: .15s; } .chatw__typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes chatDot { 0%, 60%, 100% { opacity: .3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-4px); } }
+.chatw__topic { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; padding: 8px 12px; border-radius: 12px; background: color-mix(in srgb, var(--primary) 8%, transparent); font-size: .85rem; font-weight: 600; }
+.chatw__change { border: 0; background: none; color: var(--primary); font: inherit; font-size: .8rem; text-decoration: underline; cursor: pointer; padding: 4px; }
+.chatw__two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.chatw__foot[hidden] { display: none; }
+.btn--chat { cursor: pointer; font: inherit; color: inherit; }
+.btn--chat svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }

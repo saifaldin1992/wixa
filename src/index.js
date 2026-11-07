@@ -1617,10 +1617,11 @@ async function handleChat(request, env, ctx, action) {
     const name = cleanText(b.name, 80), phone = cleanText(b.phone, 30), body = cleanText(b.body, 2000);
     if (!name || !body || !PHONE_RE.test(phone)) return json({ error: "invalid" }, 422);
     const key = hex(crypto.getRandomValues(new Uint8Array(32)));
-    const r = await rpcToken(env, "chat_start", { p: { secret: await sha256hex(key), name, phone, body, page: cleanText(b.page, 200) } });
+    const topic = cleanText(b.topic, 120);
+    const r = await rpcToken(env, "chat_start", { p: { secret: await sha256hex(key), name, phone, body, topic, page: cleanText(b.page, 200) } });
     if (!r.ok) return chatError(r);
     const d = await r.json();
-    ctx.waitUntil(notifyChat(env, request, { name, phone, body, isNew: true, push: true, email: true }).catch((e) => console.error("chat notify", e)));
+    ctx.waitUntil(notifyChat(env, request, { name, phone, body, topic, isNew: true, push: true, email: true }).catch((e) => console.error("chat notify", e)));
     return json({ id: d.id, key, online: d.online }, 200, noStore);
   }
   const id = cleanText(b.id, 40), key = cleanText(b.key, 64);
@@ -1632,11 +1633,11 @@ async function handleChat(request, env, ctx, action) {
     const r = await rpcToken(env, "chat_send", { p: { id, secret, body } });
     if (!r.ok) return chatError(r);
     const d = await r.json();
-    if (d.push || d.email) ctx.waitUntil(notifyChat(env, request, { name: d.name, phone: d.phone, body, push: d.push, email: d.email }).catch((e) => console.error("chat notify", e)));
+    if (d.push || d.email) ctx.waitUntil(notifyChat(env, request, { name: d.name, phone: d.phone, topic: d.topic, body, push: d.push, email: d.email }).catch((e) => console.error("chat notify", e)));
     return json({ id: d.id, online: d.online }, 200, noStore);
   }
   // poll
-  const r = await rpcToken(env, "chat_poll", { p: { id, secret, after: Math.max(0, parseInt(b.after, 10) || 0), seen: !!b.seen } });
+  const r = await rpcToken(env, "chat_poll", { p: { id, secret, after: Math.max(0, parseInt(b.after, 10) || 0), seen: !!b.seen, typing: !!b.typing } });
   return r.ok ? json(await r.json(), 200, noStore) : chatError(r);
 }
 
@@ -1645,7 +1646,7 @@ async function notifyChat(env, request, m) {
   const jobs = [];
   if (m.push) jobs.push(pushTeam(env));
   if (m.email) jobs.push(sendOwnerMail(env, m.isNew ? `محادثة جديدة في الموقع — ${m.name}` : `رسالة جديدة في الدردشة — ${m.name}`,
-    mailBox(m.isNew ? "محادثة جديدة في الموقع" : "رسالة جديدة في الدردشة", `<p><b>${esc(m.name)}</b> · <span dir="ltr">${esc(m.phone)}</span></p>
+    mailBox(m.isNew ? "محادثة جديدة في الموقع" : "رسالة جديدة في الدردشة", `<p><b>${esc(m.name)}</b> · <span dir="ltr">${esc(m.phone)}</span>${m.topic ? `<br>الموضوع: <b>${esc(m.topic)}</b>` : ""}</p>
       <p style="background:#F3EEFB;padding:12px 14px;border-radius:12px;white-space:pre-wrap">${esc(m.body)}</p>
       <p>الزبون ينتظر ردك في نافذة الدردشة على الموقع.</p>
       <p><a href="${origin}/admin/#chats" style="display:inline-block;background:#5B21B6;color:#fff;padding:12px 22px;border-radius:99px;text-decoration:none">الرد من لوحة التحكم</a></p>`)));

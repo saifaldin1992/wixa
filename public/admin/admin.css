@@ -572,3 +572,13 @@ html[dir="rtl"] .chat__back svg { transform: none; }
   .chat__back { display: grid; }
 }
 @media (pointer: coarse) { .chat__compose textarea { font-size: 16px; } }
+
+.chat__topic { font-style: normal; font-size: 11.5px; font-weight: 600; color: var(--brand); background: var(--brand-50); border-radius: 99px; padding: 1px 8px; justify-self: start; width: max-content; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat__typing { margin: 0; padding: 0 18px 8px; font-size: 12.5px; color: var(--muted); }
+.chat__typing[hidden] { display: none; }
+.chat__quick { display: flex; gap: 6px; overflow-x: auto; padding: 8px 12px; background: var(--panel); border-top: 1px solid var(--line); }
+.chat__quick[hidden] { display: none; }
+.chat__quick button { flex-shrink: 0; min-height: 36px; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--line-2); background: var(--bg); font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap; }
+.chat__quick button:hover { border-color: var(--brand); color: var(--brand); }
+#quickBtn { font-size: 18px; flex-shrink: 0; }
+.chat-off--name { background: var(--brand-50); border-color: color-mix(in srgb, var(--brand) 30%, transparent); }

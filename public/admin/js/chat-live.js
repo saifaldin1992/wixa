@@ -3,7 +3,7 @@
    and tells the site that the team is online (a heartbeat every 45 s while the dashboard is visible). */
 import { $, role, sb, toast, user } from "./core.js";
 
-let channel = null, beat = 0;
+let channel = null, beat = 0, countTimer = 0;
 const listeners = new Set();
 export const onChat = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
 export const canChat = () => role === "owner" || role === "support";
@@ -43,7 +43,7 @@ export async function startChatLive() {
       listeners.forEach((f) => f("message", m));
       refreshChatCount();
     })
-    .on("postgres_changes", { event: "*", schema: "public", table: "chats" }, (p) => { listeners.forEach((f) => f("chat", p.new || p.old)); refreshChatCount(); })
+    .on("postgres_changes", { event: "*", schema: "public", table: "chats" }, (p) => { listeners.forEach((f) => f("chat", p.new || p.old)); clearTimeout(countTimer); countTimer = setTimeout(refreshChatCount, 1500); })
     .subscribe();
   ping(); beat = setInterval(ping, 45000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { ping(); refreshChatCount(); } });
