@@ -537,8 +537,7 @@ async function handleAdminStats(request, env, url, ctx) {
     today_views: a.today?.[0]?.count || 0,
     today_visitors: a.today?.[0]?.sum?.visits || 0,
     views_90d: a.total90?.[0]?.count || 0,
-    messages_new,
-    by_day,
+    by_day, // (the unread-messages count is added after, per admin — reading it here threw before it existed)
     top_pages: rows(a.pages, (x) => x.dimensions.requestPath, (x) => x.count),
     countries: rows(a.countries, (x) => x.dimensions.countryName, (x) => x.sum.visits),
     devices: rows(a.devices, (x) => x.dimensions.deviceType, (x) => x.sum.visits),
