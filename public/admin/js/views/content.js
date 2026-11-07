@@ -182,14 +182,12 @@ export function renderContentTab() {
     };
     draw(); return;
   } else if (contentTab === "sections") {
-    const names = { iraq_map: "خريطة العراق في الواجهة الرئيسية", story: "القصة (المميزات)", projects: "الإنجازات (المشاريع)", services: "الخدمات", process: "كيف نعمل", stats: "الأرقام", testimonials: "آراء العملاء", calculator: "حاسبة التكلفة", partners: "الشركاء", careers: "الوظائف (انضم إلى فريقنا)", faq: "الأسئلة الشائعة", contact: "التواصل" };
+    const names = { story: "القصة (المميزات)", projects: "الإنجازات (المشاريع)", services: "الخدمات", process: "كيف نعمل", stats: "الأرقام", testimonials: "آراء العملاء", calculator: "حاسبة التكلفة", partners: "الشركاء", careers: "الوظائف (انضم إلى فريقنا)", faq: "الأسئلة الشائعة", contact: "التواصل" };
     body.innerHTML = `<p class="muted" style="margin-top:0">أخفِ أي قسم لا تحتاجه. (قسما الشركاء وآراء العملاء يختفيان تلقائياً إذا كانا فارغين.)</p><div class="stack">${Object.entries(names).map(([k, l]) => `<label class="switch"><input type="checkbox" data-path="sections.${k}" ${settings.sections[k] ? "checked" : ""}><i></i>${l}</label>`).join("")}</div>
       <label class="f" style="margin-top:18px;max-width:360px"><span>لغة الموقع عند أول زيارة</span><select data-path="default_lang">
         <option value="auto" ${(settings.default_lang || "auto") === "auto" ? "selected" : ""}>حسب لغة جهاز الزائر (عربي ← عربي، غيره ← إنجليزي)</option>
         <option value="ar" ${settings.default_lang === "ar" ? "selected" : ""}>العربية دائماً</option>
         <option value="en" ${settings.default_lang === "en" ? "selected" : ""}>الإنجليزية دائماً</option></select></label>
-      <label class="f" style="margin-top:18px;max-width:360px"><span>حجم خريطة العراق <small class="muted" id="mapSizeVal">${Number(settings.iraq_map_size) || 100}٪</small></span>
-        <input type="range" min="60" max="140" step="5" data-path="iraq_map_size" value="${Number(settings.iraq_map_size) || 100}" oninput="document.getElementById('mapSizeVal').textContent=this.value+'٪'"></label>
       <label class="f" style="margin-top:18px;max-width:360px"><span>طريقة عرض الشركاء</span><select data-path="partners_style">
         <option value="grid" ${settings.partners_style !== "marquee" ? "selected" : ""}>ثابتة — ٣ شعارات في السطر</option>
         <option value="marquee" ${settings.partners_style === "marquee" ? "selected" : ""}>شريط متحرك مثل آراء العملاء</option></select></label>`;

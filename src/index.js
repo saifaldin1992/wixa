@@ -304,7 +304,6 @@ async function handleHome(request, env, ctx) {
   try { st = JSON.parse(data)?.settings || {}; } catch {}
   const lang = pickLang(request, st.default_lang);
   const hero = { ...HERO_DEFAULTS[lang], ...Object.fromEntries(Object.entries(st.content?.[lang] || {}).filter(([, v]) => v)) };
-  const mapOn = st.sections?.iraq_map !== false;
   const seo = st.seo || {};
   const origin = new URL(request.url).origin;
   const abs = (u) => (/^https?:\/\//.test(u) ? u : `${origin}${u.startsWith("/") ? "" : "/"}${u}`);
@@ -337,7 +336,6 @@ async function handleHome(request, env, ctx) {
     .on(...attr('link[rel="icon"][sizes]', "href", seo.icon_url))
     .on(...attr('link[rel="apple-touch-icon"]', "href", seo.icon_url))
     .on("#heroTitle", fill("hero_title", true))
-    .on("svg.iraq", { element: (el) => { if (!mapOn) el.remove(); } })
     .on('[data-c="hero_badge"]', fill("hero_badge", false))
     .on('.hero__sub[data-c="hero_sub"]', fill("hero_sub", false))
     .on("body", { element: (el) => {

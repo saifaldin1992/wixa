@@ -5,8 +5,10 @@ import { updateProcess } from "./sections.js";
 // ---------- scroll progress + custom cursor ----------
 export function setupProgress() {
   const bar = $("#progressBar");
-  const upd = () => { const h = document.documentElement.scrollHeight - innerHeight; bar.style.transform = `scaleX(${h > 0 ? Math.min(1, scrollY / h) : 0})`; updateProcess(); };
-  addEventListener("scroll", upd, { passive: true }); addEventListener("resize", upd); upd();
+  let queued = false;
+  const upd = () => { queued = false; const h = document.documentElement.scrollHeight - innerHeight; bar.style.transform = `scaleX(${h > 0 ? Math.min(1, scrollY / h) : 0})`; updateProcess(); };
+  const onScroll = () => { if (!queued) { queued = true; requestAnimationFrame(upd); } };
+  addEventListener("scroll", onScroll, { passive: true }); addEventListener("resize", onScroll); upd();
 }
 export function setupCursor() {
   if (!anim || state.settings.cursor === false || !matchMedia("(hover: hover) and (pointer: fine)").matches) return;
@@ -25,11 +27,20 @@ export function setupCursor() {
   document.addEventListener("pointerleave", () => { x = y = -100; });
 }
 
-export function setupMotion() {
-  if (!anim || !window.gsap || !window.ScrollTrigger) return;
+const loadScript = (src) => new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.append(s); });
+export const desktop = () => matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+// Scroll effects (smooth scrolling, project parallax) only on computers with a mouse/trackpad.
+// Phones and tablets keep the device's own scrolling and never download these libraries.
+export async function setupMotion() {
+  if (!anim || !desktop()) return;
+  try {
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js");
+    await Promise.all([loadScript("https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"), loadScript("https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js")]);
+  } catch { return; }
+  if (!window.gsap || !window.ScrollTrigger) return;
   gsap.registerPlugin(ScrollTrigger);
-  // touch screens keep the phone's own scrolling (lighter and more natural than a smoothed one)
-  if (window.Lenis && matchMedia("(hover: hover) and (pointer: fine)").matches) {
+  if (window.Lenis) {
     const lenis = new Lenis({ duration: 1.1, smoothWheel: true });
     window.__lenis = lenis;
     lenis.on("scroll", ScrollTrigger.update);
@@ -40,8 +51,6 @@ export function setupMotion() {
       if (t !== null) { e.preventDefault(); lenis.scrollTo(t, { offset: -90 }); }
     });
   }
-  gsap.to(".hero__bg", { yPercent: 18, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } });
-  gsap.to(".hero__content", { y: 80, opacity: 0.3, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } });
   $$(".project").forEach((p) => {
     gsap.fromTo($(".screen", p), { y: 60 }, { y: -20, ease: "none", scrollTrigger: { trigger: p, start: "top bottom", end: "bottom top", scrub: true } });
     gsap.fromTo($(".phone", p), { y: 120 }, { y: -40, ease: "none", scrollTrigger: { trigger: p, start: "top bottom", end: "bottom top", scrub: true } });

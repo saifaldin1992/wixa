@@ -33,8 +33,6 @@ export function render() {
   applyDefaultMode();
   const brand = lang === "ar" ? s.brand.name_ar : s.brand.name_en;
   document.title = (s.seo && s.seo[`title_${lang}`]) || `${brand} — ${c.hero_title}`;
-  // map of Iraq: size chosen in the dashboard (60–140 %)
-  document.documentElement.style.setProperty("--map-scale", String(Math.min(1.4, Math.max(0.6, (Number(s.iraq_map_size) || 100) / 100))));
 
   $$("[data-c]").forEach((el) => { if (el.id !== "heroTitle") el.textContent = c[el.dataset.c] ?? ""; });
   $$("[data-t]").forEach((el) => {

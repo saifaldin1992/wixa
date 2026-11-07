@@ -589,26 +589,10 @@ html[data-theme="dark"] .hero__title .word:last-child > span { background-image:
 /* map of Iraq behind the logo: the border draws itself, a light travels along it, Baghdad pulses */
 /* the map of Iraq sits right under the badge, behind the title and subtitle */
 .hero__stage { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; isolation: isolate; }
-.hero__stage .iraq { position: absolute; left: 50%; top: 4px; width: calc(min(530px, 92vw) * var(--map-scale, 1)); height: auto; aspect-ratio: 1080 / 1096; transform: translateX(-50%); overflow: visible; pointer-events: none; z-index: -1; opacity: .5; -webkit-mask-image: linear-gradient(#000 45%, transparent 72%); mask-image: linear-gradient(#000 45%, transparent 72%); }
-.iraq[hidden] { display: none; }
-.iq-fill { fill: url(#iqFill); opacity: 0; }
-.iq-line { fill: none; stroke: url(#iqStroke); stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; opacity: .55; stroke-dasharray: 1; stroke-dashoffset: 1; }
-.iq-flow { fill: none; stroke: var(--accent); stroke-width: 2.6; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-dasharray: 3 97; stroke-dashoffset: 100; opacity: 0; }
-.iq-city { opacity: 0; }
-.iq-dot { fill: var(--accent); }
-.iq-ping { fill: none; stroke: var(--accent); stroke-width: 2; vector-effect: non-scaling-stroke; transform-box: fill-box; transform-origin: center; opacity: 0; }
-.hero.in .iq-line { animation: iqDraw 2.8s cubic-bezier(.65,0,.35,1) 1.2s forwards; }
-.hero.in .iq-fill { animation: iqFade 1.6s ease 3.4s forwards; }
-.hero.in .iq-flow { animation: iqFade .8s ease 3.8s forwards, iqFlow 14s linear 3.8s infinite; }
-.hero.in .iq-city { animation: iqFade .6s ease 3.6s forwards; }
-.hero.in .iq-ping { animation: iqPing 3s ease-out 3.8s infinite; }
-.hero.in .iq-ping--2 { animation-delay: 5.3s; }
 @keyframes iqDraw { to { stroke-dashoffset: 0; } }
 @keyframes iqFade { to { opacity: 1; } }
 @keyframes iqFlow { to { stroke-dashoffset: 0; } }
 @keyframes iqPing { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(4.5); opacity: 0; } }
-html[data-theme="dark"] .iq-line { opacity: .7; }
-.no-anim .iq-line { stroke-dashoffset: 0; } .no-anim .iq-fill, .no-anim .iq-city { opacity: 1; }
 
 /* compact layout: same content, less scrolling */
 @media (max-width: 760px) {
@@ -921,4 +905,18 @@ html[dir="ltr"] .svc__more svg { transform: scaleX(-1); }
 @media (max-width: 760px) {
   .mbar { pointer-events: auto; visibility: hidden; transition: transform .45s var(--ease-out), opacity .3s, visibility 0s linear .45s; }
   .mbar.show { visibility: visible; transition: transform .45s var(--ease-out), opacity .3s, visibility 0s; }
+}
+
+/* the header box is as tall as its hidden menu: let taps pass through everything but the bar itself */
+.header { pointer-events: none; }
+.header__bar, .header__menu.open { pointer-events: auto; }
+
+/* phones and tablets: no continuously repainting decorations (keeps scrolling and taps instant) */
+@media (hover: none), (pointer: coarse) {
+  .header__bar { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(var(--surface-rgb), .96); }
+  .aurora { animation: none !important; }
+  .hero.in .lg-glow { animation: lgGlow 1.6s var(--ease-out) 2.2s forwards !important; }
+  .hero.in .lg-shine-bar, .pulse, .hero__scroll span { animation: none !important; }
+  .hero__title .word:last-child > span { animation: none; background-position: 50% 0; }
+  .pmodal__scrim { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(var(--dark-rgb), .7); }
 }
