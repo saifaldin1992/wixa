@@ -100,7 +100,7 @@ export function setupContact() {
     if (PREVIEW) { status.className = "form__status ok"; status.textContent = UI[lang].ok; return; }
     const svc = form.elements.service.value;
     const ok = await send(form, status, "#turnstile", { name: form.elements.name.value, email: form.elements.email.value, phone: form.elements.phone.value,
-      message: form.elements.message.value, services: svc ? [svc] : [] }, UI[lang].ok);
+      message: form.elements.message.value, services: svc ? [svc] : [], marketing: !!form.elements.marketing?.checked }, UI[lang].ok);
     if (ok) { status.textContent = ""; $(".form__inner", form).hidden = true; $("#formDone").hidden = false; }
   });
   liveCheck(form);

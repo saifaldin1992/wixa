@@ -2,6 +2,7 @@
 import { $, $$, DEFAULTS, ROLE_AR, closeModal, confirmBox, esc, merge, role, savedJSON, setSettings } from "./core.js";
 import { viewTeam } from "./views/team.js";
 import { viewChats } from "./views/chats.js";
+import { viewCustomers } from "./views/customers.js";
 import { isDirty } from "./settings.js";
 import { viewAccount } from "./views/account.js";
 import { viewAppearance } from "./views/appearance.js";
@@ -32,6 +33,7 @@ export const VIEWS = {
   diagnose: { title: "الفحص والتشخيص", sub: "فحص كل أجزاء الموقع، مكان أي عطل وطريقة حله، وسجل الأعطال", render: viewDiagnose },
   devguide: { title: "دليل المطوّر", sub: "كيف بُني المشروع وأين يوجد كل جزء — للمطورين", render: viewDevGuide },
   messages: { title: "الرسائل", sub: "رسائل نموذج التواصل", render: viewMessages },
+  customers: { title: "الزبائن", sub: "كل من تواصل معك من الموقع — للمتابعة والعروض", render: viewCustomers },
   chats: { title: "المحادثات", sub: "دردشة مباشرة مع زوار الموقع", render: viewChats },
   team: { title: "الفريق والصلاحيات", sub: "من يدخل إلى لوحة التحكم وماذا يستطيع — بالدعوة فقط", render: viewTeam },
   account: { title: "الحساب", sub: "بيانات الدخول والأمان", render: viewAccount },
@@ -42,7 +44,7 @@ export let current = null;
 const ROLE_VIEWS = {
   owner: null, // everything
   editor: ["overview", "content", "projects", "services", "partners", "testimonials", "posts", "appearance", "brand", "seo", "devguide", "account"],
-  support: ["overview", "messages", "chats", "account"],
+  support: ["overview", "messages", "chats", "customers", "account"],
 };
 export const canSee = (name) => !ROLE_VIEWS[role] || ROLE_VIEWS[role].includes(name);
 function applyRoleNav() {

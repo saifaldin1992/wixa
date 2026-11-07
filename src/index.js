@@ -695,6 +695,7 @@ async function handleContact(request, env, ctx) {
     message: clean(body.message, 4000),
     services: Array.isArray(body.services) ? body.services.filter((s) => typeof s === "string").slice(0, 10).map((s) => s.slice(0, 80)) : [],
     lang: body.lang === "en" ? "en" : "ar",
+    marketing: body.marketing === true, // agreed to receive offers (unticked by default)
   };
   if (body.kind === "booking" && !row.message) row.message = "حجز موعد";
   if (!row.name || !row.message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) return json({ error: "validation" }, 422);
@@ -1618,7 +1619,7 @@ async function handleChat(request, env, ctx, action) {
     if (!name || !body || !PHONE_RE.test(phone)) return json({ error: "invalid" }, 422);
     const key = hex(crypto.getRandomValues(new Uint8Array(32)));
     const topic = cleanText(b.topic, 120);
-    const r = await rpcToken(env, "chat_start", { p: { secret: await sha256hex(key), name, phone, body, topic, page: cleanText(b.page, 200) } });
+    const r = await rpcToken(env, "chat_start", { p: { secret: await sha256hex(key), name, phone, body, topic, marketing: b.marketing === true, page: cleanText(b.page, 200) } });
     if (!r.ok) return chatError(r);
     const d = await r.json();
     ctx.waitUntil(notifyChat(env, request, { name, phone, body, topic, isNew: true, push: true, email: true }).catch((e) => console.error("chat notify", e)));

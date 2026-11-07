@@ -1182,3 +1182,8 @@ html.has-chat .totop { bottom: 88px; }
 .chatw__foot[hidden] { display: none; }
 .btn--chat { cursor: pointer; font: inherit; color: inherit; }
 .btn--chat svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* consent to offers (contact form + chat): unticked by default */
+.consent, .chatw__consent { display: flex; align-items: flex-start; gap: 10px; font-size: .88rem; color: var(--muted); line-height: 1.7; cursor: pointer; }
+.consent input, .chatw__consent input { width: 20px; height: 20px; margin-top: 3px; accent-color: var(--primary); flex-shrink: 0; }
+.chatw__consent { font-size: .8rem; gap: 8px; } .chatw__consent input { width: 18px; height: 18px; margin-top: 2px; }

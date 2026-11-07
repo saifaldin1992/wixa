@@ -4,7 +4,7 @@
 export const UI_DEFAULTS = {
   ar: { nav_home: "الرئيسية", nav_projects: "حلولنا", nav_services: "خدماتنا", nav_partners: "شركاؤنا", nav_contact: "تواصل معنا", calc_est: "التقدير المبدئي",
     lang: "English", f_name: "الاسم", f_email: "البريد الإلكتروني", f_phone: "رقم الهاتف", f_service: "الخدمة المطلوبة", f_any: "استشارة عامة",
-    f_message: "حدّثنا عن مشروعك", f_send: "إرسال", sending: "جارٍ الإرسال…", ok: "شكراً لك! وصلت رسالتك وسنتواصل معك قريباً.", err: "تعذّر الإرسال، حاول مرة أخرى.", invalid: "يرجى تعبئة الحقول المطلوبة بشكل صحيح.",
+    f_message: "حدّثنا عن مشروعك", f_marketing: "أرغب باستلام العروض والأخبار من ويكسا (يمكنك إلغاؤها في أي وقت)", f_send: "إرسال", sending: "جارٍ الإرسال…", ok: "شكراً لك! وصلت رسالتك وسنتواصل معك قريباً.", err: "تعذّر الإرسال، حاول مرة أخرى.", invalid: "يرجى تعبئة الحقول المطلوبة بشكل صحيح.",
     no_projects: "ستُعرض المشاريع هنا قريباً.", step: "٠",
     nav_careers: "الوظائف", privacy: "سياسة الخصوصية", nav_calc: "احسب تكلفة مشروعك", wa: "واتساب", or_wa: "أو راسلنا على واتساب", calc_wa: "أرسل التقدير عبر واتساب",
     bk_btn: "احجز موعداً", bk_title: "احجز موعداً معنا", bk_day: "اختر اليوم", bk_time: "اختر الوقت (بتوقيت بغداد)", bk_pick_day: "اختر يوماً لتظهر الأوقات المتاحة.",
@@ -15,7 +15,7 @@ export const UI_DEFAULTS = {
     j_about: "نبذة عن خبراتك ومهاراتك", j_send: "إرسال الطلب", j_ok: "شكراً لك! وصل طلبك وسنتواصل معك إن كان مناسباً.", page: "صفحة المشروع" },
   en: { nav_home: "Home", nav_projects: "Solutions", nav_services: "Services", nav_partners: "Partners", nav_contact: "Contact", calc_est: "Estimate",
     lang: "العربية", f_name: "Name", f_email: "Email", f_phone: "Phone", f_service: "Service", f_any: "General inquiry",
-    f_message: "Tell us about your project", f_send: "Send", sending: "Sending…", ok: "Thank you! We've received your message and will be in touch soon.", err: "Couldn't send. Please try again.", invalid: "Please fill in the required fields correctly.",
+    f_message: "Tell us about your project", f_marketing: "Send me offers and news from WIXA (you can opt out any time)", f_send: "Send", sending: "Sending…", ok: "Thank you! We've received your message and will be in touch soon.", err: "Couldn't send. Please try again.", invalid: "Please fill in the required fields correctly.",
     no_projects: "Projects will appear here soon.", step: "0",
     nav_careers: "Careers", privacy: "Privacy policy", nav_calc: "Estimate your project", wa: "WhatsApp", or_wa: "Or message us on WhatsApp", calc_wa: "Send the estimate on WhatsApp",
     bk_btn: "Book a meeting", bk_title: "Book a meeting with us", bk_day: "Choose a day", bk_time: "Choose a time (Baghdad time)", bk_pick_day: "Choose a day to see the free times.",

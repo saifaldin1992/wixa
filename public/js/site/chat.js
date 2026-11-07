@@ -8,13 +8,13 @@ const T = {
   ar: { title: "تحدث مع ويكسا", online: "متصلون الآن — نرد خلال دقائق", away: "غير متصلين الآن — اترك رسالتك وسنرد هنا أو على هاتفك", name: "الاسم", phone: "رقم الهاتف", msg: "رسالتك",
     start: "ابدأ المحادثة", ph: "اكتب رسالة…", send: "إرسال", wa: "أو راسلنا على واتساب", err: "تعذّر الإرسال، حاول مرة أخرى", fill: "أكمل الحقول المطلوبة",
     open: "فتح الدردشة", close: "إغلاق", you: "أنت", team: "فريق ويكسا", busy: "رسائل كثيرة، انتظر قليلاً",
-    pick: "بماذا نساعدك؟", svc: "أي خدمة تهمك؟", change: "تغيير", typing: "يكتب…", joined: "انضم إلى المحادثة", closed: "انتهت هذه المحادثة. شكراً لتواصلك معنا.", again: "بدء محادثة جديدة",
+    pick: "بماذا نساعدك؟", svc: "أي خدمة تهمك؟", change: "تغيير", typing: "يكتب…", joined: "انضم إلى المحادثة", closed: "انتهت هذه المحادثة. شكراً لتواصلك معنا.", again: "بدء محادثة جديدة", consent: "أرغب باستلام العروض والأخبار",
     topics: [["svc", "استفسار عن خدمة"], ["quote", "طلب عرض سعر"], ["project", "متابعة مشروع قائم"], ["meet", "حجز موعد أو اجتماع"], ["other", "سؤال آخر"]],
     hints: { svc: "اكتب سؤالك عن الخدمة…", quote: "صف مشروعك باختصار: ماذا تريد أن تبني؟", project: "اذكر اسم المشروع وما تريد متابعته…", meet: "متى يناسبك الاجتماع؟", other: "اكتب سؤالك…" } },
   en: { title: "Chat with WIXA", online: "Online now — we reply in minutes", away: "We're away — leave a message and we'll reply here or by phone", name: "Name", phone: "Phone number", msg: "Your message",
     start: "Start chat", ph: "Type a message…", send: "Send", wa: "Or message us on WhatsApp", err: "Couldn't send, please try again", fill: "Please fill the required fields",
     open: "Open chat", close: "Close", you: "You", team: "WIXA team", busy: "Too many messages, please wait",
-    pick: "How can we help?", svc: "Which service?", change: "Change", typing: "is typing…", joined: "joined the chat", closed: "This chat has ended. Thanks for reaching out.", again: "Start a new chat",
+    pick: "How can we help?", svc: "Which service?", change: "Change", typing: "is typing…", joined: "joined the chat", closed: "This chat has ended. Thanks for reaching out.", again: "Start a new chat", consent: "Send me offers and news",
     topics: [["svc", "Ask about a service"], ["quote", "Request a quote"], ["project", "Follow up on a project"], ["meet", "Book a meeting"], ["other", "Something else"]],
     hints: { svc: "Type your question about the service…", quote: "Briefly describe your project…", project: "Which project, and what would you like to follow up?", meet: "When suits you?", other: "Type your question…" } },
 };
@@ -120,6 +120,7 @@ export function setupChat() {
         <div class="chatw__two"><label><span>${t("name")} <em>*</em></span><input name="name" required maxlength="80" autocomplete="name" value="${esc(saved.name || "")}"></label>
         <label><span>${t("phone")} <em>*</em></span><input name="phone" required type="tel" inputmode="tel" maxlength="30" autocomplete="tel" dir="ltr" value="${esc(saved.phone || "")}"></label></div>
         <label><span>${t("msg")} <em>*</em></span><textarea name="body" required rows="2" maxlength="2000" placeholder="${esc(t("hints")[pick.topic] || "")}"></textarea></label>
+        <label class="chatw__consent"><input type="checkbox" name="marketing" ${saved.marketing ? "checked" : ""}><span>${t("consent")}</span></label>
         <button class="chatw__go" type="submit">${t("start")}</button><p class="chatw__err" hidden></p></form>`;
       $("form", foot).onsubmit = startChat;
       $(".chatw__change", foot).onclick = () => { pick = { topic: "", service: "" }; paint(); footer(); };
@@ -150,8 +151,8 @@ export function setupChat() {
     if (bad) { showErr(t("fill")); return; }
     if (busy) return; busy = true; f.querySelector(".chatw__go").disabled = true; showErr("");
     try {
-      const d = await api("start", { name: f.name.value, phone: f.phone.value, body: f.body.value, topic: topicLabel(), page: location.pathname });
-      try { localStorage.setItem("wixa-chat-me", JSON.stringify({ name: f.name.value.trim(), phone: f.phone.value.trim() })); } catch {}
+      const d = await api("start", { name: f.name.value, phone: f.phone.value, body: f.body.value, topic: topicLabel(), marketing: f.marketing.checked, page: location.pathname });
+      try { localStorage.setItem("wixa-chat-me", JSON.stringify({ name: f.name.value.trim(), phone: f.phone.value.trim(), marketing: f.marketing.checked })); } catch {}
       conv = { id: d.id, key: d.key }; online = d.online; save(); msgs = []; after = 0; status = "open";
       footer(); await poll(); schedule();
     } catch (err) { showErr(err.status === 429 ? t("busy") : t("err")); f.querySelector(".chatw__go").disabled = false; }

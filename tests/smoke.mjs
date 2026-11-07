@@ -135,7 +135,7 @@ try {
     p.on("pageerror", (e) => errors.push(e.message));
     await p.goto(`${BASE}/admin/`, { waitUntil: "load" });
     await p.waitForTimeout(1200);
-    for (const v of ["overview", "appearance", "brand", "content", "projects", "services", "partners", "testimonials", "messages", "chats", "posts", "seo", "integrations", "diagnose", "devguide", "team", "account"]) {
+    for (const v of ["overview", "appearance", "brand", "content", "projects", "services", "partners", "testimonials", "messages", "chats", "customers", "posts", "seo", "integrations", "diagnose", "devguide", "team", "account"]) {
       await p.evaluate((h) => (location.hash = h), v);
       await p.waitForTimeout(600);
       const ok = await p.evaluate(() => document.querySelector("#view")?.children.length > 0);
