@@ -105,5 +105,5 @@ CF_ACCOUNT_ID = "1816dc735005fa354d10dfef69ac1450"
 CF_SITE_TAG = "57a74dffd4314b11ab3d247957199494"
 CF_BEACON_TOKEN = "3e0bde0c61e7495d904b8bdd01e51da0"
 TURNSTILE_SITE_KEY = "0x4AAAAAAF18CPavg0KnYszj"
-SUPABASE_URL = "https://zwusczwhlshdgnoyesde.supabase.co"
-SUPABASE_PUBLISHABLE_KEY = "sb_publishable_bw5DNoKlh5foR4Ibq0PljQ_BvVa6fFn"
+SUPABASE_URL = "https://jcxzghfgvqjdkwdlrbfl.supabase.co" # Frankfurt
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_lvRASFyAOTbCO-Jk_RW_Gw_OUBe3LiQ"
