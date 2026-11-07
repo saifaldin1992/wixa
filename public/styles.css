@@ -1276,7 +1276,8 @@ html:not([data-page]) [data-pages]:not([data-pages~="home"]),
 html[data-page="home"] [data-pages]:not([data-pages~="home"]),
 html[data-page="about"] [data-pages]:not([data-pages~="about"]),
 html[data-page="pricing"] [data-pages]:not([data-pages~="pricing"]),
-html[data-page="careers"] [data-pages]:not([data-pages~="careers"]) { display: none !important; }
+html[data-page="careers"] [data-pages]:not([data-pages~="careers"]),
+html[data-page="contact"] [data-pages]:not([data-pages~="contact"]) { display: none !important; }
 html[data-page]:not([data-page="home"]) main { padding-top: clamp(96px, 12vw, 140px); }
 html[data-page]:not([data-page="home"]) main > section:first-of-type:not(.hero) { padding-top: 0; }
 /* the top menu: short, with one clear button */
@@ -1304,3 +1305,33 @@ html[data-page="home"] .partners { padding-top: clamp(32px, 5vw, 56px); }
 html[data-page="home"] .partners .head { margin-bottom: 20px; text-align: center; }
 html[data-page="home"] .partners .head__title { font-size: clamp(1.1rem, 2vw, 1.4rem); color: var(--muted); font-weight: 600; }
 html[data-page="home"] .partners .head__sub { display: none; }
+
+/* contact: "send" first, then WhatsApp; the main buttons share one size; the phone moved to the contact page */
+.form__btns .btn--wa { order: 2; }
+.form__btns .btn[type="submit"] { order: 1; }
+.cta__actions .icon-btn { display: none !important; }
+.cta__actions > .btn { flex: 0 0 240px; width: 240px; min-width: 0; justify-content: center; white-space: nowrap; }
+@media (max-width: 640px) { .cta__actions > .btn { flex: 1 1 100%; width: 100%; } }
+.svc__chat { border: 0; background: none; font: inherit; cursor: pointer; color: var(--primary); padding: 0; }
+[data-theme="dark"] .svc__chat { color: var(--accent, #C4B5FD); }
+.svc__chat svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+/* ===== the contact page: every way to reach us ===== */
+.ways__grid { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 14px; }
+.way { display: flex; align-items: center; gap: 16px; padding: 22px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); color: inherit; text-decoration: none; font: inherit; text-align: start; cursor: pointer; width: 100%; min-height: 96px; transition: transform .4s var(--ease-out), box-shadow .4s, border-color .3s; touch-action: manipulation; }
+.way:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: rgba(var(--primary-rgb), .35); }
+.way__ico { width: 54px; height: 54px; flex-shrink: 0; border-radius: 16px; display: grid; place-items: center; background: rgba(var(--primary-rgb), .1); color: var(--primary); }
+[data-theme="dark"] .way__ico { color: var(--accent, #C4B5FD); }
+.way__ico svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.way--wa .way__ico { background: rgba(37, 211, 102, .14); color: #16A34A; } .way--wa .way__ico svg { fill: currentColor; stroke: none; }
+.way div { display: grid; gap: 2px; min-width: 0; } .way b { font-size: 1.05rem; } .way small { color: var(--muted); font-size: .88rem; line-height: 1.6; }
+.way span[dir="ltr"] { font-weight: 600; font-size: .95rem; overflow-wrap: anywhere; }
+.ways__social { max-width: var(--max); margin: 18px auto 0; padding: 0 var(--gutter); display: flex; justify-content: center; gap: 10px; }
+.ways__social a { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--line-2); color: var(--text); }
+.ways__social svg { width: 20px; height: 20px; fill: currentColor; }
+html[data-page="contact"] .cta { padding-top: 40px; }
+html[data-page="contact"] .cta__title, html[data-page="contact"] .cta__sub, html[data-page="contact"] .cta .wave { display: none; }
+html[data-page="contact"] .cta__actions { display: none !important; }
+html[data-page="contact"] .cta .form { margin-top: 0; }
+/* "send" on top, WhatsApp under it, on every screen */
+.form__btns { flex-direction: column; align-items: stretch; width: 100%; max-width: 420px; margin-inline: auto; }
+.form__btns .btn { width: 100%; }

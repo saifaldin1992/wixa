@@ -2,6 +2,7 @@
    (المحتوى ← من نحن / المجالات / الضمانات / الباقات). A section with nothing in it stays hidden. */
 import { $, $$, ICONS, UI, C, esc, lang } from "./core.js";
 import { openContact } from "./contact.js";
+import { openChat } from "./chat.js";
 
 const para = (t) => esc(t).split(/\n\s*\n/).map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`).join("");
 const show = (sel, on) => { const s = $(sel); if (s) s.classList.toggle("is-empty", !on); };
@@ -42,6 +43,7 @@ export function renderSales() {
   };
   if (!$("#svcTabs").dataset.bound) {
     $("#svcTabs").dataset.bound = 1;
+    $("#servicesGrid").addEventListener("click", (e) => { const b = e.target.closest("[data-chat-svc]"); if (b) openChat("svc", b.dataset.chatSvc); });
     $("#svcTabs").addEventListener("click", (e) => { const b = e.target.closest("[data-tab]"); if (b) tab(b.dataset.tab); });
     const fromHash = () => { if (location.hash === "#industries") { tab("industries"); $("#services").scrollIntoView({ behavior: "smooth" }); } };
     addEventListener("hashchange", fromHash); setTimeout(fromHash, 300);
