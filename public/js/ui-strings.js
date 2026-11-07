@@ -2,7 +2,7 @@
    These are the defaults; the owner can change any of them from the dashboard (المحتوى ← نصوص الأزرار والقوائم),
    which saves them in settings.ui.ar / settings.ui.en. */
 export const UI_DEFAULTS = {
-  ar: { nav_home: "الرئيسية", nav_projects: "حلولنا", nav_services: "خدماتنا", nav_partners: "شركاؤنا", nav_contact: "تواصل معنا", calc_est: "التقدير المبدئي",
+  ar: { nav_home: "الرئيسية", nav_about: "من نحن", nav_pricing: "الباقات", nav_industries: "حلول حسب مجالك", pkg_from: "يبدأ من", pkg_cta: "اطلب هذه الباقة", pkg_calc: "احسب بدقة", ind_cta: "اطلب حلّك", pkg_featured: "الأكثر مناسبة للشركات", nav_projects: "حلولنا", nav_services: "خدماتنا", nav_partners: "شركاؤنا", nav_contact: "تواصل معنا", calc_est: "التقدير المبدئي",
     lang: "English", f_name: "الاسم", f_email: "البريد الإلكتروني", f_phone: "رقم الهاتف", f_service: "الخدمة المطلوبة", f_any: "استشارة عامة",
     f_message: "حدّثنا عن مشروعك", f_marketing: "أرغب باستلام العروض والأخبار من ويكسا (يمكنك إلغاؤها في أي وقت)", f_send: "إرسال", sending: "جارٍ الإرسال…", ok: "شكراً لك! وصلت رسالتك وسنتواصل معك قريباً.", err: "تعذّر الإرسال، حاول مرة أخرى.", invalid: "يرجى تعبئة الحقول المطلوبة بشكل صحيح.",
     no_projects: "ستُعرض المشاريع هنا قريباً.", step: "٠",
@@ -13,7 +13,7 @@ export const UI_DEFAULTS = {
     done_title: "وصلت رسالتك", done_text: "شكراً لتواصلك مع ويكسا. سيتواصل معك أحد أفراد فريقنا قريباً.", done_again: "إرسال رسالة أخرى", bad_phone: "يرجى كتابة رقم هاتف صحيح.",
     j_title: "التقديم على وظيفة", j_job: "الوظيفة", j_general: "تقديم عام (بدون وظيفة محددة)", j_cv: "رابط السيرة الذاتية أو LinkedIn أو أعمالك (اختياري)",
     j_about: "نبذة عن خبراتك ومهاراتك", j_send: "إرسال الطلب", j_ok: "شكراً لك! وصل طلبك وسنتواصل معك إن كان مناسباً.", page: "صفحة المشروع" },
-  en: { nav_home: "Home", nav_projects: "Solutions", nav_services: "Services", nav_partners: "Partners", nav_contact: "Contact", calc_est: "Estimate",
+  en: { nav_home: "Home", nav_about: "About", nav_pricing: "Packages", nav_industries: "Solutions by field", pkg_from: "From", pkg_cta: "Choose this package", pkg_calc: "Get a precise estimate", ind_cta: "Get your solution", pkg_featured: "Best fit for companies", nav_projects: "Solutions", nav_services: "Services", nav_partners: "Partners", nav_contact: "Contact", calc_est: "Estimate",
     lang: "العربية", f_name: "Name", f_email: "Email", f_phone: "Phone", f_service: "Service", f_any: "General inquiry",
     f_message: "Tell us about your project", f_marketing: "Send me offers and news from WIXA (you can opt out any time)", f_send: "Send", sending: "Sending…", ok: "Thank you! We've received your message and will be in touch soon.", err: "Couldn't send. Please try again.", invalid: "Please fill in the required fields correctly.",
     no_projects: "Projects will appear here soon.", step: "0",

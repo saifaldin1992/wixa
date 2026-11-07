@@ -28,7 +28,7 @@ export const TEXT_FIELDS = [
 
 export async function viewContent(view) {
   settingsActions();
-  const tabs = [["texts", "النصوص"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"], ["privacy", "سياسة الخصوصية"], ["booking", "المواعيد"], ["ui", "نصوص الأزرار والقوائم"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
+  const tabs = [["texts", "النصوص"], ["about", "من نحن"], ["industries", "حلول حسب المجال"], ["pricing", "الباقات والأسعار"], ["guarantees", "الضمانات"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"], ["privacy", "سياسة الخصوصية"], ["booking", "المواعيد"], ["ui", "نصوص الأزرار والقوائم"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
   view.innerHTML = `<div class="split"><div><div class="card">
       <div class="tabs" id="ctTabs">${tabs.map(([k, l]) => `<button data-k="${k}" class="${k === contentTab ? "on" : ""}">${l}</button>`).join("")}</div>
       <div id="ctBody"></div></div></div>${previewPane()}</div>`;
@@ -78,6 +78,36 @@ export function renderContentTab() {
       $$(".fi", body).forEach((el) => { el.classList.add("f"); el.style.cssText = "height:38px;padding:0 10px;border:1px solid var(--line-2);border-radius:10px;width:100%;min-width:0"; el.oninput = () => { settings.stats[el.dataset.i][el.dataset.k] = el.dataset.k === "value" ? Number(el.value) : el.value; changed(); }; });
       $$("[data-del]", body).forEach((b) => (b.onclick = () => { settings.stats.splice(+b.dataset.del, 1); changed(); draw(); }));
       $("#addStat").onclick = () => { settings.stats.push({ value: 0, suffix: "+", label_ar: "", label_en: "" }); changed(); draw(); };
+    };
+    draw(); return;
+  } else if (["about", "industries", "pricing", "guarantees"].includes(contentTab)) {
+    // the sales sections: a few texts and a list of cards, per language
+    const SPEC = {
+      about: { head: [["about_title", "العنوان"], ["about_text", "النص (افصل الفقرات بسطر فارغ)", 8]], list: "about_points", item: "نقطة", fields: [["title", "العنوان"], ["text", "النص", 2]],
+        note: "قسم «من نحن» يظهر بعد القصة. اكتب قصة شركتك ورؤيتها، وثلاث نقاط تميّزكم." },
+      industries: { head: [["industries_title", "العنوان"], ["industries_sub", "الوصف", 2]], list: "industries", item: "مجال", fields: [["title", "اسم المجال"], ["text", "ماذا نبني لهذا المجال", 3], ["price", "السعر (مثل: يبدأ من 1,500$)"], ["icon", "الأيقونة", "icon"]],
+        note: "بطاقة لكل مجال، وزر «اطلب حلّك» يفتح نموذج التواصل باسم المجال." },
+      pricing: { head: [["pricing_title", "العنوان"], ["pricing_sub", "الوصف", 2], ["pricing_note", "ملاحظة أسفل الباقات", 2]], list: "packages", item: "باقة",
+        fields: [["name", "اسم الباقة"], ["price", "السعر (مثل 1,500$ أو «حسب الطلب»)"], ["from", "اكتب «يبدأ من» قبل السعر", "check"], ["featured", "باقة مميزة (إطار ملوّن)", "check"], ["desc", "وصف قصير", 2], ["features", "ما تشمله (كل ميزة في سطر)", 5]],
+        note: "زر «اطلب هذه الباقة» يفتح نموذج التواصل باسم الباقة. الأسعار تقديرية — عدّلها كما تشاء." },
+      guarantees: { head: [["guarantees_title", "العنوان"], ["guarantees_sub", "الوصف", 2]], list: "guarantees", item: "ضمان", fields: [["title", "العنوان"], ["text", "النص", 2]],
+        note: "ضماناتك وشروطك التي تطمئن الزبون: الدفعات، الدعم، الملكية…" },
+    }[contentTab];
+    const draw = () => {
+      const c = settings.content[L], items = c[SPEC.list] || (c[SPEC.list] = []);
+      const field = (i, [k, label, kind]) => kind === "check"
+        ? `<label class="switch"><input type="checkbox" data-path="content.${L}.${SPEC.list}.${i}.${k}" ${items[i][k] ? "checked" : ""}><i></i>${label}</label>`
+        : kind === "icon"
+          ? `<label class="f"><span>${label}</span><select data-path="content.${L}.${SPEC.list}.${i}.${k}">${Object.keys(window.WIXA.ICONS).map((n) => `<option ${items[i][k] === n ? "selected" : ""}>${n}</option>`).join("")}</select></label>`
+          : input(`content.${L}.${SPEC.list}.${i}.${k}`, label, !!kind, `dir="${dir}" ${kind ? `rows="${kind}"` : ""}`);
+      body.innerHTML = langSeg() + `<p class="muted" style="margin-top:0">${SPEC.note}</p><div class="stack">
+        ${SPEC.head.map(([k, label, rows]) => input(`content.${L}.${k}`, label, !!rows, `dir="${dir}" ${rows ? `rows="${rows}"` : ""}`)).join("")}
+        ${items.map((_, i) => `<div class="sec-title">${SPEC.item} ${i + 1} <span><button class="b b--sm b--ghost" data-up="${i}" title="للأعلى" ${i ? "" : "disabled"}>↑</button><button class="b b--sm b--ghost b--danger" data-del="${i}">${I.trash}</button></span></div>${SPEC.fields.map((f) => field(i, f)).join("")}`).join("")}
+        </div><button class="b b--sm" id="addItem" style="margin-top:12px">${I.plus}إضافة ${SPEC.item}</button>`;
+      bindLangSeg(); bindPathInputs(body);
+      $$("[data-del]", body).forEach((b) => (b.onclick = () => { items.splice(+b.dataset.del, 1); changed(); draw(); }));
+      $$("[data-up]", body).forEach((b) => (b.onclick = () => { const i = +b.dataset.up; [items[i - 1], items[i]] = [items[i], items[i - 1]]; changed(); draw(); }));
+      $("#addItem").onclick = () => { items.push(Object.fromEntries(SPEC.fields.map(([k, , kind]) => [k, kind === "check" ? false : kind === "icon" ? "web" : ""]))); changed(); draw(); };
     };
     draw(); return;
   } else if (contentTab === "process") {
@@ -197,7 +227,7 @@ export function renderContentTab() {
     };
     draw(); return;
   } else if (contentTab === "sections") {
-    const names = { story: "القصة (المميزات)", projects: "الإنجازات (المشاريع)", services: "الخدمات", process: "كيف نعمل", stats: "الأرقام", testimonials: "آراء العملاء", calculator: "حاسبة التكلفة", partners: "الشركاء", careers: "الوظائف (انضم إلى فريقنا)", faq: "الأسئلة الشائعة", contact: "التواصل" };
+    const names = { about: "من نحن", industries: "حلول حسب مجالك", guarantees: "الضمانات", pricing: "الباقات والأسعار", story: "القصة (المميزات)", projects: "الإنجازات (المشاريع)", services: "الخدمات", process: "كيف نعمل", stats: "الأرقام", testimonials: "آراء العملاء", calculator: "حاسبة التكلفة", partners: "الشركاء", careers: "الوظائف (انضم إلى فريقنا)", faq: "الأسئلة الشائعة", contact: "التواصل" };
     body.innerHTML = `<p class="muted" style="margin-top:0">أخفِ أي قسم لا تحتاجه. (قسما الشركاء وآراء العملاء يختفيان تلقائياً إذا كانا فارغين.)</p><div class="stack">${Object.entries(names).map(([k, l]) => `<label class="switch"><input type="checkbox" data-path="sections.${k}" ${settings.sections[k] ? "checked" : ""}><i></i>${l}</label>`).join("")}</div>
       <label class="f" style="margin-top:18px;max-width:360px"><span>لغة الموقع عند أول زيارة</span><select data-path="default_lang">
         <option value="auto" ${(settings.default_lang || "auto") === "auto" ? "selected" : ""}>حسب لغة جهاز الزائر (عربي ← عربي، غيره ← إنجليزي)</option>

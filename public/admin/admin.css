@@ -635,3 +635,7 @@ html[dir="rtl"] .chat__back svg { transform: none; }
 .quote__feats, .days { display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .fs { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 10px; margin: 0; }
 .fs legend { padding: 0 6px; font-weight: 700; font-size: 14px; }
+
+/* account page: cards fill the width (two columns on tablets and computers) */
+.acct { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 16px; align-items: start; max-width: 1200px; }
+.acct .card { margin: 0; }

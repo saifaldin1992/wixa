@@ -29,7 +29,7 @@ export async function viewAccount(view) {
   if (u) setUser(u);
   const { data: fx } = await sb.auth.mfa.listFactors();
   const totp = fx?.totp?.find((x) => x.status === "verified");
-  const card = (body) => `<div class="card" style="max-width:560px">${body}</div>`;
+  const card = (body) => `<div class="card">${body}</div>`;
   view.innerHTML = card(`<div class="card__head"><div><h3>الحساب</h3><p dir="ltr" style="text-align:right">${esc(user.email)}</p></div>
       <button class="b b--danger" id="logout">${I.out}تسجيل الخروج</button></div>`)
     + card(`<div class="card__head"><div><h3>تغيير بريد تسجيل الدخول</h3><p>البريد الذي تدخل به إلى لوحة التحكم فقط. بريد التواصل الظاهر في الموقع يبقى كما هو (يُعدَّل من المحتوى ← التواصل). سنرسل رابط تأكيد إلى البريد الحالي والجديد، ويتم التغيير بعد تأكيدهما.</p></div></div>
@@ -50,6 +50,7 @@ export async function viewAccount(view) {
     + card(`<div class="card__head"><div><h3>نسخة احتياطية للمحتوى</h3><p>نزّل كل النصوص والمشاريع والخدمات والشركاء والآراء في ملف واحد. يُنصح بتنزيلها بعد كل تعديل كبير.</p></div>
       <button class="b b--primary" id="backupBtn">${I.upload}تنزيل</button></div>`);
 
+  view.innerHTML = `<div class="acct">${view.innerHTML}</div>`; // two columns on wide screens, one on phones
   $("#backupBtn").onclick = (e) => exportBackup(e.currentTarget);
   $("#logout").onclick = async () => { await sb.auth.signOut(); location.hash = ""; };
   $("#pwForm").onsubmit = async (e) => {
