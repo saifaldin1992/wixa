@@ -1,12 +1,12 @@
 /* Overview: visitors from Cloudflare Web Analytics, messages */
-import { $, $$, I, esc, fmt, sb, adminApi, role } from "../core.js";
+import { $, setSubnav, $$, I, esc, fmt, sb, adminApi, role } from "../core.js";
 import { route } from "../shell.js";
 import { textFixesCard } from "../textfixes.js";
 
 // ---------------- view: overview ----------------
 export let period = 30;
 export async function viewOverview(view) {
-  $("#topActions").innerHTML = `<div class="seg" id="period">${[7, 30, 90].map((d) => `<button data-d="${d}" class="${d === period ? "on" : ""}">${d} يوم</button>`).join("")}</div>`;
+  setSubnav(`<div class="seg" id="period">${[7, 30, 90].map((d) => `<button data-d="${d}" class="${d === period ? "on" : ""}">${d} يوم</button>`).join("")}</div>`);
   $$("#period button").forEach((b) => (b.onclick = () => { period = +b.dataset.d; route(); }));
   // the last numbers seen in this tab appear at once; fresh ones replace them a moment later
   const cacheKey = `wixa-stats-${period}`;

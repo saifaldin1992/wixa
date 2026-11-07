@@ -1,7 +1,7 @@
 /* Orders: every project order from the site's one order page (/order), whatever button it came from.
    Each card: number, what was chosen and from where, the price guide, gifts and discount saved with it,
    the customer's contact buttons, a status the team moves forward, and a private note. */
-import { $, $$, I, esc, sb, toast } from "../core.js";
+import { $, setSubnav, $$, I, esc, sb, toast } from "../core.js";
 import { route } from "../shell.js";
 import { openQuote } from "../quote.js";
 
@@ -20,7 +20,7 @@ export async function viewOrders(view) {
   }
   const count = (k) => rows.filter((o) => (k === "open" ? !["done", "cancelled"].includes(o.status) : k === "all" ? true : o.status === k)).length;
   const tabs = [["open", "المفتوحة"], ...Object.entries(ORDER_STATUS).map(([k, [l]]) => [k, l]), ["all", "الكل"]];
-  $("#topActions").innerHTML = `<div class="seg" id="of">${tabs.map(([k, l]) => `<button data-v="${k}" class="${filter === k ? "on" : ""}">${l} <small>${count(k)}</small></button>`).join("")}</div>`;
+  setSubnav(`<div class="seg" id="of">${tabs.map(([k, l]) => `<button data-v="${k}" class="${filter === k ? "on" : ""}">${l} <small>${count(k)}</small></button>`).join("")}</div>`);
   $$("#of button").forEach((b) => (b.onclick = () => { filter = b.dataset.v; route(); }));
 
   // where orders come from (which buttons sell)

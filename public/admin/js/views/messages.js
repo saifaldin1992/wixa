@@ -1,5 +1,5 @@
 /* Contact form messages and job applications, with a follow-up status and private notes per message */
-import { $, $$, I, adminApi, confirmBox, esc, sb, toast } from "../core.js";
+import { $, setSubnav, $$, I, adminApi, confirmBox, esc, sb, toast } from "../core.js";
 import { route } from "../shell.js";
 
 const STATUS = { new: ["جديد", ""], working: ["قيد المتابعة", "warn"], won: ["تم الاتفاق", "ok"], lost: ["لم يتم", "off"] };
@@ -11,7 +11,8 @@ const booking = (m) => { const x = (m.services?.[0] || "").match(/^حجز موع
 export let msgFilter = "new";
 export async function viewMessages(view) {
   const tabs = [["new", "الجديدة"], ["working", "قيد المتابعة"], ["bookings", "المواعيد"], ["jobs", "طلبات التوظيف"], ["all", "الكل"]];
-  $("#topActions").innerHTML = `<div class="seg" id="mf">${tabs.map(([k, l]) => `<button data-v="${k}" class="${msgFilter === k ? "on" : ""}">${l}</button>`).join("")}</div><button class="b" id="csvBtn" title="تنزيل الرسائل المعروضة كملف Excel">تصدير Excel</button>`;
+  setSubnav(`<div class="seg" id="mf">${tabs.map(([k, l]) => `<button data-v="${k}" class="${msgFilter === k ? "on" : ""}">${l}</button>`).join("")}</div>`);
+  $("#topActions").innerHTML = `<button class="b" id="csvBtn" title="تنزيل الرسائل المعروضة كملف Excel">تصدير Excel</button>`;
   $$("#mf button").forEach((b) => (b.onclick = () => { msgFilter = b.dataset.v; route(); }));
   let q = sb.from("contact_messages").select("*").order("created_at", { ascending: false }).limit(300);
   if (msgFilter === "new") q = q.eq("handled", false);

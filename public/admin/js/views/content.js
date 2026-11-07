@@ -1,5 +1,5 @@
 /* Content: texts, story, process, stats, calculator, sections, brand, contact */
-import { $, $$, I, ICONS, esc, savedJSON, sb, setSaved, settings, toast } from "../core.js";
+import { $, setSubnav, $$, I, ICONS, esc, savedJSON, sb, setSaved, settings, toast } from "../core.js";
 import { PRIVACY_DEFAULTS } from "../../../js/privacy-defaults.js";
 import { UI_DEFAULTS } from "../../../js/ui-strings.js";
 
@@ -29,8 +29,8 @@ export const TEXT_FIELDS = [
 export async function viewContent(view) {
   settingsActions();
   const tabs = [["texts", "النصوص"], ["about", "من نحن"], ["industries", "حلول حسب المجال"], ["pricing", "الباقات والأسعار"], ["guarantees", "الضمانات"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"], ["privacy", "سياسة الخصوصية"], ["booking", "المواعيد"], ["ui", "نصوص الأزرار والقوائم"], ["nav", "القوائم"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
+  setSubnav(`<div class="seg" id="ctTabs">${tabs.map(([k, l]) => `<button data-k="${k}" class="${k === contentTab ? "on" : ""}">${l}</button>`).join("")}</div>`);
   view.innerHTML = `<div class="split"><div><div class="card">
-      <div class="tabs" id="ctTabs">${tabs.map(([k, l]) => `<button data-k="${k}" class="${k === contentTab ? "on" : ""}">${l}</button>`).join("")}</div>
       <div id="ctBody"></div></div></div>${previewPane()}</div>`;
   bindPreview();
   $$("#ctTabs button").forEach((b) => (b.onclick = () => { contentTab = b.dataset.k; $$("#ctTabs button").forEach((x) => x.classList.toggle("on", x === b)); renderContentTab(); }));

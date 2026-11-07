@@ -1,6 +1,6 @@
 /* Sales dashboard (owner): how many people reached out, how many became customers, what they ask for most,
    where they come from, how fast the team answers and how customers rate the chat. Built from the dashboard's own data. */
-import { $, $$, esc } from "../core.js";
+import { $, setSubnav, $$, esc } from "../core.js";
 import { STAGES, loadCustomers } from "./customers.js";
 
 let days = 30;
@@ -14,7 +14,7 @@ const count = (arr) => { const m = new Map(); arr.forEach((x) => x && m.set(x, (
 const dur = (min) => (min < 1 ? "أقل من دقيقة" : min < 60 ? `${Math.round(min)} دقيقة` : min < 1440 ? `${(min / 60).toFixed(1)} ساعة` : `${(min / 1440).toFixed(1)} يوم`);
 
 export async function viewSales(view) {
-  $("#topActions").innerHTML = `<div class="seg" id="sPeriod">${[[7, "7 أيام"], [30, "30 يوماً"], [90, "3 أشهر"], [365, "سنة"]].map(([d, l]) => `<button data-d="${d}" class="${d === days ? "on" : ""}">${l}</button>`).join("")}</div>`;
+  setSubnav(`<div class="seg" id="sPeriod">${[[7, "7 أيام"], [30, "30 يوماً"], [90, "3 أشهر"], [365, "سنة"]].map(([d, l]) => `<button data-d="${d}" class="${d === days ? "on" : ""}">${l}</button>`).join("")}</div>`);
   $$("#sPeriod button").forEach((b) => (b.onclick = () => { days = +b.dataset.d; viewSales(view); }));
   let data;
   try { data = await loadCustomers(); } catch (e) { view.innerHTML = `<div class="empty"><p>تعذّر تحميل البيانات (${esc(e.message)})</p></div>`; return; }

@@ -2,7 +2,7 @@
    merged into one card per person (by phone number, otherwise by email): what they asked about, where they came from,
    whether they agreed to receive offers, private notes, and the sales pipeline (stage, follow-up date, deal value).
    Owner and customer service only. */
-import { $, $$, closeModal, esc, openModal, sb, toast } from "../core.js";
+import { $, setSubnav, $$, closeModal, esc, openModal, sb, toast } from "../core.js";
 
 let seg = "all", q = "", mode = "list";
 const day = (t) => new Date(t).toLocaleDateString("ar-IQ", { day: "numeric", month: "short", year: "numeric" });
@@ -74,8 +74,8 @@ export async function viewCustomers(view) {
   const due = all.filter((c) => c.follow && c.follow <= today() && !["won", "lost"].includes(c.stage));
   const kpi = { total: all.length, yes: all.filter((c) => consent(c) === "yes").length, fresh: all.filter((c) => new Date(c.first) > month).length, won: all.filter((c) => c.stage === "won").reduce((a, c) => a + c.value, 0) };
 
-  $("#topActions").innerHTML = `<div class="seg"><button type="button" data-mode="list" class="${mode === "list" ? "on" : ""}">قائمة</button><button type="button" data-mode="board" class="${mode === "board" ? "on" : ""}">مراحل البيع</button></div>
-    <button class="b" id="copyNums">📋 نسخ أرقام الموافقين</button><button class="b b--primary" id="csv">⬇️ تصدير Excel</button>`;
+  $("#topActions").innerHTML = `    <button class="b" id="copyNums">📋 نسخ أرقام الموافقين</button><button class="b b--primary" id="csv">⬇️ تصدير Excel</button>`;
+  setSubnav(`<div class="seg"><button type="button" data-mode="list" class="${mode === "list" ? "on" : ""}">قائمة</button><button type="button" data-mode="board" class="${mode === "board" ? "on" : ""}">مراحل البيع</button></div><span class="subnav__sep" aria-hidden="true"></span><div class="seg" id="custSeg">${[["all", "الكل"], ["yes", "يقبلون العروض"], ["follow", "متابعة اليوم"], ["chat", "من الدردشة"], ["form", "من النموذج"], ["booking", "حجزوا موعداً"]].map(([k, l]) => `<button type="button" data-seg="${k}" class="${seg === k ? "on" : ""}">${l}</button>`).join("")}</div>`);
   view.innerHTML = `${notesReady ? "" : `<div class="chat-off">لحفظ الملاحظات ومراحل البيع يلزم تطبيق تحديث قاعدة البيانات الأخير.</div>`}
     ${due.length ? `<div class="chat-off chat-off--name">⏰ <b>${due.length}</b> زبون حان موعد متابعته: ${due.slice(0, 4).map((c) => `<a href="#" data-due="${esc(c.key)}">${esc(c.name)}</a>`).join("، ")}${due.length > 4 ? "…" : ""}</div>` : ""}
     <div class="cust__kpis">
@@ -85,7 +85,6 @@ export async function viewCustomers(view) {
       <div class="card cust__kpi"><b>${money(kpi.won)}</b><span>قيمة المبيعات المسجّلة</span></div>
     </div>
     <div class="cust__bar">
-      <div class="seg seg--wide">${[["all", "الكل"], ["yes", "يقبلون العروض"], ["follow", "متابعة اليوم"], ["chat", "من الدردشة"], ["form", "من النموذج"], ["booking", "حجزوا موعداً"]].map(([k, l]) => `<button type="button" data-seg="${k}" class="${seg === k ? "on" : ""}">${l}</button>`).join("")}</div>
       <label class="cust__search"><input type="search" placeholder="بحث بالاسم أو الرقم أو الخدمة…" value="${esc(q)}"></label>
     </div>
     <p class="muted cust__hint">أرسل العروض فقط لمن وافق عليها (✓). من لم يوافق تواصلت معه بخصوص طلبه فقط.</p>
@@ -142,7 +141,7 @@ export async function viewCustomers(view) {
     return true;
   }
   $$("[data-mode]").forEach((b) => (b.onclick = () => { mode = b.dataset.mode; $$("[data-mode]").forEach((x) => x.classList.toggle("on", x === b)); paint(); }));
-  $$("[data-seg]", view).forEach((b) => (b.onclick = () => { seg = b.dataset.seg; $$("[data-seg]", view).forEach((x) => x.classList.toggle("on", x === b)); paint(); }));
+  $$("#subNav [data-seg]").forEach((b) => (b.onclick = () => { seg = b.dataset.seg; $$("#subNav [data-seg]").forEach((x) => x.classList.toggle("on", x === b)); paint(); }));
   $$("[data-due]", view).forEach((a) => (a.onclick = (e) => { e.preventDefault(); details(all.find((c) => c.key === a.dataset.due)); }));
   $(".cust__search input", view).oninput = (e) => { q = e.target.value.trim(); paint(); };
 

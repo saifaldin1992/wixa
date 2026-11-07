@@ -2,6 +2,8 @@
 
 export const { DEFAULTS, FONTS, merge, ICONS } = window.WIXA;
 export const $ = (s, el = document) => el.querySelector(s);
+// a page's sub-menus (status tabs, filters, sections, periods) go in one strip under the page title — the same on every page and screen
+export function setSubnav(html = "") { const n = document.getElementById("subNav"); if (!n) return; n.innerHTML = html; n.hidden = !html; }
 export const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 export const clone = (o) => structuredClone(o);

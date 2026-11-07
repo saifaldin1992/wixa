@@ -1,5 +1,5 @@
 /* Sidebar, top bar and the hash router */
-import { $, $$, DEFAULTS, ROLE_AR, closeModal, confirmBox, esc, merge, role, savedJSON, setSettings } from "./core.js";
+import { $, $$, setSubnav, DEFAULTS, ROLE_AR, closeModal, confirmBox, esc, merge, role, savedJSON, setSettings } from "./core.js";
 import { viewTeam } from "./views/team.js";
 import { viewChats } from "./views/chats.js";
 import { viewCustomers } from "./views/customers.js";
@@ -90,7 +90,7 @@ export async function route() {
   current = VIEWS[name] ? name : "overview";
   $$("#sideNav a").forEach((a) => a.classList.toggle("on", a.dataset.view === current));
   $("#viewTitle").textContent = v.title; $("#viewSub").textContent = v.sub;
-  $("#topActions").innerHTML = "";
+  $("#topActions").innerHTML = ""; setSubnav("");
   const view = $("#view");
   view.style.animation = "none"; view.offsetHeight; view.style.animation = "";
   view.innerHTML = '<div class="skeleton" style="height:120px"></div>';
