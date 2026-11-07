@@ -51,7 +51,7 @@ if (PREVIEW) addEventListener("message", (e) => {
   setupTracking();
   setupProgress();
   setupCursor();
-  setupChat();
+  try { setupChat(); } catch (e) { reportError(`chat: ${e.message}`, "chat.js", 0); } // the chat can never stop the site from opening
   // reveal right away (the content is already in the page); scroll effects start once everything has loaded
   $(".loader").classList.add("done");
   document.body.classList.remove("is-loading");
