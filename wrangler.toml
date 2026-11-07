@@ -67,8 +67,8 @@ CF_SITE_TAG = "a4d140ea04cf4d6f8cb3117d66cb91e8"
 # so the Worker adds none here. Staging is excluded from that rule and uses its own site below.
 CF_BEACON_TOKEN = ""
 TURNSTILE_SITE_KEY = "0x4AAAAAAF18CPavg0KnYszj"
-SUPABASE_URL = "https://oswetqychjhfrwulzkjy.supabase.co"
-SUPABASE_PUBLISHABLE_KEY = "sb_publishable_m6oe17fpFQvF1huyQ_8U_g_4NLmHiAm"
+SUPABASE_URL = "https://sdtsoppvyogdfamotrvx.supabase.co" # Frankfurt (moved from Seoul, Nov 2026)
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_5Hc_PPGOyJYJb0MMZlvLQA_t4p7ijOW"
 
 # ---------- staging ----------
 [env.staging]

@@ -8,3 +8,7 @@ supabase/.branches/
 .wrangler/
 .dev.vars
 public/build/
+
+# stray build/tool files
+*.whl
+/fold-*.png

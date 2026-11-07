@@ -8,7 +8,7 @@ const LABEL = { ok: "سليم", warn: "تنبيه", fail: "عطل" };
 const WHERE = { site: "متصفح الزائر (الموقع)", admin: "لوحة التحكم", server: "الخادم" };
 
 export async function viewDiagnose(view) {
-  $("#topActions").innerHTML = `<button class="b b--primary" id="runDiag">افحص الآن</button>`;
+  $("#topActions").innerHTML = `<button class="b" id="importMedia" title="بعد نقل قاعدة البيانات: ينسخ الصور الناقصة من القاعدة القديمة">🖼️ نقل الصور</button><button class="b b--primary" id="runDiag">افحص الآن</button>`;
   view.innerHTML = `<div class="diag">
     <div class="card diag-sum" id="diagSum"><div class="skeleton" style="height:60px"></div></div>
     <div id="diagGroups"></div>
@@ -17,6 +17,14 @@ export async function viewDiagnose(view) {
     <div class="card"><div class="card__head"><div><h3>الاتصالات</h3><p>الخدمات المرتبطة بالموقع وحالتها.</p></div></div><div id="connBox"></div></div>
   </div>`;
   $("#runDiag").onclick = () => runChecks();
+  $("#importMedia").onclick = async (e) => {
+    e.target.disabled = true;
+    try {
+      const r = await adminApi("import-media", "POST", {});
+      toast(r.missing.length ? `نُسخت ${r.copied} صورة · تعذّر ${r.missing.length}` : r.copied ? `نُسخت ${r.copied} صورة ✓` : `كل الصور (${r.present}) موجودة ✓`, r.missing.length ? "err" : "");
+    } catch (err) { toast(`تعذّر النقل (${err.message})`, "err"); }
+    finally { e.target.disabled = false; }
+  };
   $("#clearErr").onclick = async () => { try { await adminApi("errors", "DELETE"); toast("تم مسح السجل ✓"); loadErrors(); } catch { toast("تعذّر المسح", "err"); } };
   runChecks(); loadErrors();
   const box = $("#connBox"); viewStatus(box).catch(() => {});

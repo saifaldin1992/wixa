@@ -1791,6 +1791,31 @@ async function runReminders(env) {
   await sendOwnerMail(env, `متابعات اليوم: ${d.follow.length + d.waiting.length} — ويكسا`, html);
 }
 
+// ---------- one-time: copy images from the previous database (after moving to a new Supabase project) ----------
+// Finds every image the site uses in this project's media storage, and copies any that are missing from the
+// old project (fixed list below, so this can never fetch anything else). Owner only, uses the owner's session to upload.
+const OLD_MEDIA = ["https://oswetqychjhfrwulzkjy.supabase.co", "https://zwusczwhlshdgnoyesde.supabase.co"];
+async function handleAdminImportMedia(request, env, ctx) {
+  const s = await adminSession(request, env, ["owner"]);
+  if (s.error) return s.error;
+  const base = `${env.SUPABASE_URL}/storage/v1/object/public/media/`;
+  const raw = await loadFromSupabase(env).catch(() => "") || "";
+  const paths = [...new Set([...raw.matchAll(new RegExp(base.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&") + "([A-Za-z0-9._/-]{1,200})", "g"))].map((m) => m[1]))];
+  const out = { found: paths.length, copied: 0, present: 0, missing: [] };
+  for (const p of paths) {
+    const here = await fetch(base + p, { method: "HEAD" });
+    if (here.ok) { out.present++; continue; }
+    let src = null;
+    for (const o of OLD_MEDIA) { const r = await fetch(`${o}/storage/v1/object/public/media/${p}`); if (r.ok) { src = r; break; } }
+    if (!src) { out.missing.push(p); continue; }
+    const up = await fetch(`${env.SUPABASE_URL}/storage/v1/object/media/${p}`, { method: "POST",
+      headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, authorization: request.headers.get("authorization"), "content-type": src.headers.get("content-type") || "image/png", "cache-control": "max-age=31536000", "x-upsert": "true" },
+      body: await src.arrayBuffer() });
+    if (up.ok) out.copied++; else out.missing.push(`${p} (${up.status})`);
+  }
+  return json(out);
+}
+
 export default {
   // "*/15 * * * *" → health check; "17 6 * * SUN" → weekly report (Sunday 09:17 Baghdad)
   async scheduled(event, env, ctx) {
@@ -1849,6 +1874,7 @@ export default {
         case "POST /api/chat/send": return await handleChat(request, env, ctx, "send");
         case "POST /api/chat/poll": return await handleChat(request, env, ctx, "poll");
         case "POST /api/chat/rate": return await handleChatRate(request, env);
+        case "POST /api/admin/import-media": return await handleAdminImportMedia(request, env, ctx);
         case "GET /unsubscribe":
         case "POST /unsubscribe":
           return await handleUnsubscribe(request, env, url);
