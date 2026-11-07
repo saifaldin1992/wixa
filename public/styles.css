@@ -1416,3 +1416,30 @@ html.fab-clear .wa, html.fab-clear .chatw__btn { transform: translateY(140%); op
 /* phone menu: "start your project" as a clear button at the top */
 .header__menu .menu-cta { display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 14px; background: var(--primary); color: #fff !important; font-weight: 700; margin-bottom: 6px; }
 @media (min-width: 901px) { .header__menu .menu-cta { display: none; } }
+/* request: the gift promise at the start, surprise cards at the end */
+.rq__gift { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin: 0 0 16px; border-radius: 16px; border: 1.5px dashed color-mix(in srgb, var(--primary) 45%, transparent); background: color-mix(in srgb, var(--primary) 7%, var(--surface)); }
+.rq__gift-ico { font-size: 28px; line-height: 1; animation: giftWiggle 2.4s ease-in-out infinite; }
+.rq__gift b { display: block; color: var(--fg); font-size: .98rem; }
+.rq__gift small { display: block; color: var(--muted); font-size: .84rem; line-height: 1.6; }
+@keyframes giftWiggle { 0%, 70%, 100% { transform: rotate(0); } 75% { transform: rotate(-12deg); } 85% { transform: rotate(10deg); } 92% { transform: rotate(-5deg); } }
+.rq__gifts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 6px 0 14px; perspective: 900px; }
+.gcard { position: relative; height: 150px; padding: 0; border: 0; background: none; cursor: pointer; font: inherit; color: inherit; touch-action: manipulation; }
+.gcard__in { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .8s cubic-bezier(.2,.8,.2,1.2); }
+.gcard.open .gcard__in { transform: rotateY(180deg); }
+.gcard__front, .gcard__back { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 6px; padding: 12px; border-radius: 18px; backface-visibility: hidden; -webkit-backface-visibility: hidden; text-align: center; }
+.gcard__front { background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 55%, var(--accent))); color: #fff; box-shadow: 0 14px 30px -12px rgba(var(--primary-rgb), .6); }
+.gcard__front small { font-size: .82rem; opacity: .92; }
+.gcard__box { font-size: 40px; line-height: 1; animation: giftWiggle 2s ease-in-out infinite; }
+.gcard:nth-child(2) .gcard__box { animation-delay: .4s; }
+.gcard__back { transform: rotateY(180deg); background: var(--surface); border: 1.5px solid color-mix(in srgb, var(--primary) 35%, transparent); }
+.gcard__back b { font-size: 1.05rem; color: var(--fg); }
+.gcard__back small { font-size: .8rem; color: var(--muted); line-height: 1.5; }
+.gcard__tag { padding: 3px 10px; border-radius: 99px; background: var(--wa-ink, #0E7C47); color: #fff; font-size: .75rem; font-weight: 700; }
+.gcard:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 18px; }
+.rq__won { animation: heroUp .6s var(--ease-out) both; }
+.rq__won[hidden] { display: none; }
+.rq__wonT { margin: 0; font-weight: 800; color: var(--fg); font-size: 1.05rem; }
+.rq__won .muted { margin: 4px 0 0; font-size: .88rem; }
+.rq__ticket { margin: 16px 0 6px; padding: 12px; border-radius: 16px; background: color-mix(in srgb, var(--primary) 6%, var(--surface)); }
+.rq__ticket .rq__no { margin: 2px 0 8px; }
+@media (prefers-reduced-motion: reduce) { .gcard__in { transition: none; } .gcard__box, .rq__gift-ico { animation: none; } }

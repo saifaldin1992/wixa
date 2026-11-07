@@ -1,4 +1,5 @@
-/* "Start your project": a short guided request (type → field → features → budget & time → details).
+/* "Start your project": three short steps (what to build → about the project → your details), with two gifts
+   promised at the start and revealed as surprise cards at the end (free brand identity + a free year of support).
    The visitor gets a request number on screen and by email; the team gets a clear summary in the messages. */
 import { $, $$, esc, state, lang, C, L, ICONS } from "./core.js";
 import { ensureTurnstile, turnstileToken, resetTurnstile, check, liveCheck } from "./contact.js";
@@ -7,9 +8,12 @@ import { visitSource } from "./source.js";
 const T = {
   ar: {
     title: "ابدأ مشروعك", step: "الخطوة", of: "من", next: "التالي", back: "رجوع", send: "أرسل الطلب", sending: "جارٍ الإرسال…", skip: "تخطَّ",
-    q: ["ماذا تريد أن نبني لك؟", "ما مجال عملك؟", "ما الميزات التي تحتاجها؟", "الميزانية والوقت", "آخر خطوة: تفاصيلك"],
-    hint: ["اختر الأقرب، ويمكن تعديله لاحقاً مع الفريق.", "يساعدنا على اقتراح حلول جربناها في مجالك.", "اختر كل ما يناسبك، أو تخطَّ إن لم تكن متأكداً.", "تقدير تقريبي فقط، يساعدنا على اقتراح الخيار المناسب.", "نرسل لك رقم الطلب على بريدك، ونعود إليك خلال يوم عمل."],
-    other: "شيء آخر", budget: "الميزانية التقريبية", time: "متى تريد الإطلاق؟",
+    q: ["ماذا تريد أن نبني لك؟", "أخبرنا عن مشروعك", "آخر خطوة: تفاصيلك"],
+    hint: ["اختر الأقرب، ويمكن تعديله لاحقاً مع الفريق.", "اختر مجالك، والباقي اختياري يساعدنا على اقتراح الأنسب.", "نرسل لك رقم الطلب على بريدك، ونعود إليك خلال يوم عمل."],
+    other: "شيء آخر", field: "مجال عملك", feats: "ميزات تحتاجها (اختياري)", budget: "الميزانية التقريبية (اختياري)", time: "متى تريد الإطلاق؟ (اختياري)",
+    giftTop: "هديتان مع كل طلب مشروع", giftTopSub: "أكمل طلبك واكشف هداياك في النهاية",
+    gifts: [["هوية بصرية", "تصميم هوية بصرية لمشروعك مجاناً"], ["دعم لمدة سنة", "صيانة ودعم فني مجاني لمدة 12 شهراً"]],
+    tap: "اضغط لكشف الهدية", won: "مبروك! حصلت على هديتين", wonSub: "تُضاف الهديتان إلى مشروعك عند البدء بالعمل.", free: "مجاناً",
     budgets: ["أقل من 1,000$", "1,000$ – 3,000$", "3,000$ – 7,000$", "أكثر من 7,000$", "لم أحدد بعد"],
     times: ["خلال شهر", "خلال 1–3 أشهر", "مرن"],
     details: "صف فكرتك باختصار", detailsPh: "ماذا تريد أن يفعل المشروع؟ من سيستخدمه؟ هل لديك موقع أو تطبيق حالي؟",
@@ -20,9 +24,12 @@ const T = {
   },
   en: {
     title: "Start your project", step: "Step", of: "of", next: "Next", back: "Back", send: "Send request", sending: "Sending…", skip: "Skip",
-    q: ["What would you like us to build?", "What's your field?", "Which features do you need?", "Budget and timing", "Last step: your details"],
-    hint: ["Pick the closest — you can refine it with the team later.", "It helps us suggest solutions we've built in your field.", "Pick all that apply, or skip if you're not sure.", "A rough idea only, so we can suggest the right option.", "We'll email you a request number and reply within one working day."],
-    other: "Something else", budget: "Rough budget", time: "When would you like to launch?",
+    q: ["What would you like us to build?", "Tell us about your project", "Last step: your details"],
+    hint: ["Pick the closest — you can refine it with the team later.", "Pick your field; the rest is optional and helps us suggest the right fit.", "We'll email you a request number and reply within one working day."],
+    other: "Something else", field: "Your field", feats: "Features you need (optional)", budget: "Rough budget (optional)", time: "When would you like to launch? (optional)",
+    giftTop: "Two gifts with every project request", giftTopSub: "Finish your request and reveal your gifts at the end",
+    gifts: [["Brand identity", "Brand identity design for your project, free"], ["A year of support", "Free maintenance and support for 12 months"]],
+    tap: "Tap to reveal", won: "Congratulations! You've won two gifts", wonSub: "Both gifts are added to your project when work begins.", free: "Free",
     budgets: ["Under $1,000", "$1,000 – $3,000", "$3,000 – $7,000", "Over $7,000", "Not sure yet"],
     times: ["Within a month", "In 1–3 months", "Flexible"],
     details: "Describe your idea briefly", detailsPh: "What should it do? Who will use it? Do you have a current site or app?",
@@ -33,14 +40,14 @@ const T = {
   },
 };
 const t = (k) => (T[lang] || T.ar)[k];
-const STEPS = 5;
+const STEPS = 3;
 let step = 0, ans = { type: "", field: "", features: [], budget: "", timeline: "" };
 
 function options() {
   const s = state.settings, c = C();
   const types = (s.calculator?.types || []).map((x) => ({ label: L(x, "label"), icon: x.icon })).filter((x) => x.label);
   const fields = (c.industries || []).map((x) => x.title).filter(Boolean);
-  const feats = (s.calculator?.features || []).map((x) => L(x, "label")).filter(Boolean);
+  const feats = (s.calculator?.features || []).map((x) => L(x, "label")).filter((f) => f && !/هوية|identity|صيانة|support/i.test(f)); // both come free
   return { types, fields, feats };
 }
 
@@ -53,12 +60,13 @@ function paint() {
   $("#rqQ").textContent = t("q")[step]; $("#rqHint").textContent = t("hint")[step];
   $("#rqBack").hidden = step === 0;
   $("#rqNext").hidden = step === STEPS - 1; $("#rqSend").hidden = step !== STEPS - 1;
-  $("#rqNext").textContent = step === 2 && !ans.features.length ? t("skip") : t("next");
+  $("#rqNext").textContent = t("next");
   $("#rqErr").textContent = "";
-  if (step === 0) box.innerHTML = `<div class="rq__grid rq__grid--big">${[...o.types.map((x) => chip("type", x.label, x.label, ans.type === x.label, x.icon)), chip("type", t("other"), t("other"), ans.type === t("other"), "code")].join("")}</div>`;
-  if (step === 1) box.innerHTML = `<div class="rq__grid">${[...o.fields, t("other")].map((f) => chip("field", f, f, ans.field === f)).join("")}</div>`;
-  if (step === 2) box.innerHTML = `<div class="rq__grid">${o.feats.map((f) => chip("features", f, f, ans.features.includes(f))).join("")}</div>`;
-  if (step === 3) box.innerHTML = `<p class="rq__label">${t("budget")}</p><div class="rq__grid">${t("budgets").map((b) => chip("budget", b, b, ans.budget === b)).join("")}</div>
+  if (step === 0) box.innerHTML = `<div class="rq__gift"><span class="rq__gift-ico" aria-hidden="true">🎁</span><div><b>${t("giftTop")}</b><small>${t("gifts").map((g) => g[0]).join(" + ")} — ${t("giftTopSub")}</small></div></div>
+    <div class="rq__grid rq__grid--big">${[...o.types.map((x) => chip("type", x.label, x.label, ans.type === x.label, x.icon)), chip("type", t("other"), t("other"), ans.type === t("other"), "code")].join("")}</div>`;
+  if (step === 1) box.innerHTML = `<p class="rq__label">${t("field")}</p><div class="rq__grid">${[...o.fields, t("other")].map((f) => chip("field", f, f, ans.field === f)).join("")}</div>
+    ${o.feats.length ? `<p class="rq__label">${t("feats")}</p><div class="rq__grid">${o.feats.map((f) => chip("features", f, f, ans.features.includes(f))).join("")}</div>` : ""}
+    <p class="rq__label">${t("budget")}</p><div class="rq__grid">${t("budgets").map((b) => chip("budget", b, b, ans.budget === b)).join("")}</div>
     <p class="rq__label">${t("time")}</p><div class="rq__grid">${t("times").map((b) => chip("timeline", b, b, ans.timeline === b)).join("")}</div>`;
   $("#rqForm").hidden = step !== STEPS - 1; box.hidden = step === STEPS - 1;
   if (step === STEPS - 1) { ensureTurnstile("#turnstileReq"); setTimeout(() => $("#rqForm").elements.message.focus(), 60); }
@@ -67,7 +75,6 @@ function paint() {
 function valid() {
   if (step === 0 && !ans.type) return false;
   if (step === 1 && !ans.field) return false;
-  if (step === 3 && (!ans.budget || !ans.timeline)) return false;
   return true;
 }
 
@@ -114,10 +121,10 @@ export function setupRequest() {
     const c = e.target.closest(".rq__chip"); if (!c) return;
     const g = c.dataset.g, v = c.dataset.v;
     if (g === "features") ans.features = ans.features.includes(v) ? ans.features.filter((x) => x !== v) : [...ans.features, v];
-    else ans[g] = v;
-    paint();
-    // single-choice steps move on by themselves
-    if ((step === 0 || step === 1) && g !== "features") setTimeout(() => { step++; paint(); }, 180);
+    else ans[g] = ans[g] === v && g !== "type" && g !== "field" ? "" : v; // optional choices can be un-picked
+    const sc = $(".rq__box", m), y = sc.scrollTop;
+    paint(); sc.scrollTop = y; // picking an option never jumps the sheet back to the top
+    if (step === 0) setTimeout(() => { step++; paint(); sc.scrollTop = 0; }, 180); // the first step moves on by itself
     $(`.rq__chip[data-g="${g}"][data-v="${CSS.escape(v)}"]`, m)?.focus();
   });
   addEventListener("keydown", (e) => { if (e.key === "Escape" && !m.hidden) closeRequest(); });
@@ -147,10 +154,18 @@ export function setupRequest() {
     const wa = (state.settings.contact?.whatsapp || "").replace(/\D/g, "");
     $(".rq__main").hidden = true;
     const box = $("#rqDone"); box.hidden = false;
-    box.innerHTML = `<div class="rq__ok" aria-hidden="true">✓</div><h2>${t("done")}</h2>
-      ${no ? `<p class="muted">${t("doneSub")}</p><div class="rq__no" dir="ltr">${esc(no)}</div><button type="button" class="btn btn--ghost rq__copy">${t("copy")}</button>` : ""}
+    box.innerHTML = `<h2>${t("done")}</h2><p class="rq__hint">${t("tap")}</p>
+      <div class="rq__gifts">${t("gifts").map(([h, p], i) => `<button type="button" class="gcard" data-gift="${i}" aria-label="${t("tap")}">
+        <span class="gcard__in"><span class="gcard__front"><span class="gcard__box" aria-hidden="true">🎁</span><small>${t("tap")}</small></span>
+        <span class="gcard__back"><span class="gcard__tag">${t("free")}</span><b>${esc(h)}</b><small>${esc(p)}</small></span></span></button>`).join("")}</div>
+      <div class="rq__won" hidden><p class="rq__wonT">🎉 ${t("won")}</p><p class="muted">${t("wonSub")}</p></div>
+      ${no ? `<div class="rq__ticket"><span class="muted">${t("doneSub")}</span><div class="rq__no" dir="ltr">${esc(no)}</div><button type="button" class="btn btn--ghost rq__copy">${t("copy")}</button></div>` : ""}
       <p class="rq__hint">${t("doneMail")}</p>
       <div class="rq__nav">${wa ? `<a class="btn btn--wa" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent((lang === "ar" ? "مرحباً، بخصوص طلبي رقم " : "Hello, about my request ") + no)}">${t("wa")}</a>` : ""}<button type="button" class="btn btn--primary" data-close>${t("close")}</button></div>`;
+    const reveal = (c) => { if (c.classList.contains("open")) return; c.classList.add("open"); c.setAttribute("aria-label", c.querySelector(".gcard__back b").textContent); if (!$(".gcard:not(.open)", box)) $(".rq__won", box).hidden = false; };
+    $$(".gcard", box).forEach((c) => c.addEventListener("click", () => reveal(c)));
+    // if they don't tap, the cards turn over by themselves
+    setTimeout(() => $$(".gcard:not(.open)", box).forEach((c, i) => setTimeout(() => reveal(c), i * 450)), 4000);
     $(".rq__copy", box)?.addEventListener("click", async (e) => { try { await navigator.clipboard.writeText(no); e.target.textContent = t("copied"); } catch {} });
   }
   // every "start your project" button opens it; the link still works without scripts

@@ -754,6 +754,7 @@ async function sendRequestConfirmation(env, cfg, row) {
       <div style="padding:22px;color:#140F1F;font-size:15px;line-height:1.9">
         <p style="margin:0 0 14px;white-space:pre-wrap">${esc(intro)}</p>
         <div style="background:#F3EEFC;border-radius:12px;padding:14px 16px;text-align:center;margin:0 0 16px"><div style="color:#625C70;font-size:13px">${ar ? "رقم الطلب" : "Request number"}</div><div style="font-size:22px;font-weight:bold;letter-spacing:1px;color:#5B21B6" dir="ltr">${esc(row.request_no)}</div></div>
+        <div style="border:1.5px dashed #C4B5FD;border-radius:12px;padding:12px 16px;margin:0 0 16px;background:#FBF9FF"><div style="font-weight:bold;color:#5B21B6;margin-bottom:4px">🎁 ${ar ? "هداياك مع هذا الطلب" : "Your gifts with this request"}</div><div style="color:#3A3446;font-size:14px">${ar ? "✓ تصميم هوية بصرية مجاناً<br>✓ صيانة ودعم فني مجاني لمدة سنة" : "✓ Free brand identity design<br>✓ A free year of maintenance and support"}</div></div>
         <div style="white-space:pre-wrap;color:#3A3446;font-size:14px;border-top:1px solid #EEE;padding-top:12px">${esc(row.message)}</div>
         <p style="margin:16px 0 0;color:#625C70;font-size:13px">${esc(keep)}</p>
         ${wa ? `<p style="margin:14px 0 0"><a href="https://wa.me/${wa}?text=${encodeURIComponent((ar ? "مرحباً، بخصوص طلبي رقم " : "Hello, about my request ") + row.request_no)}" style="display:inline-block;background:#0E7C47;color:#fff;text-decoration:none;padding:10px 18px;border-radius:99px;font-weight:bold">${ar ? "تابع طلبك على واتساب" : "Follow up on WhatsApp"}</a></p>` : ""}
@@ -819,6 +820,7 @@ async function handleContact(request, env, ctx) {
       [ar ? "الميزانية" : "Budget", clean(p.budget, 60)],
       [ar ? "المدة" : "Timeline", clean(p.timeline, 60)],
       [ar ? "ملفات / أمثلة" : "Files / examples", safeHref(clean(p.link, 300))],
+      [ar ? "🎁 الهدايا" : "🎁 Gifts", ar ? "تصميم هوية بصرية مجاناً + صيانة ودعم فني مجاني لمدة سنة" : "Free brand identity design + a free year of maintenance and support"],
     ].filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`);
     row.services = [`طلب مشروع ${reqNo}`, clean(p.type, 80)].filter(Boolean);
     row.message = `${lines.join("\n")}\n\n${row.message}`.slice(0, 4300);
