@@ -1,5 +1,6 @@
 /* Appointment booking, printable quote (PDF) and anonymous counts of visitor actions */
 import { $, $$, PREVIEW, UI, esc, lang, state } from "./core.js";
+import { visitSource } from "./source.js";
 import { ensureTurnstile, turnstileToken, resetTurnstile, check, liveCheck } from "./contact.js";
 
 // ---------- visitor actions: counted once per visit, sent in one small request when the page is left ----------
@@ -106,7 +107,7 @@ export function setupBooking() {
     try {
       const res = await fetch("/api/contact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({
         kind: "booking", date: bk.date, time: bk.time, name: f.elements.name.value, email: f.elements.email.value, phone: f.elements.phone.value,
-        message: f.elements.message.value, lang, website: f.elements.website.value, turnstile: turnstileToken("#turnstileBk") }) });
+        message: f.elements.message.value, lang, source: visitSource(), website: f.elements.website.value, turnstile: turnstileToken("#turnstileBk") }) });
       if (res.status === 409) { st.className = "form__status err"; st.textContent = ui.bk_taken; loadSlots(bk.date); bk.time = ""; return; }
       if (!res.ok) throw new Error(res.status);
       f.reset(); st.className = "form__status ok"; st.textContent = `${ui.bk_ok} ${bk.date} · ${bk.time}`;

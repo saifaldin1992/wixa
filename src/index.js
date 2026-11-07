@@ -109,7 +109,7 @@ const CONFIG_DEFAULTS = {
   },
   spam: { turnstile: true, blocked: "" },
   tags: { ga4: "", meta_pixel: "", clarity: "", tiktok: "" },
-  reports: { weekly: true, monitor: true },
+  reports: { weekly: true, monitor: true, reminders: true },
   backup: { freq: "weekly" }, // daily | weekly | monthly | off
   templates: [
     { title: "شكر واستلام", body: "أهلاً {name}،\nشكراً لتواصلك مع ويكسا. استلمنا طلبك ونراجعه الآن، وسنعود إليك قريباً بالتفاصيل." },
@@ -150,7 +150,7 @@ function cleanConfig(prev, body) {
   }
   if (b.backup) next.backup = { freq: ["daily", "weekly", "monthly", "off"].includes(b.backup.freq) ? b.backup.freq : "weekly" };
   if (Array.isArray(b.templates)) next.templates = b.templates.slice(0, 20).map((t) => ({ title: str(t?.title, 60).trim(), body: str(t?.body, 2000) })).filter((t) => t.title || t.body);
-  if (b.reports) next.reports = { weekly: b.reports.weekly !== false, monitor: b.reports.monitor !== false };
+  if (b.reports) next.reports = { weekly: b.reports.weekly !== false, monitor: b.reports.monitor !== false, reminders: b.reports.reminders !== false };
   if (b.spam) next.spam = { turnstile: b.spam.turnstile !== false, blocked: str(b.spam.blocked, 3000) };
   if (b.tags) {
     next.tags = {};
@@ -696,6 +696,7 @@ async function handleContact(request, env, ctx) {
     services: Array.isArray(body.services) ? body.services.filter((s) => typeof s === "string").slice(0, 10).map((s) => s.slice(0, 80)) : [],
     lang: body.lang === "en" ? "en" : "ar",
     marketing: body.marketing === true, // agreed to receive offers (unticked by default)
+    source: clean(body.source, 60), // where the visitor came from (Google, Instagram…)
   };
   if (body.kind === "booking" && !row.message) row.message = "حجز موعد";
   if (!row.name || !row.message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) return json({ error: "validation" }, 422);
@@ -794,6 +795,7 @@ main{padding:20px 0 60px}h1{font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.3;m
 .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border-radius:99px;text-decoration:none;font-weight:700;background:var(--p);color:#fff}
 .btn--ghost{background:var(--s);color:var(--t);border:1px solid var(--l)}.btn--wa{background:#25D366;color:#fff}
 .sub{display:flex;gap:6px;overflow-x:auto;padding:0 0 6px;scrollbar-width:none}.sub a{flex-shrink:0;padding:6px 12px;border-radius:99px;text-decoration:none;color:var(--m);font-size:.85rem}.sub a:hover{color:var(--t);background:var(--s)}
+.case{display:grid;gap:12px;margin:24px 0}.case div{padding:18px 20px;border-radius:16px;border:1px solid var(--l);background:var(--s)}.case h3{margin:0 0 6px;font-size:1rem;color:var(--p,#5B21B6)}.case p{margin:0}
 .more{margin-top:40px;padding-top:24px;border-top:1px solid var(--l)}.more h2{margin-top:0}.more__grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
 .more__grid a{display:block;padding:16px;border-radius:16px;border:1px solid var(--l);background:var(--s);text-decoration:none;color:var(--t)}.more__grid b{display:block}.more__grid span{color:var(--m);font-size:.85rem}
 .btn--wa{background:#25D366}.hp{position:absolute;left:-9999px;opacity:0}
@@ -846,6 +848,10 @@ async function handleProjectPage(request, env, ctx, slug) {
     ${T("summary") ? `<p class="lead">${esc(T("summary"))}</p>` : ""}
     ${imgs.length || mob ? `<div class="gallery">${imgs.map((u) => `<img src="${esc(u)}" alt="${esc(T("title"))}" loading="lazy">`).join("")}${mob ? `<img class="mob" src="${esc(mob)}" alt="" loading="lazy">` : ""}</div>` : ""}
     ${stats.length ? `<div class="stats">${stats.map((x) => `<div><b>${esc(x.value)}</b><span>${esc(x[`label_${lang}`] || x.label_ar || "")}</span></div>`).join("")}</div>` : ""}
+    ${(() => { // case study: the challenge → our solution → the result
+      const cs = [["problem", lang === "ar" ? "التحدي" : "The challenge"], ["solution", lang === "ar" ? "الحل" : "Our solution"], ["result", lang === "ar" ? "النتيجة" : "The result"]].filter(([f]) => T(f).trim());
+      return cs.length ? `<div class="case">${cs.map(([f, h]) => `<div><h3>${h}</h3><p>${esc(T(f)).replace(/\n/g, "<br>")}</p></div>`).join("")}</div>` : "";
+    })()}
     ${detailsHtml(T("details"))}
     ${link ? `<p><a href="${esc(link)}" target="_blank" rel="noopener">${esc(link.replace(/^https?:\/\//, "").replace(/\/$/, ""))} ↗</a></p>` : ""}
     ${others.length ? `<section class="more"><h2>${lang === "ar" ? "مشاريع أخرى" : "More projects"}</h2><div class="more__grid">${others.map((o) => {
@@ -1619,7 +1625,7 @@ async function handleChat(request, env, ctx, action) {
     if (!name || !body || !PHONE_RE.test(phone)) return json({ error: "invalid" }, 422);
     const key = hex(crypto.getRandomValues(new Uint8Array(32)));
     const topic = cleanText(b.topic, 120);
-    const r = await rpcToken(env, "chat_start", { p: { secret: await sha256hex(key), name, phone, body, topic, marketing: b.marketing === true, page: cleanText(b.page, 200) } });
+    const r = await rpcToken(env, "chat_start", { p: { secret: await sha256hex(key), name, phone, body, topic, marketing: b.marketing === true, source: cleanText(b.source, 60), page: cleanText(b.page, 200) } });
     if (!r.ok) return chatError(r);
     const d = await r.json();
     ctx.waitUntil(notifyChat(env, request, { name, phone, body, topic, isNew: true, push: true, email: true }).catch((e) => console.error("chat notify", e)));
@@ -1705,11 +1711,94 @@ async function handleAdminPush(request, env) {
   return json({ ok: true, devices: subs.length, test: status });
 }
 
+// ---------- sales: chat ratings, email campaigns, unsubscribe links, daily reminders ----------
+const STAGE_AR = { new: "جديد", contacted: "تواصلنا", quoted: "أُرسل العرض", won: "تم البيع", lost: "خسرناه" };
+async function handleChatRate(request, env) {
+  if (!(await allowed(env.TRACK_LIMITER, `chat-rate:${clientIp(request)}`))) return json({ error: "rate_limited" }, 429);
+  let b = {};
+  try { b = await request.json(); } catch {}
+  const id = cleanText(b.id, 40), key = cleanText(b.key, 64), rating = parseInt(b.rating, 10);
+  if (!/^[0-9a-f-]{36}$/.test(id) || !/^[0-9a-f]{64}$/.test(key) || !(rating >= 1 && rating <= 5)) return json({ error: "invalid" }, 422);
+  const r = await rpcToken(env, "chat_rate", { p: { id, secret: await sha256hex(key), rating, note: cleanText(b.note, 500) } });
+  return r.ok ? json({ ok: true }) : chatError(r);
+}
+
+// unsubscribe links carry a signature, so nobody can unsubscribe someone else
+async function unsubSig(env, email) {
+  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(`unsub:${env.WRITE_TOKEN || ""}`), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  return hex(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(email.toLowerCase()))).slice(0, 32);
+}
+async function handleUnsubscribe(request, env, url) {
+  const email = String(url.searchParams.get("e") || "").trim().toLowerCase().slice(0, 200), sig = url.searchParams.get("s") || "";
+  const ok = EMAIL_RE.test(email) && sig === (await unsubSig(env, email));
+  let done = false;
+  if (ok) { const r = await rpcToken(env, "campaign_optout", { email }); done = r.ok; }
+  const msg = done ? ["تم إلغاء اشتراكك", "لن تصلك رسائل العروض من ويكسا بعد الآن. إذا كان هذا خطأً راسلنا وسنعيد اشتراكك."]
+    : ok ? ["تعذّر الإلغاء الآن", "حدث خطأ مؤقت، حاول بعد دقائق أو راسلنا وسنلغيه لك."] : ["الرابط غير صالح", "تأكد أنك فتحت الرابط كاملاً من البريد."];
+  return new Response(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${msg[0]} — WIXA</title>
+    <style>body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:system-ui,Tahoma,sans-serif;background:#F6F3FB;color:#1A1424}main{max-width:440px;margin:16px;background:#fff;border-radius:20px;padding:32px;text-align:center;box-shadow:0 20px 60px -30px rgba(91,33,182,.4)}h1{font-size:22px;margin:0 0 10px;color:#5B21B6}p{line-height:1.9;color:#5E5670;margin:0 0 18px}a{color:#5B21B6;font-weight:700}</style></head>
+    <body><main><h1>${msg[0]}</h1><p>${msg[1]}</p><a href="/">العودة إلى الموقع</a></main></body></html>`, { status: ok ? 200 : 400, headers: { ...SECURITY_HEADERS, "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+}
+
+// GET: audience size + sent campaigns · POST {subject, body, test}: send (test → only to the alerts address)
+async function handleAdminCampaign(request, env) {
+  const s = await adminSession(request, env, ["owner"]);
+  if (s.error) return s.error;
+  const aud = await rpcToken(env, "campaign_audience", {});
+  if (aud.status === 404) return json({ error: "migration_missing" }, 503);
+  const audience = aud.ok ? await aud.json() : [];
+  const log = env.PRIVATE ? (await env.PRIVATE.get("campaigns", { type: "json" })) || [] : [];
+  if (request.method === "GET") return json({ audience: audience.length, log }, 200, { "cache-control": "no-store" });
+  if (!env.RESEND_API_KEY) return json({ error: "no_email_key" }, 503);
+  let b = {};
+  try { b = await request.json(); } catch {}
+  const subject = cleanText(b.subject, 150), body = String(b.body || "").replace(/\r/g, "").trim().slice(0, 8000);
+  if (!subject || !body) return json({ error: "invalid" }, 422);
+  const cfg = await getConfig(env), origin = new URL(request.url).origin;
+  const list = b.test ? [{ email: await notifyAddress(env), name: "تجربة" }].filter((x) => x.email) : audience;
+  if (!list.length) return json({ error: "no_audience" }, 422);
+  const mails = await Promise.all(list.map(async (r) => {
+    const link = `${origin}/unsubscribe?e=${encodeURIComponent(r.email)}&s=${await unsubSig(env, r.email)}`;
+    const text = body.replace(/\{name\}/g, r.name || "");
+    return { from: `${cfg.alerts.from_name} <offers@wixa.dev>`, to: [r.email], subject: b.test ? `[تجربة] ${subject}` : subject,
+      headers: { "List-Unsubscribe": `<${link}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
+      html: mailBox(esc(subject), `<div style="white-space:pre-wrap">${esc(text)}</div>
+        <p style="margin-top:24px;font-size:12px;color:#8A8296">وصلتك هذه الرسالة لأنك وافقت على استلام عروض ويكسا. <a href="${link}" style="color:#8A8296">إلغاء الاشتراك</a></p>`) };
+  }));
+  let sent = 0, failed = 0;
+  for (let i = 0; i < mails.length; i += 100) {
+    const r = await fetch("https://api.resend.com/emails/batch", { method: "POST", headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" }, body: JSON.stringify(mails.slice(i, i + 100)) });
+    if (r.ok) sent += Math.min(100, mails.length - i); else { failed += Math.min(100, mails.length - i); console.error("campaign", r.status, await r.text()); }
+  }
+  if (!b.test && env.PRIVATE) await env.PRIVATE.put("campaigns", JSON.stringify([{ at: new Date().toISOString(), subject, sent, failed }, ...log].slice(0, 30)));
+  return json({ ok: failed === 0, sent, failed, test: !!b.test });
+}
+
+// Every morning (production): follow-ups due today and chats waiting for a reply → one email to the owner
+async function runReminders(env) {
+  const cfg = await getConfig(env);
+  if (cfg.reports.reminders === false) return;
+  const r = await rpcToken(env, "sales_due", {});
+  if (!r.ok) return;
+  const d = await r.json();
+  if (!d.follow.length && !d.waiting.length) return;
+  const site = env.SITE_ENV === "staging" ? "https://staging.wixa.dev" : "https://wixa.dev";
+  const li = (x) => `<li style="margin-bottom:8px">${x}</li>`;
+  const html = mailBox("متابعات اليوم", `
+    ${d.follow.length ? `<p><b>زبائن موعد متابعتهم اليوم (${d.follow.length}):</b></p><ul>${d.follow.map((f) => li(`<b>${esc(d.names[f.key] || f.key.slice(2))}</b> — ${STAGE_AR[f.stage] || ""}${f.note ? `<br><span style="color:#6B6478">${esc(f.note)}</span>` : ""}`)).join("")}</ul>` : ""}
+    ${d.waiting.length ? `<p><b>محادثات تنتظر ردك منذ أكثر من يوم (${d.waiting.length}):</b></p><ul>${d.waiting.map((w) => li(`<b>${esc(w.name)}</b> <span dir="ltr">${esc(w.phone)}</span><br><span style="color:#6B6478">${esc(w.text)}</span>`)).join("")}</ul>` : ""}
+    <p><a href="${site}/admin/#customers" style="display:inline-block;background:#5B21B6;color:#fff;padding:12px 22px;border-radius:99px;text-decoration:none">فتح لوحة التحكم</a></p>`);
+  await sendOwnerMail(env, `متابعات اليوم: ${d.follow.length + d.waiting.length} — ويكسا`, html);
+}
+
 export default {
   // "*/15 * * * *" → health check; "17 6 * * SUN" → weekly report (Sunday 09:17 Baghdad)
   async scheduled(event, env, ctx) {
     if (event.cron === "17 6 * * SUN") ctx.waitUntil(runWeeklyReport(env).catch((e) => console.error("weekly", e)));
-    else if (event.cron === "23 3 * * *") ctx.waitUntil(runBackup(env).catch((e) => console.error("backup", e)));
+    else if (event.cron === "23 3 * * *") {
+      ctx.waitUntil(runBackup(env).catch((e) => console.error("backup", e)));
+      ctx.waitUntil(runReminders(env).catch((e) => console.error("reminders", e))); // 06:23 Baghdad
+    }
     else ctx.waitUntil(runMonitor(env).catch((e) => console.error("monitor", e)));
   },
   async fetch(request, env, ctx) {
@@ -1759,6 +1848,13 @@ export default {
         case "POST /api/chat/start": return await handleChat(request, env, ctx, "start");
         case "POST /api/chat/send": return await handleChat(request, env, ctx, "send");
         case "POST /api/chat/poll": return await handleChat(request, env, ctx, "poll");
+        case "POST /api/chat/rate": return await handleChatRate(request, env);
+        case "GET /unsubscribe":
+        case "POST /unsubscribe":
+          return await handleUnsubscribe(request, env, url);
+        case "GET /api/admin/campaign":
+        case "POST /api/admin/campaign":
+          return await handleAdminCampaign(request, env);
         case "GET /api/admin/push":
         case "POST /api/admin/push":
         case "DELETE /api/admin/push":

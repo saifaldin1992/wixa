@@ -1,5 +1,6 @@
 /* Contact form and job applications: lazy bot protection (Turnstile), open + prefill, submit */
 import { $, PREVIEW, UI, esc, state, lang, L } from "./core.js";
+import { visitSource } from "./source.js";
 
 // ---------- Turnstile (bot protection), loaded lazily; one widget per form ----------
 const widgets = {};
@@ -55,7 +56,7 @@ async function send(form, statusEl, sel, body, okText) {
   btn.disabled = true;
   statusEl.className = "form__status"; statusEl.textContent = ui.sending;
   try {
-    const res = await fetch("/api/contact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...body, lang, website: form.elements.website.value, turnstile: turnstileToken(sel) }) });
+    const res = await fetch("/api/contact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...body, lang, source: visitSource(), website: form.elements.website.value, turnstile: turnstileToken(sel) }) });
     if (!res.ok) throw new Error(res.status);
     form.reset(); statusEl.className = "form__status ok"; statusEl.textContent = okText;
     dispatchEvent(new Event("wixa:lead")); // counted by any analytics switched on in the dashboard

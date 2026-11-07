@@ -52,6 +52,7 @@ export async function viewIntegrations(view) {
       <div class="stack">
         ${sw("weeklyOn", cfg.reports?.weekly !== false, "تقرير أسبوعي كل أحد صباحاً: الزوار والرسائل وطلبات التوظيف وأكثر خدمة طُلبت")}
         ${sw("monitorOn", cfg.reports?.monitor !== false, "مراقبة الموقع كل ١٥ دقيقة: بريد فوري إذا توقفت قاعدة البيانات أو الموقع، وآخر عند العودة")}
+        ${sw("remindOn", cfg.reports?.reminders !== false, "تذكير صباحي: الزبائن الذين حان موعد متابعتهم، والمحادثات التي تنتظر ردك منذ أكثر من يوم")}
         <div class="row-btns">${save()}<button class="b" data-test="weekly">${I.mail}أرسل لي التقرير الآن</button></div>
       </div></div>
 
@@ -102,7 +103,7 @@ export async function viewIntegrations(view) {
   const bodyFor = {
     cAlerts: () => ({ alerts: { on: chk("alertsOn"), from_name: val("fromName") } }),
     cReply: () => ({ autoreply: { on: chk("replyOn"), subject_ar: val("subAr"), subject_en: val("subEn"), body_ar: val("bodyAr"), body_en: val("bodyEn") } }),
-    cReports: () => ({ reports: { weekly: chk("weeklyOn"), monitor: chk("monitorOn") } }),
+    cReports: () => ({ reports: { weekly: chk("weeklyOn"), monitor: chk("monitorOn"), reminders: chk("remindOn") } }),
     cBackup: () => ({ backup: { freq: $("#bkFreq .on")?.dataset.v || "weekly" } }),
     cTpl: () => ({ templates: $$("#tplList .tpl").map((r) => ({ title: $(".tpl__t", r).value, body: $(".tpl__b", r).value })) }),
     cTags: () => ({ tags: Object.fromEntries($$("[data-tag]").map((i) => [i.dataset.tag, i.value.trim()])) }),

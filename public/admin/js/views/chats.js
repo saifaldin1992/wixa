@@ -2,6 +2,7 @@
    New messages arrive instantly through chat-live.js; replies are written straight to the database. */
 import { $, $$, I, adminApi, closeModal, confirmBox, esc, openModal, role, sb, settings, toast } from "../core.js";
 import { saveSettings } from "../settings.js";
+import { openQuote } from "../quote.js";
 import { disablePush, enablePush, isIOS, onChat, pushState, pushSupported, refreshChatCount } from "../chat-live.js";
 
 let filter = "open", current = null, unsub = null, me = null, typingTimer = 0;
@@ -43,7 +44,7 @@ export async function viewChats(view) {
     const rows = list.filter((c) => filter === "all" || c.status === filter);
     items.innerHTML = rows.length ? rows.map((c) => `<button type="button" class="chat__item ${current === c.id ? "on" : ""}" data-id="${c.id}">
         <span class="chat__av">${esc((c.name || "?").trim()[0] || "?")}</span>
-        <span class="chat__meta"><b>${esc(c.name)}</b>${c.topic ? `<em class="chat__topic">${esc(c.topic)}</em>` : ""}<small>${c.last_from === "staff" ? "أنت: " : ""}${esc(c.last_text)}</small></span>
+        <span class="chat__meta"><b>${esc(c.name)}${c.rating ? ` <span class="stars">${"★".repeat(c.rating)}</span>` : ""}</b>${c.topic ? `<em class="chat__topic">${esc(c.topic)}</em>` : ""}<small>${c.last_from === "staff" ? "أنت: " : ""}${esc(c.last_text)}</small></span>
         <span class="chat__side"><small>${when(c.last_at)}</small>${c.unread ? `<i class="count">${c.unread}</i>` : ""}</span></button>`).join("")
       : `<p class="muted chat__none">${filter === "open" ? "لا توجد محادثات مفتوحة." : "لا توجد محادثات."}</p>`;
     $$(".chat__item", items).forEach((b) => (b.onclick = () => openChat(b.dataset.id)));
@@ -65,8 +66,8 @@ export async function viewChats(view) {
     const wa = waNum(c.phone);
     thread.innerHTML = `<header class="chat__head">
         <button class="b b--icon b--ghost chat__back" type="button" title="رجوع">${BACK}</button>
-        <div class="chat__who"><b>${esc(c.name)}</b>${c.topic ? `<em class="chat__topic">${esc(c.topic)}</em>` : ""}<small class="muted"><a href="tel:${esc(c.phone)}" dir="ltr">${esc(c.phone)}</a>${c.page ? ` · من صفحة <span dir="ltr">${esc(c.page)}</span>` : ""} · بدأت ${when(c.created_at)}</small></div>
-        <div class="chat__acts">${wa ? `<a class="b b--sm" href="https://wa.me/${wa}" target="_blank" rel="noopener">واتساب</a>` : ""}
+        <div class="chat__who"><b>${esc(c.name)}${c.rating ? ` <span class="stars" title="${esc(c.rating_note || "")}">${"★".repeat(c.rating)}</span>` : ""}</b>${c.topic ? `<em class="chat__topic">${esc(c.topic)}</em>` : ""}${c.rating_note ? `<small class="muted">«${esc(c.rating_note)}»</small>` : ""}<small class="muted">${c.source ? `جاء من: ${esc(c.source)} · ` : ""}<a href="tel:${esc(c.phone)}" dir="ltr">${esc(c.phone)}</a>${c.page ? ` · من صفحة <span dir="ltr">${esc(c.page)}</span>` : ""} · بدأت ${when(c.created_at)}</small></div>
+        <div class="chat__acts"><button class="b b--sm" type="button" id="chatQuote">💰 عرض سعر</button>${wa ? `<a class="b b--sm" href="https://wa.me/${wa}" target="_blank" rel="noopener">واتساب</a>` : ""}
           <button class="b b--sm" type="button" id="chatStatus">${c.status === "open" ? "إغلاق المحادثة" : "إعادة فتح"}</button>
           ${role === "owner" ? `<button class="b b--icon b--ghost b--danger" type="button" id="chatDel" title="حذف">${I.trash}</button>` : ""}</div>
       </header>
@@ -74,6 +75,7 @@ export async function viewChats(view) {
       <p class="chat__typing" hidden>${esc(c.name)} يكتب…</p>
       <div class="chat__quick" hidden>${quick().map((q) => `<button type="button">${esc(q)}</button>`).join("")}</div>
       <form class="chat__compose"><button class="b b--icon b--ghost" type="button" id="quickBtn" title="ردود جاهزة">⚡</button><textarea name="body" rows="1" maxlength="2000" placeholder="اكتب ردك…" required></textarea><button class="b b--primary" type="submit">إرسال</button></form>`;
+    $("#chatQuote").onclick = () => openQuote({ name: c.name, phone: c.phone, chatId: c.status === "open" ? c.id : null });
     $(".chat__back", thread).onclick = () => { current = null; $(".chat", view).classList.remove("chat--thread"); thread.innerHTML = ""; paintList(); };
     $("#chatStatus").onclick = async () => {
       const status = c.status === "open" ? "closed" : "open";
@@ -168,9 +170,20 @@ export async function viewChats(view) {
       <label class="f"><span>رسالة الترحيب (عربي)</span><textarea id="cGa" rows="2">${esc(c.greeting_ar || "")}</textarea></label>
       <label class="f"><span>رسالة الترحيب (English)</span><textarea id="cGe" rows="2" dir="ltr">${esc(c.greeting_en || "")}</textarea></label>
       <label class="f"><span>الردود الجاهزة (كل رد في سطر) — تظهر عند زر ⚡ أثناء الرد</span><textarea id="cQ" rows="6">${esc(quick().join("\n"))}</textarea></label>
+      <fieldset class="fs"><legend>أوقات الدوام (بتوقيت بغداد)</legend>
+        <label class="switch"><input type="checkbox" id="hOn" ${c.hours?.on ? "checked" : ""}><i></i>خارج الدوام يظهر للزبون «نعود غداً الساعة …» بدل «غير متصلين»</label>
+        <div class="days">${["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"].map((d, i) => `<label class="chk"><input type="checkbox" value="${i}" ${(c.hours?.days || [0, 1, 2, 3, 4]).map(Number).includes(i) ? "checked" : ""}> ${d}</label>`).join("")}</div>
+        <div class="grid2"><label class="f"><span>من</span><input type="time" id="hFrom" value="${esc(c.hours?.from || "09:00")}" dir="ltr"></label><label class="f"><span>إلى</span><input type="time" id="hTo" value="${esc(c.hours?.to || "17:00")}" dir="ltr"></label></div></fieldset>
+      <fieldset class="fs"><legend>رسالة الترحيب الذكية</legend>
+        <label class="switch"><input type="checkbox" id="nOn" ${c.nudge?.on !== false ? "checked" : ""}><i></i>تظهر فقاعة صغيرة بجانب زر الدردشة بعد مدة من التصفح (مرة واحدة لكل زيارة)</label>
+        <label class="f"><span>بعد كم ثانية</span><input type="number" id="nDelay" min="5" max="300" value="${Number(c.nudge?.delay) || 25}" dir="ltr"></label>
+        <label class="f"><span>النص العام (عربي) — في قسم الخدمات والمشاريع والحاسبة يظهر نص مناسب للقسم تلقائياً</span><input id="nAr" value="${esc(c.nudge?.text_ar || "")}" placeholder="عندك فكرة مشروع؟ اسألنا 👋"></label>
+        <label class="f"><span>النص العام (English)</span><input id="nEn" dir="ltr" value="${esc(c.nudge?.text_en || "")}" placeholder="Have a project in mind? Ask us 👋"></label></fieldset>
       <p class="muted" style="margin:0;font-size:13px">يظهر للزائر «متصلون الآن» عندما يكون أحد الفريق فاتحاً لوحة التحكم، وإلا يظهر أنكم غير متصلين وسترد لاحقاً. تصلك رسالة على البريد عند بدء محادثة جديدة، وعند كل رسالة جديدة إذا لم يكن أحد متصلاً.</p></div>`, foot, true);
     $("[data-go]", foot).onclick = async () => {
-      settings.chat = { ...c, on: $("#cOn").checked, greeting_ar: $("#cGa").value.trim(), greeting_en: $("#cGe").value.trim(), quick: $("#cQ").value.split("\n").map((x) => x.trim()).filter(Boolean).slice(0, 30) };
+      settings.chat = { ...c, on: $("#cOn").checked, greeting_ar: $("#cGa").value.trim(), greeting_en: $("#cGe").value.trim(), quick: $("#cQ").value.split("\n").map((x) => x.trim()).filter(Boolean).slice(0, 30),
+        hours: { on: $("#hOn").checked, days: $$(".days input:checked", $("#modalBody")).map((x) => +x.value), from: $("#hFrom").value || "09:00", to: $("#hTo").value || "17:00" },
+        nudge: { on: $("#nOn").checked, delay: Math.min(300, Math.max(5, Number($("#nDelay").value) || 25)), text_ar: $("#nAr").value.trim(), text_en: $("#nEn").value.trim() } };
       await saveSettings(); closeModal(); viewChats(view);
     };
   };

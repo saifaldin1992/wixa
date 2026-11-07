@@ -29,6 +29,7 @@ export async function viewOverview(view) {
   }
   if (location.hash.slice(1) && location.hash.slice(1) !== "overview") return; // the user moved on
   paintOverview(view, s);
+  if (role !== "editor") todayCard(view).catch(() => {});
   if (role !== "support" && !sessionStorage.getItem("wixa-fixes-checked")) { textFixesCard(view); try { sessionStorage.setItem("wixa-fixes-checked", "1"); } catch {} }
 }
 
@@ -130,4 +131,26 @@ export function speedCard(s, source) {
   }).join("");
   const load = s.load_ms != null ? `<p class="muted" style="margin:14px 0 0">التحميل الكامل للصفحة: ${(s.load_ms / 1000).toFixed(1)} ث · عدد القياسات: ${fmt(s.samples)}</p>` : "";
   return `<div class="card" style="margin-top:16px">${head}<div class="vitals">${tiles}</div>${load}</div>`;
+}
+
+// "Today": who is waiting for a reply and whose follow-up is due (owner and customer service)
+async function todayCard(view) {
+  const today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
+  const [ch, fu, msg] = await Promise.all([
+    sb.from("chats").select("id,name,last_at").eq("status", "open").eq("last_from", "visitor").order("last_at").limit(50),
+    sb.from("customer_notes").select("key,follow_at,stage").lte("follow_at", today).not("stage", "in", "(won,lost)").limit(50),
+    sb.from("contact_messages").select("id", { count: "exact", head: true }).eq("handled", false),
+  ]);
+  const waiting = ch.error ? [] : ch.data || [], due = fu.error ? [] : fu.data || [], fresh = msg.count || 0;
+  const old = document.getElementById("todayCard"); if (old) old.parentNode.removeChild(old);
+  if (!waiting.length && !due.length && !fresh) return;
+  const el = document.createElement("div");
+  el.id = "todayCard"; el.className = "card today";
+  el.innerHTML = `<div class="card__head"><div><h3>اليوم في خدمة الزبائن</h3><p>ما ينتظرك الآن</p></div></div>
+    <div class="today__grid">
+      <a href="#chats" class="today__item ${waiting.length ? "hot" : ""}"><b>${waiting.length}</b><span>محادثة تنتظر ردك</span>${waiting[0] ? `<small>أقدمها: ${esc(waiting[0].name)}</small>` : ""}</a>
+      <a href="#customers" class="today__item ${due.length ? "hot" : ""}"><b>${due.length}</b><span>زبون حان موعد متابعته</span></a>
+      <a href="#messages" class="today__item ${fresh ? "hot" : ""}"><b>${fresh}</b><span>رسالة جديدة لم تُعالج</span></a>
+    </div>`;
+  view.prepend(el);
 }

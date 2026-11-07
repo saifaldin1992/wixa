@@ -15,6 +15,7 @@ export function renderCalc() {
   updateCalc(false);
 }
 let calcShown = [0, 0];
+export let calcTouched = false; // the visitor has used the calculator (for the "send me the estimate" offer)
 function calcRange() {
   const cfg = state.settings.calculator || {};
   const t = (cfg.types || [])[calc.type]; if (!t) return null;
@@ -25,6 +26,7 @@ function calcRange() {
   return [r(min), r(max)];
 }
 function updateCalc(animate = true) {
+  if (animate) calcTouched = true;
   const range = calcRange(), el = $("#calcPrice");
   if (!range) { el.textContent = "—"; return; }
   const cur = (state.settings.calculator || {}).currency || "$";
@@ -76,7 +78,7 @@ export function setupCalc() {
 }
 
 // the chosen project, features and estimate as a ready message
-function estimateText() {
+export function estimateText() {
   {
     const cfg = state.settings.calculator || {}, t = (cfg.types || [])[calc.type], r = calcRange();
     if (!t || !r) return "";

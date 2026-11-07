@@ -3,18 +3,25 @@
    then leaves a name and phone, then talks to a named team member, with "typing…" shown on both sides.
    The conversation's id and secret key live in this browser (localStorage), so the visitor can come back to it. */
 import { $, $$, L, PREVIEW, esc, lang, state } from "./core.js";
+import { visitSource } from "./source.js";
 
 const T = {
   ar: { title: "تحدث مع ويكسا", online: "متصلون الآن — نرد خلال دقائق", away: "غير متصلين الآن — اترك رسالتك وسنرد هنا أو على هاتفك", name: "الاسم", phone: "رقم الهاتف", msg: "رسالتك",
     start: "ابدأ المحادثة", ph: "اكتب رسالة…", send: "إرسال", wa: "أو راسلنا على واتساب", err: "تعذّر الإرسال، حاول مرة أخرى", fill: "أكمل الحقول المطلوبة",
     open: "فتح الدردشة", close: "إغلاق", you: "أنت", team: "فريق ويكسا", busy: "رسائل كثيرة، انتظر قليلاً",
     pick: "بماذا نساعدك؟", svc: "أي خدمة تهمك؟", change: "تغيير", typing: "يكتب…", joined: "انضم إلى المحادثة", closed: "انتهت هذه المحادثة. شكراً لتواصلك معنا.", again: "بدء محادثة جديدة", consent: "أرغب باستلام العروض والأخبار",
+    hoursOut: "نحن خارج أوقات الدوام — نعود", today: "اليوم", tomorrow: "غداً", at: "الساعة",
+    rateQ: "كيف كانت خدمتنا؟", rateNote: "ملاحظة (اختياري)", rateSend: "إرسال التقييم", rateThanks: "شكراً لتقييمك! 💜",
+    nudge: { calculator: "حسبت التكلفة؟ اسألنا عن التفاصيل 👋", services: "تبحث عن خدمة معينة؟ اسألنا هنا 👋", projects: "أعجبك مشروع؟ نصنع لك مثله 👋" },
     topics: [["svc", "استفسار عن خدمة"], ["quote", "طلب عرض سعر"], ["project", "متابعة مشروع قائم"], ["meet", "حجز موعد أو اجتماع"], ["other", "سؤال آخر"]],
     hints: { svc: "اكتب سؤالك عن الخدمة…", quote: "صف مشروعك باختصار: ماذا تريد أن تبني؟", project: "اذكر اسم المشروع وما تريد متابعته…", meet: "متى يناسبك الاجتماع؟", other: "اكتب سؤالك…" } },
   en: { title: "Chat with WIXA", online: "Online now — we reply in minutes", away: "We're away — leave a message and we'll reply here or by phone", name: "Name", phone: "Phone number", msg: "Your message",
     start: "Start chat", ph: "Type a message…", send: "Send", wa: "Or message us on WhatsApp", err: "Couldn't send, please try again", fill: "Please fill the required fields",
     open: "Open chat", close: "Close", you: "You", team: "WIXA team", busy: "Too many messages, please wait",
     pick: "How can we help?", svc: "Which service?", change: "Change", typing: "is typing…", joined: "joined the chat", closed: "This chat has ended. Thanks for reaching out.", again: "Start a new chat", consent: "Send me offers and news",
+    hoursOut: "We're outside working hours — back", today: "today", tomorrow: "tomorrow", at: "at",
+    rateQ: "How was our service?", rateNote: "A note (optional)", rateSend: "Send rating", rateThanks: "Thanks for your rating! 💜",
+    nudge: { calculator: "Worked out a cost? Ask us about the details 👋", services: "Looking for a specific service? Ask us here 👋", projects: "Like a project? We can build yours 👋" },
     topics: [["svc", "Ask about a service"], ["quote", "Request a quote"], ["project", "Follow up on a project"], ["meet", "Book a meeting"], ["other", "Something else"]],
     hints: { svc: "Type your question about the service…", quote: "Briefly describe your project…", project: "Which project, and what would you like to follow up?", meet: "When suits you?", other: "Type your question…" } },
 };
@@ -66,11 +73,27 @@ export function setupChat() {
   const btn = $(".chatw__btn", root), box = $(".chatw__box", root), body = $(".chatw__body", root), foot = $(".chatw__foot", root);
 
   const setUnread = (n) => { const b = $(".chatw__badge", root); b.hidden = !n || isOpen; b.textContent = n > 9 ? "9+" : n; };
+  // outside the working hours set in the dashboard: say when we are back (Baghdad time)
+  const hoursNote = () => {
+    const h = cfg.hours;
+    if (!h?.on) return "";
+    const now = new Date(Date.now() + 3 * 3600e3), days = (h.days || [0, 1, 2, 3, 4]).map(Number);
+    const hm = (v, d) => { const [a, b] = String(v || d).split(":").map(Number); return a * 60 + (b || 0); };
+    const from = hm(h.from, "09:00"), to = hm(h.to, "17:00"), mins = now.getUTCHours() * 60 + now.getUTCMinutes();
+    if (days.includes(now.getUTCDay()) && mins >= from && mins < to) return "";
+    for (let i = 0; i < 8; i++) {
+      const d = new Date(now.getTime() + i * 864e5);
+      if (!days.includes(d.getUTCDay()) || (i === 0 && mins >= from)) continue;
+      const when = i === 0 ? t("today") : i === 1 ? t("tomorrow") : d.toLocaleDateString(lang === "ar" ? "ar-IQ" : "en-GB", { weekday: "long", timeZone: "UTC" });
+      return `${t("hoursOut")} ${when} ${t("at")} ${h.from || "09:00"}`;
+    }
+    return "";
+  };
   const head = () => {
     btn.setAttribute("aria-label", t("open")); $(".chatw__x", root).setAttribute("aria-label", t("close"));
     $(".chatw__title", root).textContent = t("title");
     $(".chatw__status", root).classList.toggle("on", online);
-    $(".chatw__status span", root).textContent = online ? t("online") : t("away");
+    $(".chatw__status span", root).textContent = online ? t("online") : hoursNote() || t("away");
   };
   const bubble = (cls, html) => `<div class="chatw__msg chatw__msg--${cls}">${html}</div>`;
   const greeting = () => bubble("team", `<p>${esc(cfg[`greeting_${lang}`] || cfg.greeting_ar || "")}</p>`);
@@ -126,8 +149,23 @@ export function setupChat() {
       $(".chatw__change", foot).onclick = () => { pick = { topic: "", service: "" }; paint(); footer(); };
     } else if (status === "closed") {
       foot.hidden = false;
-      foot.innerHTML = `<button class="chatw__go" type="button">${t("again")}</button>`;
-      $("button", foot).onclick = () => reset();
+      if (!conv.rated) {
+        foot.innerHTML = `<div class="chatw__rate"><p>${t("rateQ")}</p><div class="chatw__stars">${[1, 2, 3, 4, 5].map((n) => `<button type="button" data-r="${n}" aria-label="${n}">★</button>`).join("")}</div>
+          <textarea name="note" rows="2" maxlength="500" placeholder="${t("rateNote")}" hidden></textarea><button class="chatw__go" type="button" data-send hidden>${t("rateSend")}</button></div>
+          <button class="chatw__link" type="button" data-new>${t("again")}</button>`;
+        let r = 0;
+        $$("[data-r]", foot).forEach((b) => (b.onclick = () => {
+          r = +b.dataset.r;
+          $$("[data-r]", foot).forEach((x) => x.classList.toggle("on", +x.dataset.r <= r));
+          $("textarea", foot).hidden = $("[data-send]", foot).hidden = false;
+        }));
+        $("[data-send]", foot).onclick = async (e) => {
+          e.target.disabled = true;
+          try { await api("rate", { ...conv, rating: r, note: $("textarea", foot).value }); conv.rated = r; save(); footer(); }
+          catch { e.target.disabled = false; }
+        };
+      } else foot.innerHTML = `<p class="chatw__thanks">${t("rateThanks")}</p><button class="chatw__go" type="button" data-new>${t("again")}</button>`;
+      $("[data-new]", foot).onclick = () => reset();
     } else {
       foot.hidden = false;
       foot.innerHTML = `<form class="chatw__send"><textarea name="body" rows="1" maxlength="2000" placeholder="${t("ph")}" aria-label="${t("msg")}"></textarea>
@@ -151,7 +189,7 @@ export function setupChat() {
     if (bad) { showErr(t("fill")); return; }
     if (busy) return; busy = true; f.querySelector(".chatw__go").disabled = true; showErr("");
     try {
-      const d = await api("start", { name: f.name.value, phone: f.phone.value, body: f.body.value, topic: topicLabel(), marketing: f.marketing.checked, page: location.pathname });
+      const d = await api("start", { name: f.name.value, phone: f.phone.value, body: f.body.value, topic: topicLabel(), marketing: f.marketing.checked, source: visitSource(), page: location.pathname });
       try { localStorage.setItem("wixa-chat-me", JSON.stringify({ name: f.name.value.trim(), phone: f.phone.value.trim(), marketing: f.marketing.checked })); } catch {}
       conv = { id: d.id, key: d.key }; online = d.online; save(); msgs = []; after = 0; status = "open";
       footer(); await poll(); schedule();
@@ -198,6 +236,7 @@ export function setupChat() {
   }
   async function toggle(open) {
     isOpen = open;
+    if (open) { const n = $(".chatw__nudge", root); if (n) n.parentNode.removeChild(n); }
     box.hidden = !open; root.classList.toggle("open", open); btn.setAttribute("aria-expanded", open);
     document.documentElement.classList.toggle("chat-open", open);
     if (!open) { schedule(); return; }
@@ -225,6 +264,25 @@ export function setupChat() {
     b.onclick = () => openChat("", "");
     cta.after(b);
   }
+  // a friendly greeting next to the button after a while, matching the part of the page being read (once per visit)
+  const nd = cfg.nudge || {};
+  let seenNudge = false;
+  try { seenNudge = !!sessionStorage.getItem("wixa-nudge"); } catch {}
+  const dropNudge = () => { const n = $(".chatw__nudge", root); if (n) n.parentNode.removeChild(n); };
+  if (nd.on !== false && !conv && !seenNudge) setTimeout(() => {
+    if (conv || isOpen || $(".chatw__nudge")) return;
+    const mid = innerHeight / 2;
+    const sec = [...document.querySelectorAll("[data-section]")].find((el) => { const r = el.getBoundingClientRect(); return r.top <= mid && r.bottom >= mid; })?.dataset.section;
+    const text = t("nudge")[sec] || (nd[`text_${lang}`] || nd.text_ar || (lang === "ar" ? "عندك فكرة مشروع؟ اسألنا 👋" : "Have a project in mind? Ask us 👋"));
+    const b = document.createElement("div");
+    b.className = "chatw__nudge";
+    b.innerHTML = `<button type="button" class="chatw__nudge-t">${esc(text)}</button><button type="button" class="chatw__nudge-x" aria-label="${t("close")}">✕</button>`;
+    root.appendChild(b);
+    try { sessionStorage.setItem("wixa-nudge", "1"); } catch {}
+    $(".chatw__nudge-t", b).onclick = () => { dropNudge(); toggle(true); };
+    $(".chatw__nudge-x", b).onclick = dropNudge;
+    setTimeout(dropNudge, 20000);
+  }, Math.max(5, Number(nd.delay) || 25) * 1000);
   head();
   if (conv) { poll(); schedule(); }
 }

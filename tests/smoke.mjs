@@ -61,6 +61,9 @@ try {
   check((await chatPost("start", { name: "", phone: "", body: "" })).status === 422, "chat: a conversation needs a name, phone and message");
   check((await chatPost("poll", { id: "x", key: "y" })).status === 422, "chat: a conversation can only be read with its key");
   check((await fetch(`${BASE}/api/admin/push`)).status === 401, "chat notifications require sign-in");
+  check((await fetch(`${BASE}/api/admin/campaign`)).status === 401, "email campaigns require sign-in");
+  check((await chatPost("rate", { id: "x", key: "y", rating: 9 })).status === 422, "chat: a rating needs a valid conversation");
+  check((await fetch(`${BASE}/unsubscribe?e=a@b.co&s=forged`)).status === 400, "unsubscribe links cannot be forged");
   check((await fetch(`${BASE}/api/client-error`, { method: "POST", body: JSON.stringify({ msg: "test" }) })).status === 204, "browser errors are accepted");
   check((await fetch(`${BASE}/blog`)).status === 200, "articles page responds");
   check((await fetch(`${BASE}/blog/no-such-article`)).status === 404, "unknown articles return 404");
@@ -135,7 +138,7 @@ try {
     p.on("pageerror", (e) => errors.push(e.message));
     await p.goto(`${BASE}/admin/`, { waitUntil: "load" });
     await p.waitForTimeout(1200);
-    for (const v of ["overview", "appearance", "brand", "content", "projects", "services", "partners", "testimonials", "messages", "chats", "customers", "posts", "seo", "integrations", "diagnose", "devguide", "team", "account"]) {
+    for (const v of ["overview", "appearance", "brand", "content", "projects", "services", "partners", "testimonials", "messages", "chats", "customers", "sales", "campaigns", "posts", "seo", "integrations", "diagnose", "devguide", "team", "account"]) {
       await p.evaluate((h) => (location.hash = h), v);
       await p.waitForTimeout(600);
       const ok = await p.evaluate(() => document.querySelector("#view")?.children.length > 0);

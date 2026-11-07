@@ -53,7 +53,11 @@
     // appointment booking: off until switched on in the dashboard (المحتوى ← المواعيد); days 0 = Sunday … 6 = Saturday, Baghdad time
     booking: { on: false, days: [0, 1, 2, 3, 4], from: "10:00", to: "16:00", slot: 30, days_ahead: 14 },
     // live chat with visitors: off until switched on in the dashboard (المحادثات)
-    chat: { on: false, greeting_ar: "أهلاً بك 👋 اكتب سؤالك وسنرد عليك هنا مباشرة.", greeting_en: "Hi 👋 Send us your question and we'll reply right here." },
+    chat: { on: false, greeting_ar: "أهلاً بك 👋 اكتب سؤالك وسنرد عليك هنا مباشرة.", greeting_en: "Hi 👋 Send us your question and we'll reply right here.",
+      hours: { on: false, days: [0, 1, 2, 3, 4], from: "09:00", to: "17:00" }, nudge: { on: true, delay: 25, text_ar: "", text_en: "" } },
+    // sales: a promotion bar at the top, and the "send me the estimate on WhatsApp" offer after using the calculator
+    promo: { on: false, text_ar: "", text_en: "", link: "", until: "" },
+    exit_offer: { on: true },
     // Cost estimator. Prices are in USD and are only indicative ranges — review them from the dashboard.
     calculator: {
       currency: "$",

@@ -11,6 +11,9 @@ import { setupProjectModal } from "./site/projects.js";
 import { setupBooking, setupTracking } from "./site/extras.js";
 import { setupProgress, setupCursor, setupMotion, pauseOffscreen } from "./site/effects.js";
 import { setupChat } from "./site/chat.js";
+import { visitSource } from "./site/source.js";
+import { setupPromo, setupExitOffer } from "./site/promo.js";
+visitSource(); // remember where this visit came from (first visit wins)
 const { DEFAULTS, merge, applyTheme } = window.WIXA;
 
 // script errors in visitors' browsers go to the dashboard's error log (at most 3 per page view)
@@ -52,6 +55,7 @@ if (PREVIEW) addEventListener("message", (e) => {
   setupProgress();
   setupCursor();
   try { setupChat(); } catch (e) { reportError(`chat: ${e.message}`, "chat.js", 0); } // the chat can never stop the site from opening
+  try { setupPromo(); setupExitOffer(); } catch (e) { reportError(`promo: ${e.message}`, "promo.js", 0); }
   // reveal right away (the content is already in the page); scroll effects start once everything has loaded
   $(".loader").classList.add("done");
   document.body.classList.remove("is-loading");

@@ -3,6 +3,8 @@ import { $, $$, DEFAULTS, ROLE_AR, closeModal, confirmBox, esc, merge, role, sav
 import { viewTeam } from "./views/team.js";
 import { viewChats } from "./views/chats.js";
 import { viewCustomers } from "./views/customers.js";
+import { viewSales } from "./views/sales.js";
+import { viewCampaigns } from "./views/campaigns.js";
 import { isDirty } from "./settings.js";
 import { viewAccount } from "./views/account.js";
 import { viewAppearance } from "./views/appearance.js";
@@ -33,6 +35,8 @@ export const VIEWS = {
   diagnose: { title: "الفحص والتشخيص", sub: "فحص كل أجزاء الموقع، مكان أي عطل وطريقة حله، وسجل الأعطال", render: viewDiagnose },
   devguide: { title: "دليل المطوّر", sub: "كيف بُني المشروع وأين يوجد كل جزء — للمطورين", render: viewDevGuide },
   messages: { title: "الرسائل", sub: "رسائل نموذج التواصل", render: viewMessages },
+  sales: { title: "لوحة المبيعات", sub: "من تواصل، ومن اشترى، ومن أين جاؤوا، وكيف نخدمهم", render: viewSales },
+  campaigns: { title: "العروض والحملات", sub: "شريط العروض، وعرض الحاسبة، والحملات البريدية", render: viewCampaigns },
   customers: { title: "الزبائن", sub: "كل من تواصل معك من الموقع — للمتابعة والعروض", render: viewCustomers },
   chats: { title: "المحادثات", sub: "دردشة مباشرة مع زوار الموقع", render: viewChats },
   team: { title: "الفريق والصلاحيات", sub: "من يدخل إلى لوحة التحكم وماذا يستطيع — بالدعوة فقط", render: viewTeam },

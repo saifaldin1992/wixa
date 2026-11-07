@@ -1187,3 +1187,44 @@ html.has-chat .totop { bottom: 88px; }
 .consent, .chatw__consent { display: flex; align-items: flex-start; gap: 10px; font-size: .88rem; color: var(--muted); line-height: 1.7; cursor: pointer; }
 .consent input, .chatw__consent input { width: 20px; height: 20px; margin-top: 3px; accent-color: var(--primary); flex-shrink: 0; }
 .chatw__consent { font-size: .8rem; gap: 8px; } .chatw__consent input { width: 18px; height: 18px; margin-top: 2px; }
+
+/* case study inside the project window */
+.pcase { display: grid; gap: 10px; margin-bottom: 18px; }
+.pcase div { padding: 14px 16px; border-radius: 14px; background: color-mix(in srgb, var(--primary) 6%, transparent); border: 1px solid var(--line); }
+.pcase h4 { margin: 0 0 4px; color: var(--primary); font-size: .95rem; }
+[data-theme="dark"] .pcase h4 { color: var(--accent, #C4B5FD); }
+.pcase p { margin: 0; line-height: 1.8; }
+/* promotion bar (top of the page) */
+.promo { position: fixed; top: 0; left: 0; right: 0; z-index: 70; min-height: 40px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 6px 48px; background: linear-gradient(90deg, var(--primary), #7C3AED); color: #fff; font-size: .9rem; text-align: center; }
+.promo a { color: #fff; text-decoration: none; } .promo a b { text-decoration: underline; white-space: nowrap; }
+.promo button { position: absolute; inset-inline-end: 8px; width: 36px; height: 36px; border: 0; border-radius: 50%; background: rgba(255,255,255,.16); color: #fff; cursor: pointer; }
+html.has-promo .header { top: 52px; }
+html.has-promo .progress { top: 40px; }
+@media (max-width: 760px) { .promo { font-size: .82rem; padding: 6px 44px 6px 12px; } html[dir="rtl"] .promo { padding: 6px 12px 6px 44px; } }
+/* "send me the estimate" offer */
+.exitm { position: fixed; inset: 0; z-index: 130; display: grid; place-items: center; padding: 16px; }
+.exitm__scrim { position: absolute; inset: 0; background: rgba(15, 10, 25, .5); }
+.exitm__box { position: relative; width: min(420px, 100%); background: var(--surface); color: var(--text); border-radius: 22px; padding: 26px 22px 20px; display: grid; gap: 10px; box-shadow: 0 30px 80px -20px rgba(0,0,0,.5); }
+.exitm__box h3 { margin: 0; font-size: 1.2rem; padding-inline-end: 36px; }
+.exitm__box p { margin: 0; color: var(--muted); line-height: 1.8; font-size: .92rem; }
+.exitm__box label { display: grid; gap: 4px; font-size: .85rem; color: var(--muted); }
+.exitm__box em { color: #E11D48; font-style: normal; }
+.exitm__box input { height: 46px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--bg); color: var(--text); padding: 0 12px; font: inherit; font-size: 16px; }
+.exitm__box input.bad { border-color: #E11D48; }
+.exitm__x { position: absolute; top: 14px; inset-inline-end: 14px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--bg); color: var(--text); cursor: pointer; }
+.exitm__msg { color: #E11D48 !important; font-size: .85rem !important; }
+
+/* chat: rating, greeting bubble */
+.chatw__rate { display: grid; gap: 8px; text-align: center; } .chatw__rate p { margin: 0; font-weight: 700; }
+.chatw__stars { display: flex; justify-content: center; gap: 4px; direction: ltr; }
+.chatw__stars button { width: 44px; height: 44px; border: 0; background: none; font-size: 30px; color: color-mix(in srgb, var(--muted) 45%, transparent); cursor: pointer; transition: transform .2s, color .2s; }
+.chatw__stars button.on { color: #F59E0B; } .chatw__stars button:hover { transform: scale(1.12); }
+.chatw__rate textarea { width: 100%; font: inherit; font-size: 16px; border: 1.5px solid var(--line); border-radius: 12px; padding: 8px 12px; background: var(--bg); color: var(--text); resize: none; }
+.chatw__rate textarea[hidden], .chatw__rate [hidden] { display: none; }
+.chatw__link { margin-top: 6px; border: 0; background: none; color: var(--primary); font: inherit; font-size: .85rem; text-decoration: underline; cursor: pointer; width: 100%; padding: 8px; }
+.chatw__thanks { text-align: center; margin: 0 0 8px; font-weight: 700; }
+.chatw__nudge { position: fixed; z-index: 58; bottom: 86px; inset-inline-end: 20px; max-width: min(280px, calc(100vw - 40px)); display: flex; align-items: flex-start; gap: 4px; padding: 6px 6px 6px 4px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 18px 40px -16px rgba(0,0,0,.35); animation: nudgeIn .5s ease-out both; }
+.chatw__nudge-t { flex: 1; border: 0; background: none; color: var(--text); font: inherit; font-size: .9rem; line-height: 1.6; text-align: start; padding: 8px 10px; cursor: pointer; }
+.chatw__nudge-x { width: 32px; height: 32px; flex-shrink: 0; border: 0; border-radius: 50%; background: var(--bg); color: var(--muted); cursor: pointer; }
+@keyframes nudgeIn { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: none; } }
+@media (max-width: 760px) { .chatw__nudge, html[dir="rtl"] .chatw__nudge { inset-inline-end: auto; right: auto; left: 14px; bottom: calc(76px + env(safe-area-inset-bottom)); } }

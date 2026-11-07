@@ -25,6 +25,9 @@ function openProject(i) {
     if (bullets.length) html += `<ul>${bullets.map((l) => `<li>${esc(l.replace(/^[•\-–]\s*/, ""))}</li>`).join("")}</ul>`;
     return html;
   }).join("");
+  // case study: the challenge → our solution → the result
+  const cs = [["problem", lang === "ar" ? "التحدي" : "The challenge"], ["solution", lang === "ar" ? "الحل" : "Our solution"], ["result", lang === "ar" ? "النتيجة" : "The result"]].filter(([f]) => L(p, f).trim());
+  if (cs.length) $("#pmText").insertAdjacentHTML("afterbegin", `<div class="pcase">${cs.map(([f, h]) => `<div><h4>${h}</h4><p>${esc(L(p, f)).replace(/\n/g, "<br>")}</p></div>`).join("")}</div>`);
   const stats = Array.isArray(p.stats) ? p.stats : [];
   $("#pmStats").innerHTML = stats.map((st) => `<div><b>${esc(st.value)}</b><span>${esc(st[`label_${lang}`] || st.label_ar || "")}</span></div>`).join("");
   $("#pmStats").hidden = !stats.length;
