@@ -145,6 +145,16 @@ node scripts/build.mjs                # بناء الواجهة يدوياً
 
 ---
 
+### إعداد بيئة جديدة (مشروع Supabase فارغ)
+1. أنشئ المشروع في **Central EU (Frankfurt)**.
+2. افتح `supabase/schema.sql` في GitHub ← زر **Copy raw file** ← الصقه كاملاً في SQL Editor ← Run.
+3. **Authentication ← Users ← Add user** (Auto Confirm): أول حساب يصبح المالك تلقائياً.
+4. **Authentication ← URL Configuration**: Site URL و Redirect URLs (`https://wixa.dev/**` و `https://staging.wixa.dev/**`).
+5. **Authentication ← Emails ← SMTP**: `smtp.resend.com` · 465 · `resend` · مفتاح Resend جديد (Sending access).
+6. مفتاح الكتابة: اختر نصاً عشوائياً طويلاً، ضعه في الـ Worker باسم `WRITE_TOKEN`، وشغّل:
+   `insert into private.config (key, value) values ('write_token_sha256', encode(extensions.digest('النص نفسه', 'sha256'), 'hex'));`
+7. حدّث `SUPABASE_URL` و`SUPABASE_PUBLISHABLE_KEY` للبيئة في `wrangler.toml`.
+
 ## 7. الخادم (`src/index.js`)
 
 ### الصفحات
