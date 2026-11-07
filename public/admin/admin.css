@@ -684,3 +684,14 @@ html[dir="rtl"] .chat__back svg { transform: none; }
 .subnav__sep { flex: none; width: 1px; height: 22px; background: var(--line); margin: 0 6px; }
 .top__actions:empty { display: none; }
 @media (max-width: 960px) { .top__actions { flex: 1 1 100%; justify-content: flex-start; } }
+
+/* brand guide: interface components */
+.bg-subnav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 10px; overflow-x: auto; }
+.bg-subnav span { padding: 10px 12px; font-size: 13px; font-weight: 600; color: var(--muted); border-bottom: 3px solid transparent; white-space: nowrap; }
+.bg-subnav i { font-style: normal; margin-inline-start: 6px; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--line); font-size: 11px; }
+.bg-subnav .on i { border-color: transparent; }
+.bg-dots { display: flex; gap: 8px; margin: 6px 0 10px; } .bg-dots i { width: 8px; height: 8px; border-radius: 99px; background: var(--line-2); } .bg-dots i.on { width: 24px; }
+.bg-gifts { display: flex; gap: 10px; margin: 4px 0 10px; }
+.bg-gifts span { width: 130px; height: 96px; border-radius: 16px; display: grid; place-content: center; justify-items: center; gap: 4px; font-size: 30px; color: #fff; text-align: center; }
+.bg-gifts span small { font-size: 11px; } .bg-gifts span:last-child { background: #fff; border: 1.5px solid var(--line); font-size: 14px; }
+.bg-gifts em { font-style: normal; color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 700; }
