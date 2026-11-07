@@ -1048,3 +1048,21 @@ body { font-size: var(--fs-body); }
 .calc__price small { font-size: var(--fs-lead); }
 @media (max-width: 1100px) and (min-width: 901px) { .header__nav a { font-size: .875rem; } }
 .calc__sticky b { font-size: 1rem; }
+
+/* service cards: "learn more" and "ask on WhatsApp" side by side under the text, on every screen size */
+.svc__links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; margin-top: auto; padding-top: 12px; grid-column: 1 / -1; }
+.svc .svc__more, .svc .svc__wa { margin: 0; padding: 0; min-height: var(--tap); grid-column: auto; }
+@media (min-width: 641px) and (max-width: 760px) { .svc__links { grid-column: 2; } }
+
+/* partners: logos fill their card (they were small with a wide margin) */
+.partner { padding: 8% 10%; aspect-ratio: 3 / 2; }
+.partner img { max-width: 78%; max-height: 72%; width: auto; height: auto; opacity: .85; }
+.partners__grid:not(.is-marquee) .partner img { max-height: 72%; }
+
+/* calculator actions: a comfortable width instead of stretching across a wide panel */
+.calc__btns { max-width: 380px; }
+@media (max-width: 479px) { .calc__btns { max-width: none; } }
+/* partners: every card the same size; the logo fills it (kept whole, never cropped) */
+.partners__grid:not(.is-marquee) .partner, .partner { position: relative; aspect-ratio: 3 / 2; padding: 0; overflow: hidden; }
+.partner img, .partners__grid:not(.is-marquee) .partner img { position: absolute; inset: 0; margin: auto; width: 80%; height: 72%; max-width: none; max-height: none; object-fit: contain; }
+.partner span { padding: 0 10px; }

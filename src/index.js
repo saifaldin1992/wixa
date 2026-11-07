@@ -788,6 +788,13 @@ main{padding:20px 0 60px}h1{font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.3;m
 .more{margin-top:40px;padding-top:24px;border-top:1px solid var(--l)}.more h2{margin-top:0}.more__grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
 .more__grid a{display:block;padding:16px;border-radius:16px;border:1px solid var(--l);background:var(--s);text-decoration:none;color:var(--t)}.more__grid b{display:block}.more__grid span{color:var(--m);font-size:.85rem}
 .btn--wa{background:#25D366}.hp{position:absolute;left:-9999px;opacity:0}
+.btn{min-height:48px;padding:0 22px;font-size:.9375rem;line-height:1.2;box-sizing:border-box}
+h1{font-size:1.75rem}h2{font-size:1.25rem}.lead{font-size:1rem}header .home{font-size:1.0625rem}header .home img{width:34px;height:34px}
+header nav a{min-height:40px;display:inline-flex;align-items:center;padding:0 14px;font-size:.875rem}
+.sub a{font-size:.875rem;min-height:40px;display:inline-flex;align-items:center}
+.more__grid b{font-size:1.0625rem;line-height:1.5}.more__grid span{font-size:.875rem}p,li{font-size:.9375rem}
+@media(min-width:768px){h1{font-size:2.25rem}h2{font-size:1.5rem}.lead{font-size:1.0625rem}p,li{font-size:1rem}}
+@media(min-width:1200px){h1{font-size:2.75rem}.lead{font-size:1.125rem}.btn{min-height:50px;padding:0 26px}}
 .posts{display:grid;gap:14px;margin-top:20px}.post{display:grid;grid-template-columns:160px 1fr;gap:16px;padding:14px;border-radius:18px;border:1px solid var(--l);background:var(--s);text-decoration:none;color:var(--t)}
 .post img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:12px}.post b{display:block;font-size:1.1rem}.post span{font-size:.8rem;color:var(--m)}.post p{margin:6px 0 0;font-size:.92rem}
 @media(max-width:560px){.post{grid-template-columns:1fr}}
