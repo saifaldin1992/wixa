@@ -130,8 +130,8 @@ async function claimInvite() {
 }
 
 export async function enter(u) {
-  // the admin check and the site settings load together
-  let [{ data: isAdmin, error }] = await Promise.all([sb.rpc("is_admin"), loadSettings()]);
+  // the admin check, the role and the site settings load together (one round trip instead of two)
+  let [{ data: isAdmin, error }, roleRes] = await Promise.all([sb.rpc("is_admin"), sb.rpc("admin_role"), loadSettings()]);
   if (!error && !isAdmin) {
     const claim = await claimInvite().catch(() => null);
     if (claim === "ok") ({ data: isAdmin, error } = await sb.rpc("is_admin"));
@@ -150,7 +150,7 @@ export async function enter(u) {
   }
   setUser(u);
   // the role decides which pages show (before the team update is applied, everyone is the owner)
-  const { data: r, error: re } = await sb.rpc("admin_role");
+  const { data: r, error: re } = isAdmin && roleRes && !roleRes.error && roleRes.data ? roleRes : await sb.rpc("admin_role"); // asked again only after an invitation was just accepted
   setRole(re ? "owner" : r);
   if (LINK.invite) history.replaceState(null, "", location.pathname + "#overview");
   $("#auth").hidden = true; $("#app").hidden = false;

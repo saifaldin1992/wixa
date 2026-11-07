@@ -184,7 +184,10 @@ export function renderContentTab() {
     const draw = () => {
       settings.careers ??= { jobs: [] };
       const jobs = settings.careers.jobs || (settings.careers.jobs = []);
-      body.innerHTML = `<p class="muted" style="margin-top:0">الشواغر التي تظهر في قسم «انضم إلى فريقنا». إن لم تضف أي وظيفة يظهر زر «أرسل سيرتك الذاتية» فقط. الطلبات تصلك في صفحة الرسائل ← طلبات التوظيف.</p>
+      body.innerHTML = `<p class="muted" style="margin-top:0">الشواغر التي تظهر في صفحة «الوظائف». الطلبات تصلك في صفحة الرسائل ← طلبات التوظيف.</p>
+        <div class="card" style="padding:14px 16px;margin-bottom:14px;background:var(--brand-50);border-color:transparent"><b style="display:block;margin-bottom:8px">عندما لا توجد وظيفة معروضة</b>
+          <div class="grid2">${input("content.ar.careers_empty", "النص الذي يظهر (عربي)", true)}${input("content.en.careers_empty", "Text shown (English)", true, 'dir="ltr"')}</div>
+          <p class="muted" style="margin:6px 0 0;font-size:13px">يظهر تلقائياً إذا لم تضف وظيفة أو أطفأت «معروضة» في كل الوظائف، ومعه زر «أرسل سيرتك الذاتية».</p></div>
         <div class="stack">${jobs.map((j, i) => `<div class="sec-title">الوظيفة ${i + 1} <span><label class="switch" style="font-size:13px"><input type="checkbox" data-path="careers.jobs.${i}.open" ${j.open !== false ? "checked" : ""}><i></i>معروضة</label> <button class="b b--sm b--ghost b--danger" data-del="${i}">${I.trash}</button></span></div>
           <div class="grid2">${input(`careers.jobs.${i}.title_ar`, "المسمى الوظيفي (عربي)", false, 'placeholder="مثال: مطوّر واجهات أمامية"')}${input(`careers.jobs.${i}.title_en`, "Job title (English)", false, 'dir="ltr" placeholder="e.g. Frontend developer"')}
           ${input(`careers.jobs.${i}.type_ar`, "نوع الدوام (عربي)", false, 'placeholder="دوام كامل / جزئي / عن بُعد"')}${input(`careers.jobs.${i}.type_en`, "Type (English)", false, 'dir="ltr" placeholder="Full-time / Part-time / Remote"')}

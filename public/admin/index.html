@@ -15,7 +15,8 @@
   <link rel="preload" href="/fonts/alexandria/alexandria-arabic-400-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/fonts/alexandria.css">
   <link rel="stylesheet" href="/build/admin.css">
-  <script src="/build/shared.js"></script>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <script src="/build/shared.js" defer></script>
 </head>
 <body>
 
@@ -105,7 +106,7 @@
 
   <div class="toasts" id="toasts" aria-live="polite"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" defer></script>
   <script src="/build/admin.js" type="module"></script>
 </body>
 </html>

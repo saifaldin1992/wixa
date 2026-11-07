@@ -147,7 +147,7 @@ export function render() {
     <article class="job reveal-up"><div class="job__main"><h3>${esc(L(j, "title"))}</h3>
       <div class="job__tags">${[L(j, "type"), L(j, "location")].filter(Boolean).map((t) => `<span>${esc(t)}</span>`).join("")}</div>
       ${L(j, "desc") ? `<p>${esc(L(j, "desc")).replace(/\n/g, "<br>")}</p>` : ""}</div>
-      <button type="button" class="btn btn--primary" data-job="${i}">${esc(c.careers_apply || "")}</button></article>`).join("") : `<p class="careers__empty reveal-up">${esc(c.careers_empty || "")}</p>`)
+      <button type="button" class="btn btn--primary" data-job="${i}">${esc(c.careers_apply || "")}</button></article>`).join("") : `<div class="careers__empty reveal-up"><span class="careers__emptyIco" aria-hidden="true">💼</span><p>${esc(c.careers_empty || "")}</p></div>`)
     + `<div class="careers__general reveal-up"><button type="button" class="btn btn--ghost" data-job="-1">${esc(c.careers_general || "")}</button></div>`;
 
   // frequently asked questions

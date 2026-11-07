@@ -1546,3 +1546,8 @@ html.menu-open, html.menu-open body, html:has(> body[style*="overflow: hidden"])
 
 /* "how we work" ends with the guarantees strip: no extra empty band before the packages */
 .process:has(.guar-strip:not([hidden])) { padding-bottom: clamp(48px, 7vw, 80px); }
+
+/* careers: no open roles — a clear, friendly card instead of plain grey text */
+div.careers__empty { max-width: 640px; margin: 0 auto; padding: clamp(22px, 4vw, 34px); text-align: center; background: var(--surface); border: 1px dashed color-mix(in srgb, var(--primary) 35%, var(--line)); border-radius: calc(var(--radius) + 4px); }
+div.careers__empty p { margin: 8px 0 0; color: var(--text); line-height: 1.9; }
+.careers__emptyIco { display: inline-grid; place-items: center; width: 56px; height: 56px; border-radius: 16px; font-size: 26px; background: color-mix(in srgb, var(--primary) 10%, transparent); }
