@@ -42,7 +42,7 @@ export function setupChat() {
       <div class="chatw__foot"></div>
     </section>`;
   document.body.appendChild(root);
-  if (!$("#wa") || $("#wa").hidden) root.classList.add("chatw--low"); // no WhatsApp button below it
+  document.documentElement.classList.add("has-chat"); // replaces the round contact button opposite WhatsApp
   const btn = $(".chatw__btn", root), box = $(".chatw__box", root), body = $(".chatw__body", root), foot = $(".chatw__foot", root);
 
   const setUnread = (n) => { unread = n; const b = $(".chatw__badge", root); b.hidden = !n || isOpen; b.textContent = n > 9 ? "9+" : n; };

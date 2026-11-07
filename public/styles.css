@@ -1110,13 +1110,12 @@ body { font-size: var(--fs-body); }
 .footer__wave--brand path { stroke: url(#fwv); }
 
 /* ---------- live chat ---------- */
-.chatw__btn { position: fixed; z-index: 58; bottom: 88px; inset-inline-start: 20px; width: 56px; height: 56px; border-radius: 50%; border: 0; cursor: pointer; background: var(--primary); color: #fff; display: grid; place-items: center; box-shadow: 0 12px 30px -8px rgba(var(--primary-rgb), .6); transition: transform .4s var(--ease-out); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-.chatw--low .chatw__btn { bottom: 20px; }
+.chatw__btn { position: fixed; z-index: 58; bottom: 20px; inset-inline-end: 20px; width: 56px; height: 56px; border-radius: 50%; border: 0; cursor: pointer; background: var(--primary); color: #fff; display: grid; place-items: center; box-shadow: 0 12px 30px -8px rgba(var(--primary-rgb), .6); transition: transform .4s var(--ease-out); -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 .chatw__btn:hover { transform: scale(1.06); }
 .chatw__btn svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .chatw__badge { position: absolute; top: -2px; inset-inline-end: -2px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 99px; background: #E11D48; color: #fff; font-size: 12px; font-weight: 700; display: grid; place-items: center; border: 2px solid var(--bg); }
 .chatw.open .chatw__btn { opacity: 0; pointer-events: none; }
-.chatw__box { position: fixed; z-index: 110; bottom: 20px; inset-inline-start: 20px; width: min(380px, calc(100vw - 40px)); height: min(600px, calc(100dvh - 40px)); display: flex; flex-direction: column; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 30px 80px -20px rgba(0,0,0,.45); overflow: hidden; }
+.chatw__box { position: fixed; z-index: 110; bottom: 20px; inset-inline-end: 20px; width: min(380px, calc(100vw - 40px)); height: min(600px, calc(100dvh - 40px)); display: flex; flex-direction: column; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 30px 80px -20px rgba(0,0,0,.45); overflow: hidden; }
 .chatw__box[hidden] { display: none; }
 .chatw__head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--primary); color: #fff; }
 .chatw__mark { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,.16); display: grid; place-items: center; flex-shrink: 0; }
@@ -1155,11 +1154,15 @@ html[dir="rtl"] .chatw__send button svg { transform: scaleX(-1); }
 .chatw__err { margin: 6px 0 0; color: #E11D48; font-size: .82rem; text-align: center; }
 .chatw__err[hidden] { display: none; }
 @media (max-width: 760px) {
-  .chatw__btn, html[dir="rtl"] .chatw__btn { inset-inline-start: auto; inset-inline-end: auto; left: auto; right: 14px; width: 48px; height: 48px; bottom: calc(76px + env(safe-area-inset-bottom)); }
-  .chatw--low .chatw__btn, html[dir="rtl"] .chatw--low .chatw__btn { bottom: calc(16px + env(safe-area-inset-bottom)); }
+  .chatw__btn, html[dir="rtl"] .chatw__btn { inset-inline-start: auto; inset-inline-end: auto; right: auto; left: 14px; width: 48px; height: 48px; bottom: calc(16px + env(safe-area-inset-bottom)); }
+  /* the chat button takes the place of the round contact button (opposite WhatsApp) */
+  html.has-chat .mbar { display: none; }
   .chatw__btn svg { width: 22px; height: 22px; }
   .chatw__box { inset: 0; width: 100%; height: 100dvh; border-radius: 0; border: 0; }
   .chatw__foot { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
   html.chat-open, html.chat-open body { overflow: hidden; }
   html.chat-open .mbar, html.chat-open .wa, html.chat-open .totop { visibility: hidden; }
 }
+/* desktop: the back-to-top button sits above the chat button */
+html.has-chat .totop { bottom: 88px; }
+@media (max-width: 760px) { html.has-chat .totop { bottom: calc(76px + env(safe-area-inset-bottom)); } }
