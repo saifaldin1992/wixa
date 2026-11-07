@@ -1551,3 +1551,13 @@ html.menu-open, html.menu-open body, html:has(> body[style*="overflow: hidden"])
 div.careers__empty { max-width: 640px; margin: 0 auto; padding: clamp(22px, 4vw, 34px); text-align: center; background: var(--surface); border: 1px dashed color-mix(in srgb, var(--primary) 35%, var(--line)); border-radius: calc(var(--radius) + 4px); }
 div.careers__empty p { margin: 8px 0 0; color: var(--text); line-height: 1.9; }
 .careers__emptyIco { display: inline-grid; place-items: center; width: 56px; height: 56px; border-radius: 16px; font-size: 26px; background: color-mix(in srgb, var(--primary) 10%, transparent); }
+/* social icons (footer + contact page): clear at rest, each in its own colour on hover/tap */
+.footer__social a, .ways__social a { border: 0; background: color-mix(in srgb, var(--primary) 10%, var(--surface)); color: var(--text); transition: background .25s, color .25s, transform .25s var(--ease); }
+html[data-theme="dark"] .footer__social a, html[data-theme="dark"] .ways__social a { background: color-mix(in srgb, var(--fg) 16%, var(--surface)); }
+.footer__social svg { width: 19px; height: 19px; }
+.footer__social a:hover, .ways__social a:hover, .footer__social a:focus-visible, .ways__social a:focus-visible { color: #fff; transform: translateY(-2px); border-color: transparent; }
+:is(.footer__social, .ways__social) a[aria-label="instagram"]:is(:hover, :focus-visible) { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
+:is(.footer__social, .ways__social) a[aria-label="facebook"]:is(:hover, :focus-visible) { background: #1877F2; }
+:is(.footer__social, .ways__social) a[aria-label="x"]:is(:hover, :focus-visible) { background: #000; }
+:is(.footer__social, .ways__social) a[aria-label="linkedin"]:is(:hover, :focus-visible) { background: #0A66C2; }
+:is(.footer__social, .ways__social) a[aria-label="email"]:is(:hover, :focus-visible), :is(.footer__social, .ways__social) a[href^="mailto:"]:is(:hover, :focus-visible) { background: var(--primary); }
