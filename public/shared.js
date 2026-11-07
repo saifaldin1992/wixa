@@ -60,9 +60,9 @@
     exit_offer: { on: true },
     // where each site link shows: "both" (menu + footer) · "menu" · "footer" · "hidden"; the list order is the order shown
     nav: { items: [
-      { k: "services", at: "both" }, { k: "industries", at: "both" }, { k: "projects", at: "both" }, { k: "pricing", at: "both" },
+      { k: "home", at: "footer" }, { k: "services", at: "both" }, { k: "industries", at: "both" }, { k: "projects", at: "both" }, { k: "pricing", at: "both" },
       { k: "careers", at: "both" }, { k: "contact", at: "both" }, { k: "blog", at: "both" },
-      { k: "home", at: "footer" }, { k: "about", at: "footer" }, { k: "partners", at: "footer" }, { k: "faq", at: "footer" },
+      { k: "about", at: "footer" }, { k: "partners", at: "footer" }, { k: "faq", at: "footer" },
       { k: "privacy", at: "footer" }, { k: "calc", at: "hidden" },
     ] },
     // gifts and a discount promised with every project request ("start your project"); edited in the dashboard (offers)
@@ -110,7 +110,7 @@
           { title: "انتهى زمن الانتظار", text: "ما كان يحتاج طابوراً صار يُنجز من الهاتف خلال دقائق." },
           { title: "نبني من الفكرة حتى التشغيل", text: "نحلل، نصمم، نطور ونشغّل — ونبقى معك بعد الإطلاق." },
         ],
-        projects_title: "نماذج من حلولنا",
+        projects_title: "نماذج من عملنا",
         projects_sub: "أمثلة على المنصات والتطبيقات والأنظمة التي نبنيها، ونصممها لتناسب طبيعة عملك.",
         services_title: "خدماتنا",
         services_sub: "كل ما يحتاجه مشروعك الرقمي تحت سقف واحد.",
@@ -153,7 +153,7 @@
           { name: "موقع شركة", price: "1,500$", from: true, desc: "للشركات التي تريد حضوراً رقمياً يجلب العملاء.", features: "عدة صفحات بالعربي والإنجليزي\nلوحة تحكم لإدارة المحتوى\nتهيئة لمحركات البحث\nنماذج تواصل وحجز", featured: true },
           { name: "متجر إلكتروني", price: "2,500$", from: true, desc: "لبيع منتجاتك أونلاين بسهولة.", features: "أقسام ومنتجات وعروض\nسلة ودفع إلكتروني أو عند الاستلام\nإدارة الطلبات والمخزون\nتقارير المبيعات" },
           { name: "نظام إدارة أو عيادة", price: "3,000$", from: true, desc: "لتنظيم عملك الداخلي في نظام واحد.", features: "حجوزات وملفات وعملاء\nفوترة وتقارير\nصلاحيات لكل موظف\nيعمل على الحاسوب والجوال" },
-          { name: "تطبيق جوال", price: "5,000$", from: true, desc: "تطبيق iOS وAndroid بتجربة سلسة.", features: "تصميم يعكس هويتك\nإشعارات فورية\nلوحة تحكم للإدارة\nالنشر في المتاجر" },
+          { name: "تطبيق جوال", price: "5,000$", from: true, desc: "تطبيق لأجهزة آيفون وأندرويد بتجربة سلسة.", features: "تصميم يعكس هويتك\nإشعارات فورية\nلوحة تحكم للإدارة\nالنشر في المتاجر" },
           { name: "مشاريع خاصة", price: "حسب الطلب", from: false, desc: "منصات وأنظمة كبيرة ومشاريع مخصصة.", features: "دراسة كاملة للمتطلبات\nبنية قابلة للتوسع\nفريق مخصص لمشروعك\nخطة تنفيذ على مراحل" },
         ],
         process_title: "كيف نعمل",
@@ -205,7 +205,7 @@
           { title: "The waiting is over", text: "What used to need a queue now takes minutes on a phone." },
           { title: "From idea to launch", text: "We analyze, design, build and run it — and stay with you after launch." },
         ],
-        projects_title: "Solutions we build",
+        projects_title: "Our work",
         projects_sub: "Examples of the platforms, apps and systems we build — each tailored to how your business works.",
         services_title: "Our services",
         services_sub: "Everything your digital project needs, under one roof.",

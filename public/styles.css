@@ -1543,3 +1543,6 @@ html.menu-open, html.menu-open body, html:has(> body[style*="overflow: hidden"])
   .header__menu .menu-cta { display: flex; }
 }
 @media (max-width: 599px) { .head-start { display: none; } }
+
+/* "how we work" ends with the guarantees strip: no extra empty band before the packages */
+.process:has(.guar-strip:not([hidden])) { padding-bottom: clamp(48px, 7vw, 80px); }

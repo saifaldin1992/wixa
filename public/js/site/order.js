@@ -123,7 +123,7 @@ function paintPick(root) {
   root.innerHTML = `<div class="ord__pick"><h2>${t("pickT")}</h2><p class="muted">${t("pickS")}</p>
     <div class="ord__pkgs">${pk.map((p, i) => `<button type="button" class="ord__pkg${p.featured ? " is-featured" : ""}" data-p="${i}">
       <b>${esc(p.name)}</b><small>${esc(p.desc || "")}</small><span>${p.from && /\d/.test(p.price || "") ? `<i>${t("from")}</i> ` : ""}<bdi dir="ltr">${esc(p.price || "")}</bdi></span></button>`).join("")}
-      <button type="button" class="ord__pkg ord__pkg--custom" data-p="custom"><b>${t("custom")}</b><small>${t("customD")}</small><span>${t("customP")}</span></button></div></div>`;
+      ${pk.some((p) => !/\d/.test(p.price || "")) ? "" : `<button type="button" class="ord__pkg ord__pkg--custom" data-p="custom"><b>${t("custom")}</b><small>${t("customD")}</small><span>${t("customP")}</span></button>`}</div></div>`;
   $(".ord__pkgs", root).onclick = (e) => {
     const b = e.target.closest("[data-p]"); if (!b) return;
     const sel = b.dataset.p === "custom" ? { source: "start", item: t("custom"), price: t("customP") } : pkgSel(pk[+b.dataset.p]);
