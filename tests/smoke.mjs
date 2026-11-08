@@ -3,16 +3,9 @@
 // Set WIXA_LIB_DIR to a node_modules folder with gsap + lenis to serve CDN files locally (offline runs).
 const { chromium, devices } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
 
 const BASE = process.env.WIXA_URL || "http://localhost:8787";
-const LIB = process.env.WIXA_LIB_DIR;
-const libs = LIB && {
-  "gsap.min.js": join(LIB, "gsap/dist/gsap.min.js"),
-  "ScrollTrigger.min.js": join(LIB, "gsap/dist/ScrollTrigger.min.js"),
-  "lenis.min.js": join(LIB, "lenis/dist/lenis.min.js"),
-  "supabase.min.js": join(LIB, "@supabase/supabase-js/dist/umd/supabase.js"),
-};
+// third-party libraries are served from /vendor on the site itself, so the browser needs no outside network
 
 let failed = 0;
 const check = (ok, name, extra = "") => {
@@ -22,10 +15,6 @@ const check = (ok, name, extra = "") => {
 
 async function page(browser, url, opts = {}) {
   const ctx = await browser.newContext(opts);
-  if (libs) await ctx.route(/cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net/, (r) => {
-    const f = Object.keys(libs).find((k) => r.request().url().endsWith(k));
-    return f ? r.fulfill({ body: readFileSync(libs[f]), contentType: "application/javascript" }) : r.abort();
-  });
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.fulfill({ body: "", contentType: "text/css" }));
   const p = await ctx.newPage();
   const errors = [];

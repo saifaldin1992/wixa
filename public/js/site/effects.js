@@ -35,8 +35,8 @@ export const desktop = () => matchMedia("(hover: hover) and (pointer: fine)").ma
 export async function setupMotion() {
   if (!anim || !desktop()) return;
   try {
-    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js");
-    await Promise.all([loadScript("https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"), loadScript("https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js")]);
+    await loadScript("/vendor/gsap-3.12.5.min.js");
+    await Promise.all([loadScript("/vendor/ScrollTrigger-3.12.5.min.js"), loadScript("/vendor/lenis-1.1.13.min.js")]);
   } catch { return; }
   if (!window.gsap || !window.ScrollTrigger) return;
   gsap.registerPlugin(ScrollTrigger);

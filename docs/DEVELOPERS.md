@@ -334,3 +334,9 @@ page whose first title is not at the standard distance under the header bar.
 the page is wider than the screen, if a card on its own is narrower than the page, or if a row of cards does not start
 at the page edge. Spacing between cards comes from the container's `gap` only.
 
+
+## Third-party libraries (Nov 2026)
+
+supabase-js 2.45.4 (dashboard), gsap 3.12.5 + ScrollTrigger and lenis 1.1.13 (site effects) are served from
+`public/vendor/`, one file per version — never from a CDN. The CSP allows scripts only from the site itself, Cloudflare
+Insights and Turnstile. To upgrade: add the new file with its version in the name, point the page at it, delete the old.

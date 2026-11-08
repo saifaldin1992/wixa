@@ -33,7 +33,7 @@ import DEV_GUIDE from "../docs/DEVELOPERS.md";
 
 const SITE_TTL = 60; // seconds the site content may be served from cache
 // Keep in sync with public/_headers. The sha256 is the inline theme script in index.html.
-const CSP = "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://challenges.cloudflare.com 'sha256-NVKT0UrdROLsGcatClpvEhxXytwpjLyEshzIKuByDnE='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://cloudflareinsights.com https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'";
+const CSP = "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com https://challenges.cloudflare.com 'sha256-NVKT0UrdROLsGcatClpvEhxXytwpjLyEshzIKuByDnE='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://cloudflareinsights.com https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'";
 const SECURITY_HEADERS = {
   "content-security-policy": CSP,
   "permissions-policy": "camera=(), microphone=(), geolocation=()",
@@ -1384,6 +1384,7 @@ async function handleSlots(request, env, ctx, url) {
   const rules = bookingRules(st);
   if (!rules.on) return json({ slots: [] });
   const date = url.searchParams.get("date") || "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ slots: [] }); // only real dates reach storage
   const all = slotsFor(rules, date);
   const taken = env.PRIVATE ? ((await env.PRIVATE.get(`book:${date}`, { type: "json" }).catch(() => null)) || []) : [];
   return json({ slots: all.filter((t) => !taken.includes(t)) }, 200, { "cache-control": "no-store" });
@@ -1993,13 +1994,20 @@ async function handleChatRate(request, env) {
 }
 
 // unsubscribe links carry a signature, so nobody can unsubscribe someone else
+// compares two strings in the same time whatever they contain, so a signature cannot be guessed one character at a time
+function sameText(a, b) {
+  a = String(a); b = String(b);
+  let diff = a.length ^ b.length;
+  for (let i = 0; i < Math.max(a.length, b.length); i++) diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  return diff === 0;
+}
 async function unsubSig(env, email) {
   const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(`unsub:${env.WRITE_TOKEN || ""}`), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   return hex(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(email.toLowerCase()))).slice(0, 32);
 }
 async function handleUnsubscribe(request, env, url) {
   const email = String(url.searchParams.get("e") || "").trim().toLowerCase().slice(0, 200), sig = url.searchParams.get("s") || "";
-  const ok = EMAIL_RE.test(email) && sig === (await unsubSig(env, email));
+  const ok = EMAIL_RE.test(email) && sameText(sig, await unsubSig(env, email));
   let done = false;
   if (ok) { const r = await rpcToken(env, "campaign_optout", { email }); done = r.ok; }
   const msg = done ? ["تم إلغاء اشتراكك", "لن تصلك رسائل العروض من ويكسا بعد الآن. إذا كان هذا خطأً راسلنا وسنعيد اشتراكك."]
