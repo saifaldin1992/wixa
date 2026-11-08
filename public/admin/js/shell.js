@@ -24,7 +24,7 @@ import { viewDevGuide } from "./views/devguide.js";
 export const VIEWS = {
   overview: { title: "نظرة عامة", sub: "زوار الموقع ونشاطه", render: viewOverview },
   appearance: { title: "المظهر والخطوط", sub: "الألوان ونوع الخط وحجمه والحركة — مع معاينة مباشرة", render: viewAppearance },
-  brand: { title: "الهوية البصرية", sub: "دليل الشعار والألوان والخط — خاص بك ولا يظهر في الموقع", render: viewBrand },
+  brand: { title: "UI / UX", sub: "الهوية البصرية ومكوّنات الواجهة والمعايير — خاص بك ولا يظهر في الموقع", render: viewBrand },
   content: { title: "المحتوى والنصوص", sub: "نصوص الموقع بالعربي والإنجليزي، الأرقام، الأقسام وبيانات التواصل", render: viewContent },
   projects: { title: "المشاريع", sub: "أضف مشاريعك واعرضها في قسم الإنجازات", render: () => viewList("projects") },
   services: { title: "الخدمات", sub: "الخدمات التي تظهر في الموقع", render: () => viewList("services") },

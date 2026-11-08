@@ -1,5 +1,5 @@
 /* Developer guide: docs/DEVELOPERS.md from the repository, served to signed-in admins only and shown here. */
-import { $, esc, sb, toast } from "../core.js";
+import { $, esc, sb, toast, sectionTabs } from "../core.js";
 
 // A small Markdown renderer for the guide: headings, paragraphs, lists, tables, code, bold, links.
 function md(src) {
@@ -44,9 +44,16 @@ export async function viewDevGuide(view) {
     text = await r.text();
   } catch (e) { view.innerHTML = `<div class="empty">تعذّر تحميل الدليل (${esc(e.message)})</div>`; return; }
   const html = md(text);
-  const toc = [...html.matchAll(/<h3 id="([^"]+)">(.*?)<\/h3>/g)].map(([, id, t]) => `<a href="#" data-to="${id}">${t.replace(/<[^>]+>/g, "")}</a>`).join("");
-  view.innerHTML = `<div class="devguide"><nav class="dg-toc card">${toc}</nav><article class="card dg-body">${html}</article></div>`;
-  view.querySelectorAll("[data-to]").forEach((a) => (a.onclick = (e) => { e.preventDefault(); view.querySelector(`#${a.dataset.to}`)?.scrollIntoView({ behavior: "smooth", block: "start" }); }));
+  // each "## n. title" chapter becomes its own section, grouped into four branches
+  const parts = html.split(/(?=<h3 id=)/), intro = parts.shift();
+  const chapters = parts.map((p, i) => {
+    const title = (p.match(/<h3[^>]*>(.*?)<\/h3>/) || [, ""])[1].replace(/<[^>]+>/g, "");
+    const n = Number((title.match(/^(\d+)\./) || [])[1]) || 0;
+    return { k: `c${i}`, n, label: title.replace(/^\d+\.\s*/, "").replace(/\s*\(.*?\)\s*$/, "").replace(/\s*\(`?src\/index\.js`?\)/, ""), html: p };
+  });
+  const BR = [["start", "البداية", [1, 2, 3, 4, 13]], ["data", "الإعدادات والبيانات", [5, 6]], ["code", "الخادم والواجهة", [7, 8, 0]], ["ops", "التشغيل والصيانة", [9, 10, 11, 12]]];
+  view.innerHTML = `<div class="devguide devguide--tabs">${chapters.map((c) => `<article class="card dg-body" data-sec="${c.k}">${c.n === 1 ? intro : ""}${c.html}</article>`).join("")}</div>`;
+  sectionTabs(view, "devguide", BR.map(([k, label, nums]) => ({ k, label, items: chapters.filter((c) => nums.includes(c.n)).sort((a, b) => nums.indexOf(a.n) - nums.indexOf(b.n)).map((c) => [c.k, c.label]) })).filter((g) => g.items.length));
   $("#dgDownload").onclick = () => {
     const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(new Blob([text], { type: "text/markdown" })), download: "WIXA-DEVELOPERS.md" });
     document.body.append(a); a.click(); a.remove(); toast("تم التنزيل ✓");

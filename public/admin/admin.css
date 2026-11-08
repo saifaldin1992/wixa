@@ -788,3 +788,9 @@ body { font-size: 14.5px; }
 /* the sub-menu never widens the page: its bars slide sideways inside the screen width */
 .subnav { grid-template-columns: minmax(0, 1fr); min-width: 0; max-width: 100%; }
 .subnav .seg { min-width: 0; max-width: 100%; }
+
+/* long pages split into sub-menus: only the chosen section shows (printing shows them all) */
+.sec-off { display: none !important; }
+@media print { .sec-off { display: revert !important; } }
+.devguide--tabs { display: block; }
+.devguide--tabs .dg-body { max-width: 900px; }

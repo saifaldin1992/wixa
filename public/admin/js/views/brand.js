@@ -1,6 +1,7 @@
 /* Brand guide — for the owner only (inside the dashboard, never linked from the public site).
    Logo files to download, colours, light/dark palettes, typography, the WIXA wave, components, spacing and usage rules.
    Colours and font follow the current site settings, so the guide always matches the live site. */
+import { sectionTabs } from "../core.js";
 import { $, $$, esc, settings, toast } from "../core.js";
 
 const { darkPalette, ICONS } = window.WIXA;
@@ -205,5 +206,34 @@ export async function viewBrand(view) {
     try { download(`${name}-${width}.png`, await toPng(svg, Number(width))); } catch { toast("تعذّر تجهيز الصورة", "err"); }
     finally { b.disabled = false; }
   }));
+  // ---- sub-menus: identity / UI components / UX standards ----
+  const doc = $("#brandDoc", view);
+  const cards = [...doc.children];
+  const h3 = (c) => (c.querySelector(".card__head h3")?.textContent || "").trim();
+  // the "interface components" card holds many topics: each h4 becomes its own card
+  const comp = cards.find((c) => h3(c).startsWith("مكوّنات الواجهة"));
+  if (comp) {
+    const parts = []; let curP = null;
+    for (const n of [...comp.children]) {
+      if (n.tagName === "H4") { curP = document.createElement("div"); curP.className = "card"; parts.push(curP); n.style.marginTop = "0"; }
+      if (curP) curP.appendChild(n);
+    }
+    comp.replaceWith(...parts);
+  }
+  const KEY = [["الشعار", "logo"], ["الألوان", "colors"], ["الوضع النهاري", "modes"], ["الخط", "type"], ["منحنى", "wave"], ["الأيقونات", "icons"], ["أسلوب الكتابة", "voice"],
+    ["العناصر والمسافات", "space"], ["الظلال", "space"], ["القائمة الفرعية", "menus"], ["القوائم", "menus"], ["البطاقات المتحركة", "swipe"], ["لون الموجة", "accent"], ["العناوين", "accent"],
+    ["الطلب والهدايا", "order"], ["تتبع الطلب", "order"], ["الشركاء", "partners"], ["أيقونات التواصل", "partners"], ["لوحة التحكم", "dash"], ["النصوص", "voice"],
+    ["الواجهة الأولى", "hero"], ["الصفحات الداخلية", "pages"], ["المعايير العالمية", "std"]];
+  for (const c of [...doc.children]) {
+    const title = (c.querySelector(".card__head h3, h4")?.textContent || "").replace(/^\d+\.\s*/, "").trim();
+    const hit = KEY.find(([t]) => title.startsWith(t));
+    c.dataset.sec = c.classList.contains("bg-cover") ? "logo" : hit ? hit[1] : "logo";
+    const h = c.querySelector(".card__head h3"); if (h) h.textContent = h.textContent.replace(/^\d+\.\s*/, ""); // numbers made sense only on one long page
+  }
+  sectionTabs(view, "brand", [
+    { k: "id", label: "الهوية البصرية", items: [["logo", "الشعار"], ["colors", "الألوان"], ["modes", "النهاري والليلي"], ["type", "الخط"], ["wave", "منحنى WIXA"], ["icons", "الأيقونات"], ["voice", "الكتابة"]] },
+    { k: "ui", label: "مكوّنات الواجهة UI", items: [["space", "المقاسات والظلال"], ["hero", "الواجهة الأولى"], ["menus", "القوائم"], ["swipe", "البطاقات المتحركة"], ["accent", "العناوين ولون الموجة"], ["order", "الطلب والتتبع"], ["partners", "الشركاء والتواصل"], ["pages", "الصفحات الداخلية"], ["dash", "لوحة التحكم"]] },
+    { k: "ux", label: "التجربة والمعايير UX", items: [["std", "المعايير العالمية"]] },
+  ]);
   $("#brandPdf").onclick = () => { document.body.classList.add("print-brand"); setTimeout(() => { print(); document.body.classList.remove("print-brand"); }, 50); };
 }

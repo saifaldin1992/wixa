@@ -3,6 +3,27 @@
 export const { DEFAULTS, FONTS, merge, ICONS } = window.WIXA;
 export const $ = (s, el = document) => el.querySelector(s);
 // a page's sub-menus (status tabs, filters, sections, periods) go in one strip under the page title — the same on every page and screen
+// Long pages as sub-menus: the first row picks a branch, the second a section of it; only that section shows.
+// Every element of the page with data-sec="<section>" belongs to that section (several may share one).
+// groups: [{ k, label, items: [[sectionKey, label], …] }]. The choice is remembered for the visit.
+export function sectionTabs(view, key, groups) {
+  const store = `wixa-sec-${key}`;
+  let cur = ""; try { cur = sessionStorage.getItem(store) || ""; } catch {}
+  const all = groups.flatMap((g) => g.items.map(([k]) => k));
+  if (!all.includes(cur)) cur = all[0];
+  const paint = () => {
+    const g = groups.find((x) => x.items.some(([k]) => k === cur)) || groups[0];
+    setSubnav(`<div class="seg" data-secgrp>${groups.map((x) => `<button type="button" data-g="${x.k}" class="${x === g ? "on" : ""}">${esc(x.label)}</button>`).join("")}</div>`
+      + (g.items.length > 1 ? `<div class="seg" data-secitem>${g.items.map(([k, l]) => `<button type="button" data-s="${k}" class="${k === cur ? "on" : ""}">${esc(l)}</button>`).join("")}</div>` : ""));
+    view.querySelectorAll("[data-sec]").forEach((el) => el.classList.toggle("sec-off", !el.dataset.sec.split(" ").includes(cur)));
+    const sub = document.getElementById("subNav");
+    sub.querySelectorAll("[data-g]").forEach((b) => (b.onclick = () => { cur = groups.find((x) => x.k === b.dataset.g).items[0][0]; go(); }));
+    sub.querySelectorAll("[data-s]").forEach((b) => (b.onclick = () => { cur = b.dataset.s; go(); }));
+    sub.querySelector("[data-secitem] .on, [data-secgrp] .on")?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  };
+  const go = () => { try { sessionStorage.setItem(store, cur); } catch {} paint(); scrollTo({ top: 0, behavior: "smooth" }); };
+  paint();
+}
 export function setSubnav(html = "") { const n = document.getElementById("subNav"); if (!n) return; n.innerHTML = html; n.hidden = !html; }
 export const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
