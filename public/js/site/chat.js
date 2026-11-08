@@ -4,6 +4,7 @@
    The conversation's id and secret key live in this browser (localStorage), so the visitor can come back to it. */
 import { $, $$, L, PREVIEW, esc, lang, state } from "./core.js";
 import { visitSource } from "./source.js";
+import { STAGES, STAGE_LABEL, statusMsg, lastOrder, rememberOrder, lookupOrder, findOrders, normNumber, ORDER_RE } from "./orderstatus.js";
 
 const T = {
   ar: { title: "تحدث مع ويكسا", online: "متصلون الآن — نرد خلال دقائق", away: "غير متصلين الآن — اترك رسالتك وسنرد هنا أو على هاتفك", name: "الاسم", phone: "رقم الهاتف", msg: "رسالتك",
@@ -13,7 +14,11 @@ const T = {
     hoursOut: "نحن خارج أوقات الدوام — نعود", today: "اليوم", tomorrow: "غداً", at: "الساعة",
     rateQ: "كيف كانت خدمتنا؟", ratePub: "انشر رأيي في موقع ويكسا (بعد المراجعة)", rateHint: "احكِ للآخرين عن تجربتك معنا…", rateNote: "ملاحظة (اختياري)", rateSend: "إرسال التقييم", rateThanks: "شكراً لتقييمك! 💜",
     nudge: { calculator: "حسبت التكلفة؟ اسألنا عن التفاصيل 👋", services: "تبحث عن خدمة معينة؟ اسألنا هنا 👋", projects: "أعجبك مشروع؟ نصنع لك مثله 👋" },
-    topics: [["svc", "استفسار عن خدمة"], ["quote", "طلب عرض سعر"], ["project", "متابعة مشروع قائم"], ["meet", "حجز موعد أو اجتماع"], ["other", "سؤال آخر"]],
+    trackQ: "اكتب رقم طلبك ورقم الهاتف الذي طلبت به.", orderNo: "رقم الطلب", trackGo: "تتبع الطلب", forgot: "نسيت رقم الطلب؟", haveNo: "لدي رقم الطلب",
+    findQ: "اكتب رقم هاتفك واسمك كما كتبتهما في الطلب، ونعرض لك طلباتك.", findGo: "ابحث عن طلباتي", found: "طلباتك — اختر طلباً لترى حالته:", none: "لم نجد طلباً بهذه البيانات. تأكد منها، أو تحدث مع الفريق.",
+    talk: "تحدث مع الفريق عن هذا الطلب", lastOrd: "طلبك الأخير", another: "تتبع طلب آخر", orderTopic: "متابعة طلب", aboutOrder: "بخصوص طلبي رقم ", order: "طلب رقم",
+    nf: "لم نجد طلباً بهذا الرقم والهاتف. تأكد منهما وحاول مرة أخرى.", tErr: "تعذّر البحث الآن، حاول بعد قليل.", tMany: "محاولات كثيرة، انتظر دقيقة وحاول مرة أخرى.", tFix: "اكتب رقم الطلب كما وصلك ورقم هاتف صحيح.", fFix: "اكتب رقم هاتف صحيح واسمك.",
+    topics: [["track", "تتبع طلبي"], ["svc", "استفسار عن خدمة"], ["quote", "طلب عرض سعر"], ["project", "متابعة مشروع قائم"], ["meet", "حجز موعد أو اجتماع"], ["other", "سؤال آخر"]],
     hints: { svc: "اكتب سؤالك عن الخدمة…", quote: "صف مشروعك باختصار: ماذا تريد أن تبني؟", project: "اذكر اسم المشروع وما تريد متابعته…", meet: "متى يناسبك الاجتماع؟", other: "اكتب سؤالك…" } },
   en: { title: "Chat with WIXA", online: "Online now — we reply in minutes", away: "We're away — leave a message and we'll reply here or by phone", name: "Name", phone: "Phone number", msg: "Your message",
     start: "Start chat", ph: "Type a message…", send: "Send", wa: "Or message us on WhatsApp", err: "Couldn't send, please try again", fill: "Please fill the required fields",
@@ -22,7 +27,11 @@ const T = {
     hoursOut: "We're outside working hours — back", today: "today", tomorrow: "tomorrow", at: "at",
     rateQ: "How was our service?", rateNote: "A note (optional)", ratePub: "Share my review on the WIXA site (after review)", rateHint: "Tell others about your experience…", rateSend: "Send rating", rateThanks: "Thanks for your rating! 💜",
     nudge: { calculator: "Worked out a cost? Ask us about the details 👋", services: "Looking for a specific service? Ask us here 👋", projects: "Like a project? We can build yours 👋" },
-    topics: [["svc", "Ask about a service"], ["quote", "Request a quote"], ["project", "Follow up on a project"], ["meet", "Book a meeting"], ["other", "Something else"]],
+    trackQ: "Enter your order number and the phone you ordered with.", orderNo: "Order number", trackGo: "Track order", forgot: "Forgot your order number?", haveNo: "I have the order number",
+    findQ: "Enter your phone and your name as you wrote them on the order, and we'll show your orders.", findGo: "Find my orders", found: "Your orders — pick one to see its status:", none: "No order found with these details. Check them, or talk to the team.",
+    talk: "Talk to the team about this order", lastOrd: "Your latest order", another: "Track another order", orderTopic: "Order follow-up", aboutOrder: "About my order ", order: "Order",
+    nf: "No order found with this number and phone. Check them and try again.", tErr: "Couldn't search right now, please try again shortly.", tMany: "Too many tries — wait a minute and try again.", tFix: "Enter the order number as you received it and a valid phone number.", fFix: "Enter a valid phone number and your name.",
+    topics: [["track", "Track my order"], ["svc", "Ask about a service"], ["quote", "Request a quote"], ["project", "Follow up on a project"], ["meet", "Book a meeting"], ["other", "Something else"]],
     hints: { svc: "Type your question about the service…", quote: "Briefly describe your project…", project: "Which project, and what would you like to follow up?", meet: "When suits you?", other: "Type your question…" } },
 };
 const t = (k) => (T[lang] || T.ar)[k];
@@ -32,6 +41,9 @@ const SEND = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l16-8-6 
 
 let conv = null, msgs = [], after = 0, online = false, isOpen = false, timer = 0, busy = false, typing = null, status = "open";
 let pick = { topic: "", service: "" }, lastTyping = 0;
+// order tracking inside the chat: "num" = order number + phone, "find" = phone + name (forgotten number)
+let track = { mode: "num", num: "", res: null, list: null, phone: "", err: "", busy: false }, lastInfo = null, notes = [];
+const me = () => { try { return JSON.parse(localStorage.getItem("wixa-chat-me") || "{}"); } catch { return {}; } };
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch { return null; } };
 const save = () => { try { conv ? localStorage.setItem(KEY, JSON.stringify(conv)) : localStorage.removeItem(KEY); } catch {} };
 const api = async (path, body) => {
@@ -46,8 +58,15 @@ const services = () => {
   return c.length ? c : state.services.map((sv) => L(sv, "title")).filter(Boolean);
 };
 const topicLabel = () => {
+  if (pick.topic === "order") return `${t("orderTopic")} ${pick.service}`;
   const name = (t("topics").find(([k]) => k === pick.topic) || [])[1] || "";
   return pick.service ? `${name}: ${pick.service}` : name;
+};
+
+const orderCard = (o) => {
+  const at = Math.max(0, STAGES.indexOf(o.status)), lb = STAGE_LABEL[lang] || STAGE_LABEL.ar;
+  return `<div class="chatw__card"><b>${t("order")} <span class="chatw__no">${esc(o.number)}</span></b><span>${esc(statusMsg(o.status))}</span>${o.status === "cancelled" ? "" :
+    `<ul class="chatw__ord">${STAGES.map((k, i) => `<li class="${i < at || o.status === "done" ? "done" : i === at ? "now" : ""}">${esc(lb[k])}</li>`).join("")}</ul>`}</div>`;
 };
 
 let openFn = null;
@@ -100,10 +119,16 @@ export function setupChat() {
 
   // before a conversation: choose a topic (and a service) from tappable chips
   const paintPick = () => {
-    let html = greeting() + bubble("team", `<p>${t("pick")}</p>`);
-    if (!pick.topic) html += `<div class="chatw__chips">${t("topics").map(([k, n]) => `<button type="button" data-topic="${k}">${esc(n)}</button>`).join("")}</div>`;
+    let html = greeting();
+    if (lastInfo && pick.topic !== "track") html += bubble("team", orderCard(lastInfo).replace('<div class="chatw__card">', `<div class="chatw__card"><small>${t("lastOrd")}</small>`)) + `<div class="chatw__chips"><button type="button" data-talk="${esc(lastInfo.number)}">${t("talk")}</button></div>`;
+    html += bubble("team", `<p>${t("pick")}</p>`);
+    if (pick.topic === "track") {
+      html += bubble("me", `<p>${esc(t("topics")[0][1])}</p>`) + bubble("team", `<p>${track.mode === "find" ? t("findQ") : t("trackQ")}</p>`);
+      if (track.list) html += track.list.length ? bubble("team", `<p>${t("found")}</p>`) + `<div class="chatw__chips">${track.list.map((o) => `<button type="button" data-pickord="${esc(o.number)}"><span class="chatw__no">${esc(o.number)}</span> · ${esc((STAGE_LABEL[lang] || STAGE_LABEL.ar)[o.status] || "")}</button>`).join("")}</div>` : bubble("team", `<p>${t("none")}</p>`);
+      if (track.res) html += bubble("team", orderCard(track.res)) + `<div class="chatw__chips"><button type="button" data-talk="${esc(track.res.number)}">${t("talk")}</button><button type="button" data-again>${t("another")}</button></div>`;
+    } else if (!pick.topic) html += `<div class="chatw__chips">${t("topics").map(([k, n]) => `<button type="button" data-topic="${k}">${esc(n)}</button>`).join("")}</div>`;
     else {
-      html += bubble("me", `<p>${esc((t("topics").find(([k]) => k === pick.topic) || [])[1])}</p>`);
+      html += bubble("me", `<p>${esc(pick.topic === "order" ? topicLabel() : (t("topics").find(([k]) => k === pick.topic) || [])[1])}</p>`);
       if (pick.topic === "svc" && services().length) {
         html += bubble("team", `<p>${t("svc")}</p>`);
         if (!pick.service) html += `<div class="chatw__chips">${services().map((n) => `<button type="button" data-svc="${esc(n)}">${esc(n)}</button>`).join("")}</div>`;
@@ -111,7 +136,10 @@ export function setupChat() {
       }
     }
     body.innerHTML = html; body.scrollTop = body.scrollHeight;
-    $$("[data-topic]", body).forEach((b) => (b.onclick = () => { pick.topic = b.dataset.topic; pick.service = ""; paint(); footer(); }));
+    $$("[data-topic]", body).forEach((b) => (b.onclick = () => { pick.topic = b.dataset.topic; pick.service = ""; if (pick.topic === "track") startTrack(""); paint(); footer(); }));
+    $$("[data-talk]", body).forEach((b) => (b.onclick = () => talkAbout(b.dataset.talk)));
+    $$("[data-pickord]", body).forEach((b) => (b.onclick = () => runLookup(b.dataset.pickord, track.phone)));
+    $$("[data-again]", body).forEach((b) => (b.onclick = () => { startTrack(""); paint(); footer(); }));
     $$("[data-svc]", body).forEach((b) => (b.onclick = () => { pick.service = b.dataset.svc; paint(); footer(); }));
   };
   const paintChat = () => {
@@ -123,6 +151,7 @@ export function setupChat() {
       html += bubble(team ? "team" : "me", `<p>${esc(m.body)}</p><small>${team ? esc(who) : t("you")} · ${time(m.at)}</small>`);
     }
     if (typing) html += `<div class="chatw__msg chatw__msg--team chatw__typing"><p><i></i><i></i><i></i></p><small>${esc(typing === "-" ? t("team") : typing)} ${t("typing")}</small></div>`;
+    for (const n of notes) html += bubble("team", n);
     if (status === "closed") html += `<p class="chatw__sys">${t("closed")}</p>`;
     const end = body.scrollHeight - body.scrollTop - body.clientHeight < 60;
     body.innerHTML = html;
@@ -133,6 +162,29 @@ export function setupChat() {
   const waHref = () => { const a = $("#wa"); return a && !a.hidden && a.href.includes("wa.me") ? a.href : ""; };
   const footer = () => {
     const wa = waHref();
+    if (!conv && pick.topic === "track") {
+      if (track.res) { foot.hidden = true; foot.innerHTML = ""; return; }
+      foot.hidden = false;
+      const saved = me(), lo = lastOrder();
+      foot.innerHTML = `<form class="chatw__start chatw__track" novalidate>${track.mode === "find"
+        ? `<label><span>${t("phone")}</span><input name="phone" type="tel" inputmode="tel" dir="ltr" autocomplete="tel" value="${esc(track.phone || saved.phone || lo?.phone || "")}"></label>
+           <label><span>${t("name")}</span><input name="name" autocomplete="name" value="${esc(saved.name || "")}"></label>`
+        : `<label><span>${t("orderNo")}</span><input name="number" autocomplete="off" placeholder="WX-261108-XXXX" value="${esc(track.num || lo?.number || "")}"></label>
+           <label><span>${t("phone")}</span><input name="phone" type="tel" inputmode="tel" dir="ltr" autocomplete="tel" value="${esc(track.phone || saved.phone || lo?.phone || "")}"></label>`}
+        <button class="chatw__go" type="submit" ${track.busy ? "disabled" : ""}>${track.mode === "find" ? t("findGo") : t("trackGo")}</button>
+        <button class="chatw__link" type="button" data-mode>${track.mode === "find" ? t("haveNo") : t("forgot")}</button>
+        <p class="chatw__err" ${track.err ? "" : "hidden"}>${esc(track.err)}</p>
+        <button type="button" class="chatw__change" data-back>${t("change")}</button></form>`;
+      const f = $("form", foot);
+      $("[data-mode]", foot).onclick = () => { track.mode = track.mode === "find" ? "num" : "find"; track.err = ""; track.list = null; paint(); footer(); };
+      $("[data-back]", foot).onclick = () => { pick = { topic: "", service: "" }; startTrack(""); paint(); footer(); };
+      f.onsubmit = (e) => {
+        e.preventDefault();
+        if (track.mode === "find") runFind(f.phone.value.trim(), f.name.value.trim());
+        else runLookup(normNumber(f.number.value), f.phone.value.trim());
+      };
+      return;
+    }
     if (!conv) {
       const ready = pick.topic && (pick.topic !== "svc" || pick.service || !services().length);
       if (!ready) { foot.innerHTML = wa ? `<a class="chatw__wa" href="${wa}" target="_blank" rel="noopener">${t("wa")}</a>` : ""; foot.hidden = !wa; return; }
@@ -142,7 +194,7 @@ export function setupChat() {
         <p class="chatw__topic"><span>${esc(topicLabel())}</span><button type="button" class="chatw__change">${t("change")}</button></p>
         <div class="chatw__two"><label><span>${t("name")} <em>*</em></span><input name="name" required maxlength="80" autocomplete="name" value="${esc(saved.name || "")}"></label>
         <label><span>${t("phone")} <em>*</em></span><input name="phone" required type="tel" inputmode="tel" maxlength="30" autocomplete="tel" dir="ltr" value="${esc(saved.phone || "")}"></label></div>
-        <label><span>${t("msg")} <em>*</em></span><textarea name="body" required rows="2" maxlength="2000" placeholder="${esc(t("hints")[pick.topic] || "")}"></textarea></label>
+        <label><span>${t("msg")} <em>*</em></span><textarea name="body" required rows="2" maxlength="2000" placeholder="${esc(t("hints")[pick.topic] || "")}">${pick.topic === "order" ? esc(t("aboutOrder") + pick.service + " — ") : ""}</textarea></label>
         <label class="chatw__consent"><input type="checkbox" name="marketing" ${saved.marketing ? "checked" : ""}><span>${t("consent")}</span></label>
         <button class="chatw__go" type="submit">${t("start")}</button><p class="chatw__err" hidden></p></form>`;
       $("form", foot).onsubmit = startChat;
@@ -187,6 +239,34 @@ export function setupChat() {
   };
   const showErr = (m) => { const e = $(".chatw__err", foot); if (e) { e.textContent = m; e.hidden = !m; } };
 
+  function startTrack(num) { track = { mode: "num", num: num || "", res: null, list: null, phone: "", err: "", busy: false }; }
+  async function runLookup(number, phone) {
+    if (number.length < 6 || phone.replace(/\D/g, "").length < 7) { track.err = t("tFix"); footer(); return; }
+    track.busy = true; track.err = ""; track.num = number; track.phone = phone; footer();
+    const r = await lookupOrder(number, phone).catch(() => ({ error: "storage" }));
+    track.busy = false;
+    if (r.order) { track.res = r.order; track.list = null; rememberOrder(r.order.number, phone); }
+    else track.err = r.error === "not_found" ? t("nf") : r.error === "rate_limited" ? t("tMany") : r.error === "validation" ? t("tFix") : t("tErr");
+    paint(); footer();
+  }
+  async function runFind(phone, name) {
+    if (phone.replace(/\D/g, "").length < 7 || name.length < 2) { track.err = t("fFix"); footer(); return; }
+    track.busy = true; track.err = ""; track.phone = phone; footer();
+    const r = await findOrders(phone, name).catch(() => ({ error: "storage" }));
+    track.busy = false;
+    if (r.orders) track.list = r.orders;
+    else track.err = r.error === "rate_limited" ? t("tMany") : r.error === "validation" ? t("fFix") : t("tErr");
+    paint(); footer();
+  }
+  function talkAbout(number) { pick = { topic: "order", service: number }; startTrack(""); paint(); footer(); }
+  // in a running conversation: a written order number gets its status shown right away
+  async function noteFor(number) {
+    const phone = me().phone || lastOrder()?.phone || "";
+    if (!phone) return;
+    const r = await lookupOrder(normNumber(number), phone).catch(() => ({}));
+    if (r.order) { notes.push(orderCard(r.order)); paint(); }
+  }
+
   async function startChat(e) {
     e.preventDefault();
     const f = e.target; let bad = false;
@@ -208,14 +288,14 @@ export function setupChat() {
     busy = true; showErr("");
     msgs.push({ id: 0, from: "visitor", body: text, at: new Date().toISOString() }); paint(); // shown at once, confirmed by the next refresh
     ta.value = ""; ta.style.height = "auto";
-    try { await api("send", { ...conv, body: text }); await poll(); }
+    try { await api("send", { ...conv, body: text }); await poll(); const m = text.match(ORDER_RE); if (m) noteFor(m[0]); }
     catch (err) {
       msgs = msgs.filter((m) => m.id); paint(); ta.value = text;
       if (err.status === 404) return reset();
       showErr(err.status === 429 ? t("busy") : t("err"));
     } finally { busy = false; if (ta.isConnected) ta.focus(); }
   }
-  function reset() { conv = null; msgs = []; after = 0; status = "open"; typing = null; pick = { topic: "", service: "" }; save(); paint(); footer(); }
+  function reset() { conv = null; msgs = []; after = 0; status = "open"; typing = null; notes = []; pick = { topic: "", service: "" }; startTrack(""); save(); paint(); footer(); }
 
   async function poll(isTyping = false) {
     if (!conv) return;
@@ -247,11 +327,23 @@ export function setupChat() {
     if (!open) { schedule(); return; }
     setUnread(0); delete body.dataset.ready; paint(); footer();
     if (!conv) api("status").then((d) => { online = !!d.online; head(); }).catch(() => {});
+    const lo = lastOrder();
+    if (!conv && lo && !lastInfo && lo.phone) lookupOrder(lo.number, lo.phone).then((r) => { if (r.order) { lastInfo = r.order; if (isOpen && !conv) paint(); } }).catch(() => {});
     else { after = 0; msgs = []; await poll(); footer(); }
     schedule();
     const first = $("textarea, input", foot); if (first && matchMedia("(pointer: fine)").matches) first.focus();
   }
-  openFn = (topic, service) => { if (!conv && topic) pick = { topic, service: service || "" }; toggle(true); };
+  openFn = (topic, service) => {
+    if (topic === "track") {
+      if (conv) { toggle(true).then(() => service && noteFor(service)); return; }
+      pick = { topic: "track", service: "" }; startTrack(service || "");
+      const lo = lastOrder();
+      if (service && lo?.number === service && lo.phone) { toggle(true); runLookup(service, lo.phone); return; }
+      toggle(true); return;
+    }
+    if (!conv && topic) pick = { topic, service: service || "" };
+    toggle(true);
+  };
 
   btn.onclick = () => toggle(!isOpen);
   $(".chatw__x", root).onclick = () => toggle(false);

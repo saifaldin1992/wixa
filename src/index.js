@@ -862,6 +862,19 @@ async function handleTrack(request, env) {
   return order ? json({ ok: true, order }) : json({ error: "not_found" }, 404);
 }
 
+// POST /api/order-find — "I forgot my order number" (live chat): the phone the order was placed with + the name on it
+// → up to 5 recent order numbers with their status. Both must match; the strict form limiter (5 a minute per IP).
+async function handleOrderFind(request, env) {
+  if (!(await allowed(env.CONTACT_LIMITER, clientIp(request)))) return json({ error: "rate_limited" }, 429);
+  let b;
+  try { b = await request.json(); } catch { return json({ error: "invalid_json" }, 400); }
+  const phone = typeof b.phone === "string" ? b.phone.slice(0, 40) : "", name = typeof b.name === "string" ? b.name.trim().slice(0, 120) : "";
+  if (phone.replace(/\D/g, "").length < 7 || name.length < 2) return json({ error: "validation" }, 422);
+  const r = await rpc(env, "find_orders", { phone, name });
+  if (!r.ok) { console.error("order find", r.status, await r.text()); return json({ error: "storage" }, 502); }
+  return json({ ok: true, orders: await r.json() });
+}
+
 async function handleContact(request, env, ctx) {
   const ip = clientIp(request);
   if (!(await allowed(env.CONTACT_LIMITER, ip))) return json({ error: "rate_limited" }, 429);
@@ -2078,6 +2091,7 @@ export default {
         case "POST /api/chat/poll": return await handleChat(request, env, ctx, "poll");
         case "POST /api/order": return await handleOrder(request, env, ctx);
         case "POST /api/order-status": return await handleTrack(request, env);
+        case "POST /api/order-find": return await handleOrderFind(request, env);
         case "POST /api/chat/rate": return await handleChatRate(request, env);
         case "GET /unsubscribe":
         case "POST /unsubscribe":

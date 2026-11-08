@@ -1,6 +1,9 @@
 /* Conversations: live chat with site visitors (owner and customer service).
    New messages arrive instantly through chat-live.js; replies are written straight to the database. */
 import { $, setSubnav, $$, I, adminApi, closeModal, confirmBox, esc, openModal, role, sb, settings, toast } from "../core.js";
+// the status messages a customer sees when tracking an order (defaults shared with the site)
+import { DEFAULT_STATUS_MSGS } from "../../../js/order-msgs.js";
+const ORDER_MSGS = [["new", "وصلنا طلبك (جديد)"], ["contacted", "تواصلنا معك"], ["quoted", "أرسلنا عرض السعر"], ["in_progress", "العمل جارٍ"], ["done", "تم التسليم"], ["cancelled", "ملغى"]];
 import { saveSettings } from "../settings.js";
 import { openQuote } from "../quote.js";
 import { disablePush, enablePush, isIOS, onChat, pushState, pushSupported, refreshChatCount } from "../chat-live.js";
@@ -179,10 +182,14 @@ export async function viewChats(view) {
         <label class="f"><span>بعد كم ثانية</span><input type="number" id="nDelay" min="5" max="300" value="${Number(c.nudge?.delay) || 25}" dir="ltr"></label>
         <label class="f"><span>النص العام (عربي) — في قسم الخدمات والمشاريع والحاسبة يظهر نص مناسب للقسم تلقائياً</span><input id="nAr" value="${esc(c.nudge?.text_ar || "")}" placeholder="عندك فكرة مشروع؟ اسألنا 👋"></label>
         <label class="f"><span>النص العام (English)</span><input id="nEn" dir="ltr" value="${esc(c.nudge?.text_en || "")}" placeholder="Have a project in mind? Ask us 👋"></label></fieldset>
+      <fieldset class="fs"><legend>رسائل حالة الطلب — يراها الزبون عند تتبع طلبه في الدردشة وصفحة «تتبع طلبك»</legend>
+        <p class="muted" style="margin:0 0 8px;font-size:13px">تتغير الحالة من صفحة الطلبات. اترك الحقل فارغاً لاستخدام النص الافتراضي.</p>
+        ${ORDER_MSGS.map(([k, n]) => `<div class="grid2"><label class="f"><span>${n} (عربي)</span><textarea data-sm="${k}" data-l="ar" rows="2" placeholder="${esc(DEFAULT_STATUS_MSGS[k].ar)}">${esc(c.status_msgs?.[k]?.ar || "")}</textarea></label><label class="f"><span>${n} (English)</span><textarea data-sm="${k}" data-l="en" rows="2" dir="ltr" placeholder="${esc(DEFAULT_STATUS_MSGS[k].en)}">${esc(c.status_msgs?.[k]?.en || "")}</textarea></label></div>`).join("")}</fieldset>
       <p class="muted" style="margin:0;font-size:13px">يظهر للزائر «متصلون الآن» عندما يكون أحد الفريق فاتحاً لوحة التحكم، وإلا يظهر أنكم غير متصلين وسترد لاحقاً. تصلك رسالة على البريد عند بدء محادثة جديدة، وعند كل رسالة جديدة إذا لم يكن أحد متصلاً.</p></div>`, foot, true);
     $("[data-go]", foot).onclick = async () => {
       settings.chat = { ...c, on: $("#cOn").checked, greeting_ar: $("#cGa").value.trim(), greeting_en: $("#cGe").value.trim(), quick: $("#cQ").value.split("\n").map((x) => x.trim()).filter(Boolean).slice(0, 30),
         hours: { on: $("#hOn").checked, days: $$(".days input:checked", $("#modalBody")).map((x) => +x.value), from: $("#hFrom").value || "09:00", to: $("#hTo").value || "17:00" },
+        status_msgs: Object.fromEntries(ORDER_MSGS.map(([k]) => [k, { ar: $(`[data-sm="${k}"][data-l="ar"]`).value.trim(), en: $(`[data-sm="${k}"][data-l="en"]`).value.trim() }])),
         nudge: { on: $("#nOn").checked, delay: Math.min(300, Math.max(5, Number($("#nDelay").value) || 25)), text_ar: $("#nAr").value.trim(), text_en: $("#nEn").value.trim() } };
       await saveSettings(); closeModal(); viewChats(view);
     };

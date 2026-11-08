@@ -5,6 +5,8 @@
 import { $, $$, esc, state, lang, C, L } from "./core.js";
 import { ensureTurnstile, turnstileToken, resetTurnstile, check, liveCheck } from "./contact.js";
 import { visitSource } from "./source.js";
+import { rememberOrder } from "./orderstatus.js";
+import { openChat } from "./chat.js";
 
 const KEY = "wixa-order";
 const T = {
@@ -113,6 +115,7 @@ function paint() {
       if (!res.ok) throw new Error(res.status);
       dispatchEvent(new Event("wixa:lead"));
       try { localStorage.setItem("wixa-chat-me", JSON.stringify({ ...me, name: f.name.value.trim(), phone: f.phone.value.trim() })); sessionStorage.removeItem(KEY); } catch {}
+      rememberOrder(d.number || "", f.phone.value.trim());
       paintDone(root, d.number || "", !!f.email.value.trim(), rw);
     } catch { $(".ord__err", root).textContent = t("err"); btn.disabled = false; btn.textContent = t("send"); resetTurnstile("#turnstileOrder"); }
   };
@@ -142,9 +145,10 @@ function paintDone(root, no, mailed, rw) {
       <span class="gcard__in"><span class="gcard__front"><span class="gcard__box" aria-hidden="true">🎁</span><small>${t("tap")}</small></span>
       <span class="gcard__back"><span class="gcard__tag">${esc(tag)}</span><b>${esc(h)}</b><small>${esc(p)}</small></span></span></button>`).join("")}</div>
       <div class="rq__won" hidden><p class="rq__wonT">${t("won")}</p></div>` : ""}
-    <div class="rq__nav">${wa ? `<a class="btn btn--wa" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent((lang === "ar" ? "مرحباً، بخصوص طلبي رقم " : "Hello, about my order ") + no)}">${t("wa")}</a>` : ""}<a class="btn btn--ghost" href="/${lang === "en" ? "?lang=en" : ""}">${t("home")}</a></div></div>`;
+    <div class="rq__nav">${state.settings.chat?.on && no ? `<button type="button" class="btn btn--primary" data-chat-order="${esc(no)}">${lang === "en" ? "Follow your order in live chat" : "تابع طلبك بالدردشة"}</button>` : wa ? `<a class="btn btn--wa" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent((lang === "ar" ? "مرحباً، بخصوص طلبي رقم " : "Hello, about my order ") + no)}">${t("wa")}</a>` : ""}<a class="btn btn--ghost" href="/${lang === "en" ? "?lang=en" : ""}">${t("home")}</a></div></div>`;
   const reveal = (c) => { if (c.classList.contains("open")) return; c.classList.add("open"); c.setAttribute("aria-label", $(".gcard__back b", c).textContent); if (!$(".gcard:not(.open)", root)) $(".rq__won", root).hidden = false; };
   $$(".gcard", root).forEach((c) => (c.onclick = () => reveal(c)));
+  const oc = $("[data-chat-order]", root); if (oc) oc.onclick = () => openChat("track", oc.dataset.chatOrder);
   setTimeout(() => $$(".gcard:not(.open)", root).forEach((c, i) => setTimeout(() => reveal(c), i * 450)), 4000);
   $(".rq__copy", root)?.addEventListener("click", async (e) => { try { await navigator.clipboard.writeText(no); e.target.textContent = t("copied"); } catch {} });
   scrollTo({ top: 0, behavior: "smooth" });

@@ -1731,3 +1731,24 @@ html[lang] .chatw__btn { color: #062A33; }
 /* one corner radius for cards (22px) and one button height (48px) everywhere */
 .faq__item, .ord__pkg { border-radius: 22px; }
 .track-btn, .track__form button { min-height: 48px; height: auto; }
+
+/* track page: the form always fits the phone's width (inputs could push it past the left edge) */
+.track__form, .track__res { min-width: 0; max-width: 100%; }
+.track__form label { min-width: 0; }
+.track__form input { width: 100%; min-width: 0; box-sizing: border-box; }
+.track__say { margin: -6px 0 18px; padding: 12px 14px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 10%, var(--surface)); color: var(--text); font-weight: 600; line-height: 1.7; }
+.track__chat { border: 0; background: none; padding: 0; font: inherit; color: var(--primary); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+/* live chat: order tracking */
+.chatw__track { display: grid; gap: 8px; }
+.chatw__track input { font: inherit; min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--bg); color: var(--text); width: 100%; box-sizing: border-box; }
+.chatw__track input[name="number"] { direction: ltr; text-align: start; text-transform: uppercase; }
+.chatw__ord { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: .86rem; }
+.chatw__ord li { display: flex; gap: 8px; align-items: center; color: var(--muted); }
+.chatw__ord li::before { content: ""; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--line-2); flex: none; }
+.chatw__ord li.done { color: var(--text); } .chatw__ord li.done::before { background: var(--primary); border-color: var(--primary); }
+.chatw__ord li.now { color: var(--text); font-weight: 700; } .chatw__ord li.now::before { border-color: var(--accent); background: var(--accent); }
+.chatw__no { direction: ltr; unicode-bidi: isolate; font-weight: 800; }
+/* one card per order in the chat: number, the stage message, the stages */
+.chatw__card { display: grid; gap: 6px; padding: 12px 14px; border-radius: 18px; border-start-start-radius: 6px; background: var(--surface); border: 1px solid var(--line); font-size: .95rem; line-height: 1.7; max-width: 100%; }
+.chatw__card small { color: var(--muted); font-size: .8rem; }
+.chatw__card .chatw__ord { margin: 4px 0 0; padding-top: 8px; border-top: 1px solid var(--line); }
