@@ -165,6 +165,9 @@ node scripts/build.mjs                # بناء الواجهة يدوياً
 2. اجعله آمناً للتكرار (`if not exists`، `create or replace`، `drop policy if exists`).
 3. طبّقه على **التجريبي** ثم جرّب، ثم على **الرئيسي** — من Supabase ← SQL Editor.
 4. لا تحذف أعمدة أو بيانات دون نسخة احتياطية (اللوحة ← الإعدادات ← النسخ الاحتياطي ← «أرسل نسخة الآن»).
+5. **سجل تغييرات القاعدة:** طبّق كل ملف بأداة الترحيل (Supabase MCP `apply_migration` أو `supabase db push`) لا بلصقه في SQL Editor،
+   حتى يُسجَّل في `supabase_migrations.schema_migrations` على **القاعدتين** (اسم + تاريخ). إن طُبِّق يدوياً فاكتب في أول سطر من الملف
+   `-- STATUS: applied on staging <التاريخ>, production <التاريخ>`. اعرض السجل بـ `select version, name from supabase_migrations.schema_migrations order by version;`.
 
 ---
 
@@ -435,3 +438,21 @@ editor of the **staging** project, `select net.http_get('https://staging.wixa.de
 `net._http_response` (status, body, `created`). Never against production, and never with valid form data (it would
 create real orders or chats).
 
+
+## Audit log — سجل التعديلات (Nov 2026)
+
+Who changed what and when, for the owner only (dashboard → النظام → «سجل التعديلات», `views/audit.js`).
+Migration `20261118000000_audit_log.sql` (**apply on staging, then production**; until then the page says «السجل غير مفعّل بعد»).
+
+- **Table `public.audit_log`**: `at, actor, actor_email, actor_role, area, action, target, summary, changes (jsonb {field: {from, to}}), source`.
+  RLS: owners read only. A trigger refuses every update/delete — nobody (owner included) can edit or remove entries.
+- **Dashboard edits** (saved straight to the database) are recorded by the trigger `private.audit_row` on
+  `site_settings, projects, services, partners, testimonials, posts, orders, customer_notes, contact_messages, chats, admins`.
+  Only changes made by a signed-in person (`auth.uid()` set) are logged; only the changed fields are stored; noisy chat columns are ignored.
+- **Server actions** (team, integrations, publish, notify, bookings, review links, campaigns, clearing errors) call
+  `audit(env, session, {area, action, target, summary, changes})` from `src/services/audit.js` → token RPC `audit_add`.
+  It never throws: a logging failure never breaks the action. `adminSession` now returns `user {id, email}` for this.
+  **Never put secrets in `changes`** — for integrations only the names of changed keys are stored.
+- **Retention**: 12 months, removed by the monthly job `private.audit_purge()` (pg_cron `41 2 1 * *`).
+- New table edited from the dashboard → add `create trigger … execute function private.audit_row()` in a new migration.
+  New server action → add one `await audit(…)` line.

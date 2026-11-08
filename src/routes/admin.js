@@ -8,10 +8,12 @@ import { evBuf, unsubSig } from "./forms.js";
 import { cfgMemo, cleanConfig, getConfig, getSiteData, publishNow, saveConfig } from "../services/data.js";
 import { mailBox, notifyAddress, notifyOwner, sendAutoReply, sendOwnerMail } from "../services/mail.js";
 import { cachedStats } from "../services/stats.js";
+import { audit } from "../services/audit.js";
 
 // GET/PUT /api/admin/integrations — read or change the integrations (admins only)
 export async function handleAdminIntegrations(request, env) {
-  const { error, role } = await adminSession(request, env, request.method === "GET" ? undefined : ["owner"]);
+  const s = await adminSession(request, env, request.method === "GET" ? undefined : ["owner"]);
+  const { error, role } = s;
   if (error) return error;
   if (!env.PRIVATE) return json({ error: "storage_not_configured" }, 503);
   cfgMemo.at = 0; // always read the stored copy here
@@ -26,19 +28,22 @@ export async function handleAdminIntegrations(request, env) {
   let next;
   try { next = cleanConfig(cfg, body); } catch (e) { return json({ error: e.message, field: e.field }, 422); }
   await saveConfig(env, next);
+  const changed = Object.keys(next).filter((k) => JSON.stringify(next[k]) !== JSON.stringify(cfg[k]));
+  if (changed.length) await audit(env, s, { area: "integrations", action: "update", target: changed.join("، "), summary: "تعديل إعدادات التكاملات والتنبيهات والحماية" });
   return json(next, 200, { "cache-control": "no-store" });
 }
 
 // POST /api/admin/integrations/test — send a sample alert or auto-reply to the alerts address
 export async function handleAdminTest(request, env) {
-  const { error } = await adminSession(request, env, ["owner"]);
-  if (error) return error;
+  const s = await adminSession(request, env, ["owner"]);
+  if (s.error) return s.error;
   let body = {};
   try { body = await request.json(); } catch {}
   const to = await notifyAddress(env);
   if (!env.RESEND_API_KEY || !to) return json({ error: "email_not_configured" }, 503);
   const cfg = await getConfig(env);
   const sample = { name: "زائر تجريبي", email: to, phone: null, message: "هذه رسالة تجريبية من لوحة التحكم.", services: [], lang: body.lang === "en" ? "en" : "ar" };
+  await audit(env, s, { area: "integrations", action: "send_test", target: String(body.kind || "alert").slice(0, 20), summary: `إرسال تجربة إلى ${to}` });
   if (body.kind === "backup") return (await runBackup(env, true)) ? json({ ok: true, to }) : json({ error: "send_failed" }, 502);
   const ok = body.kind === "weekly" ? await runWeeklyReport(env, true) : body.kind === "autoreply" ? await sendAutoReply(env, cfg, sample, true) : await notifyOwner(env, sample, true);
   return ok ? json({ ok: true, to }) : json({ error: "send_failed" }, 502);
@@ -46,9 +51,10 @@ export async function handleAdminTest(request, env) {
 
 // POST /api/admin/refresh — show the latest content on the site now
 export async function handleAdminRefresh(request, env) {
-  const { error } = await adminSession(request, env, ["owner", "editor"]);
-  if (error) return error;
+  const s = await adminSession(request, env, ["owner", "editor"]);
+  if (s.error) return s.error;
   try { await publishNow(env); } catch (e) { console.error("refresh", e); return json({ error: "refresh_failed" }, 502); }
+  await audit(env, s, { area: "site", action: "publish", summary: "تحديث الموقع بآخر التعديلات" });
   return json({ ok: true });
 }
 
@@ -162,8 +168,8 @@ export async function handleAdminStatus(request, env, ctx) {
 
 // GET/PUT /api/admin/notify — read or change where new-message alerts are sent (admins only)
 export async function handleAdminNotify(request, env) {
-  const { error } = await adminSession(request, env, ["owner"]);
-  if (error) return error;
+  const s = await adminSession(request, env, ["owner"]);
+  if (s.error) return s.error;
   if (request.method === "GET") {
     const custom = env.PRIVATE ? await env.PRIVATE.get("notify_email") : null;
     return json({ email: await notifyAddress(env), source: custom ? "dashboard" : "default", editable: !!env.PRIVATE }, 200, { "cache-control": "no-store" });
@@ -172,17 +178,18 @@ export async function handleAdminNotify(request, env) {
   let body = {};
   try { body = await request.json(); } catch {}
   const email = String(body.email || "").trim().slice(0, 200);
-  if (!email) { await env.PRIVATE.delete("notify_email"); return json({ email: env.NOTIFY_EMAIL || "", source: "default" }); }
+  if (!email) { await env.PRIVATE.delete("notify_email"); await audit(env, s, { area: "notify", action: "update", summary: "بريد التنبيهات: العودة إلى البريد الافتراضي" }); return json({ email: env.NOTIFY_EMAIL || "", source: "default" }); }
   if (!EMAIL_RE.test(email)) return json({ error: "invalid_email" }, 422);
   await env.PRIVATE.put("notify_email", email);
+  await audit(env, s, { area: "notify", action: "update", target: email, summary: "تغيير بريد التنبيهات" });
   return json({ email, source: "dashboard" });
 }
 
 // ---------------------------------------------------------------- message status + notes (dashboard)
 // Kept in the private store by message id: { status: new|working|won|lost, note }.
 export async function handleAdminMsgMeta(request, env) {
-  const { error } = await adminSession(request, env, ["owner", "support"]); // customer data: never the content editor
-  if (error) return error;
+  const s = await adminSession(request, env, ["owner", "support"]); // customer data: never the content editor
+  if (s.error) return s.error;
   if (!env.PRIVATE) return json({ error: "storage_not_configured" }, 503);
   const all = (await env.PRIVATE.get("msgmeta", { type: "json" })) || {};
   if (request.method === "GET") return json(all, 200, { "cache-control": "no-store" });
@@ -192,14 +199,16 @@ export async function handleAdminMsgMeta(request, env) {
   if (!id) return json({ error: "missing_id" }, 422);
   if (b.remove) delete all[id];
   else all[id] = { status: ["new", "working", "won", "lost"].includes(b.status) ? b.status : "new", note: String(b.note || "").slice(0, 2000), at: new Date().toISOString() };
+  const before = (await env.PRIVATE.get("msgmeta", { type: "json" }).catch(() => null))?.[id] || null;
   await env.PRIVATE.put("msgmeta", JSON.stringify(all));
+  await audit(env, s, { area: "messages", action: b.remove ? "delete" : "update", target: `رسالة ${id}`, changes: b.remove ? {} : { status: { from: before?.status ?? null, to: all[id].status }, note: { from: before?.note ?? null, to: all[id].note.slice(0, 300) } } });
   return json(all[id] || { ok: true });
 }
 
 // DELETE /api/admin/booking {date, time} — cancel an appointment: its time becomes free to book again
 export async function handleAdminBooking(request, env) {
-  const { error } = await adminSession(request, env, ["owner", "support"]); // customer data: never the content editor
-  if (error) return error;
+  const s = await adminSession(request, env, ["owner", "support"]); // customer data: never the content editor
+  if (s.error) return s.error;
   if (!env.PRIVATE) return json({ error: "storage_not_configured" }, 503);
   let b = {};
   try { b = await request.json(); } catch {}
@@ -208,20 +217,22 @@ export async function handleAdminBooking(request, env) {
   const key = `book:${date}`;
   const taken = ((await env.PRIVATE.get(key, { type: "json" }).catch(() => null)) || []).filter((t) => t !== time);
   await env.PRIVATE.put(key, JSON.stringify(taken), { expirationTtl: 90 * 864e2 });
+  await audit(env, s, { area: "bookings", action: "cancel", target: `${date} ${time}`, summary: "إلغاء موعد" });
   return json({ ok: true, free: time });
 }
 
 // ---------------------------------------------------------------- client review links
 // The owner creates a one-time link in the dashboard; the client's review arrives hidden until published.
 export async function handleAdminReviewLink(request, env) {
-  const { error } = await adminSession(request, env, ["owner", "editor"]);
-  if (error) return error;
+  const s = await adminSession(request, env, ["owner", "editor"]);
+  if (s.error) return s.error;
   if (!env.PRIVATE) return json({ error: "storage_not_configured" }, 503);
   let b = {};
   try { b = await request.json(); } catch {}
   const code = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
   await env.PRIVATE.put(`review:${code}`, JSON.stringify({ name: String(b.name || "").slice(0, 120), at: new Date().toISOString() }), { expirationTtl: 60 * 864e2 });
   const origin = new URL(request.url).origin;
+  await audit(env, s, { area: "testimonials", action: "review_link", target: String(b.name || "").slice(0, 120), summary: "إنشاء رابط رأي لعميل" });
   return json({ url: `${origin}/review?c=${code}${b.lang === "en" ? "&lang=en" : ""}`, days: 60 });
 }
 // GET /api/admin/funnel?days=30 — totals for the dashboard
@@ -282,9 +293,15 @@ export async function handleAdminTeam(request, env, ctx) {
       });
       sent = r.ok;
     }
+    await audit(env, s, { area: "team", action: "invite", target: email, summary: `دعوة بصلاحية ${ROLE_AR[role]}${sent ? "" : " (لم يُرسل البريد)"}` });
     return json({ code, link, sent, email, role });
   }
-  if (b.action === "cancel") { await env.PRIVATE.delete(`invite:${String(b.code || "").slice(0, 20)}`); return json({ ok: true }); }
+  if (b.action === "cancel") {
+    const code = String(b.code || "").slice(0, 20), inv = await env.PRIVATE.get(`invite:${code}`, { type: "json" }).catch(() => null);
+    await env.PRIVATE.delete(`invite:${code}`);
+    await audit(env, s, { area: "team", action: "invite_cancel", target: inv?.email || code, summary: "إلغاء دعوة" });
+    return json({ ok: true });
+  }
   if (b.action === "role" || b.action === "remove") {
     const me = await sessionUser(request, env);
     if (b.user_id === me?.id) return json({ error: "self" }, 422);
@@ -292,6 +309,8 @@ export async function handleAdminTeam(request, env, ctx) {
       ? await rpcToken(env, "team_grant", { p: { user_id: b.user_id, role: b.role } })
       : await rpcToken(env, "team_remove", { uid: b.user_id });
     if (!r.ok) { const t = await r.text(); return json({ error: /last owner/.test(t) ? "last_owner" : "failed" }, 422); }
+    await audit(env, s, { area: "team", action: b.action === "role" ? "role" : "remove", target: String(b.email || b.user_id || "").slice(0, 160),
+      summary: b.action === "role" ? `تغيير الصلاحية إلى ${ROLE_AR[b.role] || b.role}` : "إزالة من الفريق" });
     // a removed member, or one who no longer answers chats, stops getting chat notifications on their devices
     if ((b.action === "remove" || b.role === "editor") && env.PRIVATE) {
       const list = await rpcToken(env, "team_list", {}).then((x) => (x.ok ? x.json() : [])).catch(() => []);
@@ -353,5 +372,6 @@ export async function handleAdminCampaign(request, env) {
     if (r.ok) sent += Math.min(100, mails.length - i); else { failed += Math.min(100, mails.length - i); console.error("campaign", r.status, await r.text()); }
   }
   if (!b.test && env.PRIVATE) await env.PRIVATE.put("campaigns", JSON.stringify([{ at: new Date().toISOString(), subject, sent, failed }, ...log].slice(0, 30)));
+  await audit(env, s, { area: "campaigns", action: b.test ? "send_test" : "send", target: subject, summary: `${sent} أُرسلت${failed ? ` · ${failed} فشلت` : ""}` });
   return json({ ok: failed === 0, sent, failed, test: !!b.test });
 }

@@ -12,7 +12,10 @@ import { json } from "./core.js";
 const ROLE_TTL = 60e3;
 const roleMemo = new Map(); // fingerprint → { role, until }
 const fingerprint = async (s) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map((b) => b.toString(16).padStart(2, "0")).join("");
-const tokenExpiry = (auth) => { try { return JSON.parse(atob(auth.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).exp * 1000 || 0; } catch { return 0; } };
+const claims = (jwt) => { try { return JSON.parse(decodeURIComponent(escape(atob(jwt.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))))); } catch { return {}; } };
+const tokenExpiry = (jwt) => (claims(jwt).exp || 0) * 1000;
+// who is signed in (read from the token Supabase has just accepted for this request): for the change log
+const userOf = (jwt) => { const c = claims(jwt); return { id: c.sub || "", email: c.email || "" }; };
 
 export async function adminSession(request, env, roles) {
   const auth = request.headers.get("authorization") || "";
@@ -22,7 +25,7 @@ export async function adminSession(request, env, roles) {
   const known = roleMemo.get(fp);
   if (known && known.until > now) {
     if (roles && !roles.includes(known.role)) return { error: json({ error: "role_forbidden", role: known.role }, 403) };
-    return { asUser, role: known.role };
+    return { asUser, role: known.role, user: userOf(auth.slice(7)) };
   }
   let role = null;
   try {
@@ -40,7 +43,7 @@ export async function adminSession(request, env, roles) {
     roleMemo.set(fp, { role, until: Math.min(now + ROLE_TTL, exp) });
   }
   if (roles && !roles.includes(role)) return { error: json({ error: "role_forbidden", role }, 403) };
-  return { asUser, role };
+  return { asUser, role, user: userOf(auth.slice(7)) };
 }
 export async function sessionUser(request, env) {
   const auth = request.headers.get("authorization") || "";

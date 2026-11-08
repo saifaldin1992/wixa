@@ -839,3 +839,19 @@ body { font-size: 14.5px; }
 body:has(#auth:not([hidden])) .boot, body:has(#app:not([hidden])) .boot, body:has(#netFail) .boot { display: none; }
 
 .boot__mark { fill: currentColor; }
+
+/* سجل التعديلات */
+.audit__bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 12px; margin-bottom: 10px; }
+.audit__bar label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
+.audit__list { display: grid; gap: 10px; }
+.audit__row summary { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; cursor: pointer; list-style: none; }
+.audit__row summary::-webkit-details-marker { display: none; }
+.audit__when { color: var(--muted); font-size: 13px; min-width: 110px; }
+.audit__who { font-weight: 600; overflow-wrap: anywhere; }
+.audit__what { color: var(--brand); }
+.audit__target { overflow-wrap: anywhere; }
+.audit__n { font-size: 12px; margin-inline-start: auto; }
+.audit__sum { margin: 10px 0 0; color: var(--muted); }
+.audit__ch { width: 100%; margin-top: 10px; font-size: 13px; border-collapse: collapse; }
+.audit__ch th, .audit__ch td { text-align: start; padding: 6px 8px; border-top: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+.audit__ch code { font-size: 12px; }

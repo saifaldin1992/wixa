@@ -19,6 +19,7 @@ import { viewPosts } from "./views/posts.js";
 import { viewSeo } from "./views/seo.js";
 import { viewDiagnose } from "./views/diagnose.js";
 import { viewDevGuide } from "./views/devguide.js";
+import { viewAudit } from "./views/audit.js";
 
 // ---------------- shell / router ----------------
 export const VIEWS = {
@@ -37,6 +38,7 @@ export const VIEWS = {
   protect: { title: "الحماية", sub: "الحماية من الرسائل المزعجة ووضع الصيانة", render: (v) => composeView(v, [[viewIntegrations, ["#cSpam", "#cMaint"]]]) },
   backup: { title: "النسخ الاحتياطي", sub: "النسخة التلقائية، نسخة المحتوى، والاسترجاع", render: (v) => composeView(v, [[viewIntegrations, ["#cBackup"]], [viewAccount, ["نسخة احتياطية"]]]) },
   diagnose: { title: "الفحص والتشخيص", sub: "فحص كل أجزاء الموقع، مكان أي عطل وطريقة حله، وسجل الأعطال", render: (v) => composeView(v, [[viewIntegrations, ["#cPublish"]], [viewDiagnose, ["*"]]]) },
+  audit: { title: "سجل التعديلات", sub: "من عدّل ماذا ومتى — للمالك فقط، ولا يمكن تعديله أو حذفه", render: viewAudit },
   devguide: { title: "دليل المطوّر", sub: "كيف بُني المشروع وأين يوجد كل جزء — للمطورين", render: viewDevGuide },
   orders: { title: "الطلبات", sub: "كل طلبات المشاريع من الموقع في مكان واحد: ماذا اختار الزبون، ومن أين، وهداياه وخصمه", render: viewOrders },
   messages: { title: "الرسائل", sub: "رسائل نموذج التواصل", render: viewMessages },

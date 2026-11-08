@@ -10,7 +10,7 @@
     const q = {
       then: (res, rej) => ok(single ? (rows[table] ?? null) : [], { count: 0 }).then(res, rej),
     };
-    for (const m of ["select", "eq", "neq", "in", "order", "limit", "range", "update", "insert", "upsert", "delete", "match", "is", "gte", "lte", "gt", "lt", "not", "or"]) q[m] = () => q;
+    for (const m of ["select", "eq", "neq", "in", "order", "limit", "range", "update", "insert", "upsert", "delete", "match", "is", "gte", "lte", "gt", "lt", "not", "or", "ilike"]) q[m] = () => q;
     q.single = q.maybeSingle = () => { single = true; return q; };
     return q;
   };

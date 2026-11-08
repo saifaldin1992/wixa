@@ -2,7 +2,7 @@
 const { chromium, devices } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
 import { readFileSync } from "node:fs";
 const BASE = process.env.BASE || "http://localhost:8787", OUT = process.argv[2] || "";
-const VIEWS = ["overview", "orders", "messages", "chats", "customers", "sales", "campaigns", "content", "appearance", "brand", "projects", "services", "partners", "testimonials", "posts", "seo", "integrations", "notify", "protect", "backup", "diagnose", "devguide", "team", "account"];
+const VIEWS = ["overview", "orders", "messages", "chats", "customers", "sales", "campaigns", "content", "appearance", "brand", "projects", "services", "partners", "testimonials", "posts", "seo", "integrations", "notify", "protect", "backup", "diagnose", "audit", "devguide", "team", "account"];
 const b = await chromium.launch();
 const ctx = await b.newContext({ ...devices["iPhone 13"] });
 await ctx.route(/supabase-js/, (r) => r.fulfill({ body: readFileSync(new URL("./supabase-stub.js", import.meta.url)), contentType: "application/javascript" }));

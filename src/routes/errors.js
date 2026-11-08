@@ -2,6 +2,7 @@
 
 import { adminSession } from "../lib/auth.js";
 import { allowed, clientIp, json } from "../lib/core.js";
+import { audit } from "../services/audit.js";
 
 // ---------------------------------------------------------------- error log (site + server)
 // The last 50 problems, kept in the private store: errors in visitors' browsers (sent by the page) and on the server.
@@ -40,10 +41,10 @@ export async function handleClientError(request, env, ctx) {
 }
 // GET / DELETE /api/admin/errors
 export async function handleAdminErrors(request, env) {
-  const { error } = await adminSession(request, env, ["owner"]);
-  if (error) return error;
+  const s = await adminSession(request, env, ["owner"]);
+  if (s.error) return s.error;
   if (!env.PRIVATE) return json([]);
-  if (request.method === "DELETE") { await env.PRIVATE.delete("errors"); errBuf = { list: [], at: 0 }; return json({ ok: true }); }
+  if (request.method === "DELETE") { await env.PRIVATE.delete("errors"); errBuf = { list: [], at: 0 }; await audit(env, s, { area: "diagnose", action: "clear_errors", summary: "مسح سجل الأعطال" }); return json({ ok: true }); }
   const saved = (await env.PRIVATE.get("errors", { type: "json" }).catch(() => null)) || [];
   return json([...errBuf.list, ...saved].slice(0, 60), 200, { "cache-control": "no-store" });
 }

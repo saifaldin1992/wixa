@@ -6,7 +6,7 @@
 const { chromium, devices } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
 import { readFileSync } from "node:fs";
 const BASE = process.env.BASE || "http://localhost:8787";
-const VIEWS = ["overview", "orders", "messages", "chats", "customers", "sales", "campaigns", "content", "appearance", "brand", "projects", "services", "partners", "testimonials", "posts", "seo", "integrations", "notify", "protect", "backup", "diagnose", "devguide", "team", "account"];
+const VIEWS = ["overview", "orders", "messages", "chats", "customers", "sales", "campaigns", "content", "appearance", "brand", "projects", "services", "partners", "testimonials", "posts", "seo", "integrations", "notify", "protect", "backup", "diagnose", "audit", "devguide", "team", "account"];
 
 // realistic answers from the server, so every page draws its cards
 const src = readFileSync(new URL("../src/services/data.js", import.meta.url), "utf8");
