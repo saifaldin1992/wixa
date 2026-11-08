@@ -1052,7 +1052,7 @@ footer a{color:var(--m)}
 </style></head><body><div class="wrap">
 <header><a class="home" href="/?lang=${lang}"><img src="/icons/icon-96.png" alt="">${esc(brand)}</a>
 <nav><button class="tbtn" type="button" id="tbtn" aria-label="${ar ? "الوضع الليلي / النهاري" : "Dark / light mode"}"><svg class="mo" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/></svg><svg class="su" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button><a href="${path}?lang=${other}" hreflang="${other}">${ar ? "English" : "العربية"}</a><a href="/?lang=${lang}">${ar ? "الرئيسية" : "Home"}</a></nav></header>
-<nav class="sub">${[["/?lang=LANG#projects", ar ? "نماذج من عملنا" : "Our work"], ["/?lang=LANG#services", ar ? "خدماتنا" : "Services"], ["/pricing?lang=LANG", ar ? "الباقات" : "Packages"], ["/careers?lang=LANG", ar ? "الوظائف" : "Careers"], ["/contact?lang=LANG", ar ? "تواصل معنا" : "Contact"]].map(([h, t]) => `<a href="${h.replace("LANG", lang)}">${t}</a>`).join("")}<a href="/blog?lang=${lang}">${ar ? "المقالات" : "Articles"}</a></nav>
+<nav class="sub">${[["/?lang=LANG#projects", ar ? "نماذج من عملنا" : "Our work"], ["/?lang=LANG#services", ar ? "خدماتنا" : "Services"], ["/?lang=LANG#pricing", ar ? "الباقات" : "Packages"], ["/careers?lang=LANG", ar ? "الوظائف" : "Careers"], ["/contact?lang=LANG", ar ? "تواصل معنا" : "Contact"]].map(([h, t]) => `<a href="${h.replace("LANG", lang)}">${t}</a>`).join("")}<a href="/blog?lang=${lang}">${ar ? "المقالات" : "Articles"}</a></nav>
 <main>${body}
 <div class="actions"><a class="btn" href="/order?lang=${lang}${orderQ}">${ar ? "اطلب مشروعك" : "Order your project"}</a><a class="btn btn--ghost" href="/contact?lang=${lang}">${ar ? "تواصل معنا" : "Contact us"}</a>${wa ? `<a class="btn btn--wa" href="https://wa.me/${wa}" target="_blank" rel="noopener">${ar ? "واتساب" : "WhatsApp"}</a>` : ""}</div></main>
 <footer><span>© ${new Date().getFullYear()} ${esc(brand)}</span><span><a href="/privacy?lang=${lang}">${ar ? "سياسة الخصوصية" : "Privacy policy"}</a> · <a href="/?lang=${lang}">${origin.replace(/^https?:\/\//, "")}</a></span></footer>
@@ -2105,8 +2105,13 @@ export default {
           return await handleAdminPush(request, env);
         case "DELETE /api/admin/booking": return await handleAdminBooking(request, env);
         case "POST /api/admin/review-link": return await handleAdminReviewLink(request, env);
-        case "GET /about":
         case "GET /pricing":
+        case "HEAD /pricing": {
+          // the packages page is now a section of the home page
+          const q = url.searchParams.get("lang") === "en" ? "?lang=en" : "";
+          return new Response(null, { status: 301, headers: { location: `/${q}#pricing`, "cache-control": "public, max-age=3600" } });
+        }
+        case "GET /about":
         case "GET /careers":
         case "GET /order":
         case "GET /track":
@@ -2140,7 +2145,7 @@ export default {
           let projects = [], services = [];
           try { const d = JSON.parse(await getSiteData(env, ctx)); projects = d.projects || []; services = d.services || []; } catch {}
           const posts = await getPosts(env);
-          const urls = ["/", "/about", "/pricing", "/careers", "/contact", "/faq", "/privacy", "/blog", ...services.map((x) => `/services/${encodeURIComponent(x.slug)}`), ...projects.map((x) => `/projects/${encodeURIComponent(x.slug)}`), ...posts.map((x) => `/blog/${encodeURIComponent(x.slug)}`)].map((p) => `<url><loc>https://wixa.dev${p}</loc><lastmod>${today}</lastmod></url>`).join("");
+          const urls = ["/", "/about", "/careers", "/contact", "/faq", "/privacy", "/blog", ...services.map((x) => `/services/${encodeURIComponent(x.slug)}`), ...projects.map((x) => `/projects/${encodeURIComponent(x.slug)}`), ...posts.map((x) => `/blog/${encodeURIComponent(x.slug)}`)].map((p) => `<url><loc>https://wixa.dev${p}</loc><lastmod>${today}</lastmod></url>`).join("");
           return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>\n`, {
             headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" },
           });

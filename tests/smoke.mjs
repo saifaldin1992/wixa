@@ -98,9 +98,9 @@ try {
       check((await p.getAttribute("html", "lang")) === "en", "language toggle works");
       // the homepage is short: the calculator, about us and careers live on their own pages
       check(await p.evaluate(() => document.querySelector("#calculator").offsetHeight > 0 && !document.querySelector(".pricing__more") && !document.querySelector("#about").offsetHeight), "homepage shows the whole pricing section (packages + calculator); about us stays on its own page");
-      // cost calculator (/pricing): picking a type changes the estimate, the button prefills the contact form
+      // packages and the cost calculator are sections of the home page; the old /pricing link lands there
       await p.goto(BASE + "/pricing", { waitUntil: "load" }); await p.waitForTimeout(1200);
-      check(await p.evaluate(() => document.documentElement.dataset.page === "pricing" && document.querySelector("#calculator").offsetHeight > 0), "/pricing shows the packages and the calculator");
+      check(await p.evaluate(() => document.documentElement.dataset.page === "home" && location.hash === "#pricing" && document.querySelector("#calculator").offsetHeight > 0), "old /pricing link opens the packages section on the home page");
       const price0 = await p.textContent("#calcPrice");
       await p.click("#calcTypes .ctype:last-child"); await p.click("#calcFeats .cfeat"); await p.waitForTimeout(900);
       check((await p.textContent("#calcPrice")) !== price0, "calculator updates the estimate");
