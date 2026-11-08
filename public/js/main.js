@@ -4,7 +4,7 @@ import { load } from "./site/data.js";
 import { render } from "./site/render.js";
 import { setupUI } from "./site/ui.js";
 import { setupTheme } from "./site/theme.js";
-import { setupParticles, setupLogoTilt } from "./site/hero.js";
+import { setupParticles, setupLogoTilt, fitHeroTop } from "./site/hero.js";
 import { setupCalc } from "./site/calculator.js";
 import { setupContact } from "./site/contact.js";
 import { setupProjectModal } from "./site/projects.js";
@@ -52,6 +52,7 @@ if (PREVIEW) addEventListener("message", (e) => {
   setupContact();
   setupOrder();
   setupTrack();
+  fitHeroTop();
   setupTheme();
   setupParticles();
   setupLogoTilt();

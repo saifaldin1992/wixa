@@ -1682,3 +1682,16 @@ html[data-theme="dark"] .hero__logo .hero__globe { opacity: .2; }
 /* partners grid (not the moving strip): logos rest faded in grey and show their colours on hover, focus or tap */
 .partners__grid:not(.is-marquee) .partner img, html[data-theme="dark"] .partners__grid:not(.is-marquee) .partner img { filter: grayscale(1); opacity: .55; transition: filter .4s, opacity .4s, transform .5s var(--ease-out); }
 html .partners__grid:not(.is-marquee) .partner:is(:hover, :focus-visible, :active, .is-on) img { filter: none; opacity: 1; }
+
+/* partners strip: same width as the rest of the site (it ran edge to edge on wide screens) */
+.partners__grid.is-marquee { max-width: calc(var(--max) - var(--gutter) * 2); margin-inline: auto; }
+@media (max-width: 760px) { .partners__grid.is-marquee { max-width: none; } }
+@media (min-width: 1100px) { .partners__track .partner { width: 200px; } }
+/* every main page/section title sits in the middle, with the line under it */
+.about__text > .head__title, .ord__pick > h2, .ord__pick > h2 + p, .track__wrap > h1, .track__wrap > h1 + p { text-align: center; }
+.ord__pick > h2 + p, .track__wrap > h1 + p { margin-inline: auto; max-width: 560px; }
+/* about: the title spans the whole width above the two columns, so it sits in the middle of the page */
+.about__text { display: contents; }
+.about__text > .head__title { grid-column: 1 / -1; margin-bottom: 0; }
+/* the "by service / by your field" switch sits in the middle under the title */
+.svc-tabs { justify-content: center; margin-inline: auto; }

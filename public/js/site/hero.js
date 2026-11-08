@@ -49,6 +49,21 @@ function runnerDot(d) {
     <path class="lg-trace__halo" d="${outer}" pathLength="1"/><path class="lg-trace__halo2" d="${outer}" pathLength="1"/><path class="lg-trace__edge" d="${outer}" pathLength="1"/><path class="lg-trace" d="${outer}" pathLength="1"/></g>`;
 }
 
+// ---------- hero: the globe's top sits right under the header bar ----------
+// The bar can be pushed down (the staging strip, a promo bar), so measure where it really ends.
+export function fitHeroTop() {
+  const hero = document.querySelector(".hero"), bar = document.querySelector(".header__bar, .header");
+  if (!hero || !bar) return;
+  const fit = () => {
+    if (scrollY > 40) return; // the bar slides away on scroll; measure it only at the top of the page
+    const bottom = bar.getBoundingClientRect().bottom + scrollY, top = hero.getBoundingClientRect().top + scrollY;
+    hero.style.setProperty("padding-top", `${Math.max(60, Math.round(bottom - top + 6))}px`, "important");
+  };
+  fit();
+  addEventListener("resize", fit);
+  if ("ResizeObserver" in window) new ResizeObserver(fit).observe(document.body);
+}
+
 // ---------- hero: floating particles ----------
 export function setupParticles() {
   const c = $("#particles");

@@ -983,7 +983,7 @@ function simplePage(request, st, { lang, title, description, path, image, body, 
   const c = st.contact || {};
   const wa = String(c.whatsapp || "").replace(/\D/g, "");
   const other = ar ? "en" : "ar";
-  const html = `<!doctype html><html lang="${lang}" dir="${ar ? "rtl" : "ltr"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  const html = `<!doctype html><html lang="${lang}" dir="${ar ? "rtl" : "ltr"}" data-mode="${st.mode === "light" || st.mode === "dark" ? st.mode : ""}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)} — ${esc(brand)}</title><meta name="description" content="${esc(description)}">
 <link rel="canonical" href="${origin}${path}?lang=${lang}"><link rel="alternate" hreflang="ar" href="${origin}${path}?lang=ar"><link rel="alternate" hreflang="en" href="${origin}${path}?lang=en">
 <meta property="og:type" content="website"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${origin}${path}">
@@ -991,9 +991,13 @@ ${image ? `<meta property="og:image" content="${esc(image)}"><meta name="twitter
 <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 ${font === "Alexandria" ? '<link rel="preload" href="/fonts/alexandria/alexandria-arabic-800-normal.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="/fonts/alexandria.css">' : `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;500;700;800&display=swap">`}
 ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld).replace(/</g, "\\u003c")}</script>` : ""}
+<script src="/theme-pre.js"></script>
 <style>
-:root{--p:${color};--bg:#FBFAFE;--s:#fff;--t:#140F1F;--m:#625C70;--l:#ECE8F3;color-scheme:light dark}
-@media(prefers-color-scheme:dark){:root{--bg:#0F0B1A;--s:#17122A;--t:#F1EEF8;--m:#A9A3BC;--l:#2A2340;--p:#A574F1}}
+:root{--p:${color};--bg:#FBFAFE;--s:#fff;--t:#140F1F;--m:#625C70;--l:#ECE8F3;color-scheme:light}
+html[data-theme="dark"]{--bg:#0F0B1A;--s:#17122A;--t:#F1EEF8;--m:#A9A3BC;--l:#2A2340;--p:#A574F1;color-scheme:dark}
+.tbtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--l);background:var(--s);color:var(--t);display:inline-grid;place-items:center;cursor:pointer;padding:0}.tbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8}
+html[data-theme="dark"] .tbtn .mo,html:not([data-theme="dark"]) .tbtn .su{display:none}
+main>h1,main>.lead,main>.cat,article>h1,article>.lead{text-align:center}main>.cat{display:table;margin-inline:auto}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font-family:"${font}",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;line-height:1.8}
 a{color:var(--p)}.wrap{max-width:900px;margin:0 auto;padding:0 20px}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0}
@@ -1033,8 +1037,8 @@ footer{border-top:1px solid var(--l);padding:22px 0;font-size:.85rem;color:var(-
 footer a{color:var(--m)}
 </style></head><body><div class="wrap">
 <header><a class="home" href="/?lang=${lang}"><img src="/icons/icon-96.png" alt="">${esc(brand)}</a>
-<nav><a href="${path}?lang=${other}" hreflang="${other}">${ar ? "English" : "العربية"}</a><a href="/?lang=${lang}">${ar ? "الرئيسية" : "Home"}</a></nav></header>
-<nav class="sub">${[["/?lang=LANG#projects", ar ? "حلولنا" : "Solutions"], ["/?lang=LANG#services", ar ? "خدماتنا" : "Services"], ["/pricing?lang=LANG", ar ? "الباقات" : "Packages"], ["/careers?lang=LANG", ar ? "الوظائف" : "Careers"], ["/contact?lang=LANG", ar ? "تواصل معنا" : "Contact"]].map(([h, t]) => `<a href="${h.replace("LANG", lang)}">${t}</a>`).join("")}<a href="/blog?lang=${lang}">${ar ? "المقالات" : "Articles"}</a></nav>
+<nav><button class="tbtn" type="button" id="tbtn" aria-label="${ar ? "الوضع الليلي / النهاري" : "Dark / light mode"}"><svg class="mo" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/></svg><svg class="su" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button><a href="${path}?lang=${other}" hreflang="${other}">${ar ? "English" : "العربية"}</a><a href="/?lang=${lang}">${ar ? "الرئيسية" : "Home"}</a></nav></header>
+<nav class="sub">${[["/?lang=LANG#projects", ar ? "نماذج من عملنا" : "Our work"], ["/?lang=LANG#services", ar ? "خدماتنا" : "Services"], ["/pricing?lang=LANG", ar ? "الباقات" : "Packages"], ["/careers?lang=LANG", ar ? "الوظائف" : "Careers"], ["/contact?lang=LANG", ar ? "تواصل معنا" : "Contact"]].map(([h, t]) => `<a href="${h.replace("LANG", lang)}">${t}</a>`).join("")}<a href="/blog?lang=${lang}">${ar ? "المقالات" : "Articles"}</a></nav>
 <main>${body}
 <div class="actions"><a class="btn" href="/order?lang=${lang}${orderQ}">${ar ? "اطلب مشروعك" : "Order your project"}</a><a class="btn btn--ghost" href="/contact?lang=${lang}">${ar ? "تواصل معنا" : "Contact us"}</a>${wa ? `<a class="btn btn--wa" href="https://wa.me/${wa}" target="_blank" rel="noopener">${ar ? "واتساب" : "WhatsApp"}</a>` : ""}</div></main>
 <footer><span>© ${new Date().getFullYear()} ${esc(brand)}</span><span><a href="/privacy?lang=${lang}">${ar ? "سياسة الخصوصية" : "Privacy policy"}</a> · <a href="/?lang=${lang}">${origin.replace(/^https?:\/\//, "")}</a></span></footer>
