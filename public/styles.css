@@ -1626,7 +1626,7 @@ html[data-theme="dark"] .hero__logo .hero__globe { opacity: .12; }
 @media (min-width: 761px) and (max-height: 860px) { .hero__content { --lw: min(400px, 72vw, 26vh); } }
 .hero__content .hero__logo { margin-bottom: var(--bm) !important; }
 .hero .hero__stage .hero__title { margin-top: max(4px, calc(var(--ov) - var(--bm) - 40px)); }
-.hero__badge { gap: 8px; }
+.hero__badge { gap: 6px; padding: 4px 12px; font-size: .8125rem; box-shadow: none; } /* «الشريك التقني لمشاريعك»: a small label above the title, not a button */
 .badge__star { font-style: normal; color: var(--accent); font-size: .8em; line-height: 1; }
 @media (min-width: 761px) { .hero { min-height: auto; padding-bottom: 110px !important; } }
 

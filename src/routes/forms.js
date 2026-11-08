@@ -1,6 +1,6 @@
 // Public forms and endpoints: project orders, order tracking, contact, booking, review, visit events, unsubscribe.
 
-import { EMAIL_RE, SECURITY_HEADERS, allowed, baghdadNow, clientIp, dayKey, esc, hex, json, pickLang, rpc, rpcToken, safeHref, sameText, sb, toHM, toMin, turnstileOk } from "../lib/core.js";
+import { EMAIL_RE, SECURITY_HEADERS, allowed, baghdadNow, clientIp, dayKey, esc, hex, json, newOrderNumber, pickLang, rpc, rpcToken, safeHref, sameText, sb, toHM, toMin, turnstileOk } from "../lib/core.js";
 import { simplePage } from "./pages.js";
 import { getConfig, getSiteData } from "../services/data.js";
 import { mailBox, notifyOwner, requestOffer, sendAutoReply, sendOwnerMail, sendRequestConfirmation } from "../services/mail.js";
@@ -29,9 +29,7 @@ export async function handleOrder(request, env, ctx) {
   const blocked = cfg.spam.blocked.split(/[\n,،]/).map((w) => w.trim().toLowerCase()).filter((w) => w.length >= 2);
   if (blocked.some((w) => `${name} ${email} ${phone} ${note}`.toLowerCase().includes(w))) return json({ ok: true, number: "" }, 201);
 
-  const d = new Date(), pad = (n) => String(n).padStart(2, "0");
-  const rnd = [...crypto.getRandomValues(new Uint8Array(4))].map((x) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[x % 32]).join("");
-  const number = `WX-${String(d.getUTCFullYear()).slice(2)}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}-${rnd}`;
+  const number = newOrderNumber();
   const offer = await requestOffer(env, ctx, lang);
   const until = (offer.discount.match(/\d{4}-\d{2}-\d{2}/) || [""])[0];
   const r = await rpc(env, "submit_order", { number, source, item, details, price_hint: price, name, phone, email, note, lang,
@@ -121,9 +119,7 @@ export async function handleContact(request, env, ctx) {
   if (body.kind === "project") {
     const p = body.project && typeof body.project === "object" ? body.project : {};
     const ar = row.lang === "ar";
-    const d = new Date(), pad = (n) => String(n).padStart(2, "0");
-    const rnd = [...crypto.getRandomValues(new Uint8Array(4))].map((b) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b % 32]).join("");
-    reqNo = `WX-${String(d.getUTCFullYear()).slice(2)}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}-${rnd}`;
+    reqNo = newOrderNumber();
     const list = (v) => (Array.isArray(v) ? v.filter((x) => typeof x === "string").slice(0, 12).map((x) => x.slice(0, 80)) : []);
     const lines = [
       [ar ? "رقم الطلب" : "Request no.", reqNo],

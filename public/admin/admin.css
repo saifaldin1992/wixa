@@ -645,6 +645,8 @@ html[dir="rtl"] .chat__back svg { transform: none; }
 
 /* orders */
 .ord-top { display: grid; gap: 10px; margin-bottom: 12px; }
+.ord-bar { display: flex; align-items: center; gap: 10px; }
+.ord-bar .ord-search { flex: 1; }
 .ord-search { width: 100%; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; }
 .ord-src { display: flex; flex-wrap: wrap; gap: 6px; }
 .ord-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; margin-top: 12px; }

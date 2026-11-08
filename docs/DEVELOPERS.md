@@ -336,6 +336,11 @@ lib/  →  services/  →  jobs/  →  routes/  →  index.js
 - The page posts to **`POST /api/order`** (`handleOrder`): name + phone required, **email optional everywhere on the site**. The Worker numbers it (`WX-YYMMDD-XXXX`), adds the gifts/discount from the dashboard settings (`requestOffer`), writes it with `submit_order` into **`public.orders`** (migration `20261114000000_orders.sql`), alerts the team and emails the client when an email was given.
 - Dashboard → **Orders** (`views/orders.js`): status (new → contacted → quoted → in progress → done / cancelled), private team note, call / WhatsApp / email, “quote” (pre-filled with the gifts and discount), and which buttons bring orders.
 
+**Manual orders:** the round «+» on the Orders page opens «طلب يدوي» → `POST /api/admin/order` (`handleAdminOrder`,
+owner and customer service). Same `WX-…` number (`newOrderNumber()` in `lib/core.js`) and `submit_order`, `source = manual`,
+the channel (phone / WhatsApp / visit / social / email / other) in `visit_source`; the current gifts and discount only when
+ticked. Nothing is emailed; the action is written to the audit log.
+
 ## Dashboard organisation (Nov 2026)
 
 The sidebar has seven groups, each page in one place only:

@@ -14,7 +14,7 @@
 
 import { runBackup, runMonitor, runReminders, runWeeklyReport } from "./jobs/scheduled.js";
 import { SECURITY_HEADERS, SITE_TTL, json, serveBuild } from "./lib/core.js";
-import { handleAdminBooking, handleAdminCampaign, handleAdminDevGuide, handleAdminFunnel, handleAdminIntegrations, handleAdminMsgMeta, handleAdminNotify, handleAdminPage, handleAdminRefresh, handleAdminReviewLink, handleAdminStats, handleAdminStatus, handleAdminTeam, handleAdminTest, handleInviteClaim } from "./routes/admin.js";
+import { handleAdminBooking, handleAdminCampaign, handleAdminOrder, handleAdminDevGuide, handleAdminFunnel, handleAdminIntegrations, handleAdminMsgMeta, handleAdminNotify, handleAdminPage, handleAdminRefresh, handleAdminReviewLink, handleAdminStats, handleAdminStatus, handleAdminTeam, handleAdminTest, handleInviteClaim } from "./routes/admin.js";
 import { handleAdminPush, handleChat, handleChatRate } from "./routes/chat.js";
 import { handleAdminDiagnose } from "./routes/diagnose.js";
 import { handleAdminErrors, handleClientError, recordError } from "./routes/errors.js";
@@ -96,6 +96,7 @@ export default {
         case "DELETE /api/admin/push":
           return await handleAdminPush(request, env);
         case "DELETE /api/admin/booking": return await handleAdminBooking(request, env);
+        case "POST /api/admin/order": return await handleAdminOrder(request, env, ctx);
         case "POST /api/admin/review-link": return await handleAdminReviewLink(request, env);
         case "GET /pricing":
         case "HEAD /pricing": {

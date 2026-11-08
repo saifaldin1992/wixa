@@ -3,10 +3,10 @@
 import DEV_GUIDE from "../../docs/DEVELOPERS.md";
 import { runBackup, runWeeklyReport } from "../jobs/scheduled.js";
 import { adminSession, sessionUser } from "../lib/auth.js";
-import { EMAIL_RE, ROLE_AR, SECURITY_HEADERS, allowed, cleanText, clientIp, dayKey, esc, fmtDate, json, newCode, rpcToken, sb, versionAssets } from "../lib/core.js";
+import { EMAIL_RE, ROLE_AR, SECURITY_HEADERS, allowed, cleanText, clientIp, dayKey, esc, fmtDate, json, newCode, newOrderNumber, rpc, rpcToken, sb, versionAssets } from "../lib/core.js";
 import { evBuf, unsubSig } from "./forms.js";
 import { cfgMemo, cleanConfig, getConfig, getSiteData, publishNow, saveConfig } from "../services/data.js";
-import { mailBox, notifyAddress, notifyOwner, sendAutoReply, sendOwnerMail } from "../services/mail.js";
+import { mailBox, notifyAddress, notifyOwner, requestOffer, sendAutoReply, sendOwnerMail } from "../services/mail.js";
 import { cachedStats } from "../services/stats.js";
 import { audit } from "../services/audit.js";
 
@@ -203,6 +203,29 @@ export async function handleAdminMsgMeta(request, env) {
   await env.PRIVATE.put("msgmeta", JSON.stringify(all));
   await audit(env, s, { area: "messages", action: b.remove ? "delete" : "update", target: `رسالة ${id}`, changes: b.remove ? {} : { status: { from: before?.status ?? null, to: all[id].status }, note: { from: before?.note ?? null, to: all[id].note.slice(0, 300) } } });
   return json(all[id] || { ok: true });
+}
+
+// POST /api/admin/order — an order the team adds by hand (a phone call, WhatsApp, a visit…). Same numbering and the
+// same Orders page as the site's orders; source «manual», the channel kept in visit_source. Nothing is sent to anyone.
+export const MANUAL_CHANNELS = new Set(["phone", "whatsapp", "visit", "social", "email", "other"]);
+export async function handleAdminOrder(request, env, ctx) {
+  const s = await adminSession(request, env, ["owner", "support"]); // customer data: never the content editor
+  if (s.error) return s.error;
+  let b = {};
+  try { b = await request.json(); } catch {}
+  const clean = (v, max) => (typeof v === "string" ? v.replace(/[\u0000-\u001f]/g, " ").trim().slice(0, max) : "");
+  const name = clean(b.name, 120), phone = clean(b.phone, 40), email = clean(b.email, 200);
+  if (!name || phone.replace(/\D/g, "").length < 7) return json({ error: "validation" }, 422);
+  if (email && !EMAIL_RE.test(email)) return json({ error: "bad_email" }, 422);
+  const lang = b.lang === "en" ? "en" : "ar";
+  const offer = b.offer ? await requestOffer(env, ctx, lang) : { gifts: [], discount: "" };
+  const number = newOrderNumber();
+  const r = await rpc(env, "submit_order", { number, source: "manual", item: clean(b.item, 200), details: { features: [], timeline: clean(b.timeline, 60) },
+    price_hint: clean(b.price, 80), name, phone, email, note: typeof b.note === "string" ? b.note.trim().slice(0, 3000) : "", lang, marketing: b.marketing === true,
+    visit_source: MANUAL_CHANNELS.has(b.channel) ? b.channel : "other", gifts: offer.gifts, discount: offer.discount, discount_until: (offer.discount.match(/\d{4}-\d{2}-\d{2}/) || [""])[0] });
+  if (!r.ok) { console.error("manual order", r.status, await r.text()); return json({ error: r.status === 404 ? "migration_missing" : "storage" }, 502); }
+  await audit(env, s, { area: "orders", action: "insert", target: number, summary: `طلب يدوي: ${name}${b.item ? ` — ${clean(b.item, 200)}` : ""}` });
+  return json({ ok: true, number }, 201);
 }
 
 // DELETE /api/admin/booking {date, time} — cancel an appointment: its time becomes free to book again

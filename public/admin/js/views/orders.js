@@ -1,7 +1,7 @@
 /* Orders: every project order from the site's one order page (/order), whatever button it came from.
    Each card: number, what was chosen and from where, the price guide, gifts and discount saved with it,
    the customer's contact buttons, a status the team moves forward, and a private note. */
-import { $, setSubnav, $$, I, esc, sb, toast } from "../core.js";
+import { $, setSubnav, $$, I, adminApi, closeModal, esc, openModal, sb, toast } from "../core.js";
 import { route } from "../shell.js";
 import { openQuote } from "../quote.js";
 
@@ -9,7 +9,9 @@ export const ORDER_STATUS = {
   new: ["جديد", ""], contacted: ["تواصلنا", "warn"], quoted: ["أُرسل العرض", "warn"],
   in_progress: ["قيد التنفيذ", "ok"], done: ["مكتمل", "ok"], cancelled: ["ملغي", "off"],
 };
-const SOURCE = { package: "باقة", field: "حل لمجال", calc: "الحاسبة", similar: "مشروع مشابه", service: "خدمة", start: "ابدأ مشروعك" };
+const SOURCE = { package: "باقة", field: "حل لمجال", calc: "الحاسبة", similar: "مشروع مشابه", service: "خدمة", start: "ابدأ مشروعك", manual: "يدوي" };
+// how a hand-added order reached the team (kept in visit_source)
+const CHANNEL = { phone: "اتصال هاتفي", whatsapp: "واتساب", visit: "زيارة", social: "مواقع التواصل", email: "بريد", other: "أخرى" };
 let filter = "open", search = "";
 
 export async function viewOrders(view) {
@@ -32,7 +34,7 @@ export async function viewOrders(view) {
   const wa = (p) => String(p || "").replace(/\D/g, "").replace(/^0(?=7)/, "964").replace(/^00/, "");
 
   view.innerHTML = `<div class="card ord-top">
-      <input class="ord-search" id="ordQ" type="search" placeholder="ابحث برقم الطلب أو الاسم أو الهاتف" value="${esc(search)}">
+      <div class="ord-bar"><input class="ord-search" id="ordQ" type="search" placeholder="ابحث برقم الطلب أو الاسم أو الهاتف" value="${esc(search)}"><button type="button" class="add-fab" id="ordAdd" aria-label="إضافة طلب يدوي" title="إضافة طلب يدوي">${I.plus}</button></div>
       ${bySource.length ? `<div class="ord-src">${bySource.map(([k, n]) => `<span class="tag off">${esc(SOURCE[k] || k)}: <b>${n}</b></span>`).join("")}</div>` : ""}
     </div>
     ${list.length ? list.map((o) => {
@@ -41,7 +43,7 @@ export async function viewOrders(view) {
       const expired = o.discount_until && new Date(o.discount_until) < new Date(new Date().toDateString());
       return `<div class="msg ${o.status === "new" ? "new" : ""}" data-id="${o.id}">
         <div class="msg__head"><div class="msg__avatar">${esc((o.name || "?").trim()[0])}</div>
-          <div class="msg__who"><b>${esc(o.name)} <span class="muted" dir="ltr" style="font-weight:600">${esc(o.number)}</span></b><span>${esc(SOURCE[o.source] || "")}: ${esc(o.item)}${o.price_hint ? ` · ${esc(o.price_hint)}` : ""}</span></div>
+          <div class="msg__who"><b>${esc(o.name)} <span class="muted" dir="ltr" style="font-weight:600">${esc(o.number)}</span></b><span>${esc(SOURCE[o.source] || "")}${o.source === "manual" && CHANNEL[o.visit_source] ? ` (${CHANNEL[o.visit_source]})` : ""}: ${esc(o.item)}${o.price_hint ? ` · ${esc(o.price_hint)}` : ""}</span></div>
           <div class="msg__meta"><span>${when(o.created_at)}</span><span class="pill ${cls}">${label}</span></div></div>
         <div class="msg__body">
           <div class="ord-grid">
@@ -64,6 +66,7 @@ export async function viewOrders(view) {
           </div></div></div>`;
     }).join("") : `<div class="empty">${I.mail}<p>${rows.length ? "لا توجد طلبات هنا." : "لم تصل طلبات بعد. كل زر «ابدأ مشروعك» و«اطلب هذه الباقة» و«اطلب حلّك» و«اطلب مشروعاً مشابهاً» والحاسبة يوصل الطلب إلى هنا."}</p></div>`}`;
 
+  $("#ordAdd").onclick = addOrder;
   const s = $("#ordQ");
   s.oninput = () => { search = s.value; clearTimeout(s._t); s._t = setTimeout(() => { route(); setTimeout(() => { const x = $("#ordQ"); x?.focus(); x?.setSelectionRange(x.value.length, x.value.length); }, 30); }, 350); };
   $$(".msg__head", view).forEach((h) => (h.onclick = () => h.parentElement.classList.toggle("open")));
@@ -88,4 +91,37 @@ export async function refreshOrderCount() {
   const el = $("#ordCount"); if (!el) return;
   const { count, error } = await sb.from("orders").select("id", { count: "exact", head: true }).eq("status", "new");
   el.hidden = !!error || !count; el.textContent = count || "";
+}
+
+// «+» → an order the team adds by hand (a phone call, WhatsApp, a visit…): it gets a number like the site's orders
+function addOrder() {
+  const foot = document.createElement("div"); foot.style.cssText = "display:flex;gap:8px";
+  foot.innerHTML = `<button class="b" data-close>إلغاء</button><button class="b b--primary" data-go>${I.save}حفظ الطلب</button>`;
+  openModal("طلب يدوي", `<form id="moForm" class="stack">
+      <div class="grid2"><label class="f"><span>اسم الزبون *</span><input name="name" required maxlength="120"></label>
+        <label class="f"><span>الهاتف *</span><input name="phone" required type="tel" dir="ltr" maxlength="40" placeholder="07xx xxx xxxx"></label></div>
+      <div class="grid2"><label class="f"><span>البريد (اختياري)</span><input name="email" type="email" dir="ltr" maxlength="200"></label>
+        <label class="f"><span>وصلنا عن طريق</span><select name="channel">${Object.entries(CHANNEL).map(([k, l]) => `<option value="${k}">${l}</option>`).join("")}</select></label></div>
+      <label class="f"><span>ما الذي يطلبه</span><input name="item" maxlength="200" placeholder="مثال: متجر إلكتروني لمحل ملابس"></label>
+      <div class="grid2"><label class="f"><span>السعر التقريبي (اختياري)</span><input name="price" maxlength="80"></label>
+        <label class="f"><span>المدة المطلوبة (اختياري)</span><input name="timeline" maxlength="60"></label></div>
+      <label class="f"><span>ملاحظة</span><textarea name="note" rows="3" maxlength="3000"></textarea></label>
+      <label class="switch"><input type="checkbox" name="offer"><i></i>أضف الهدايا والخصم المعروضين حالياً في الموقع</label>
+      <label class="switch"><input type="checkbox" name="marketing"><i></i>وافق الزبون على استلام العروض بالبريد</label>
+      <p class="muted" style="margin:0;font-size:13px">يأخذ الطلب رقماً مثل طلبات الموقع ويظهر في هذه الصفحة. لا يُرسل شيء للزبون.</p></form>`, foot);
+  const f = $("#moForm");
+  const go = $("[data-go]", foot);
+  const submit = async () => {
+    if (!f.reportValidity()) return;
+    const v = Object.fromEntries(new FormData(f));
+    go.disabled = true;
+    try {
+      const r = await adminApi("order", "POST", { ...v, offer: f.offer.checked, marketing: f.marketing.checked });
+      closeModal(); toast(`أُضيف الطلب ${r.number} ✓`); filter = "open"; search = ""; route();
+    } catch (e) {
+      toast(e.message === "validation" ? "اكتب الاسم ورقم هاتف صحيح" : e.message === "bad_email" ? "البريد غير صحيح" : `تعذّر الحفظ (${e.message})`, "err");
+    } finally { go.disabled = false; }
+  };
+  go.onclick = submit;
+  f.onsubmit = (e) => { e.preventDefault(); submit(); };
 }

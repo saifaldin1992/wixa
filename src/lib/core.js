@@ -119,6 +119,12 @@ export const newCode = () => [...crypto.getRandomValues(new Uint8Array(12))].map
 // ---------- live chat ----------
 // Visitors talk to the Worker only: each conversation has a random key kept in the visitor's browser
 // (the database stores its sha-256). The team reads and replies in the dashboard through Supabase directly.
+// An order number: WX-YYMMDD-XXXX (date in UTC, 4 characters that cannot be mistaken for each other)
+export function newOrderNumber(d = new Date()) {
+  const pad = (n) => String(n).padStart(2, "0");
+  const rnd = [...crypto.getRandomValues(new Uint8Array(4))].map((x) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[x % 32]).join("");
+  return `WX-${String(d.getUTCFullYear()).slice(2)}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}-${rnd}`;
+}
 export const hex = (buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 export const sha256hex = async (s) => hex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)));
 export const cleanText = (v, n) => String(v ?? "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim().slice(0, n);
