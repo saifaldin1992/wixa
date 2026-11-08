@@ -1719,3 +1719,15 @@ html[lang] .chatw__btn svg { width: 26px; height: 26px; stroke-width: 2.2; }
   html[lang] .wa, html[lang] .chatw__btn { width: 52px; height: 52px; bottom: calc(16px + env(safe-area-inset-bottom)); }
   html[lang] .wa svg { width: 26px; } html[lang] .chatw__btn svg { width: 24px; height: 24px; }
 }
+
+/* ===== WCAG 2.2 AA pass ===== */
+/* wave colour: the lighter end a touch deeper so white text on it stays above 4.5:1 (≈5:1) */
+:root { --wave: linear-gradient(100deg, var(--primary) 0%, color-mix(in srgb, var(--accent) 45%, var(--primary)) 100%); }
+/* chat button: a dark icon on the cyan (≈9:1; a white icon was ≈2:1, under the 3:1 needed for icons) */
+html[lang] .chatw__btn { color: #062A33; }
+/* dots under swipe rows: each one a 24×24px target at least (WCAG 2.5.8) */
+.cdots { gap: 16px !important; }
+.cdots button::before { inset: -12px -8px !important; }
+/* one corner radius for cards (22px) and one button height (48px) everywhere */
+.faq__item, .ord__pkg { border-radius: 22px; }
+.track-btn, .track__form button { min-height: 48px; height: auto; }

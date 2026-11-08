@@ -1013,6 +1013,7 @@ main{padding:20px 0 60px}h1{font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.3;m
 .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
 .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border-radius:99px;text-decoration:none;font-weight:700;background:var(--p);color:#fff}
 .btn--ghost{background:var(--s);color:var(--t);border:1px solid var(--l)}.btn--wa{background:#25D366;color:#fff}
+.actions .btn:first-child{background:linear-gradient(100deg,${color},color-mix(in srgb,#1FC8E3 45%,${color}));color:#fff}
 .sub{display:flex;gap:6px;overflow-x:auto;padding:0 0 6px;scrollbar-width:none}.sub a{flex-shrink:0;padding:6px 12px;border-radius:99px;text-decoration:none;color:var(--m);font-size:.85rem}.sub a:hover{color:var(--t);background:var(--s)}
 .case{display:grid;gap:12px;margin:24px 0}.case div{padding:18px 20px;border-radius:16px;border:1px solid var(--l);background:var(--s)}.case h3{margin:0 0 6px;font-size:1rem;color:var(--p,#5B21B6)}.case p{margin:0}
 .more{margin-top:40px;padding-top:24px;border-top:1px solid var(--l)}.more h2{margin-top:0}.more__grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}

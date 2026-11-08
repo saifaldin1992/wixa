@@ -1,7 +1,7 @@
 /* ================= WIXA admin ================= */
 :root {
-  --bg: #F4F5F8; --panel: #fff; --text: #101422; --muted: #6B7280; --line: #E6E8EE; --line-2: #D7DAE3;
-  --brand: #5B21B6; --brand-50: #F1ECFB; --ok: #12A150; --ok-50: #E8F7EE; --warn: #B7791F; --danger: #E5484D; --danger-50: #FDECEC;
+  --bg: #F4F5F8; --panel: #fff; --text: #101422; --muted: #5B6270; --line: #E6E8EE; --line-2: #D7DAE3;
+  --brand: #5B21B6; --brand-50: #F1ECFB; --ok: #0E7C47; --ok-50: #E8F7EE; --warn: #8A5A10; --danger: #C62828; --danger-50: #FDECEC;
   --r: 14px; --r-lg: 20px;
   --shadow: 0 1px 2px rgba(16,20,34,.04), 0 8px 24px -10px rgba(16,20,34,.12);
   --ease: cubic-bezier(.16,1,.3,1);
@@ -742,3 +742,6 @@ body { font-size: 14.5px; }
 .bg-wave span { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 800; }
 .bg-wave i { width: 24px; height: 8px; border-radius: 99px; }
 .bg-wave em { font-style: normal; color: #fff; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 99px; }
+
+/* links inside text are underlined, not told apart by colour alone (WCAG 1.4.1) */
+.card p a, .card li a, .help a { text-decoration: underline; text-underline-offset: 3px; }
