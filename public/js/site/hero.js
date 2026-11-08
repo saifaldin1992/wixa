@@ -29,11 +29,16 @@ export async function buildHeroLogo() {
       </linearGradient>
       <clipPath id="lgClip"><path d="${logoD}" fill-rule="evenodd"/></clipPath>
     </defs>
-    <path class="lg-glow" d="${logoD}" fill-rule="evenodd"/>
     <path class="lg-fill" d="${logoD}" fill-rule="evenodd"/>
     <g clip-path="url(#lgClip)"><rect class="lg-shine lg-shine-bar" x="0" y="-100" width="700" height="1200" transform="skewX(-18)"/></g>
-    <path class="lg-stroke" d="${logoD}" pathLength="1"/>
-    ${runnerDot(logoD)}`;
+    <path class="lg-stroke" d="${logoD}" pathLength="1"/>`;
+  // Light phones: the parts that move all the time each get their own layer, so a frame of one never makes the
+  // browser repaint the others. The blurred glow is drawn once and only its layer's opacity breathes (GPU), and
+  // the tracing line repaints just its own small layer.
+  const box = svg.parentElement;
+  box.querySelectorAll(".lg-layer").forEach((n) => n.remove());
+  svg.insertAdjacentHTML("beforebegin", `<svg class="lg-layer lg-layer--glow" viewBox="0 0 2021 982" aria-hidden="true"><path class="lg-glow" d="${logoD}" fill-rule="evenodd"/></svg>`);
+  svg.insertAdjacentHTML("afterend", `<svg class="lg-layer lg-layer--trace" viewBox="0 0 2021 982" aria-hidden="true">${runnerDot(logoD)}</svg>`);
 }
 
 // A short stroke in the site's wave colours (purple ends, cyan middle) that draws itself along the logo's outer outline (the longest sub-path),
@@ -41,7 +46,7 @@ export async function buildHeroLogo() {
 function runnerDot(d) {
   const outer = d.split(/(?=M)/).sort((a, b) => b.length - a.length)[0];
   return `<g class="lg-runner">
-    <path class="lg-trace__halo" d="${outer}" pathLength="1"/><path class="lg-trace__edge" d="${outer}" pathLength="1"/><path class="lg-trace" d="${outer}" pathLength="1"/><path class="lg-trace__core" d="${outer}" pathLength="1"/></g>`;
+    <path class="lg-trace__halo" d="${outer}" pathLength="1"/><path class="lg-trace__halo2" d="${outer}" pathLength="1"/><path class="lg-trace__edge" d="${outer}" pathLength="1"/><path class="lg-trace" d="${outer}" pathLength="1"/></g>`;
 }
 
 // ---------- hero: floating particles ----------

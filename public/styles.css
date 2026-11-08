@@ -1647,3 +1647,22 @@ html[data-theme="dark"] .lg-trace__core { stroke: color-mix(in srgb, var(--accen
 .lg-trace__core { display: none; }
 html .lg-trace { stroke: var(--accent) !important; }
 html[data-theme="dark"] .lg-trace { stroke: color-mix(in srgb, var(--accent) 55%, #fff) !important; }
+
+/* ===== smooth on mid/low-end phones (same motion, cheaper to draw) ===== */
+.hero__logo .lg-layer { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+/* glow: blurred once; the layer (not the path) fades and breathes, which the GPU does without repainting */
+.hero__logo .lg-layer--glow { opacity: 0; will-change: opacity; }
+.hero__logo .lg-layer--glow .lg-glow { opacity: 1; animation: none !important; will-change: auto; }
+.hero.in .lg-layer--glow { animation: lgGlow 1.6s var(--ease-out) 2.2s forwards, lgBreathe 5s ease-in-out 3.8s infinite; }
+.no-anim .lg-layer--glow { opacity: .16; }
+/* tracing line: its own layer, glow from soft wide strokes instead of blur filters */
+.hero__logo .lg-layer--trace { will-change: transform; }
+.lg-trace, .lg-trace__halo, .lg-trace__halo2 { filter: none !important; }
+.lg-trace__halo { stroke: var(--accent); stroke-width: 56 !important; opacity: .07 !important; }
+.lg-trace__halo2 { fill: none; stroke: var(--accent); stroke-width: 30; opacity: .14; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: .07 .93; stroke-dashoffset: 0; }
+@media (prefers-reduced-motion: no-preference) { .hero.in .lg-trace__halo2 { animation: lgTrace 15s linear 2.8s infinite; } }
+/* globe: the turning meridians spin as one layer on the GPU */
+.hero__globe ellipse { animation: none !important; }
+.hero__logo .hero__globe--spin { will-change: transform; }
+@media (prefers-reduced-motion: no-preference) { .hero__logo .hero__globe--spin { animation: globeSpinLayer 24s linear infinite; } }
+@keyframes globeSpinLayer { from { transform: scaleX(1); } 50% { transform: scaleX(-1); } to { transform: scaleX(1); } }
