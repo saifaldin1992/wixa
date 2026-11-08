@@ -14,6 +14,7 @@ import { setupChat } from "./site/chat.js";
 import { visitSource } from "./site/source.js";
 import { setupPromo, setupExitOffer } from "./site/promo.js";
 import { setupOrder } from "./site/order.js";
+import { setupTrack } from "./site/track.js";
 visitSource(); // remember where this visit came from (first visit wins)
 // one HTML, four pages: the homepage, /about, /pricing and /careers each show their own sections
 const PAGES = { "/about": "about", "/pricing": "pricing", "/careers": "careers", "/contact": "contact", "/faq": "faq", "/order": "order" };
@@ -50,6 +51,7 @@ if (PREVIEW) addEventListener("message", (e) => {
   setupUI();
   setupContact();
   setupOrder();
+  setupTrack();
   setupTheme();
   setupParticles();
   setupLogoTilt();

@@ -8,6 +8,7 @@ import { renderWays } from "./ways.js";
 import { renderCalc } from "./calculator.js";
 import { carousels } from "./carousel.js";
 import { repaintOrder } from "./order.js";
+import { repaintTrack } from "./track.js";
 const { applyTheme } = window.WIXA;
 
 // ---------- render ----------
@@ -195,6 +196,7 @@ export function render() {
   if (window.ScrollTrigger) ScrollTrigger.refresh();
   requestAnimationFrame(carousels);
   repaintOrder(); // a language switch on the order page
+  repaintTrack();
 }
 
 export function mockUI() {

@@ -1281,6 +1281,7 @@ html[data-page="careers"] [data-pages]:not([data-pages~="careers"]),
 html[data-page="contact"] [data-pages]:not([data-pages~="contact"]) { display: none !important; }
 html[data-page="faq"] [data-pages]:not([data-pages~="faq"]) { display: none !important; }
 html[data-page="order"] [data-pages]:not([data-pages~="order"]) { display: none !important; }
+html[data-page="track"] [data-pages]:not([data-pages~="track"]) { display: none !important; }
 html[data-page]:not([data-page="home"]) main { padding-top: clamp(96px, 12vw, 140px); }
 html[data-page]:not([data-page="home"]) main > section:first-of-type:not(.hero) { padding-top: 0; }
 /* the top menu: short, with one clear button */
@@ -1543,6 +1544,7 @@ html.menu-open, html.menu-open body, html:has(> body[style*="overflow: hidden"])
   .header__menu .menu-cta { display: flex; }
 }
 @media (max-width: 599px) { .head-start { display: none; } }
+.head-start { display: none !important; }
 
 /* "how we work" ends with the guarantees strip: no extra empty band before the packages */
 .process:has(.guar-strip:not([hidden])) { padding-bottom: clamp(48px, 7vw, 80px); }
@@ -1561,3 +1563,45 @@ html[data-theme="dark"] .footer__social a, html[data-theme="dark"] .ways__social
 :is(.footer__social, .ways__social) a[aria-label="x"]:is(:hover, :focus-visible) { background: #000; }
 :is(.footer__social, .ways__social) a[aria-label="linkedin"]:is(:hover, :focus-visible) { background: #0A66C2; }
 :is(.footer__social, .ways__social) a[aria-label="email"]:is(:hover, :focus-visible), :is(.footer__social, .ways__social) a[href^="mailto:"]:is(:hover, :focus-visible) { background: var(--primary); }
+
+/* ===== globe behind the hero logo: very faint, a little larger than the logo, the logo sits inside it ===== */
+.hero__logo .hero__globe { position: absolute; inset: auto; left: 50%; top: 50%; width: 112%; height: auto; aspect-ratio: 1; translate: -50% -50%; color: var(--fg); opacity: .09; z-index: -1; pointer-events: none; overflow: visible; }
+html[data-theme="dark"] .hero__logo .hero__globe { opacity: .12; }
+.hero__globe g { transform-origin: 100px 100px; }
+@media (prefers-reduced-motion: no-preference) { .hero__globe ellipse:nth-of-type(n+3) { animation: globeSpin 24s linear infinite; transform-origin: 100px 100px; transform-box: view-box; } }
+@keyframes globeSpin { from { transform: scaleX(1); } 50% { transform: scaleX(-1); } to { transform: scaleX(1); } }
+
+/* ===== "track your order": footer button (purple, apart from the round social icons) + the /track page ===== */
+.footer__tools { flex-direction: column; align-items: center; gap: 14px; }
+.track-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 20px; border-radius: 99px; background: var(--primary); color: #fff !important; font-weight: 700; font-size: .92rem; transition: filter .2s, transform .2s var(--ease); }
+.track-btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+.track-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; }
+.track { padding: clamp(28px, 5vw, 56px) 0 clamp(64px, 9vw, 110px); }
+.track__wrap { max-width: 560px; margin: 0 auto; padding: 0 var(--gutter); }
+.track__wrap h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); margin: 0 0 8px; }
+.track__wrap > p { color: var(--muted); margin: 0 0 22px; }
+.track__form { display: grid; gap: 14px; padding: 22px; border-radius: 22px; border: 1px solid var(--line); background: var(--surface); }
+.track__form label { display: grid; gap: 6px; font-weight: 700; font-size: .92rem; }
+.track__form input { font: inherit; min-height: 48px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--line-2); background: var(--bg); color: var(--fg); }
+.track__form input[name="number"] { direction: ltr; text-align: start; text-transform: uppercase; letter-spacing: .04em; }
+.track__form button { min-height: 50px; border: 0; border-radius: 99px; background: var(--primary); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.track__form button[disabled] { opacity: .6; }
+.track__msg { margin: 0; font-size: .9rem; color: #e5484d; }
+.track__msg:empty { display: none; }
+.track__res { margin-top: 18px; padding: 22px; border-radius: 22px; border: 1px solid var(--line); background: var(--surface); }
+.track__res h2 { font-size: 1.1rem; margin: 0 0 4px; }
+.track__meta { color: var(--muted); font-size: .88rem; margin: 0 0 18px; }
+.track__meta b { direction: ltr; unicode-bidi: isolate; }
+.track__steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.track__steps li { position: relative; display: flex; gap: 12px; align-items: flex-start; padding-bottom: 18px; color: var(--muted); }
+.track__steps li:last-child { padding-bottom: 0; }
+.track__steps li::before { content: ""; flex: none; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line-2); background: var(--bg); box-sizing: border-box; }
+.track__steps li:not(:last-child)::after { content: ""; position: absolute; inset-inline-start: 10px; top: 24px; bottom: 2px; width: 2px; background: var(--line-2); }
+.track__steps li.done { color: var(--fg); }
+.track__steps li.done::before { background: var(--primary); border-color: var(--primary); }
+.track__steps li.done:not(:last-child)::after { background: var(--primary); }
+.track__steps li.now { color: var(--fg); font-weight: 700; }
+.track__steps li.now::before { border-color: var(--primary); box-shadow: 0 0 0 5px color-mix(in srgb, var(--primary) 20%, transparent); }
+.track__cancel { padding: 12px 14px; border-radius: 14px; background: color-mix(in srgb, #e5484d 10%, var(--surface)); }
+.track__help { margin-top: 16px; font-size: .9rem; color: var(--muted); }
+.track__help a { color: var(--primary); font-weight: 700; }

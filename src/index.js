@@ -326,7 +326,7 @@ function faqLd(st, lang) {
 
 // GET / — static HTML with the content embedded (no flash of default text, one request per visit).
 // /about, /pricing and /careers are the homepage's HTML showing only their own sections (html[data-page])
-const PAGE_TITLES = { about: { ar: "من نحن", en: "About us" }, pricing: { ar: "الباقات والأسعار", en: "Packages & pricing" }, careers: { ar: "الوظائف", en: "Careers" }, contact: { ar: "تواصل معنا", en: "Contact us" }, order: { ar: "اطلب مشروعك", en: "Order your project" }, faq: { ar: "الأسئلة الشائعة", en: "Frequently asked questions" } };
+const PAGE_TITLES = { about: { ar: "من نحن", en: "About us" }, pricing: { ar: "الباقات والأسعار", en: "Packages & pricing" }, careers: { ar: "الوظائف", en: "Careers" }, contact: { ar: "تواصل معنا", en: "Contact us" }, order: { ar: "اطلب مشروعك", en: "Order your project" }, track: { ar: "تتبع طلبك", en: "Track your order" }, faq: { ar: "الأسئلة الشائعة", en: "Frequently asked questions" } };
 async function handleHome(request, env, ctx, pageName = "home") {
   const [page, raw, cfg] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx), getConfig(env)]);
   const data = cfg.spam.turnstile ? raw : raw.replace(/"turnstile":"[^"]*"/, '"turnstile":""');
@@ -347,7 +347,7 @@ async function handleHome(request, env, ctx, pageName = "home") {
   const attr = (sel, name, val) => [sel, { element: (el) => { if (val) el.setAttribute(name, val); } }];
   const siteTitle = seo[`title_${lang}`] || (lang === "en" ? SEO_DEFAULTS.en.title : ""), siteDesc = seo[`description_${lang}`] || (lang === "en" ? SEO_DEFAULTS.en.description : ""), img = seo.og_image ? abs(seo.og_image) : "";
   const pc = st.content?.[lang] || {}, brandName = (lang === "en" ? st.brand?.name_en : st.brand?.name_ar) || "WIXA";
-  const pageDesc = { about: pc.about_text, pricing: pc.pricing_sub, careers: pc.careers_sub, contact: pc.cta_sub, faq: pc.faq_sub, order: pc.pricing_sub }[pageName];
+  const pageDesc = { about: pc.about_text, pricing: pc.pricing_sub, careers: pc.careers_sub, contact: pc.cta_sub, faq: pc.faq_sub, order: pc.pricing_sub, track: pc.pricing_sub }[pageName];
   const title = pageName === "home" ? siteTitle : `${PAGE_TITLES[pageName][lang]} — ${brandName}`;
   const desc = pageName === "home" ? siteDesc : String(pageDesc || siteDesc || "").replace(/\s+/g, " ").slice(0, 160);
   const pagePath = pageName === "home" ? "/" : `/${pageName}`;
@@ -846,6 +846,20 @@ async function handleOrder(request, env, ctx) {
   ctx.waitUntil(sendRequestConfirmation(env, cfg, row).catch((e) => console.error("order mail", e)));
   ctx.waitUntil(countMessage(env, { services: ["طلب مشروع"] }, false).catch(() => {}));
   return json({ ok: true, number }, 201);
+}
+
+// POST /api/order-status — "track your order": the order number + the phone it was placed with → its status and dates.
+// Both must match; nothing personal comes back. Uses the stats limiter (30 a minute per IP) to stop guessing.
+async function handleTrack(request, env) {
+  if (!(await allowed(env.TRACK_LIMITER, clientIp(request)))) return json({ error: "rate_limited" }, 429);
+  let b;
+  try { b = await request.json(); } catch { return json({ error: "invalid_json" }, 400); }
+  const number = typeof b.number === "string" ? b.number.trim().slice(0, 40) : "", phone = typeof b.phone === "string" ? b.phone.slice(0, 40) : "";
+  if (number.length < 6 || phone.replace(/\D/g, "").length < 7) return json({ error: "validation" }, 422);
+  const r = await rpc(env, "track_order", { number, phone });
+  if (!r.ok) { console.error("track", r.status, await r.text()); return json({ error: "storage" }, 502); }
+  const order = await r.json();
+  return order ? json({ ok: true, order }) : json({ error: "not_found" }, 404);
 }
 
 async function handleContact(request, env, ctx) {
@@ -2058,6 +2072,7 @@ export default {
         case "POST /api/chat/send": return await handleChat(request, env, ctx, "send");
         case "POST /api/chat/poll": return await handleChat(request, env, ctx, "poll");
         case "POST /api/order": return await handleOrder(request, env, ctx);
+        case "POST /api/order-status": return await handleTrack(request, env);
         case "POST /api/chat/rate": return await handleChatRate(request, env);
         case "GET /unsubscribe":
         case "POST /unsubscribe":
@@ -2075,6 +2090,7 @@ export default {
         case "GET /pricing":
         case "GET /careers":
         case "GET /order":
+        case "GET /track":
         case "GET /contact":
         case "GET /faq":
           return await handleHome(request, env, ctx, url.pathname.slice(1));

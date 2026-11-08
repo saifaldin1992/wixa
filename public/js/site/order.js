@@ -136,7 +136,7 @@ function paintDone(root, no, mailed, rw) {
   const wa = (state.settings.contact?.whatsapp || "").replace(/\D/g, "");
   root.innerHTML = `<div class="ord__done">
     <div class="ord__ok" aria-hidden="true">✓</div><h2>${t("done")}</h2>
-    ${no ? `<div class="rq__ticket"><span class="muted">${t("doneNo")}</span><div class="rq__no" dir="ltr">${esc(no)}</div><button type="button" class="btn btn--ghost rq__copy">${t("copy")}</button></div>` : ""}
+    ${no ? `<div class="rq__ticket"><span class="muted">${t("doneNo")}</span><div class="rq__no" dir="ltr">${esc(no)}</div><button type="button" class="btn btn--ghost rq__copy">${t("copy")}</button><a class="track-btn" href="/track?n=${encodeURIComponent(no)}${lang === "en" ? "&lang=en" : ""}">${lang === "en" ? "Track your order" : "تتبع طلبك"}</a></div>` : ""}
     <p class="rq__hint">${t("next")} ${mailed ? t("mailed") : ""}</p>
     ${rw.length ? `<p class="rq__hint">${t("tap")}</p><div class="rq__gifts${rw.length === 3 ? " rq__gifts--3" : ""}">${rw.map(({ tag, h, p }) => `<button type="button" class="gcard" aria-label="${t("tap")}">
       <span class="gcard__in"><span class="gcard__front"><span class="gcard__box" aria-hidden="true">🎁</span><small>${t("tap")}</small></span>
