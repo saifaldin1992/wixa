@@ -857,3 +857,16 @@ body:has(#auth:not([hidden])) .boot, body:has(#app:not([hidden])) .boot, body:ha
 .audit__ch { width: 100%; margin-top: 10px; font-size: 13px; border-collapse: collapse; }
 .audit__ch th, .audit__ch td { text-align: start; padding: 6px 8px; border-top: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
 .audit__ch code { font-size: 12px; }
+
+/* المحتوى ← كل الروابط / صفحات مضافة (views/sitepages.js) */
+.lnks { display: grid; gap: 8px; margin-bottom: 16px; }
+.lnk { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+.lnk--off { opacity: .7; }
+.lnk__main { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; min-width: 0; }
+.lnk__main b { font-size: 14.5px; }
+.lnk__main a, .lnk__main > span[dir="ltr"] { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.lnk__al { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 6px; }
+.lnk__al .tag button { border: 0; background: none; color: inherit; cursor: pointer; padding: 0 2px; font: inherit; }
+.lnk__btns { display: flex; flex-wrap: wrap; gap: 6px; }
+small.err { color: #B91C1C; }
+.team-ed { padding: 14px; }

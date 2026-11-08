@@ -11,6 +11,7 @@
 //  • Visits are counted by Cloudflare Web Analytics, not by this Worker.
 
 import { PRIVACY_DEFAULTS } from "../../public/js/privacy-defaults.js";
+import { STATUS_DEFAULTS, TEAM_DEFAULTS, sitePages } from "../../public/js/site-pages.js";
 import { UI_DEFAULTS } from "../../public/js/ui-strings.js";
 import { SOCIAL } from "../../public/js/social-icons.js";
 import { SECURITY_HEADERS, WIXA, esc, fmtDate, notFound, pickLang, safeHref, versionAssets, versioned } from "../lib/core.js";
@@ -120,6 +121,15 @@ export async function handleHome(request, env, ctx, pageName = "home") {
       if (el.getAttribute("data-where") === "footer" ? !["both", "footer"].includes(p.at) : !["both", "menu"].includes(p.at)) el.setAttribute("hidden", ""); else if (!hide.has(el.getAttribute("data-sec") || "")) el.removeAttribute("hidden");
     } })
     .on("#langBtn", { element: (el) => el.setInnerContent(lang === "ar" ? "EN" : "ع") })
+    .on(".footer__nav", { element: (el) => { const row = footerLegal(st, lang, "/"); if (row) el.after(row, { html: true }); } })
+    .on("#processMore", { element: (el) => {
+      // under «كيف نعمل»: where the terms and the payment policy are written down
+      const q = lang === "ar" ? "" : "?lang=en";
+      const ps = sitePages(st).filter((p) => p.published && ["terms", "payment"].includes(p.id));
+      if (!ps.length) return;
+      el.setInnerContent(`${lang === "ar" ? "التفاصيل مكتوبة في:" : "It is all written down in:"} ${ps.map((p) => `<a href="${p.path}${q}">${esc(p[`title_${lang}`] || p.title_ar)}</a>`).join(" · ")}`, { html: true });
+      el.removeAttribute("hidden");
+    } })
     .on(".hero", { element: (el) => el.setAttribute("class", `${el.getAttribute("class") || ""} in in-hero`) })
     .on("body", { element: (el) => el.removeAttribute("class") })
     .on("body", { element: (el) => {
@@ -154,6 +164,24 @@ export function detailsHtml(raw) {
 
 // The site's header (logo, menu, theme, language, "start your project") and footer for the server-built pages,
 // with the same classes as the home page so they share one stylesheet and one look.
+// The small row of company pages under the footer links: pages added from the dashboard, our team, services status
+export function footerLegal(st, lang, path = "") {
+  const q = lang === "ar" ? "" : "?lang=en";
+  const team = { ...TEAM_DEFAULTS, ...(st.team || {}) }, status = { ...STATUS_DEFAULTS, ...(st.status_page || {}) };
+  const links = [
+    ...sitePages(st).filter((p) => p.published && p.footer).map((p) => [p.path, p[`title_${lang}`] || p.title_ar || p.title_en]),
+    ...(team.on && team.footer ? [["/team", team[`title_${lang}`] || TEAM_DEFAULTS[`title_${lang}`]]] : []),
+    ...(status.on && status.footer ? [["/status", lang === "ar" ? "حالة الخدمات" : "Service status"]] : []),
+  ].filter(([, t]) => t);
+  return links.length ? `<nav class="footer__legal" aria-label="${lang === "ar" ? "صفحات الشركة" : "Company pages"}">${links.map(([h, t]) => `<a href="${h}${q}"${path === h ? ' aria-current="page"' : ""}>${esc(t)}</a>`).join("")}</nav>` : "";
+}
+// A page's text: [{h, p}] → headings and paragraphs; "{email}" becomes the contact email link
+const sectionsHtml = (list, email) => {
+  const mail = `<a href="mailto:${esc(email)}">${esc(email)}</a>`;
+  return (Array.isArray(list) ? list : []).filter((x) => x?.h || x?.p)
+    .map((x) => `${x.h ? `<h2>${esc(x.h)}</h2>` : ""}${x.p ? `<p>${esc(x.p).split("{email}").join(mail).replace(/\n/g, "<br>")}</p>` : ""}`).join("");
+};
+
 export function siteShell(st, lang, path) {
   const ar = lang === "ar", q = ar ? "" : "?lang=en", other = ar ? "en" : "ar";
   const ui = { ...UI_DEFAULTS[lang] };
@@ -183,7 +211,7 @@ export function siteShell(st, lang, path) {
   const footer = `<footer class="footer">
     <svg class="footer__wave footer__wave--brand" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="fwv" x1="0" x2="1"><stop offset="0" style="stop-color:var(--fg)"/><stop offset=".5" style="stop-color:var(--accent)"/><stop offset="1" style="stop-color:var(--fg)"/></linearGradient></defs><path pathLength="1" stroke="url(#fwv)" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
     <svg class="footer__wave" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
-    <nav class="footer__nav">${foot.map((x) => link(x)).join("")}</nav>
+    <nav class="footer__nav">${foot.map((x) => link(x)).join("")}</nav>${footerLegal(st, lang, path)}
     <div class="footer__tools"><a href="/track${q}" class="track-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg><span>${esc(ui.track)}</span></a><div class="footer__social">${socials}</div></div>
     <div class="footer__brand"><a href="/${q}" class="brand">${mark}${word}</a></div>
     <p class="footer__credit">${esc(st.content?.[lang]?.footer_text || (ar ? "طُوّر بواسطة فريق ويكسا" : "Developed by the WIXA team"))} · © ${new Date().getFullYear()}</p></footer>`;
@@ -242,6 +270,12 @@ html[data-theme="dark"] .page{--p:var(--fg)}
 .page .star input:checked+span{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 20%,transparent)}.page .rv .btn{justify-self:center;border:0;cursor:pointer}
 .page .hp{position:absolute;left:-9999px;opacity:0}
 .page .btn--wa{background:#25D366;color:#fff}
+.page .team{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-top:24px}.page .team__m{padding:var(--card-pad,18px);border-radius:var(--radius,22px);border:1px solid var(--l);background:var(--s);text-align:center}
+.page .team__m img,.page .team__av{width:96px;height:96px;border-radius:50%;object-fit:cover;margin:0 auto 10px;display:grid;place-items:center;background:color-mix(in srgb,var(--p) 12%,transparent);color:var(--p);font-size:2rem;font-weight:800}
+.page .team__m b{display:block;color:var(--t);font-size:1.0625rem}.page .team__m span{display:block;color:var(--p);font-size:.875rem;font-weight:700}.page .team__m p{margin:8px 0 0;font-size:.92rem;line-height:1.7}
+.page .status{display:grid;gap:10px;margin:24px 0}.page .status__row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:14px 18px;border-radius:var(--radius,22px);border:1px solid var(--l);background:var(--s)}
+.page .status__row b{color:var(--t)}.page .status__row small{grid-column:2/-1;color:var(--m);font-size:.85rem}.page .status__st{font-weight:700;color:var(--m)}
+.page .status__dot{width:12px;height:12px;border-radius:50%;background:#0E7C47;box-shadow:0 0 0 4px color-mix(in srgb,#0E7C47 18%,transparent)}.page .status__dot--warn{background:#B45309;box-shadow:0 0 0 4px color-mix(in srgb,#B45309 18%,transparent)}.page .status__dot--down{background:#B91C1C;box-shadow:0 0 0 4px color-mix(in srgb,#B91C1C 18%,transparent)}.page .status__dot--off{background:#9CA3AF;box-shadow:none}
 .footer__wave path{stroke-dashoffset:0}
 .header .lang-btn{display:inline-grid;place-items:center;text-decoration:none;color:var(--text);line-height:1}
 </style></head><body>
@@ -263,7 +297,7 @@ export async function handleProjectPage(request, env, ctx, slug) {
   if (cfg.maintenance.on && !hasBypass(request, cfg)) return maintenancePage(request, cfg, st);
   const lang = pickLang(request, st.default_lang);
   const p = (d.projects || []).find((x) => x.slug === slug || String(x.id) === slug);
-  if (!p) return env.ASSETS.fetch(new Request(new URL("/404.html", request.url), request)).then((r) => new Response(r.body, { status: 404, headers: r.headers }));
+  if (!p) return env.ASSETS.fetch(new Request(new URL("/404", request.url), request)).then((r) => new Response(r.body, { status: 404, headers: r.headers }));
   const T = (f) => p[`${f}_${lang}`] || p[`${f}_ar`] || p[`${f}_en`] || "";
   const imgs = [p.image_url, ...(Array.isArray(p.gallery) ? p.gallery : [])].map(safeHref).filter(Boolean);
   const mob = safeHref(p.mobile_image_url);
@@ -313,6 +347,73 @@ export async function handlePrivacy(request, env, ctx) {
     : "We also use third-party analytics and advertising tools (such as Google, Meta, Microsoft or TikTok) to understand how the site and our campaigns perform; these tools may use cookies under their own policies."]);
   const body = `<h1>${ar ? "سياسة الخصوصية" : "Privacy policy"}</h1><p class="lead">${ar ? "آخر تحديث:" : "Last updated:"} ${esc(updated)}</p>${S.map(([h, p]) => `${h ? `<h2>${h}</h2>` : ""}<p>${p}</p>`).join("")}`;
   return simplePage(request, st, { lang, title: ar ? "سياسة الخصوصية" : "Privacy policy", description: ar ? "كيف تجمع ويكسا بياناتك وتستخدمها وتحميها." : "How WIXA collects, uses and protects your data.", path: "/privacy", body });
+}
+
+// ---------------------------------------------------------------- pages added from the dashboard
+// GET /<path> — a stand-alone page (terms, payments…) written in the dashboard. null when there is no such page.
+export async function handleCustomPage(request, env, ctx, path) {
+  const [raw, cfg] = await Promise.all([getSiteData(env, ctx), getConfig(env)]);
+  let st = {};
+  try { st = JSON.parse(raw).settings || {}; } catch {}
+  const pg = sitePages(st).find((p) => p.path === path && p.published);
+  if (!pg) return null;
+  if (cfg.maintenance.on && !hasBypass(request, cfg)) return maintenancePage(request, cfg, st);
+  const lang = pickLang(request, st.default_lang), ar = lang === "ar";
+  const title = pg[`title_${lang}`] || pg.title_ar || pg.title_en || "";
+  const list = Array.isArray(pg[lang]) && pg[lang].some((x) => x?.h || x?.p) ? pg[lang] : pg[ar ? "en" : "ar"];
+  const body = `<h1>${esc(title)}</h1>${pg.updated ? `<p class="lead">${ar ? "آخر تحديث:" : "Last updated:"} ${esc(pg.updated)}</p>` : ""}${sectionsHtml(list, st.contact?.email || "info@wixa.dev")}`;
+  return simplePage(request, st, { lang, title, description: String(pg[`desc_${lang}`] || pg.desc_ar || title).slice(0, 160), path, body });
+}
+
+// GET /team — our team (names, roles, photos from the dashboard). 404 until it is switched on.
+export async function handleTeam(request, env, ctx) {
+  const [raw, cfg] = await Promise.all([getSiteData(env, ctx), getConfig(env)]);
+  let st = {};
+  try { st = JSON.parse(raw).settings || {}; } catch {}
+  const t = { ...TEAM_DEFAULTS, ...(st.team || {}) };
+  if (!t.on) return notFound(request, env);
+  if (cfg.maintenance.on && !hasBypass(request, cfg)) return maintenancePage(request, cfg, st);
+  const lang = pickLang(request, st.default_lang), ar = lang === "ar";
+  const L = (o, f) => o[`${f}_${lang}`] || o[`${f}_ar`] || o[`${f}_en`] || "";
+  const people = (Array.isArray(t.members) ? t.members : []).filter((m) => L(m, "name"));
+  const initial = (n) => esc(String(n).trim()[0] || "?");
+  const body = `<h1>${esc(L(t, "title"))}</h1>${L(t, "sub") ? `<p class="lead">${esc(L(t, "sub"))}</p>` : ""}
+    ${people.length ? `<div class="team">${people.map((m) => { const img = safeHref(m.photo); return `<div class="team__m">
+      ${img ? `<img src="${esc(img)}" alt="${esc(L(m, "name"))}" loading="lazy">` : `<span class="team__av" aria-hidden="true">${initial(L(m, "name"))}</span>`}
+      <b>${esc(L(m, "name"))}</b>${L(m, "role") ? `<span>${esc(L(m, "role"))}</span>` : ""}${L(m, "bio") ? `<p>${esc(L(m, "bio"))}</p>` : ""}</div>`; }).join("")}</div>`
+      : `<div class="empty">${ar ? "نضيف تعريف الفريق قريباً." : "Our team will be introduced here soon."}</div>`}`;
+  return simplePage(request, st, { lang, title: L(t, "title"), description: L(t, "sub") || L(t, "title"), path: "/team", body });
+}
+
+// GET /status — services status for clients: is the site, ordering, order tracking and the live chat working.
+// The database check is remembered for 60 s, so the page can never flood the database.
+let statusMemo = { at: 0, db: false };
+export async function handleStatus(request, env, ctx) {
+  const [raw, cfg] = await Promise.all([getSiteData(env, ctx), getConfig(env)]);
+  let st = {};
+  try { st = JSON.parse(raw).settings || {}; } catch {}
+  if (!{ ...STATUS_DEFAULTS, ...(st.status_page || {}) }.on) return notFound(request, env);
+  const lang = pickLang(request, st.default_lang), ar = lang === "ar";
+  if (Date.now() - statusMemo.at > 60_000) {
+    let db = false;
+    try { db = (await fetch(`${env.SUPABASE_URL}/auth/v1/health`, { headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY }, signal: AbortSignal.timeout(5000) })).ok; } catch {}
+    statusMemo = { at: Date.now(), db };
+  }
+  const db = statusMemo.db, chatOn = !!st.chat?.on;
+  const rows = [
+    [ar ? "الموقع" : "Website", cfg.maintenance.on ? "warn" : "ok", cfg.maintenance.on ? (ar ? "صيانة مجدولة" : "Scheduled maintenance") : ""],
+    [ar ? "استقبال الطلبات والرسائل" : "Orders and messages", db ? "ok" : "down", ""],
+    [ar ? "تتبع الطلب" : "Order tracking", db ? "ok" : "down", ""],
+    [ar ? "الدردشة المباشرة" : "Live chat", !chatOn ? "off" : db ? "ok" : "down", !chatOn ? (ar ? "غير مفعّلة حالياً — راسلنا عبر واتساب" : "Not active right now — message us on WhatsApp") : ""],
+  ];
+  const word = { ok: ar ? "يعمل" : "Working", warn: ar ? "تنبيه" : "Notice", down: ar ? "متوقف مؤقتاً" : "Temporarily down", off: ar ? "متوقفة" : "Off" };
+  const allOk = rows.every(([, s]) => s === "ok" || s === "off");
+  const when = new Date(statusMemo.at).toLocaleString(ar ? "ar-IQ-u-nu-latn" : "en-GB", { timeZone: "Asia/Baghdad", dateStyle: "medium", timeStyle: "short" });
+  const body = `<h1>${ar ? "حالة الخدمات" : "Service status"}</h1>
+    <p class="lead">${allOk ? (ar ? "كل الخدمات تعمل بشكل طبيعي." : "All services are working normally.") : (ar ? "بعض الخدمات متأثرة الآن، ونعمل على إصلاحها." : "Some services are affected right now; we are on it.")}</p>
+    <div class="status">${rows.map(([n, s, note]) => `<div class="status__row"><span class="status__dot status__dot--${s}" aria-hidden="true"></span><b>${n}</b><span class="status__st">${word[s]}</span>${note ? `<small>${esc(note)}</small>` : ""}</div>`).join("")}</div>
+    <p class="lead" style="font-size:.875rem">${ar ? "آخر فحص:" : "Last checked:"} ${esc(when)}</p>`;
+  return simplePage(request, st, { lang, title: ar ? "حالة الخدمات" : "Service status", description: ar ? "هل خدمات ويكسا تعمل الآن." : "Whether WIXA's services are working right now.", path: "/status", body });
 }
 
 // ---------------------------------------------------------------- service pages

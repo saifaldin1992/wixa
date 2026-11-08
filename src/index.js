@@ -13,13 +13,14 @@
 // See docs/DEVELOPERS.md → «الخادم».
 
 import { runBackup, runMonitor, runReminders, runWeeklyReport } from "./jobs/scheduled.js";
-import { SECURITY_HEADERS, SITE_TTL, json, serveBuild } from "./lib/core.js";
+import { SECURITY_HEADERS, SITE_TTL, json, notFound, serveBuild } from "./lib/core.js";
+import { PATH_RE, STATUS_DEFAULTS, sitePages } from "../public/js/site-pages.js";
 import { handleAdminBooking, handleAdminCampaign, handleAdminOrder, handleAdminDevGuide, handleAdminFunnel, handleAdminIntegrations, handleAdminMsgMeta, handleAdminNotify, handleAdminPage, handleAdminRefresh, handleAdminReviewLink, handleAdminStats, handleAdminStatus, handleAdminTeam, handleAdminTest, handleInviteClaim } from "./routes/admin.js";
 import { handleAdminPush, handleChat, handleChatRate } from "./routes/chat.js";
 import { handleAdminDiagnose } from "./routes/diagnose.js";
 import { handleAdminErrors, handleClientError, recordError } from "./routes/errors.js";
 import { handleContact, handleEvent, handleOrder, handleOrderFind, handleReview, handleSlots, handleTrack, handleUnsubscribe } from "./routes/forms.js";
-import { handleBlog, handleHome, handlePrivacy, handleProjectPage, handleServicePage } from "./routes/pages.js";
+import { handleBlog, handleCustomPage, handleHome, handlePrivacy, handleProjectPage, handleServicePage, handleStatus, handleTeam } from "./routes/pages.js";
 import { getConfig, getPosts, getSiteData } from "./services/data.js";
 
 let health = { at: 0, supabase: "unknown" };
@@ -114,6 +115,12 @@ export default {
         case "GET /privacy":
         case "HEAD /privacy":
           return await handlePrivacy(request, env, ctx);
+        case "GET /team":
+        case "HEAD /team":
+          return await handleTeam(request, env, ctx);
+        case "GET /status":
+        case "HEAD /status":
+          return await handleStatus(request, env, ctx);
         case "GET /api/admin/msgmeta":
         case "PUT /api/admin/msgmeta":
           return await handleAdminMsgMeta(request, env);
@@ -135,7 +142,10 @@ export default {
           let projects = [], services = [];
           try { const d = JSON.parse(await getSiteData(env, ctx)); projects = d.projects || []; services = d.services || []; } catch {}
           const posts = await getPosts(env);
-          const urls = ["/", "/about", "/careers", "/contact", "/faq", "/privacy", "/blog", ...services.map((x) => `/services/${encodeURIComponent(x.slug)}`), ...projects.map((x) => `/projects/${encodeURIComponent(x.slug)}`), ...posts.map((x) => `/blog/${encodeURIComponent(x.slug)}`)].map((p) => `<url><loc>https://wixa.dev${p}</loc><lastmod>${today}</lastmod></url>`).join("");
+          let st = {};
+          try { st = JSON.parse(await getSiteData(env, ctx)).settings || {}; } catch {}
+          const extra = [...sitePages(st).filter((p) => p.published).map((p) => p.path), ...(st.team?.on ? ["/team"] : []), ...({ ...STATUS_DEFAULTS, ...(st.status_page || {}) }.on ? ["/status"] : [])];
+          const urls = ["/", "/about", "/careers", "/contact", "/faq", "/privacy", "/blog", ...extra, ...services.map((x) => `/services/${encodeURIComponent(x.slug)}`), ...projects.map((x) => `/projects/${encodeURIComponent(x.slug)}`), ...posts.map((x) => `/blog/${encodeURIComponent(x.slug)}`)].map((p) => `<url><loc>https://wixa.dev${p}</loc><lastmod>${today}</lastmod></url>`).join("");
           return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>\n`, {
             headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" },
           });
@@ -168,12 +178,22 @@ export default {
       const proj = url.pathname.match(/^\/projects\/([^/]+)\/?$/);
       if (proj && (request.method === "GET" || request.method === "HEAD")) return await handleProjectPage(request, env, ctx, decodeURIComponent(proj[1]));
       if (url.pathname.startsWith("/api/")) return json({ error: "not_found" }, 404);
+      // pages added from the dashboard (/terms, /payment…) and extra addresses for existing pages
+      if ((request.method === "GET" || request.method === "HEAD") && PATH_RE.test(url.pathname)) {
+        const page = await handleCustomPage(request, env, ctx, url.pathname);
+        if (page) return page;
+        let st = {};
+        try { st = JSON.parse(await getSiteData(env, ctx)).settings || {}; } catch {}
+        const alias = (Array.isArray(st.aliases) ? st.aliases : []).find((a) => a?.from === url.pathname && typeof a.to === "string" && /^\/[^/\\]/.test(a.to + "x") && !a.to.startsWith("//"));
+        if (alias) return new Response(null, { status: 301, headers: { location: `${alias.to}${url.search}`, "cache-control": "public, max-age=300" } });
+      }
     } catch (err) {
       console.error(err);
       recordError(env, ctx, { where: "server", msg: `${err?.name || "Error"}: ${err?.message || err}`, src: String(err?.stack || "").split("\n")[1]?.trim() || "", path: `${request.method} ${url.pathname}` });
       return json({ error: "server" }, 500);
     }
 
-    return env.ASSETS.fetch(request);
+    const asset = await env.ASSETS.fetch(request);
+    return asset.status === 404 ? notFound(request, env) : asset;
   },
 };

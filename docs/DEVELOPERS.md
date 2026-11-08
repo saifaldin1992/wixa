@@ -463,3 +463,22 @@ Migration `20261118000000_audit_log.sql` (**apply on staging, then production**;
 - **Retention**: 12 months, removed by the monthly job `private.audit_purge()` (pg_cron `41 2 1 * *`).
 - New table edited from the dashboard → add `create trigger … execute function private.audit_row()` in a new migration.
   New server action → add one `await audit(…)` line.
+
+## Site pages, links and company pages (Nov 2026)
+
+Dashboard → صفحات الموقع:
+- **«كل الروابط»** (`views/sitepages.js` → `renderLinks`): every address of the site in one list — basic pages, pages added
+  here, service / project / article pages and the private ones (/review, /unsubscribe) — with open, copy and **extra
+  addresses** (`settings.aliases = [{from, to}]`, answered by the Worker with a 301). Basic addresses stay fixed because
+  the site, emails and links in the wild depend on them.
+- **«صفحات مضافة»** (`renderCustom`): stand-alone text pages kept in `settings.pages` (`public/js/site-pages.js`:
+  `{id, path, title_*, desc_*, published, footer, updated, ar:[{h,p}], en:[{h,p}]}`), until saved the defaults
+  **/terms** and **/payment** (general wording — finish when the company details are final). `{email}` → contact link.
+  An address must match `PATH_RE` (one segment, a–z 0–9 -) and not be in `RESERVED_PATHS`.
+- **«فريقنا»** → `settings.team` (`/team`, 404 until switched on) and **«حالة الخدمات»** → `settings.status_page`
+  (`/status`: site, ordering, tracking, chat; database checked at most once a minute).
+
+Routing: `wrangler.toml` `not_found_handling = "none"`, so an address that is not a file reaches the Worker
+(`src/index.js` end: custom page → extra address → the site's 404 page via `notFound()`). Published pages are added to
+the sitemap and, when `footer` is on, to the small `.footer__legal` row (`footerLegal()` in `routes/pages.js`, also on the
+home page). Under «كيف نعمل» the home page links to /terms and /payment (`#processMore`).

@@ -6,6 +6,7 @@ import { UI_DEFAULTS } from "../../../js/ui-strings.js";
 // interface texts the owner can change (button labels, menu, form messages)
 const UI_GROUPS = [["القائمة والتذييل", ["nav_home", "nav_projects", "nav_services", "nav_calc", "nav_partners", "nav_careers", "nav_contact", "nav_blog", "privacy"]], ["نموذج التواصل", ["f_name", "f_email", "f_phone", "f_service", "f_any", "f_message", "f_send", "or_wa", "sending", "invalid", "bad_phone", "err", "done_title", "done_text", "done_again"]], ["الحاسبة والخدمات والمشاريع", ["calc_est", "calc_pdf", "calc_wa", "more", "page", "no_projects"]], ["حجز المواعيد", ["bk_btn", "bk_title", "bk_day", "bk_time", "bk_pick_day", "bk_none", "bk_pick_time", "bk_taken", "bk_notes", "bk_send", "bk_ok"]], ["التقديم على وظيفة", ["j_title", "j_job", "j_general", "j_cv", "j_about", "j_send", "j_ok"]]];
 import { imageField } from "../fields.js";
+import { renderCustom, renderLinks, renderStatus, renderTeam } from "./sitepages.js";
 import { bindPreview, changed, getPath, previewLang, previewPane, pushPreview, setPath, setPreviewLang, settingsActions } from "../settings.js";
 
 // ---------------- view: content ----------------
@@ -28,8 +29,8 @@ export const TEXT_FIELDS = [
 
 export async function viewContent(view) {
   settingsActions();
-  const tabs = [["texts", "النصوص"], ["about", "من نحن"], ["industries", "حلول حسب المجال"], ["pricing", "الباقات والأسعار"], ["guarantees", "الضمانات"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"], ["privacy", "سياسة الخصوصية"], ["booking", "المواعيد"], ["ui", "نصوص الأزرار والقوائم"], ["nav", "القوائم"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
-  const BR = [["home", "الصفحة الرئيسية", ["texts", "industries", "pricing", "guarantees", "story", "process", "stats", "calc", "sections"]], ["pages", "الصفحات المستقلة", ["about", "faq", "careers", "privacy", "booking"]],
+  const tabs = [["texts", "النصوص"], ["about", "من نحن"], ["industries", "حلول حسب المجال"], ["pricing", "الباقات والأسعار"], ["guarantees", "الضمانات"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"], ["privacy", "سياسة الخصوصية"], ["booking", "المواعيد"], ["links", "كل الروابط"], ["custom", "صفحات مضافة"], ["team", "فريقنا"], ["status", "حالة الخدمات"], ["ui", "نصوص الأزرار والقوائم"], ["nav", "القوائم"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
+  const BR = [["links", "كل الروابط", ["links"]], ["home", "الصفحة الرئيسية", ["texts", "industries", "pricing", "guarantees", "story", "process", "stats", "calc", "sections"]], ["pages", "الصفحات المستقلة", ["about", "faq", "careers", "privacy", "booking", "custom", "team", "status"]],
     ["menus", "القوائم والأزرار", ["nav", "ui"]], ["company", "بيانات الشركة", ["brand", "contact"]]];
   const label = Object.fromEntries(tabs);
   const drawTabs = () => {
@@ -40,6 +41,9 @@ export async function viewContent(view) {
     $$("#ctTabs button").forEach((b) => (b.onclick = () => { contentTab = b.dataset.k; drawTabs(); renderContentTab(); }));
   };
   drawTabs();
+  // «تعديل» in the links list opens that page's editor
+  if (!viewContent.listening) { viewContent.listening = true; document.addEventListener("wixa:content-tab", (e) => { contentTab = e.detail; if ($("#ctBody")) { $("#ctBranch") && viewContent.redraw?.(); renderContentTab(); } }); }
+  viewContent.redraw = drawTabs;
   view.innerHTML = `<div class="split"><div><div class="card">
       <div id="ctBody"></div></div></div>${previewPane()}</div>`;
   bindPreview();
@@ -67,6 +71,10 @@ export function renderContentTab() {
     const v = esc(getPath(settings, path) ?? "");
     return `<label class="f"><span>${label}</span>${area ? `<textarea data-path="${path}" rows="3" ${attrs}>${v}</textarea>` : `<input data-path="${path}" value="${v}" ${attrs}>`}</label>`;
   };
+  if (contentTab === "links") return void renderLinks(body);
+  if (contentTab === "custom") return renderCustom(body);
+  if (contentTab === "team") return renderTeam(body);
+  if (contentTab === "status") return renderStatus(body);
   if (contentTab === "texts") {
     body.innerHTML = langSeg() + `<div class="stack">${TEXT_FIELDS.map(([title, fields]) => `<div class="sec-title">${title}</div>${fields.map(([k, l, a]) => input(`content.${L}.${k}`, l, a, `dir="${dir}"`)).join("")}`).join("")}</div>`;
     bindLangSeg();

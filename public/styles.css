@@ -347,6 +347,10 @@ html[data-theme="dark"] .screen { border-color: rgba(255,255,255,.08); }
 .footer__nav { display: flex; justify-content: center; gap: 8px 28px; flex-wrap: wrap; color: var(--muted); font-size: .95rem; }
 .footer__nav a { padding: 4px 2px; transition: color .3s; }
 .footer__nav a:hover { color: var(--fg); }
+/* company pages (terms, payments, team, status…): one smaller row under the footer links */
+.footer__legal { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px 20px; margin-top: 10px; color: var(--muted); font-size: .8125rem; }
+.footer__legal a { padding: 4px 2px; transition: color .3s; }
+.footer__legal a:hover { color: var(--fg); }
 .footer__tools { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 22px; color: var(--muted); font-size: .9rem; }
 .footer__social { display: flex; gap: 8px; }
 .footer__social:empty, .footer__social:empty + .footer__sep { display: none; }
@@ -376,6 +380,8 @@ html[dir="ltr"] .project__more svg { transform: scaleX(-1); }
 
 /* ===== process ===== */
 .process { padding: 20px 0 120px; }
+.process__more { max-width: var(--max); margin: 28px auto 0; padding: 0 var(--gutter); text-align: center; color: var(--muted); font-size: .9375rem; }
+.process__more a { color: var(--fg); text-decoration: underline; text-underline-offset: 3px; }
 .process__track { position: relative; max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); --p: 0; }
 .process__line { position: absolute; top: 34px; inset-inline: calc(var(--gutter) + 12.5%); height: 2px; background: var(--line-2); border-radius: 2px; }
 .process__line span { position: absolute; inset: 0; background: linear-gradient(90deg, var(--accent), var(--fg)); transform-origin: right; transform: scaleX(var(--p)); border-radius: 2px; }

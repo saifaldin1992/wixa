@@ -98,7 +98,7 @@ export const safeHref = (u) => { try { const x = new URL(String(u || "")); retur
 // ---------------------------------------------------------------- message counters (for the weekly report)
 export const dayKey = (d = new Date()) => d.toISOString().slice(0, 10);
 
-export const notFound = (request, env) => env.ASSETS.fetch(new Request(new URL("/404.html", request.url), request)).then((r) => new Response(r.body, { status: 404, headers: r.headers }));
+export const notFound = (request, env) => env.ASSETS.fetch(new Request(new URL("/404", request.url), request)).then((r) => new Response(r.body, { status: 404, headers: r.headers }));
 
 export const fmtDate = (d, lang) => { try { return new Date(d).toLocaleDateString(lang === "ar" ? "ar-IQ" : "en-GB", { dateStyle: "long", timeZone: "Asia/Baghdad" }); } catch { return ""; } };
 

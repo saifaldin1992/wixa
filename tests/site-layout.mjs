@@ -9,7 +9,7 @@
 // Usage: BASE=http://localhost:8787 node tests/site-layout.mjs [paths…]
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
 const BASE = process.env.BASE || "http://localhost:8787";
-const PAGES = process.argv.slice(2).length ? process.argv.slice(2) : ["/", "/about", "/careers", "/contact", "/faq", "/privacy", "/blog", "/track", "/order", "/review"];
+const PAGES = process.argv.slice(2).length ? process.argv.slice(2) : ["/", "/about", "/careers", "/contact", "/faq", "/privacy", "/terms", "/payment", "/status", "/blog", "/track", "/order", "/review"];
 const SIZES = [["phone", { width: 390, height: 844 }], ["tablet", { width: 820, height: 1180 }], ["computer", { width: 1440, height: 900 }]];
 
 const b = await chromium.launch();

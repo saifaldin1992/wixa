@@ -41,6 +41,13 @@ try {
   check(priv.status === 200 && (await priv.text()).includes("سياسة الخصوصية"), "privacy page responds", String(priv.status));
   check((await fetch(`${BASE}/projects/no-such-project`)).status === 404, "unknown project pages return 404");
   check((await (await fetch(`${BASE}/sitemap.xml`)).text()).includes("/privacy"), "sitemap lists the privacy page");
+  for (const [p, t] of [["/terms", "الشروط والأحكام"], ["/payment", "الدفع والاسترجاع"], ["/status", "حالة الخدمات"]]) {
+    const r = await fetch(`${BASE}${p}?lang=ar`);
+    check(r.status === 200 && (await r.text()).includes(t), `${p} page responds`, String(r.status));
+  }
+  const miss = await fetch(`${BASE}/no-such-page`);
+  check(miss.status === 404 && (await miss.text()).includes("<title>"), "an unknown address shows the site's 404 page", String(miss.status));
+  check((await fetch(`${BASE}/api/admin/order`, { method: "POST", body: "{}" })).status === 401, "manual orders require sign-in");
   check((await fetch(`${BASE}/api/admin/msgmeta`)).status === 401, "message notes require sign-in");
   check((await fetch(`${BASE}/api/admin/diagnose`)).status === 401, "diagnostics require sign-in");
   check((await fetch(`${BASE}/api/admin/team`)).status === 401, "team management requires sign-in");
