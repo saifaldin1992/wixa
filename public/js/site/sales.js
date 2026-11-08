@@ -26,10 +26,8 @@ export function renderSales() {
   $("#guaranteesGrid").innerHTML = gs.map((x) => `<div class="guar reveal-up"><span class="guar__ok" aria-hidden="true">✓</span><h3>${esc(x.title)}</h3><p>${esc(x.text)}</p></div>`).join("");
   show("#guarantees", gs.length);
   // packages
-  const home = document.documentElement.dataset.page === "home";
   const allPk = (c.packages || []).filter((x) => x.name);
-  const pk = home ? allPk.slice(0, 3) : allPk; // the homepage shows a taste; /pricing shows everything
-  $(".pricing__more")?.toggleAttribute("hidden", !home || allPk.length <= 3);
+  const pk = allPk; // the whole pricing section (every package, then the calculator) on the home page as on /pricing
   $("#pricingGrid").innerHTML = pk.map((x, i) => `<article class="pkg reveal-up ${x.featured ? "pkg--featured" : ""}">
       ${x.featured ? `<span class="pkg__badge">${ui.pkg_featured}</span>` : ""}
       <h3>${esc(x.name)}</h3><p class="pkg__desc">${esc(x.desc)}</p>
