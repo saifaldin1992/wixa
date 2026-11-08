@@ -36,12 +36,12 @@ export async function buildHeroLogo() {
     ${runnerDot(logoD)}`;
 }
 
-// A short stroke in the site's wave colours that draws itself along the logo's outer outline (the longest sub-path),
+// A short stroke in the site's wave colours (purple ends, cyan middle) that draws itself along the logo's outer outline (the longest sub-path),
 // bending with every curve as if a pen were tracing the logo.
 function runnerDot(d) {
   const outer = d.split(/(?=M)/).sort((a, b) => b.length - a.length)[0];
   return `<g class="lg-runner">
-    <path class="lg-trace__halo" d="${outer}" pathLength="1"/><path class="lg-trace__edge" d="${outer}" pathLength="1"/><path class="lg-trace" d="${outer}" pathLength="1"/></g>`;
+    <path class="lg-trace__halo" d="${outer}" pathLength="1"/><path class="lg-trace__edge" d="${outer}" pathLength="1"/><path class="lg-trace" d="${outer}" pathLength="1"/><path class="lg-trace__core" d="${outer}" pathLength="1"/></g>`;
 }
 
 // ---------- hero: floating particles ----------

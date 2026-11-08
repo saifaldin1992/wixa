@@ -1633,3 +1633,13 @@ html[data-theme="dark"] .hero__logo .hero__globe { opacity: .12; }
 @keyframes lgTrace { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -1; } }
 html:not([data-theme="dark"]) .lg-trace { stroke: var(--accent); filter: drop-shadow(0 0 5px rgba(var(--accent-rgb), .9)) drop-shadow(0 0 14px rgba(var(--accent-rgb), .7)); }
 html:not([data-theme="dark"]) .lg-trace__halo { opacity: .3; }
+/* the tracing stroke in the wave's colours: a purple dash with a shorter cyan dash in its middle; softer glow, slower (15s) */
+.lg-trace { stroke: color-mix(in srgb, var(--fg) 70%, var(--accent)) !important; stroke-width: 14; filter: drop-shadow(0 0 4px rgba(var(--accent-rgb), .45)) !important; }
+.lg-trace__core { fill: none; stroke: var(--accent); stroke-width: 14; stroke-linecap: round; stroke-dasharray: .035 .965; stroke-dashoffset: -.0175; filter: drop-shadow(0 0 4px rgba(var(--accent-rgb), .6)); }
+html[data-theme="dark"] .lg-trace__core { stroke: color-mix(in srgb, var(--accent) 75%, #fff); }
+.lg-trace__halo { opacity: .1 !important; stroke-width: 90; }
+@media (prefers-reduced-motion: no-preference) {
+  .hero.in :is(.lg-trace, .lg-trace__edge, .lg-trace__halo) { animation-duration: 15s; }
+  .hero.in .lg-trace__core { animation: lgTraceCore 15s linear 2.8s infinite; }
+}
+@keyframes lgTraceCore { from { stroke-dashoffset: -.0175; } to { stroke-dashoffset: -1.0175; } }
