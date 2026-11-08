@@ -78,6 +78,7 @@ tests/                        الفحوص الآلية (npm test يشغّلها
   structure.mjs               بنية الخادم: الطبقات، لا حلقات استيراد، لا استيراد لملف غير موجود
   stats-cache.mjs             أرقام الزيارات لا تنتظر Cloudflare بعد أول مرة (نسخة فورية + تحديث في الخلفية)
   admin-netfail.mjs           لوحة التحكم بلا اتصال: رسالة «إعادة المحاولة» بدل الانتظار أو تسجيل الخروج
+  no-white-page.mjs           لا صفحة بيضاء: الموقع بلا كوده، واللوحة بلا رد من قاعدة البيانات
   smoke.mjs                   الصفحات والروابط والحماية الأساسية تعمل (Playwright)
   admin-phone.mjs             كل صفحات اللوحة تفتح على الجوال بلا أخطاء
   admin-layout.mjs            قياسات اللوحة على الجوال والكمبيوتر
@@ -266,6 +267,7 @@ lib/  →  services/  →  jobs/  →  routes/  →  index.js
 ## 9. الأمان
 
 - سياسة المحتوى (CSP) في `src/lib/core.js` (`CSP`) وفي `public/_headers` — **حدّثهما معاً** عند إضافة نطاق خارجي.
+- **لا كود مضمّن (inline script) في أي صفحة:** السياسة لا تسمح به. كود يجب أن يعمل قبل أول رسم يوضع في ملف مستقل صغير (`public/home-pre.js`، `public/theme-pre.js`، `public/admin/boot.js`).
 - كل كتابة عامة تمر بالخادم: حدّ طلبات + Turnstile + فخ للبرامج الآلية + دالة محمية بـ `WRITE_TOKEN`.
 - لوحة التحكم: دخول Supabase + `is_admin()` + التحقق بخطوتين (مستحسن).
 - الصور المرفوعة: PNG/JPEG/WebP/GIF فقط (SVG ممنوع لأنه قد يحمل برمجيات).
@@ -401,4 +403,35 @@ Insights and Turnstile. To upgrade: add the new file with its version in the nam
   together.
 - **Request logs**: Workers observability is on for both environments (Cloudflare → Workers → wixa / wixa-staging →
   Observability) to read real timings per path.
+
+## Reliability on weak connections (Nov 2026)
+
+Nothing may leave a white page or wait for ever (`tests/no-white-page.mjs`, `tests/admin-netfail.mjs`):
+
+| Where | Rule | File |
+|---|---|---|
+| Home page | sections stay hidden until `main.js` reveals them; if it has not marked `html.site-ready` within 4 s, `html.no-anim` shows everything statically | `public/home-pre.js`, `public/js/main.js` |
+| Dashboard start | `#boot` loading screen until `#auth` or `#app` shows (CSS `:has`); after 10 s «التحميل يتأخر» + reload button | `public/admin/boot.js`, `admin.css` |
+| Dashboard → Supabase | every request gives up after 20 s (uploads excepted) — the client's `global.fetch` | `public/admin/admin.js` |
+| Dashboard → `/api/admin/*` | `timedFetch()`: 20 s for reads, 60 s for sending; a toast says the connection is slow | `public/admin/js/core.js` |
+| Start-up network failure | `connectionFailed()` retry box; the session is kept (a network error is never «no admin permission») | `public/admin/js/auth.js` |
+| Settings not loaded | `saveSettings()` refuses, so defaults never overwrite the real settings | `public/admin/js/settings.js` |
+
+**Event handlers:** read `e.currentTarget` into a variable *before* the first `await` — after it the event is gone
+(`null`), which broke «رابط رأي لعميل».
+
+## Security and load tests (Nov 2026)
+
+Penetration test on staging, 61 attempts, all refused: dashboard API without/with forged tokens, server files
+(`/src`, `/.git`, `/.env`, `wrangler.toml`, schema), path traversal, open redirect, cross-site reads, the public
+Supabase key against every private table and token function, form floods, SQL injection and script payloads.
+One finding fixed: new live chats are capped at **6 a day per address** (`routes/chat.js`, KV `chatday:<date>:<fp>`,
+the address kept only as a salted fingerprint for one day).
+
+Load test on staging: 600 requests in 3.6 s and 2,000 in 14.1 s, all 200, no errors.
+
+**To repeat them** (this sandbox cannot reach the sites directly; the staging database can): from the Supabase SQL
+editor of the **staging** project, `select net.http_get('https://staging.wixa.dev/…')` for each request, then read
+`net._http_response` (status, body, `created`). Never against production, and never with valid form data (it would
+create real orders or chats).
 
