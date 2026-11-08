@@ -1619,3 +1619,7 @@ html[data-theme="dark"] .hero__logo .hero__globe { opacity: .12; }
 .hero__badge { gap: 8px; }
 .badge__star { font-style: normal; color: var(--accent); font-size: .8em; line-height: 1; }
 @media (min-width: 761px) { .hero { min-height: auto; padding-bottom: 110px !important; } }
+
+/* the wave piece that runs along the hero logo */
+.lg-runner__wave { fill: none; stroke: url(#lgWave); stroke-width: 18; stroke-linecap: round; filter: drop-shadow(0 0 10px rgba(var(--accent-rgb), .55)); }
+.lg-runner__edge { fill: none; stroke: var(--bg); stroke-width: 34; stroke-linecap: round; opacity: .9; }
