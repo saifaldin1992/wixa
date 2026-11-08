@@ -12,6 +12,7 @@ import { PRIVACY_DEFAULTS } from "../public/js/privacy-defaults.js";
 import "./window-shim.js";
 import "../public/shared.js";
 import { UI_DEFAULTS } from "../public/js/ui-strings.js";
+import { SOCIAL } from "../public/js/social-icons.js";
 const WIXA = globalThis.WIXA;
 import BUILD_MANIFEST from "../public/build/manifest.json";
 // /build/site.js → /build/site.js?v=<fingerprint of its content> (see scripts/build.mjs)
@@ -986,7 +987,46 @@ function detailsHtml(raw) {
 
 const safeHref = (u) => { try { const x = new URL(String(u || "")); return ["http:", "https:"].includes(x.protocol) ? x.href : ""; } catch { return ""; } };
 
-// One light page layout shared by project pages and the privacy policy: brand colours and font from the dashboard.
+// The site's header (logo, menu, theme, language, "start your project") and footer for the server-built pages,
+// with the same classes as the home page so they share one stylesheet and one look.
+function siteShell(st, lang, path) {
+  const ar = lang === "ar", q = ar ? "" : "?lang=en", other = ar ? "en" : "ar";
+  const ui = { ...UI_DEFAULTS[lang] };
+  for (const [k, v] of Object.entries(st.ui?.[lang] || {})) if (typeof v === "string" && v.trim() && k in ui) ui[k] = v;
+  const HREF = { home: "/", services: "/#services", industries: "/#industries", projects: "/#projects", pricing: "/#pricing", calc: "/#calculator", about: "/about", partners: "/#partners", careers: "/careers", contact: "/contact", faq: "/faq", blog: "/blog", privacy: "/privacy" };
+  const LABEL = (k) => ui[k === "privacy" ? "privacy" : `nav_${k}`] || k;
+  const href = (k) => { const h = HREF[k] || "/"; const [p, hash] = h.split("#"); return `${p}${q}${hash ? `#${hash}` : ""}`; };
+  const plan = WIXA.navPlan(st);
+  const link = (x, where) => `<a href="${href(x.k)}"${path === HREF[x.k] ? ' aria-current="page"' : ""}>${esc(LABEL(x.k))}</a>`;
+  const top = plan.filter((x) => x.at === "both" || x.at === "menu"), foot = plan.filter((x) => x.at === "both" || x.at === "footer");
+  const mark = '<span class="brand__mark"><svg viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg></span>';
+  const word = `<span class="brand__name"><svg class="wm" viewBox="0 0 716.6 150" aria-hidden="true"><use href="/wordmark.svg#wm"/></svg><span class="sr-only">${ar ? "ويكسا" : "WIXA"}</span></span>`;
+  const c = st.contact || {};
+  const host = { instagram: "www.instagram.com", x: "x.com", linkedin: "www.linkedin.com", facebook: "www.facebook.com" };
+  const social = (k) => { let v = String(c[k] || "").trim(); if (!v) return ""; if (!/^https?:\/\/[^/]+\.[a-z]{2,}/i.test(v)) v = `https://${host[k]}/${v.replace(/^https?:\/\//i, "").replace(/^@/, "").replace(/^(www\.)?(instagram|facebook|linkedin|x|twitter)(\.com)?\/?/i, "").replace(/^\/+/, "")}`; return safeHref(v); };
+  const socials = ["instagram", "x", "linkedin", "facebook"].map((k) => [k, social(k)]).filter(([, u]) => u).map(([k, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener" aria-label="${k}">${SOCIAL[k]}</a>`).join("")
+    + (c.email ? `<a href="mailto:${esc(c.email)}" aria-label="email"><svg viewBox="0 0 24 24"><path d="M3 5h18v14H3z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 6l9 7 9-7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></a>` : "");
+  const header = `<header class="header" id="header"><div class="header__bar">
+    <a href="/${q}" class="brand" aria-label="WIXA">${mark}${word}</a>
+    <nav class="header__nav" aria-label="main">${top.map((x) => link(x)).join("")}<a href="/order${q}" class="nav-cta" data-start>${esc(ui.nav_start)}</a></nav>
+    <div class="header__end">
+      <button class="theme-btn" id="tbtn" data-theme-toggle type="button" aria-label="${ar ? "الوضع الليلي / النهاري" : "Dark / light mode"}"><svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/></svg><svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+      <a class="pill-btn lang-btn" href="${path}?lang=${other}" hreflang="${other}">${ar ? "EN" : "ع"}</a>
+      <button class="menu-btn" id="menuBtn" type="button" aria-label="menu" aria-expanded="false"><span></span><span></span></button>
+    </div></div>
+    <div class="header__menu" id="menu"><a href="/order${q}" class="menu-cta" data-start>${esc(ui.nav_start)}</a>${top.map((x) => link(x)).join("")}</div></header>`;
+  const footer = `<footer class="footer">
+    <svg class="footer__wave footer__wave--brand" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="fwv" x1="0" x2="1"><stop offset="0" style="stop-color:var(--fg)"/><stop offset=".5" style="stop-color:var(--accent)"/><stop offset="1" style="stop-color:var(--fg)"/></linearGradient></defs><path pathLength="1" stroke="url(#fwv)" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
+    <svg class="footer__wave" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
+    <nav class="footer__nav">${foot.map((x) => link(x)).join("")}</nav>
+    <div class="footer__tools"><a href="/track${q}" class="track-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg><span>${esc(ui.track)}</span></a><div class="footer__social">${socials}</div></div>
+    <div class="footer__brand"><a href="/${q}" class="brand">${mark}${word}</a></div>
+    <p class="footer__credit">${esc(st.content?.[lang]?.footer_text || (ar ? "طُوّر بواسطة فريق ويكسا" : "Developed by the WIXA team"))} · © ${new Date().getFullYear()}</p></footer>`;
+  return { header, footer, ui };
+}
+
+// One page layout shared by service and project pages, articles, the privacy policy and the review form:
+// the site's own stylesheet, header, menu and footer, with the page's content in the middle.
 function simplePage(request, st, { lang, title, description, path, image, body, jsonld, status = 200, orderQ = "" }) {
   const ar = lang === "ar";
   const origin = new URL(request.url).origin;
@@ -996,7 +1036,7 @@ function simplePage(request, st, { lang, title, description, path, image, body, 
   const brand = (ar ? st.brand?.name_ar : st.brand?.name_en) || (ar ? "ويكسا" : "WIXA");
   const c = st.contact || {};
   const wa = String(c.whatsapp || "").replace(/\D/g, "");
-  const other = ar ? "en" : "ar";
+  const shell = siteShell(st, lang, path), ui = shell.ui;
   const html = `<!doctype html><html lang="${lang}" dir="${ar ? "rtl" : "ltr"}" data-mode="${st.mode === "light" || st.mode === "dark" ? st.mode : ""}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)} — ${esc(brand)}</title><meta name="description" content="${esc(description)}">
 <link rel="canonical" href="${origin}${path}?lang=${lang}"><link rel="alternate" hreflang="ar" href="${origin}${path}?lang=ar"><link rel="alternate" hreflang="en" href="${origin}${path}?lang=en">
@@ -1006,58 +1046,46 @@ ${image ? `<meta property="og:image" content="${esc(image)}"><meta name="twitter
 ${font === "Alexandria" ? '<link rel="preload" href="/fonts/alexandria/alexandria-arabic-800-normal.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="/fonts/alexandria.css">' : `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;500;700;800&display=swap">`}
 ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld).replace(/</g, "\\u003c")}</script>` : ""}
 <script src="/theme-pre.js"></script>
+<link rel="stylesheet" href="${versioned("/build/site.css")}">
+<style id="wixa-theme">:root{${Object.entries(WIXA.themeVars(WIXA.merge(WIXA.DEFAULTS, st), st.font?.family)).map(([k, v]) => `${k}:${String(v).replace(/[<>{};]/g, "")}`).join(";")}}</style>
 <style>
-:root{--p:${color};--bg:#FBFAFE;--s:#fff;--t:#140F1F;--m:#625C70;--l:#ECE8F3;color-scheme:light}
-html[data-theme="dark"]{--bg:#0F0B1A;--s:#17122A;--t:#F1EEF8;--m:#A9A3BC;--l:#2A2340;--p:#A574F1;color-scheme:dark}
-.tbtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--l);background:var(--s);color:var(--t);display:inline-grid;place-items:center;cursor:pointer;padding:0}.tbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8}
-html[data-theme="dark"] .tbtn .mo,html:not([data-theme="dark"]) .tbtn .su{display:none}
-main>h1,main>.lead,main>.cat,article>h1,article>.lead{text-align:center}main>.cat{display:table;margin-inline:auto}
-*{box-sizing:border-box}button,input,textarea,select{font:inherit}body{margin:0;background:var(--bg);color:var(--t);font-family:"${font}",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;line-height:1.8}
-a{color:var(--p)}.wrap{max-width:900px;margin:0 auto;padding:0 20px}
-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0}
-header .home{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--t);font-weight:800;font-size:1.15rem}header .home img{width:38px;height:38px}
-header nav{display:flex;gap:8px}header nav a{padding:8px 14px;border-radius:99px;border:1px solid var(--l);text-decoration:none;color:var(--t);font-size:.9rem;background:var(--s)}
-main{padding:20px 0 60px}h1{font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.3;margin:6px 0 12px}h2{font-size:1.2rem;margin:28px 0 8px}
-.cat{display:inline-block;font-size:.8rem;font-weight:700;padding:3px 12px;border-radius:99px;background:color-mix(in srgb,var(--p) 12%,transparent);color:var(--p)}
-.lead{font-size:1.1rem;color:var(--m)}p,li{color:var(--m)}ul{padding-inline-start:20px}
-.gallery{display:grid;gap:12px;margin:24px 0}.gallery img{width:100%;border-radius:18px;border:1px solid var(--l);display:block}
-.gallery .mob{max-width:300px;justify-self:center}
-.stats{display:flex;flex-wrap:wrap;gap:28px;margin:24px 0;padding:20px 0;border-top:1px solid var(--l);border-bottom:1px solid var(--l)}
-.stats b{display:block;font-size:1.6rem;color:var(--t)}.stats span{color:var(--m);font-size:.9rem}
-.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border-radius:99px;text-decoration:none;font-weight:700;background:var(--p);color:#fff}
-.btn--ghost{background:var(--s);color:var(--t);border:1px solid var(--l)}.btn--wa{background:#25D366;color:#fff}
-.actions .btn:first-child{background:linear-gradient(100deg,${color},color-mix(in srgb,#1FC8E3 45%,${color}));color:#fff}
-.sub{display:flex;gap:6px;overflow-x:auto;padding:0 0 6px;scrollbar-width:none}.sub a{flex-shrink:0;padding:6px 12px;border-radius:99px;text-decoration:none;color:var(--m);font-size:.85rem}.sub a:hover{color:var(--t);background:var(--s)}
-.case{display:grid;gap:12px;margin:24px 0}.case div{padding:18px 20px;border-radius:16px;border:1px solid var(--l);background:var(--s)}.case h3{margin:0 0 6px;font-size:1rem;color:var(--p,#5B21B6)}.case p{margin:0}
-.more{margin-top:40px;padding-top:24px;border-top:1px solid var(--l)}.more h2{margin-top:0}.more__grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-.more__grid a{display:block;padding:16px;border-radius:16px;border:1px solid var(--l);background:var(--s);text-decoration:none;color:var(--t)}.more__grid b{display:block}.more__grid span{color:var(--m);font-size:.85rem}
-.btn--wa{background:#25D366}.hp{position:absolute;left:-9999px;opacity:0}
-.btn{min-height:48px;padding:0 22px;font-size:.9375rem;line-height:1.2;box-sizing:border-box}
-h1{font-size:1.75rem}h2{font-size:1.25rem}.lead{font-size:1rem}header .home{font-size:1.0625rem}header .home img{width:34px;height:34px}
-header nav a{min-height:40px;display:inline-flex;align-items:center;padding:0 14px;font-size:.875rem}
-.sub a{font-size:.875rem;min-height:40px;display:inline-flex;align-items:center}
-.more__grid b{font-size:1.0625rem;line-height:1.5}.more__grid span{font-size:.875rem}p,li{font-size:.9375rem}
-@media(min-width:768px){h1{font-size:2.25rem}h2{font-size:1.5rem}.lead{font-size:1.0625rem}p,li{font-size:1rem}}
-@media(min-width:1200px){h1{font-size:2.75rem}.lead{font-size:1.125rem}.btn{min-height:50px;padding:0 26px}}
-.posts{display:grid;gap:14px;margin-top:20px}.post{display:grid;grid-template-columns:160px 1fr;gap:16px;padding:14px;border-radius:18px;border:1px solid var(--l);background:var(--s);text-decoration:none;color:var(--t)}
-.post img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:12px}.post b{display:block;font-size:1.1rem}.post span{font-size:.8rem;color:var(--m)}.post p{margin:6px 0 0;font-size:.92rem}
-@media(max-width:560px){.post{grid-template-columns:1fr}}
-article h2{margin-top:30px}article p,article li{font-size:1.05rem}
-.rv{display:grid;gap:14px;margin-top:20px}.rv label{display:grid;gap:6px;font-weight:700}.rv input,.rv textarea{font:inherit;padding:12px 14px;border-radius:14px;border:1px solid var(--l);background:var(--s);color:var(--t)}
-.rv fieldset{border:0;padding:0;margin:0}.rv legend{font-weight:700;margin-bottom:6px}.stars{display:flex;flex-wrap:wrap;gap:6px}
-.star input{position:absolute;opacity:0}.star span{display:inline-block;padding:6px 12px;border-radius:99px;border:1px solid var(--l);background:var(--s);color:#D9A441;cursor:pointer}
-.star input:checked+span{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 20%,transparent)}.rv .btn{justify-self:start;border:0;font:inherit;font-weight:700;cursor:pointer}
-footer{border-top:1px solid var(--l);padding:22px 0;font-size:.85rem;color:var(--m);display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between}
-footer a{color:var(--m)}
-</style></head><body><div class="wrap">
-<header><a class="home" href="/?lang=${lang}"><img src="/icons/icon-96.png" alt="">${esc(brand)}</a>
-<nav><button class="tbtn" type="button" id="tbtn" aria-label="${ar ? "الوضع الليلي / النهاري" : "Dark / light mode"}"><svg class="mo" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/></svg><svg class="su" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button><a href="${path}?lang=${other}" hreflang="${other}">${ar ? "English" : "العربية"}</a><a href="/?lang=${lang}">${ar ? "الرئيسية" : "Home"}</a></nav></header>
-<nav class="sub">${[["/?lang=LANG#projects", ar ? "نماذج من عملنا" : "Our work"], ["/?lang=LANG#services", ar ? "خدماتنا" : "Services"], ["/?lang=LANG#pricing", ar ? "الباقات" : "Packages"], ["/careers?lang=LANG", ar ? "الوظائف" : "Careers"], ["/contact?lang=LANG", ar ? "تواصل معنا" : "Contact"]].map(([h, t]) => `<a href="${h.replace("LANG", lang)}">${t}</a>`).join("")}<a href="/blog?lang=${lang}">${ar ? "المقالات" : "Articles"}</a></nav>
-<main>${body}
-<div class="actions"><a class="btn" href="/order?lang=${lang}${orderQ}">${ar ? "اطلب مشروعك" : "Order your project"}</a><a class="btn btn--ghost" href="/contact?lang=${lang}">${ar ? "تواصل معنا" : "Contact us"}</a>${wa ? `<a class="btn btn--wa" href="https://wa.me/${wa}" target="_blank" rel="noopener">${ar ? "واتساب" : "WhatsApp"}</a>` : ""}</div></main>
-<footer><span>© ${new Date().getFullYear()} ${esc(brand)}</span><span><a href="/privacy?lang=${lang}">${ar ? "سياسة الخصوصية" : "Privacy policy"}</a> · <a href="/?lang=${lang}">${origin.replace(/^https?:\/\//, "")}</a></span></footer>
-</div></body></html>`;
+/* page body on the site's colours: the content blocks below keep their own small layout */
+.page{--p:var(--primary);--t:var(--text);--m:var(--muted);--l:var(--line);--s:var(--surface);max-width:860px;margin:0 auto;padding:clamp(104px,14vw,132px) var(--gutter) clamp(48px,8vw,80px)}
+html[data-theme="dark"] .page{--p:var(--fg)}
+.page h1{font-size:var(--fs-h2,1.75rem);line-height:1.25;margin:6px 0 12px;text-align:center;text-wrap:balance}
+.page h2{font-size:1.25rem;margin:30px 0 8px}
+.page>.lead,.page .lead{font-size:1.0625rem;color:var(--m);text-align:center;max-width:620px;margin-inline:auto}
+.page .cat{display:table;margin:0 auto 6px;font-size:.8rem;font-weight:700;padding:3px 12px;border-radius:99px;background:color-mix(in srgb,var(--p) 12%,transparent);color:var(--p)}
+.page p,.page li{color:var(--m);line-height:1.9}.page ul{padding-inline-start:20px}
+.page .empty{text-align:center;padding:28px 18px;border-radius:22px;border:1px dashed var(--l-2,var(--line-2));background:var(--s);margin-top:24px}
+.page .gallery{display:grid;gap:12px;margin:24px 0}.page .gallery img{width:100%;border-radius:18px;border:1px solid var(--l);display:block}.page .gallery .mob{max-width:300px;justify-self:center}
+.page .stats{display:flex;flex-wrap:wrap;justify-content:center;gap:28px;margin:24px 0;padding:20px 0;border-top:1px solid var(--l);border-bottom:1px solid var(--l);text-align:center}
+.page .stats b{display:block;font-size:1.6rem;color:var(--t)}.page .stats span{color:var(--m);font-size:.9rem}
+.page .actions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:32px}
+.page .actions .btn{min-height:48px}
+.page .case{display:grid;gap:12px;margin:24px 0}.page .case div{padding:18px 20px;border-radius:22px;border:1px solid var(--l);background:var(--s)}.page .case h3{margin:0 0 6px;font-size:1rem;color:var(--p)}.page .case p{margin:0}
+.page .more{margin-top:40px;padding-top:24px;border-top:1px solid var(--l)}.page .more h2{margin-top:0;text-align:center}.page .more__grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.page .more__grid a{display:block;padding:16px;border-radius:22px;border:1px solid var(--l);background:var(--s);text-decoration:none;color:var(--t)}.page .more__grid b{display:block;font-size:1.0625rem;line-height:1.5}.page .more__grid span{color:var(--m);font-size:.875rem}
+.page .posts{display:grid;gap:14px;margin-top:24px}.page .post{display:grid;grid-template-columns:160px 1fr;gap:16px;padding:14px;border-radius:22px;border:1px solid var(--l);background:var(--s);text-decoration:none;color:var(--t)}
+.page .post img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:14px}.page .post b{display:block;font-size:1.1rem}.page .post span{font-size:.8rem;color:var(--m)}.page .post p{margin:6px 0 0;font-size:.92rem}
+@media(max-width:560px){.page .post{grid-template-columns:1fr}}
+.page article h2{margin-top:30px}.page article p,.page article li{font-size:1.05rem}
+.page a:not(.btn):not(.post):not(.more__grid a){color:var(--p)}
+.page .rv{display:grid;gap:14px;margin-top:20px}.page .rv label{display:grid;gap:6px;font-weight:700;color:var(--t)}.page .rv input,.page .rv textarea{font:inherit;min-height:48px;padding:12px 14px;border-radius:14px;border:1px solid var(--line-2);background:var(--s);color:var(--t);width:100%;box-sizing:border-box}
+.page .rv fieldset{border:0;padding:0;margin:0}.page .rv legend{font-weight:700;margin-bottom:6px;color:var(--t)}.page .stars{display:flex;flex-wrap:wrap;gap:6px}
+.page .star input{position:absolute;opacity:0}.page .star span{display:inline-block;padding:6px 12px;border-radius:99px;border:1px solid var(--l);background:var(--s);color:#D9A441;cursor:pointer}
+.page .star input:checked+span{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 20%,transparent)}.page .rv .btn{justify-self:center;border:0;cursor:pointer}
+.page .hp{position:absolute;left:-9999px;opacity:0}
+.page .btn--wa{background:#25D366;color:#fff}
+.footer__wave path{stroke-dashoffset:0}
+.header .lang-btn{display:inline-grid;place-items:center;text-decoration:none;color:var(--text);line-height:1}
+</style></head><body>
+${shell.header}
+<div class="scrim" id="scrim"></div>
+<main class="page">${body}
+<div class="actions"><a class="btn btn--primary" data-start href="/order?lang=${lang}${orderQ}">${ui.nav_start}</a><a class="btn btn--ghost" href="/contact?lang=${lang}">${ui.nav_contact}</a></div></main>
+${shell.footer}
+</body></html>`;
   return new Response(request.method === "HEAD" ? null : html, { status, headers: { ...SECURITY_HEADERS, "speculation-rules": '"/speculation-rules.json"', "content-type": "text/html; charset=utf-8", "cache-control": "no-cache", "content-language": lang, vary: "Accept-Language, Cookie" } });
 }
 
@@ -1311,7 +1339,7 @@ async function handleBlog(request, env, ctx, slug) {
   const origin = new URL(request.url).origin;
   if (!slug) {
     const body = `<h1>${ar ? "المقالات" : "Articles"}</h1><p class="lead">${ar ? "أفكار ونصائح عن المواقع والتطبيقات والأنظمة الرقمية." : "Ideas and advice on websites, apps and digital systems."}</p>
-      ${posts.length ? `<div class="posts">${posts.map((p) => `<a class="post" href="/blog/${encodeURIComponent(p.slug)}?lang=${lang}">${safeHref(p.cover_url) ? `<img src="${esc(safeHref(p.cover_url))}" alt="" loading="lazy">` : ""}<div><b>${esc(T(p, "title"))}</b><span>${esc(fmtDate(p.published_at || p.created_at, lang))}</span><p>${esc(T(p, "excerpt"))}</p></div></a>`).join("")}</div>` : `<p>${ar ? "ستُنشر المقالات هنا قريباً." : "Articles will appear here soon."}</p>`}`;
+      ${posts.length ? `<div class="posts">${posts.map((p) => `<a class="post" href="/blog/${encodeURIComponent(p.slug)}?lang=${lang}">${safeHref(p.cover_url) ? `<img src="${esc(safeHref(p.cover_url))}" alt="" loading="lazy">` : ""}<div><b>${esc(T(p, "title"))}</b><span>${esc(fmtDate(p.published_at || p.created_at, lang))}</span><p>${esc(T(p, "excerpt"))}</p></div></a>`).join("")}</div>` : `<p class="empty">${ar ? "ستُنشر المقالات هنا قريباً." : "Articles will appear here soon."}</p>`}`;
     return simplePage(request, st, { lang, title: ar ? "المقالات" : "Articles", description: ar ? "مقالات ويكسا عن تطوير المواقع والتطبيقات والأنظمة." : "WIXA articles on building websites, apps and systems.", path: "/blog", body });
   }
   const p = posts.find((x) => x.slug === slug);

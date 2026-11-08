@@ -7,6 +7,11 @@
   if (t !== "light" && t !== "dark") t = (m === "light" || m === "dark") ? m : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
   r.setAttribute("data-theme", t);
   addEventListener("DOMContentLoaded", function () {
+    var m = document.getElementById("menu"), mb = document.getElementById("menuBtn"), sc = document.getElementById("scrim");
+    var menu = function (open) { if (!m || !mb) return; mb.setAttribute("aria-expanded", open); m.classList.toggle("open", open); if (sc) sc.classList.toggle("open", open); r.classList.toggle("menu-open", open); };
+    if (mb) mb.addEventListener("click", function () { menu(mb.getAttribute("aria-expanded") !== "true"); });
+    if (sc) sc.addEventListener("click", function () { menu(false); });
+    if (m) m.addEventListener("click", function (e) { if (e.target.closest("a")) menu(false); });
     var b = document.getElementById("tbtn");
     if (b) b.addEventListener("click", function () {
       var n = r.getAttribute("data-theme") === "dark" ? "light" : "dark";
