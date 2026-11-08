@@ -29,7 +29,7 @@ and set the Supabase directory to `supabase`.
 - `public/index.html`, `styles.css`, `main.js`: the public bilingual (Arabic/English) site. All content, colors and fonts come from Supabase through `GET /api/site`.
 - `public/admin/`: the admin dashboard at `/admin/`: visitor stats, colors, fonts and font size with live preview, all site text, projects, services, partners (with image uploads) and contact messages.
 - `public/shared.js`: default content, fonts, icons and theme helpers used by both.
-- `src/index.js`: Cloudflare Worker: `/api/site`, `/api/track` (anonymous daily-hashed visits), `/api/contact`, `/api/config`, `/health`; everything else is served from `public/`.
+- `src/`: Cloudflare Worker, split by job (`index.js` routes every request; `core.js`, `data.js`, `pages.js`, `forms.js`, `chat.js`, `mail.js`, `admin.js`, `diagnose.js`, `errors.js`, `jobs.js` — see docs/DEVELOPERS.md).
 
 ### First admin account
 

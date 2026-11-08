@@ -42,7 +42,18 @@
 ## 3. هيكل المشروع
 
 ```
-src/index.js                  الخادم كله (Worker): الصفحات، الواجهات، البريد، المهام المجدولة
+src/                          الخادم (Worker)، مقسّم حسب الوظيفة:
+  index.js                    نقطة البدء: توجيه كل طلب إلى معالجه + المهام المجدولة
+  core.js                     الأساسيات: رؤوس الأمان، ردود JSON، الاتصال بـ Supabase، حدود الطلبات، دوال النص
+  data.js                     محتوى الموقع وإعداداته: القراءة والتخزين المؤقت وإعادة النشر بعد تعديل اللوحة
+  pages.js                    الصفحات المبنية في الخادم: الرئيسية، الخدمات، المشاريع، المقالات، الخصوصية
+  forms.js                    النماذج العامة: الطلب، تتبع الطلب، التواصل، الحجز، التقييم، الأحداث، إلغاء الاشتراك
+  chat.js                     الدردشة المباشرة وإشعارات الفريق (Web Push)
+  mail.js                     الرسائل البريدية: تنبيهات الفريق وتأكيدات الزبائن
+  admin.js                    واجهات لوحة التحكم: التحقق من الدخول والصلاحيات، الإحصاءات، الإعدادات، الفريق، الحملات
+  diagnose.js                 صفحة الفحص والتشخيص
+  errors.js                   سجل الأعطال (المتصفح والخادم)
+  jobs.js                     المهام المجدولة: المراقبة، التقرير الأسبوعي، النسخ الاحتياطي، تذكيرات المبيعات
 public/                       الملفات الثابتة
   index.html                  الصفحة الرئيسية (قالب يُكمِل الخادمُ محتواه)
   styles.css                  تصميم الموقع (آخره «نظام الأحجام» للجوال/التابلت/الكمبيوتر)
@@ -155,7 +166,11 @@ node scripts/build.mjs                # بناء الواجهة يدوياً
    `insert into private.config (key, value) values ('write_token_sha256', encode(extensions.digest('النص نفسه', 'sha256'), 'hex'));`
 7. حدّث `SUPABASE_URL` و`SUPABASE_PUBLISHABLE_KEY` للبيئة في `wrangler.toml`.
 
-## 7. الخادم (`src/index.js`)
+## 7. الخادم (`src/`)
+
+مقسّم إلى ملفات حسب الوظيفة (القائمة في «هيكل المشروع» أعلاه). كل ملف يصدّر دواله ويستورد ما يحتاجه من غيره.
+القيمة التي تتغير أثناء العمل (التخزين المؤقت، دفعات الأحداث والأعطال) تبقى في الملف الذي يغيّرها فقط.
+دالة جديدة توضع في ملف وظيفتها، ومسار جديد يُضاف في `index.js`.
 
 ### الصفحات
 `/` · `/projects/<slug>` · `/services/<slug>` · `/blog` · `/blog/<slug>` · `/privacy` · `/review?c=` · `/robots.txt` · `/sitemap.xml` · `/health` · `/admin/`
@@ -217,7 +232,7 @@ node scripts/build.mjs                # بناء الواجهة يدوياً
 
 ## 9. الأمان
 
-- سياسة المحتوى (CSP) في `src/index.js` (`CSP`) وفي `public/_headers` — **حدّثهما معاً** عند إضافة نطاق خارجي.
+- سياسة المحتوى (CSP) في `src/core.js` (`CSP`) وفي `public/_headers` — **حدّثهما معاً** عند إضافة نطاق خارجي.
 - كل كتابة عامة تمر بالخادم: حدّ طلبات + Turnstile + فخ للبرامج الآلية + دالة محمية بـ `WRITE_TOKEN`.
 - لوحة التحكم: دخول Supabase + `is_admin()` + التحقق بخطوتين (مستحسن).
 - الصور المرفوعة: PNG/JPEG/WebP/GIF فقط (SVG ممنوع لأنه قد يحمل برمجيات).
@@ -323,7 +338,7 @@ One set of sizes for every page — no page sets its own width. Tokens live at t
 | first title under the header bar (site inner pages) | 40 | 48 | 64 |
 
 Site content widths (box including gutters, centred): wide `--max` 1240 · reading `--read` 820 · narrow `--narrow` 560.
-The site block is at the end of `public/styles.css` ("FIXED SIZES"); standalone pages (`simplePage` in `src/index.js`)
+The site block is at the end of `public/styles.css` ("FIXED SIZES"); standalone pages (`simplePage` in `src/pages.js`)
 use the same tokens.
 
 `tests/site-layout.mjs` (part of `npm test`) opens every site page on a phone, a tablet and a computer and fails on

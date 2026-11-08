@@ -9,7 +9,7 @@ const BASE = process.env.BASE || "http://localhost:8787";
 const VIEWS = ["overview", "orders", "messages", "chats", "customers", "sales", "campaigns", "content", "appearance", "brand", "projects", "services", "partners", "testimonials", "posts", "seo", "integrations", "notify", "protect", "backup", "diagnose", "devguide", "team", "account"];
 
 // realistic answers from the server, so every page draws its cards
-const src = readFileSync(new URL("../src/index.js", import.meta.url), "utf8");
+const src = readFileSync(new URL("../src/data.js", import.meta.url), "utf8");
 const at = src.indexOf("{", src.indexOf("const CONFIG_DEFAULTS = {"));
 let depth = 0, end = at;
 for (let k = at; k < src.length; k++) { if (src[k] === "{") depth++; else if (src[k] === "}" && !--depth) { end = k; break; } }
