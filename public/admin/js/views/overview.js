@@ -1,5 +1,5 @@
 /* Overview: visitors from Cloudflare Web Analytics, messages */
-import { $, setSubnav, $$, I, esc, fmt, sb, adminApi, role } from "../core.js";
+import { $, setSubnav, $$, I, esc, fmt, sb, adminApi, role, timedFetch } from "../core.js";
 import { route } from "../shell.js";
 import { textFixesCard } from "../textfixes.js";
 
@@ -19,7 +19,7 @@ export async function viewOverview(view) {
   let s;
   try {
     const { data: ses } = await sb.auth.getSession();
-    const r = await fetch(`/api/admin/stats?days=${period}`, { headers: { authorization: `Bearer ${ses.session?.access_token || ""}` } });
+    const r = await timedFetch(`/api/admin/stats?days=${period}`, { headers: { authorization: `Bearer ${ses.session?.access_token || ""}` } });
     if (!r.ok) throw new Error(r.status);
     s = await r.json();
     try { sessionStorage.setItem(cacheKey, JSON.stringify(s)); } catch {}

@@ -1,5 +1,5 @@
 /* Developer guide: docs/DEVELOPERS.md from the repository, served to signed-in admins only and shown here. */
-import { $, esc, sb, toast, sectionTabs } from "../core.js";
+import { $, esc, sb, toast, sectionTabs, timedFetch } from "../core.js";
 
 // A small Markdown renderer for the guide: headings, paragraphs, lists, tables, code, bold, links.
 function md(src) {
@@ -39,7 +39,7 @@ export async function viewDevGuide(view) {
   let text = "";
   try {
     const { data: ses } = await sb.auth.getSession();
-    const r = await fetch("/api/admin/devguide", { headers: { authorization: `Bearer ${ses.session?.access_token || ""}` } });
+    const r = await timedFetch("/api/admin/devguide", { headers: { authorization: `Bearer ${ses.session?.access_token || ""}` } });
     if (!r.ok) throw new Error(r.status);
     text = await r.text();
   } catch (e) { view.innerHTML = `<div class="empty">تعذّر تحميل الدليل (${esc(e.message)})</div>`; return; }

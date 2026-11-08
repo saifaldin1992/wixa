@@ -1,6 +1,6 @@
 /* Account: email, password, two-step verification, backup */
 import { codeField } from "../auth.js";
-import { $, I, confirmBox, esc, sb, setUser, toast, user, role } from "../core.js";
+import { $, I, confirmBox, esc, sb, setUser, toast, user, role, timedFetch } from "../core.js";
 import { route } from "../shell.js";
 
 // ---------------- view: account ----------------
@@ -73,7 +73,7 @@ export async function viewAccount(view) {
   // alerts address: stored privately on the server (Cloudflare), changed through an admin-only endpoint
   const api = async (method, body) => {
     const { data: ses } = await sb.auth.getSession();
-    return fetch("/api/admin/notify", { method, headers: { authorization: `Bearer ${ses.session?.access_token || ""}`, "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+    return timedFetch("/api/admin/notify", { method, headers: { authorization: `Bearer ${ses.session?.access_token || ""}`, "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
   };
   if (role === "owner") api("GET").then((r) => r.json()).then((d) => {
     const f = $("#notifyForm"); if (!f) return;

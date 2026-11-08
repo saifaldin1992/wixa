@@ -1,5 +1,5 @@
 /* Connections: which domain, hosting, database, email and code repository the site is linked to, checked live */
-import { $, esc, sb } from "../core.js";
+import { $, esc, sb, timedFetch } from "../core.js";
 
 const ICON = { ok: "✓", warn: "!", err: "✕", info: "i" };
 
@@ -8,7 +8,7 @@ export async function viewStatus(view) {
   let d;
   try {
     const { data: ses } = await sb.auth.getSession();
-    const r = await fetch("/api/admin/status", { headers: { authorization: `Bearer ${ses.session?.access_token || ""}` } });
+    const r = await timedFetch("/api/admin/status", { headers: { authorization: `Bearer ${ses.session?.access_token || ""}` } });
     if (!r.ok) throw new Error(r.status === 403 ? "لا تملك صلاحية" : `HTTP ${r.status}`);
     d = await r.json();
   } catch (e) {

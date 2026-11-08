@@ -127,9 +127,17 @@ export const I = {
 };
 
 // ---------------- server endpoints (admins only; the Worker checks the session) ----------------
+// requests to the site's own server give up after 20 s with a clear message, so a lost connection never leaves a
+// page waiting for ever
+export function timedFetch(url, opts = {}, ms = 20000) {
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), ms);
+  return fetch(url, { ...opts, signal: ctl.signal })
+    .catch((e) => { if (e.name === "AbortError") { toast("الاتصال بطيء أو منقطع — أعد المحاولة بعد قليل", "err"); throw Object.assign(new Error("timeout"), { status: 0 }); } throw e; })
+    .finally(() => clearTimeout(timer));
+}
 export async function adminApi(path, method = "GET", body) {
   const { data: ses } = await sb.auth.getSession();
-  const r = await fetch(`/api/admin/${path}`, { method, headers: { authorization: `Bearer ${ses.session?.access_token || ""}`, "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+  const r = await timedFetch(`/api/admin/${path}`, { method, headers: { authorization: `Bearer ${ses.session?.access_token || ""}`, "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined }, method === "GET" ? 20000 : 60000); // sending (a campaign, a backup) may take longer than reading
   const data = await r.json().catch(() => ({}));
   if (!r.ok) throw Object.assign(new Error(data.error || String(r.status)), { status: r.status, data });
   return data;
