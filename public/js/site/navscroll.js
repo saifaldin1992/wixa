@@ -12,7 +12,20 @@ function glide(id) {
   return true;
 }
 
+// Pages of their own: start fetching as soon as a finger touches the link or the mouse rests on it,
+// so the page is (almost) ready when the tap ends. Chrome does this from /speculation-rules.json already.
+const OWN = /^\/(careers|contact|blog|about|faq|privacy|track|services\/|projects\/)/;
+function warm(e) {
+  const a = e.target.closest?.("a[href]");
+  if (!a || HTMLScriptElement.supports?.("speculationrules")) return;
+  const u = new URL(a.href, location.href);
+  if (u.origin !== location.origin || !OWN.test(u.pathname) || u.pathname === location.pathname || document.querySelector(`link[rel=prefetch][href="${u.pathname + u.search}"]`)) return;
+  const l = document.createElement("link"); l.rel = "prefetch"; l.href = u.pathname + u.search; document.head.appendChild(l);
+}
+
 export function setupNavScroll() {
+  document.addEventListener("touchstart", warm, { passive: true });
+  document.addEventListener("mouseover", (e) => { clearTimeout(warm.t); warm.t = setTimeout(() => warm(e), 80); });
   document.addEventListener("click", (e) => {
     const a = e.target.closest("a[href]");
     if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey) return;

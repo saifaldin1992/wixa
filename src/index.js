@@ -164,8 +164,8 @@ const deepMerge = (a, b) => {
 };
 let cfgMemo = { at: 0, v: null };
 async function getConfig(env) {
-  if (cfgMemo.v && Date.now() - cfgMemo.at < 15_000) return cfgMemo.v;
-  const raw = env.PRIVATE ? await env.PRIVATE.get("config", { type: "json", cacheTtl: 30 }).catch(() => null) : null;
+  if (cfgMemo.v && Date.now() - cfgMemo.at < 60_000) return cfgMemo.v;
+  const raw = env.PRIVATE ? await env.PRIVATE.get("config", { type: "json", cacheTtl: 60 }).catch(() => null) : null;
   cfgMemo = { at: Date.now(), v: deepMerge(CONFIG_DEFAULTS, raw || {}) };
   return cfgMemo.v;
 }
@@ -326,7 +326,7 @@ function faqLd(st, lang) {
 
 // GET / — static HTML with the content embedded (no flash of default text, one request per visit).
 // /about, /pricing and /careers are the homepage's HTML showing only their own sections (html[data-page])
-const PAGE_TITLES = { about: { ar: "من نحن", en: "About us" }, pricing: { ar: "الباقات والأسعار", en: "Packages & pricing" }, careers: { ar: "الوظائف", en: "Careers" }, contact: { ar: "تواصل معنا", en: "Contact us" }, order: { ar: "اطلب مشروعك", en: "Order your project" }, track: { ar: "تتبع طلبك", en: "Track your order" }, faq: { ar: "الأسئلة الشائعة", en: "Frequently asked questions" } };
+const PAGE_TITLES = { about: { ar: "من نحن", en: "About us" }, careers: { ar: "الوظائف", en: "Careers" }, contact: { ar: "تواصل معنا", en: "Contact us" }, order: { ar: "اطلب مشروعك", en: "Order your project" }, track: { ar: "تتبع طلبك", en: "Track your order" }, faq: { ar: "الأسئلة الشائعة", en: "Frequently asked questions" } };
 async function handleHome(request, env, ctx, pageName = "home") {
   const [page, raw, cfg] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx), getConfig(env)]);
   const data = cfg.spam.turnstile ? raw : raw.replace(/"turnstile":"[^"]*"/, '"turnstile":""');
@@ -347,7 +347,7 @@ async function handleHome(request, env, ctx, pageName = "home") {
   const attr = (sel, name, val) => [sel, { element: (el) => { if (val) el.setAttribute(name, val); } }];
   const siteTitle = seo[`title_${lang}`] || (lang === "en" ? SEO_DEFAULTS.en.title : ""), siteDesc = seo[`description_${lang}`] || (lang === "en" ? SEO_DEFAULTS.en.description : ""), img = seo.og_image ? abs(seo.og_image) : "";
   const pc = st.content?.[lang] || {}, brandName = (lang === "en" ? st.brand?.name_en : st.brand?.name_ar) || "WIXA";
-  const pageDesc = { about: pc.about_text, pricing: pc.pricing_sub, careers: pc.careers_sub, contact: pc.cta_sub, faq: pc.faq_sub, order: pc.pricing_sub, track: pc.pricing_sub }[pageName];
+  const pageDesc = { about: pc.about_text, careers: pc.careers_sub, contact: pc.cta_sub, faq: pc.faq_sub, order: pc.pricing_sub, track: pc.pricing_sub }[pageName];
   const title = pageName === "home" ? siteTitle : `${PAGE_TITLES[pageName][lang]} — ${brandName}`;
   const desc = pageName === "home" ? siteDesc : String(pageDesc || siteDesc || "").replace(/\s+/g, " ").slice(0, 160);
   const pagePath = pageName === "home" ? "/" : `/${pageName}`;
@@ -422,6 +422,7 @@ async function handleHome(request, env, ctx, pageName = "home") {
   headers.delete("etag");
   for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v);
   headers.set("content-security-policy", cspWithTags(tags));
+  headers.set("speculation-rules", '"/speculation-rules.json"');
   return new Response(res.body, { status: res.status, headers });
 }
 
@@ -1057,7 +1058,7 @@ footer a{color:var(--m)}
 <div class="actions"><a class="btn" href="/order?lang=${lang}${orderQ}">${ar ? "اطلب مشروعك" : "Order your project"}</a><a class="btn btn--ghost" href="/contact?lang=${lang}">${ar ? "تواصل معنا" : "Contact us"}</a>${wa ? `<a class="btn btn--wa" href="https://wa.me/${wa}" target="_blank" rel="noopener">${ar ? "واتساب" : "WhatsApp"}</a>` : ""}</div></main>
 <footer><span>© ${new Date().getFullYear()} ${esc(brand)}</span><span><a href="/privacy?lang=${lang}">${ar ? "سياسة الخصوصية" : "Privacy policy"}</a> · <a href="/?lang=${lang}">${origin.replace(/^https?:\/\//, "")}</a></span></footer>
 </div></body></html>`;
-  return new Response(request.method === "HEAD" ? null : html, { status, headers: { ...SECURITY_HEADERS, "content-type": "text/html; charset=utf-8", "cache-control": "no-cache", "content-language": lang, vary: "Accept-Language, Cookie" } });
+  return new Response(request.method === "HEAD" ? null : html, { status, headers: { ...SECURITY_HEADERS, "speculation-rules": '"/speculation-rules.json"', "content-type": "text/html; charset=utf-8", "cache-control": "no-cache", "content-language": lang, vary: "Accept-Language, Cookie" } });
 }
 
 // GET /projects/<slug> — one page per project (shareable, and findable in search engines)
@@ -2064,7 +2065,6 @@ export default {
             headers: { ...SECURITY_HEADERS, "content-type": "application/json; charset=utf-8", "cache-control": `public, max-age=${SITE_TTL}` },
           });
         }
-        case "POST /api/track": return new Response(null, { status: 204 }); // replaced by Cloudflare Web Analytics
         case "GET /admin/":
         case "GET /admin/index.html":
           return await handleAdminPage(request, env);
@@ -2137,9 +2137,6 @@ export default {
         case "POST /api/admin/refresh": return await handleAdminRefresh(request, env);
         case "GET /api/admin/status": return await handleAdminStatus(request, env, ctx);
         case "POST /api/contact": return await handleContact(request, env, ctx);
-        case "GET /api/config":
-          // Public values the admin dashboard needs to talk to Supabase.
-          return json({ env: env.SITE_ENV || "production", supabaseUrl: env.SUPABASE_URL, supabaseKey: env.SUPABASE_PUBLISHABLE_KEY });
         case "GET /sitemap.xml": {
           const today = new Date().toISOString().slice(0, 10);
           let projects = [], services = [];
