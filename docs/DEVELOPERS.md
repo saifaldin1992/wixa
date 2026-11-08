@@ -318,7 +318,17 @@ One set of sizes for every page — no page sets its own width. Tokens live at t
 | side gutter | 16 | 24 | 32 |
 | card padding (dashboard / site) | 16 / 18 | 20 / 22 | 24 / 26 |
 | gap between cards | 12 | 16 | 16 |
-| radius | 22 | 22 | 22 |
+| radius | controls 14 · cards 22 · large panels 28 | | |
+| panel padding (site forms, order) | 20 | 28 | 36 |
+| first title under the header bar (site inner pages) | 40 | 48 | 64 |
+
+Site content widths (box including gutters, centred): wide `--max` 1240 · reading `--read` 820 · narrow `--narrow` 560.
+The site block is at the end of `public/styles.css` ("FIXED SIZES"); standalone pages (`simplePage` in `src/index.js`)
+use the same tokens.
+
+`tests/site-layout.mjs` (part of `npm test`) opens every site page on a phone, a tablet and a computer and fails on
+sideways scrolling, a corner size outside the three, a row of cards not centred at one of the three widths, or an inner
+page whose first title is not at the standard distance under the header bar.
 
 `tests/admin-layout.mjs` (part of `npm test`) opens every dashboard page on an iPhone 13 and at 1440×900 and fails if
 the page is wider than the screen, if a card on its own is narrower than the page, or if a row of cards does not start

@@ -1,5 +1,7 @@
 /* Brand guide — for the owner only (inside the dashboard, never linked from the public site).
-   Logo files to download, colours, light/dark palettes, typography, the WIXA wave, components, spacing and usage rules.
+   Three branches, as in standard brand guidelines: identity (foundation, logo, colour, type, signature elements, icons,
+   voice, applications) · design system (grid and sizes, shape, motion, components, page patterns, dashboard) ·
+   UX standards (accessibility, content, performance, the automatic checks).
    Colours and font follow the current site settings, so the guide always matches the live site. */
 import { sectionTabs } from "../core.js";
 import { $, $$, esc, settings, toast } from "../core.js";
@@ -56,156 +58,234 @@ export async function viewBrand(view) {
   if (!document.getElementById("brandFont")) document.head.insertAdjacentHTML("beforeend", '<link id="brandFont" rel="stylesheet" href="/fonts/alexandria.css">');
   const t = settings.theme, dk = darkPalette(t), font = settings.font?.family || "Alexandria";
   const brandAr = settings.brand?.name_ar || "ويكسا", brandEn = settings.brand?.name_en || "WIXA";
+  const R = Number(t.radius) || 22;
+  const WAVE = `linear-gradient(100deg, ${t.primary}, color-mix(in srgb, ${t.accent} 45%, ${t.primary}))`;
+  const card = (sec, title, sub, body) => `<div class="card" data-sec="${sec}"><div class="card__head"><div><h3>${title}</h3>${sub ? `<p>${sub}</p>` : ""}</div></div>${body}</div>`;
+  const list = (items) => `<ul class="bg-list">${items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
+  const table = (label, head, rows) => `<div class="table-wrap" tabindex="0" role="region" aria-label="${label}"><table class="bg-table"><thead><tr>${head.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+  const h4 = (s) => `<h4 style="margin:18px 0 8px">${s}</h4>`;
+
   const variants = [
     ["color", "الأساسي — على خلفية فاتحة", t.primary, t.bg],
     ["dark", "على خلفية داكنة (الوضع الليلي)", dk.fg, dk.bg],
     ["white", "أبيض على لون الهوية", "#FFFFFF", t.primary],
     ["black", "أحادي اللون (طباعة، أختام)", "#140F1F", "#FFFFFF"],
   ];
-  const colors = [
-    ["اللون الأساسي", "Primary", t.primary, "الأزرار الرئيسية، الشعار، الروابط، العناصر المهمة"],
-    ["اللون المساعد", "Accent", t.accent, "لمسات صغيرة فقط: نقاط، خطوط، تدرجات — ليس للنصوص الطويلة"],
-    ["الداكن", "Dark", t.dark, "الأقسام الداكنة (الأرقام، الحاسبة) والخلفيات العميقة"],
-    ["النص", "Text", t.text, "العناوين والنص الأساسي"],
-    ["النص الثانوي", "Muted", t.muted, "الوصف والملاحظات"],
-    ["الخلفية", "Background", t.bg, "خلفية الصفحة"],
-    ["السطح", "Surface", t.surface, "البطاقات والنماذج"],
-    ["واتساب (أيقونة)", "WhatsApp", "#25D366", "للزر الدائري بالأيقونة فقط — لا يوضع عليه نص أبيض (تباين ضعيف)"],
-    ["واتساب (نص)", "WhatsApp ink", "#0E7C47", "خلفية أزرار واتساب التي فيها كتابة بيضاء (5.3:1)"],
+  const colorGroups = [
+    ["ألوان الهوية", [
+      ["الأساسي", "Primary", t.primary, "الشعار، الأزرار الرئيسية، الروابط، العنصر المختار"],
+      ["المساعد", "Accent", t.accent, "لمسات صغيرة: خط الشعار المتحرك، النجمتان، نهاية تدرّج الموجة — لا يُكتب به نص"],
+      ["الداكن", "Dark", t.dark, "الأقسام الداكنة والخلفيات العميقة"],
+    ]],
+    ["ألوان محايدة", [
+      ["النص", "Text", t.text, "العناوين والنص الأساسي"],
+      ["النص الثانوي", "Muted", t.muted, "الوصف والملاحظات"],
+      ["الخلفية", "Background", t.bg, "خلفية الصفحة"],
+      ["السطح", "Surface", t.surface, "البطاقات والنماذج والحقول"],
+    ]],
+    ["ألوان وظيفية (لا تُستخدم للزينة)", [
+      ["نجاح", "Success", "#0E7C47", "تم، مجاناً، العدّادات، وخلفية أزرار واتساب المكتوبة"],
+      ["تنبيه", "Warning", "#8A5A10", "ما يحتاج انتباهاً ولم يتعطل"],
+      ["خطأ", "Error", "#C62828", "الأخطاء والحذف فقط"],
+      ["واتساب", "WhatsApp", "#25D366", "الزر الدائري بالأيقونة فقط — لا يُكتب عليه بالأبيض"],
+    ]],
   ];
   const sw = ([ar, en, hex, use]) => {
     const onW = ratio(hex, "#FFFFFF"), onD = ratio(hex, t.text);
-    return `<div class="bg-sw"><button type="button" class="bg-sw__chip" style="background:${hex}" data-copy="${hex}" title="نسخ"></button>
+    return `<div class="bg-sw"><button type="button" class="bg-sw__chip" style="background:${hex}" data-copy="${hex}" title="نسخ" aria-label="نسخ ${hex}"></button>
       <div class="bg-sw__info"><b>${ar} <small>${en}</small></b><code data-copy="${hex}">${hex.toUpperCase()}</code><span class="muted">RGB ${rgb(hex).join(", ")}</span>
       <span class="muted" style="font-size:12px">${use}</span>
-      <span class="bg-ct">نص أبيض فوقه: <b>${onW.toFixed(1)}:1</b> ${grade(onW)} · نص داكن فوقه: <b>${onD.toFixed(1)}:1</b> ${grade(onD)}</span></div></div>`;
+      <span class="bg-ct">نص أبيض: <b>${onW.toFixed(1)}:1</b> ${grade(onW)} · نص داكن: <b>${onD.toFixed(1)}:1</b> ${grade(onD)}</span></div></div>`;
   };
-  const scale = [["H1 — العنوان الرئيسي", "36", "48", "64", 800, "1.2"], ["H2 — عنوان القسم", "28", "36", "44", 800, "1.25"], ["عنوان بارز (القصة، المشاريع)", "20", "24", "28", 800, "1.3"], ["H3 — عنوان البطاقة", "17", "20", "20", 700, "1.35"], ["الأرقام البارزة (السعر)", "32", "40", "48", 800, "1.1"], ["نص المقدمة", "16", "17", "18", 400, "1.7"], ["النص الأساسي", "16", "16", "16", 400, "1.7"], ["نص البطاقات", "15", "16", "16", 400, "1.7"], ["الملاحظات الصغيرة", "14", "14", "14", 400, "1.6"], ["الأزرار", "15", "16", "16", 500, "1.2"]];
+  // the same numbers as the site's sizing system (public/styles.css)
+  const scale = [
+    ["H1 — عنوان الواجهة الأولى", "36", "48", "64", 800, "1.2"],
+    ["H2 — عنوان الصفحة والقسم", "28", "36", "44", 800, "1.25"],
+    ["عنوان بارز (القصة، المشاريع)", "22", "26", "30", 800, "1.3"],
+    ["H3 — عنوان البطاقة", "18", "20", "20", 700, "1.35"],
+    ["الأرقام البارزة (السعر)", "31", "40", "48", 800, "1.1"],
+    ["نص المقدمة", "16", "17", "18", 400, "1.7"],
+    ["النص الأساسي", "16", "16", "16", 400, "1.7"],
+    ["نص البطاقات", "15", "16", "16", 400, "1.7"],
+    ["الأزرار", "15", "16", "16", 500, "1.2"],
+    ["الملاحظات الصغيرة (الأصغر)", "14", "14", "14", 400, "1.6"],
+  ];
   const space = [4, 8, 12, 16, 24, 32, 48, 56, 80, 104];
 
   view.innerHTML = `<div class="brand-doc" id="brandDoc">
-    <div class="card bg-cover" style="background:linear-gradient(135deg, ${t.primary}, ${dk.dark})">
+    <div class="card bg-cover" data-sec="about" style="background:linear-gradient(135deg, ${t.primary}, ${dk.dark})">
       <div class="bg-cover__art">${svgArt("lockup", "#FFFFFF")}</div>
-      <div><h2>دليل الهوية البصرية</h2><p>${esc(brandAr)} · ${esc(brandEn)} — مرجع لكل من يصمم أو يكتب باسم الشركة. خاص بلوحة التحكم ولا يظهر في الموقع. يتبع ألوان وخط الموقع الحاليين تلقائياً.</p></div>
+      <div><h2>دليل الهوية البصرية</h2><p>${esc(brandAr)} · ${esc(brandEn)} — المرجع الواحد لكل من يصمم أو يبرمج أو يكتب باسم الشركة. يتبع ألوان الموقع وخطه الحاليين تلقائياً، وخاص بلوحة التحكم.</p></div>
     </div>
 
-    <div class="card"><div class="card__head"><div><h3>1. الشعار</h3><p>يتكون من الرمز (المنحنى المزدوج المأخوذ من حرفي W) والاسم WIXA. استخدم الملفات أدناه دائماً ولا تعِد رسم الشعار.</p></div></div>
+    ${card("about", "أساس العلامة", "ما نريد أن يشعر به الزبون في كل نقطة تواصل — كل قرار تصميم يرجع إلى هنا.", `
+      ${table("أساس العلامة", ["العنصر", "النص المعتمد"], [
+        ["الاسم", `<b>${esc(brandAr)}</b> بالعربية · <b dir="ltr">${esc(brandEn)}</b> بالإنجليزية، بأحرف كبيرة دائماً`],
+        ["الدور", "الشريك التقني لمشاريعك"],
+        ["الوعد", "نبني المستقبل الرقمي — مواقع وتطبيقات وأنظمة واضحة تخدم عملك"],
+        ["الجمهور", "أصحاب المهن والشركات والمتاجر الذين يريدون حضوراً رقمياً بلا تعقيد تقني"],
+      ])}
+      ${h4("الشخصية")}
+      ${list(["<b>واضحة:</b> نشرح بلغة الزبون، والفائدة قبل التقنية.", "<b>قريبة:</b> نخاطب الشخص مباشرة ونبقى معه بعد التسليم.", "<b>دقيقة:</b> لا وعد بلا التزام، ولا رقم بلا مصدر.", "<b>عصرية بهدوء:</b> حركة ولمسات لونية قليلة ومدروسة، لا زحام."])}
+      ${h4("هيكل هذا الدليل")}
+      ${list(["<b>الهوية البصرية</b> — الشعار، الألوان، الخط، العناصر المميزة، الأيقونات والصور، الكتابة، التطبيقات.", "<b>نظام التصميم UI</b> — الشبكة والقياسات، الزوايا والظلال، الحركة، المكوّنات، أنماط الصفحات، لوحة التحكم.", "<b>التجربة والمعايير UX</b> — إمكانية الوصول، المحتوى واللغتان، الأداء، والفحص التلقائي قبل كل نشر."])}`)}
+
+    ${card("logo", "الشعار", "الرمز (منحنى مزدوج مأخوذ من حرفي W) مع الاسم WIXA. استخدم الملفات أدناه دائماً ولا تُعِد رسم الشعار.", `
       <div class="bg-logos">${variants.map(([k, label, fg, bg]) => `<figure class="bg-logo"><div class="bg-logo__stage" style="background:${bg}">${svgArt("lockup", fg)}</div>
         <figcaption><b>${label}</b><span class="bg-dl"><button type="button" class="b b--sm" data-dl="lockup:${k}:svg">SVG</button><button type="button" class="b b--sm" data-dl="lockup:${k}:png:1200">PNG</button><button type="button" class="b b--sm" data-dl="lockup:${k}:png:3000">PNG كبير</button></span></figcaption></figure>`).join("")}</div>
       <div class="bg-row">
-        <figure class="bg-logo bg-logo--sm"><div class="bg-logo__stage" style="background:${t.bg}">${svgArt("mark", t.primary)}</div><figcaption><b>الرمز وحده</b><span class="muted">للأيقونات وصور الحسابات</span><span class="bg-dl"><button type="button" class="b b--sm" data-dl="mark:color:svg">SVG</button><button type="button" class="b b--sm" data-dl="mark:color:png:1024">PNG</button><button type="button" class="b b--sm" data-dl="mark:white:png:1024">PNG أبيض</button></span></figcaption></figure>
-        <figure class="bg-logo bg-logo--sm"><div class="bg-logo__stage" style="background:${t.bg}">${svgArt("word", t.text)}</div><figcaption><b>الاسم وحده</b><span class="muted">عندما يكون الرمز ظاهراً في مكان آخر</span><span class="bg-dl"><button type="button" class="b b--sm" data-dl="word:text:svg">SVG</button><button type="button" class="b b--sm" data-dl="word:text:png:1600">PNG</button></span></figcaption></figure>
-        <figure class="bg-logo bg-logo--sm"><div class="bg-logo__stage" style="background:${t.primary}"><img src="/icons/icon-512.png" alt="" style="width:96px;height:96px;border-radius:22px"></div><figcaption><b>صورة الحسابات</b><span class="muted">واتساب، إنستغرام، Google</span><span class="bg-dl"><a class="b b--sm" href="/icons/icon-512.png" download="wixa-avatar-512.png">PNG 512</a><a class="b b--sm" href="/favicon.svg" download="wixa-favicon.svg">أيقونة المتصفح</a></span></figcaption></figure>
+        <figure class="bg-logo bg-logo--sm"><div class="bg-logo__stage" style="background:${t.bg}">${svgArt("mark", t.primary)}</div><figcaption><b>الرمز وحده</b><span class="muted">الأيقونات وصور الحسابات</span><span class="bg-dl"><button type="button" class="b b--sm" data-dl="mark:color:svg">SVG</button><button type="button" class="b b--sm" data-dl="mark:color:png:1024">PNG</button><button type="button" class="b b--sm" data-dl="mark:white:png:1024">PNG أبيض</button></span></figcaption></figure>
+        <figure class="bg-logo bg-logo--sm"><div class="bg-logo__stage" style="background:${t.bg}">${svgArt("word", t.text)}</div><figcaption><b>الاسم وحده</b><span class="muted">عندما يظهر الرمز في مكان آخر</span><span class="bg-dl"><button type="button" class="b b--sm" data-dl="word:text:svg">SVG</button><button type="button" class="b b--sm" data-dl="word:text:png:1600">PNG</button></span></figcaption></figure>
       </div>
       <div class="bg-rules">
-        <div><h4>المساحة الحرة</h4><div class="bg-clear" style="--p:${t.primary}">${svgArt("lockup", t.primary)}</div><p>اترك حول الشعار مساحة فارغة لا تقل عن <b>ربع ارتفاع الرمز</b> من كل جهة، لا يدخلها نص أو صورة.</p></div>
-        <div><h4>أصغر حجم</h4><p>الشعار الكامل: <b>120px</b> عرضاً على الشاشة و<b>30mm</b> في الطباعة.<br>الرمز وحده: <b>24px</b> ارتفاعاً على الشاشة و<b>8mm</b> في الطباعة. أصغر من ذلك يفقد وضوحه.<br><b>النِّسَب:</b> ارتفاع الاسم = 58٪ من ارتفاع الرمز، والمسافة بينهما = 46٪ منه. في الموقع: الرمز 26px في الأعلى و30px في التذييل.</p></div>
-        <div><h4>ممنوع</h4><ul class="bg-dont"><li>تمديد الشعار أو ضغطه أو تدويره</li><li>تغيير ألوانه خارج الألوان أدناه</li><li>إضافة ظل أو حدود أو توهج — عدا «النسخة المتحركة» أدناه</li><li>وضعه فوق صورة مزدحمة دون طبقة لون</li><li>إعادة كتابة الاسم بخط آخر</li><li>تغيير المسافة بين الرمز والاسم</li><li>إضافة حركة دوران أو تشويه</li></ul><h4 style="margin:14px 0 6px">النسخة المتحركة</h4><p>في الواجهة الرئيسية فقط، بحجم كبير: يُرسم الشعار ثم يظهر حوله <b>توهج</b> هادئ، و<b>لمعة</b> تعبر عليه، و<b>نقطة سماوية</b> تتحرك على مساره، مع طفو بطيء. لا تُستخدم هذه المؤثرات على الشعار الصغير أو في المطبوعات.</p><ul style="display:none"></ul></div>
-      </div></div>
+        <div><h4>المساحة الحرة</h4><div class="bg-clear" style="--p:${t.primary}">${svgArt("lockup", t.primary)}</div><p>حول الشعار مساحة فارغة لا تقل عن <b>ربع ارتفاع الرمز</b> من كل جهة، لا يدخلها نص أو صورة.</p></div>
+        <div><h4>البناء والأحجام</h4><p><b>النِّسَب:</b> ارتفاع الاسم = 58٪ من ارتفاع الرمز، والمسافة بينهما = 46٪ منه.<br><b>أصغر حجم:</b> الشعار الكامل 120px عرضاً على الشاشة و30mm في الطباعة · الرمز وحده 24px ارتفاعاً و8mm.<br><b>في الموقع:</b> الرمز 26px في الشريط العلوي و30px في أسفل الصفحة.</p></div>
+        <div><h4>ممنوع</h4><ul class="bg-dont"><li>تمديده أو ضغطه أو تدويره</li><li>ألوان غير النسخ الأربع أعلاه</li><li>ظل أو إطار أو توهج على الشعار الثابت</li><li>وضعه فوق صورة مزدحمة دون طبقة لون</li><li>كتابة الاسم بخط آخر أو تغيير المسافة بين الرمز والاسم</li></ul></div>
+      </div>
+      ${h4("النسخة المتحركة (الواجهة الأولى فقط)")}
+      ${list(["بحجم كبير فقط: خط نيون سماوي قصير يرسم نفسه على حافة الشعار وينحني مع منحنياته (10% من المحيط، دورة كل 15 ثانية، توهّج خفيف).", "خلفه كرة أرضية خطية باهتة. لا تُستخدم أي حركة على الشعار الصغير أو في المطبوعات."])}`)}
 
-    <div class="card"><div class="card__head"><div><h3>2. الألوان</h3><p>اضغط على أي لون لنسخ رمزه. النسب: نحو <b>60٪</b> خلفيات فاتحة، <b>30٪</b> اللون الأساسي والداكن، <b>10٪</b> اللون المساعد.</p></div></div>
+    ${card("colors", "الألوان", `اضغط أي لون لنسخ رمزه. التوزيع: نحو <b>60٪</b> خلفيات فاتحة، <b>30٪</b> الأساسي والداكن، <b>10٪</b> المساعد.`, `
       <div class="bg-ratio"><i style="flex:6;background:${t.bg}"></i><i style="flex:3;background:${t.primary}"></i><i style="flex:1;background:${t.accent}"></i></div>
-      <div class="bg-sws">${colors.map(sw).join("")}</div>
-      <p class="muted" style="font-size:12px;margin:10px 0 0">التقييم حسب معيار WCAG: <b>AA</b> = مناسب للنص العادي (4.5:1 فأكثر)، <b>AAA</b> = ممتاز (7:1)، «AA كبير» = للعناوين الكبيرة فقط.</p></div>
-
-    <div class="card"><div class="card__head"><div><h3>3. الوضع النهاري والليلي</h3><p>ألوان الوضع الليلي مشتقة تلقائياً من اللون الأساسي، فتبقى الهوية نفسها في الوضعين.</p></div></div>
+      ${colorGroups.map(([g, cs]) => `${h4(g)}<div class="bg-sws">${cs.map(sw).join("")}</div>`).join("")}
+      ${h4("الوضع النهاري والليلي")}
       <div class="bg-modes">${[["النهاري", t.bg, t.surface, t.text, t.muted, t.primary], ["الليلي", dk.bg, dk.surface, dk.text, dk.muted, dk.fg]].map(([n, bg, sf, tx, mu, br]) => `
         <div class="bg-mode" style="background:${bg};color:${tx}"><b>${n}</b>
           <div class="bg-mode__card" style="background:${sf}"><span style="color:${br};font-weight:800">${svgArt("mark", br)}</span><strong style="color:${tx}">عنوان البطاقة</strong><span style="color:${mu}">وصف قصير بلون النص الثانوي.</span><em style="background:${br};color:#fff">زر رئيسي</em></div>
           <div class="bg-mode__codes">${[["الخلفية", bg], ["السطح", sf], ["النص", tx], ["الثانوي", mu], ["الهوية", br]].map(([k, v]) => `<span><i style="background:${v}"></i>${k} <code>${v.toUpperCase()}</code></span>`).join("")}</div>
-        </div>`).join("")}</div></div>
+        </div>`).join("")}</div>
+      ${list(["ألوان الليلي مشتقة تلقائياً من اللون الأساسي، فتبقى الهوية نفسها. كل صفحة — حتى الخدمات والمقالات — تتبع اختيار الزائر وفيها زر التبديل.", "التقييم حسب WCAG: <b>AA</b> = مناسب للنص العادي (4.5:1)، <b>AAA</b> = ممتاز (7:1)، «AA كبير» = للعناوين الكبيرة فقط."])}`)}
 
-    <div class="card"><div class="card__head"><div><h3>4. الخط</h3><p>الخط الرسمي: <b>${esc(font)}</b> — عائلة واحدة للعربية والإنجليزية معاً. ${font === "Alexandria" ? "مستضاف على موقعك نفسه، ومرخّص للاستخدام التجاري المجاني (SIL OFL)." : ""}</p></div></div>
+    ${card("type", "الخط", `الخط الرسمي: <b>${esc(font)}</b> — عائلة واحدة للعربية والإنجليزية، في الموقع ولوحة التحكم والمطبوعات.${font === "Alexandria" ? " مستضاف على الموقع نفسه، ومرخّص للاستخدام التجاري (SIL OFL)." : ""}`, `
       <div class="bg-type" style="font-family:'${esc(font)}', system-ui">
         ${[[800, "عريض جداً — العناوين"], [700, "عريض — عناوين البطاقات"], [500, "متوسط — الأزرار"], [400, "عادي — النصوص"]].map(([w, n]) => `<div class="bg-type__row"><span class="muted">${w}</span><p style="font-weight:${w}">نبني المستقبل الرقمي · Building the digital future</p><small class="muted">${n}</small></div>`).join("")}
       </div>
-      <h4 style="margin:18px 0 8px">سلّم الأحجام (بكسل)</h4>
-      <div class="table-wrap" tabindex="0" role="region" aria-label="المقاسات"><table class="bg-table"><thead><tr><th>العنصر</th><th>جوال</th><th>تابلت</th><th>كمبيوتر</th><th>الوزن</th><th>ارتفاع السطر</th></tr></thead>
-        <tbody>${scale.map(([n, a, b, c, w, lh]) => `<tr><td>${n}</td><td>${a}</td><td>${b}</td><td>${c}</td><td>${w}</td><td>${lh}</td></tr>`).join("")}</tbody></table></div>
-      <p class="muted" style="font-size:12px">الأوزان المستخدمة أربعة فقط: 400 و500 و700 و800. كل الأحجام من هذا السلّم، والأصغر 14px. الأرقام بالإنجليزية (123) في الأسعار وأرقام الهواتف لوضوحها. لا تستخدم أكثر من وزنين في نفس السطر.</p>
-      ${font === "Alexandria" ? `<p style="margin:0"><a href="/fonts/alexandria/OFL.txt" target="_blank" rel="noopener">ترخيص الخط</a> · <a href="https://fonts.google.com/specimen/Alexandria" target="_blank" rel="noopener">تنزيل الخط للتصميم (Google Fonts)</a></p>` : ""}</div>
+      ${h4("سلّم الأحجام (بكسل)")}
+      ${table("سلّم الأحجام", ["العنصر", "جوال", "تابلت", "كمبيوتر", "الوزن", "ارتفاع السطر"], scale)}
+      ${list(["أربعة أوزان فقط: 400 و500 و700 و800، ولا أكثر من وزنين في السطر الواحد.", "كل حجم من هذا السلّم، والأصغر 14px. لا تُكتب أحجام يدوية في صفحة وحدها.", "الأرقام بالشكل 1 2 3 في اللغتين (الأسعار، الهواتف، أرقام الطلبات).", "لا تُلصق كلمة إنجليزية بحرف عربي (مثل «وAndroid») — اكتبها بالعربية أو اترك مسافة."])}
+      ${font === "Alexandria" ? `<p style="margin:0"><a href="/fonts/alexandria/OFL.txt" target="_blank" rel="noopener">ترخيص الخط</a> · <a href="https://fonts.google.com/specimen/Alexandria" target="_blank" rel="noopener">تنزيل الخط للتصميم (Google Fonts)</a></p>` : ""}`)}
 
-    <div class="card"><div class="card__head"><div><h3>5. منحنى WIXA</h3><p>الموجة المأخوذة من منحنيي الشعار. علامة مميزة تفتتح كل قسم في الموقع.</p></div></div>
+    ${card("elements", "العناصر المميزة", "عناصر مأخوذة من الشعار تجعل الهوية معروفة حتى بلا شعار. تُستخدم بقلة.", `
       <svg class="bg-wave" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="bgwv" x1="0" x2="1"><stop offset="0" stop-color="${t.primary}"/><stop offset=".5" stop-color="${t.accent}"/><stop offset="1" stop-color="${t.primary}"/></linearGradient></defs><path fill="none" stroke="url(#bgwv)" stroke-width="2.5" stroke-linecap="round" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
-      <ul class="bg-list"><li>خط واحد بسمك <b>2px</b> وتدرج من اللون الأساسي إلى المساعد ثم الأساسي.</li><li>يُستخدم فاصلاً أعلى العناوين أو بين الأقسام، وفي المطبوعات أسفل الترويسة.</li><li>لا يُملأ ولا يُكرر كخلفية ولا يُوضع خلف النص.</li></ul></div>
-
-    <div class="card"><div class="card__head"><div><h3>6. العناصر والمسافات</h3><p>المقاسات المعتمدة في الموقع، مبنية على إرشادات Apple وGoogle.</p></div></div>
-      <div class="bg-btns"><span class="bg-btn" style="background:${t.primary}">زر رئيسي</span><span class="bg-btn bg-btn--ghost" style="color:${t.text};border-color:${t.muted}55">زر ثانوي</span><span class="bg-btn" style="background:#0E7C47">راسلنا على واتساب</span></div>
-      <ul class="bg-list"><li>الأزرار: ارتفاع <b>48px</b> (جوال وتابلت) و<b>50px</b> (كمبيوتر)، حواف دائرية كاملة.</li><li>أي عنصر يُلمس لا يقل عن <b>44×44px</b>، والمسافة بين عنصرين متجاورين لا تقل عن <b>8px</b>.</li><li>الأزرار العائمة (المحادثة وواتساب) تختفي تلقائياً عندما تكون فوق أزرار الواجهة على الجوال.</li><li>شعارات الشركاء تُعرض بألوانها الأصلية وبدقة لا تقل عن <b>ضعف</b> حجم ظهورها (مثلاً 400px عرضاً لشعار يظهر بعرض 200px).</li><li>زوايا البطاقات: <b>${Number(t.radius) || 22}px</b>.</li><li>المسافة بين الأقسام: 56 / 80 / 104px (جوال / تابلت / كمبيوتر).</li></ul>
-      <div class="bg-space">${space.map((s) => `<span><i style="width:${s}px;height:${s}px;background:${t.primary}"></i>${s}</span>`).join("")}</div></div>
-
-    <div class="card"><div class="card__head"><div><h3>القياسات الثابتة</h3><p>مقاسات واحدة لكل الصفحات — لا تُضبط صفحة وحدها. تُفحص تلقائياً قبل كل نشر على الجوال والكمبيوتر.</p></div></div>
-      <div class="table-wrap" tabindex="0" role="region" aria-label="القياسات الثابتة"><table class="bg-table"><thead><tr><th>القياس</th><th>جوال</th><th>تابلت</th><th>كمبيوتر</th></tr></thead><tbody>
-        <tr><td>حدود الشاشة — الموقع</td><td>حتى 767px</td><td>768–1199px</td><td>1200px فأكثر</td></tr>
-        <tr><td>حدود الشاشة — لوحة التحكم</td><td>حتى 600px</td><td>601–960px</td><td>961px فأكثر</td></tr>
-        <tr><td>أقصى عرض للمحتوى</td><td colspan="3">الموقع 1240px · لوحة التحكم 1120px (في الوسط)</td></tr>
-        <tr><td>هامش جانبي</td><td>16px</td><td>24px</td><td>32px</td></tr>
-        <tr><td>حشوة البطاقة — الموقع</td><td>18px</td><td>22px</td><td>26px</td></tr>
-        <tr><td>حشوة البطاقة — لوحة التحكم</td><td>16px</td><td>20px</td><td>24px</td></tr>
-        <tr><td>المسافة بين البطاقات</td><td>12px</td><td>16px</td><td>16px</td></tr>
-        <tr><td>زوايا البطاقات</td><td colspan="3">${Number(t.radius) || 22}px في كل الأحجام</td></tr>
-        <tr><td>ارتفاع الأزرار</td><td>48px</td><td>48px</td><td>50px</td></tr>
-        <tr><td>المسافة بين الأقسام</td><td>56px</td><td>80px</td><td>104px</td></tr>
-      </tbody></table></div>
-      <ul class="bg-list"><li><b>بطاقة وحدها</b> تأخذ عرض الصفحة كاملاً، و<b>صف بطاقات</b> يبدأ وينتهي عند حافتي الصفحة — فكل الصفحات بنفس المستطيلات.</li><li>لا شيء أعرض من الشاشة: الجداول الطويلة تتحرك داخل إطارها فقط.</li><li>الفحص التلقائي (tests/admin-layout.mjs) يمر على كل صفحات اللوحة بحجم جوال وكمبيوتر ويرفض أي صفحة تخالف هذه القياسات.</li></ul></div>
-
-    <div class="card"><div class="card__head"><div><h3>الظلال والطبقات</h3><p>ظلال ناعمة بلون النص نفسه وليست سوداء، حتى تبقى الواجهة صافية.</p></div></div>
-      <div class="bg-shadows">${[["البطاقة", `0 1px 2px ${t.text}0A, 0 12px 40px -12px ${t.text}1F`], ["الزر الرئيسي", `0 12px 30px -8px ${t.primary}99`], ["النوافذ والقوائم", `0 24px 60px -20px ${t.text}40`]].map(([n, sh]) => `<span style="box-shadow:${sh}">${n}</span>`).join("")}</div>
-      <ul class="bg-list"><li>ثلاثة مستويات فقط: البطاقة، الزر الرئيسي (بلون الهوية)، النوافذ المنبثقة.</li><li>في الوضع الليلي تقل الظلال وتُستبدل بحدود رفيعة.</li><li>لا ظلال على النصوص أو الشعار.</li></ul></div>
-
-    <div class="card"><div class="card__head"><div><h3>مكوّنات الواجهة</h3><p>أنماط ثابتة تتكرر في الموقع ولوحة التحكم، حتى يبقى كل جزء جديد بنفس الهوية.</p></div></div>
-      <h4 style="margin:4px 0 8px">القائمة الفرعية (شريط تحت عنوان الصفحة)</h4>
-      <div class="bg-subnav" data-scroll tabindex="0" role="region" aria-label="مثال القائمة الفرعية"><span class="on" style="color:${t.primary};border-color:${t.primary}">المفتوحة <i style="background:${t.primary};color:#fff">3</i></span><span>جديد <i>1</i></span><span>تواصلنا <i>2</i></span><span>مكتمل <i>0</i></span></div>
-      <ul class="bg-list"><li><b>قاعدة واحدة لكل أشرطة الاختيار</b> (القوائم الفرعية، الفلاتر، اللغة، الفترة، التكرار): أزرار منفصلة داخل إطار أبيض بزوايا 14px، و<b>المختار يمتلئ بالبنفسجي</b> ونصه أبيض. تُطبَّق تلقائياً على أي صفحة جديدة.</li><li>القائمة الفرعية في <b>شريط مستقل تحت العنوان</b>؛ إذا كان في الصفحة أكثر من مجموعة (مثل العرض والفلاتر) فكل مجموعة في سطر فوق الأخرى.</li><li>إذا كثرت الخيارات تُسحب جانبياً داخل الشريط؛ داخل البطاقات تنزل لسطر جديد. لا شيء يخرج عن البطاقة البيضاء.</li><li>على الجوال لا يبقى العنوان ثابتاً أثناء النزول حتى لا يغطي المحتوى؛ على الكمبيوتر يبقى ثابتاً بخلفية مصمتة.</li></ul>
-      <h4 style="margin:18px 0 8px">البطاقات المتحركة (الجوال والتابلت)</h4>
-      <div class="bg-dots"><i></i><i class="on" style="background:linear-gradient(100deg, ${t.primary}, color-mix(in srgb, ${t.accent} 45%, ${t.primary}))"></i><i></i><i></i></div>
-      <ul class="bg-list"><li>الخدمات، حسب المجال، المشاريع، والباقات: <b>صف يُسحب يميناً ويساراً</b> بدل قائمة طويلة، وتظهر حافة البطاقة التالية لتدل على المزيد.</li><li>تحته نقاط: النقطة الحالية أطول (24px) <b>بلون الموجة</b>، والباقي 8px رمادية، ومساحة الضغط لكل نقطة 24px على الأقل. على الكمبيوتر تبقى شبكة.</li></ul>
-      <h4 style="margin:18px 0 8px">القوائم</h4>
-      <ul class="bg-list"><li>القائمة العلوية <b>7 روابط أو أقل</b> + زر «ابدأ مشروعك» البارز دائماً في نهايتها.</li><li>زر «ابدأ مشروعك» في الشريط العلوي <b>على الكمبيوتر فقط</b>. أقل من <b>1240px</b> تتحول الروابط إلى زر ☰، ويبقى «ابدأ مشروعك» داخل القائمة وزراً كبيراً في أعلى الصفحة.</li><li>الروابط الثانوية (من نحن، الأسئلة، الخصوصية) في أسفل الصفحة فقط. أماكنها تُدار من المحتوى ← القوائم.</li><li><b>أقسام الصفحة الرئيسية</b> (خدماتنا، حلول حسب مجالك، نماذج من عملنا، الباقات والأسعار، الحاسبة، شركاؤنا): الضغط عليها يحرّك الصفحة الرئيسية إلى القسم ويقف تحت الشريط العلوي مباشرة. <b>صفحات مستقلة فقط:</b> الوظائف، تواصل معنا، المقالات، من نحن، الأسئلة الشائعة.</li><li>عند فتح قائمة أو نافذة تثبت الصفحة التي تحتها.</li></ul>
-      <h4 style="margin:18px 0 8px">لون الموجة (لمسة مميزة قليلة جداً)</h4>
-      <div class="bg-wave"><span style="background:linear-gradient(100deg, ${t.primary}, color-mix(in srgb, ${t.accent} 45%, ${t.primary}))">02</span><i style="background:linear-gradient(100deg, ${t.primary}, color-mix(in srgb, ${t.accent} 45%, ${t.primary}))"></i><em style="background:linear-gradient(100deg, ${t.primary}, color-mix(in srgb, ${t.accent} 45%, ${t.primary}))">الأكثر مناسبة</em></div>
-      <ul class="bg-list"><li>تدرّج من اللون الأساسي إلى مزيج 45% من اللون المساعد — نفس ألوان منحنى WIXA وخط الشعار، وأغمق قليلاً في طرفه حتى يبقى النص الأبيض عليه بتباين ≈5:1.</li><li>يُستخدم <b>فقط</b> لما يجب أن يلفت النظر: كل أزرار «ابدأ مشروعك» (الشريط العلوي، القائمة، أعلى الصفحة، آخر الصفحة)، زر «تتبع طلبك»، رقم الخطوة الحالية في «كيف نعمل»، النقطة الحالية تحت الصفوف المتحركة، وشارة «الأكثر مناسبة».</li><li>لا يُستخدم لباقي الأزرار ولا للنصوص الطويلة ولا للخلفيات الكبيرة — باقي الأزرار (اطلب هذه الباقة، أرسل…) تبقى باللون الأساسي حتى يبقى «ابدأ مشروعك» هو الأبرز.</li></ul>
-      <h4 style="margin:18px 0 8px">العناوين</h4>
-      <ul class="bg-list"><li>كل عنوان صفحة أو قسم <b>في الوسط</b> ومعه سطره التوضيحي، بنفس الحجم في كل الصفحات: <b>28px</b> على الجوال، <b>36px</b> على التابلت، <b>44px</b> على الكمبيوتر.</li><li>نص الفقرات 16px على الجوال و18px على الكمبيوتر. خط واحد (Alexandria) في الموقع ولوحة التحكم، بالعربية والإنجليزية، في الوضعين.</li><li>كل صفحة — حتى صفحات الخدمات والمشاريع والمقالات — تتبع اختيار الزائر للوضع النهاري أو الليلي وفيها زر التبديل.</li></ul>
-      <h4 style="margin:18px 0 8px">الطلب والهدايا</h4>
-      <div class="bg-gifts"><span style="background:linear-gradient(135deg, ${t.primary}, ${t.accent})">🎁<small>اضغط لكشف الهدية</small></span><span><em style="background:#0E7C47">مجاناً</em><b style="color:${t.primary}">هوية بصرية</b></span></div>
-      <ul class="bg-list"><li>كل أزرار الطلب تؤدي إلى صفحة واحدة <b dir="ltr">/order</b>: بطاقة «طلبك» ثم الاسم والهاتف فقط (البريد اختياري في كل الموقع).</li><li>تحت زر الإرسال سطور الطمأنة بعلامة ✓ خضراء: لا دفع الآن · نتصل خلال يوم عمل · 75% / 25%.</li><li>الهدايا: بطاقة بتدرج الهوية وعلبة 🎁 تنقلب إلى وجه أبيض فيه شارة خضراء «مجاناً». الخصم شارة «محفوظ لك».</li><li>رقم الطلب بصيغة <b dir="ltr">WX-YYMMDD-XXXX</b>، بخط عريض وبلون الهوية.</li></ul>
-      <h4 style="margin:18px 0 8px">تتبع الطلب</h4>
-      <div class="bg-social"><span style="width:auto;padding:0 18px;border-radius:99px;background:linear-gradient(100deg, ${t.primary}, color-mix(in srgb, ${t.accent} 45%, ${t.primary}));color:#fff;font-weight:700">📦 تتبع طلبك</span></div>
-      <ul class="bg-list"><li>زر بلون <b>الموجة</b> (حبة كاملة الاستدارة، 44px) <b>فوق أيقونات التواصل</b> في أسفل كل صفحة — مختلف عنها عمداً حتى لا يضيع بينها.</li><li>يفتح <b dir="ltr">/track</b>: رقم الطلب + الهاتف الذي طُلب به، فتظهر المراحل: وصلنا طلبك ← تواصلنا ← أرسلنا العرض ← العمل جارٍ ← تم التسليم.</li><li>المرحلة المنجزة دائرة ممتلئة بلون الهوية، والحالية بإطار وهالة، والقادمة رمادية. التواريخ بأرقام 1 2 3 في اللغتين.</li><li>المتابعة تكون <b>بالدردشة المباشرة</b> (واتساب فقط إذا كانت الدردشة متوقفة): أول خيار فيها «تتبع طلبي»، وتعرض آخر طلب للجهاز تلقائياً، ومن نسي رقمه يكتب هاتفه واسمه. كل حالة لها جملة ودّية قصيرة تُعدّل من إعدادات الدردشة.</li></ul>
-      <h4 style="margin:18px 0 8px">الشركاء</h4>
-      <ul class="bg-list"><li>العنوان «شركاؤنا» بحجم عناوين الأقسام، وبلا منحنى فوقه لأنه يلي الواجهة الأولى مباشرة.</li><li>الشعار يملأ معظم البطاقة (90% عرضاً) على بطاقة فاتحة في الوضعين.</li><li><b>الشبكة:</b> الشعارات رمادية باهتة، وتظهر ألوانها عند المرور أو الضغط. <b>الشريط المتحرك:</b> ملوّنة دائماً.</li></ul>
-      <h4 style="margin:18px 0 8px">أيقونات التواصل الاجتماعي</h4>
-      <div class="bg-social"><span style="background:${t.primary}1A;color:${t.text}">f</span><span style="background:${t.primary}1A;color:${t.text}">◎</span><span style="background:#1877F2;color:#fff">f</span><span style="background:radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285AEB 90%);color:#fff">◎</span></div>
-      <ul class="bg-list"><li>في الوضع العادي: دائرة ممتلئة بلون الهوية الفاتح (10%) بلا إطار، والأيقونة بلون النص بحجم <b>19px</b>.</li><li>عند المرور أو الضغط فقط: لون الشبكة الرسمي والأيقونة بيضاء (فيسبوك أزرق، إنستغرام تدرّجه، البريد بنفسجي الهوية).</li><li>لا تُلوّن كلها دائماً — الألوان المتجاورة تشتت العين وتسرق الانتباه من المحتوى.</li><li>زرّا الزاوية: واتساب (أخضر) والدردشة المباشرة (<b>سماوي</b> بلون خط الشعار وأيقونة داكنة #062A33 — الأيقونة البيضاء على السماوي ضعيفة الوضوح) — نفس الحجم (52px جوال، 56px كمبيوتر) ونفس الارتفاع، كلٌّ في زاوية.</li></ul>
-      <h4 style="margin:18px 0 8px">لوحة التحكم</h4>
-      <ul class="bg-list"><li>نفس خط الموقع (Alexandria) ونفس لون الهوية.</li><li>عنوان الصفحة بمستوى زر القائمة ☰ (19px جوال، 22px كمبيوتر) ووصفه تحته بخط صغير.</li><li>زر الإضافة دائرة «+» فقط على <b>يسار سطر البحث</b>، واسمه يظهر عند المرور («إضافة مشروع»).</li><li>القوائم الفرعية في الشريط تحت العنوان، والأزرار (تصدير، حفظ) بجانب العنوان.</li><li><b>التنظيم:</b> سبع مجموعات — الرئيسية، خدمة الزبائن، المبيعات والتسويق، محتوى الموقع، التصميم، الإعدادات، النظام. كل صفحة في مكان واحد فقط، وكل صفحة طويلة مقسّمة: فرع ثم أقسامه، ويظهر قسم واحد في كل مرة.</li></ul>
-      <h4 style="margin:18px 0 8px">النصوص</h4>
-      <ul class="bg-list"><li>جملة أو جملتان لكل جواب أو وصف؛ الفائدة أولاً.</li><li>العربي والإنجليزي بنفس المعنى والطول تقريباً.</li><li>بلا مبالغة («رائدة»، «استثنائية»)، وكل وعد في الموقع يطابق الضمانات والهدايا (لا تُعرض كهدية ميزة مضمونة أصلاً).</li></ul>
-      <h4 style="margin:18px 0 8px">الواجهة الأولى (الشعار)</h4>
+      ${h4("1. منحنى WIXA")}
+      ${list(["خط واحد بسمك 2px، متدرج: الأساسي ← المساعد ← الأساسي.", "يفصل بين أقسام الصفحة الرئيسية وفوق أسفل الصفحة، وفي المطبوعات تحت الترويسة.", "لا يوضع فوق عنوان صفحة داخلية، ولا فوق «شركاؤنا»، ولا يُملأ أو يُكرر كخلفية."])}
+      ${h4("2. لون الموجة")}
+      <div class="bg-wave"><span style="background:${WAVE}">02</span><i style="background:${WAVE}"></i><em style="background:${WAVE}">الأكثر مناسبة</em></div>
+      ${list(["تدرّج من الأساسي إلى مزيج 45% من المساعد — تباين النص الأبيض عليه ≈5:1.", "<b>فقط</b> لما يجب أن يلفت النظر: أزرار «ابدأ مشروعك» كلها، زر «تتبع طلبك»، رقم الخطوة الحالية، النقطة الحالية تحت الصفوف المتحركة، شارة «الأكثر مناسبة».", "باقي الأزرار باللون الأساسي الواحد، حتى يبقى «ابدأ مشروعك» الأبرز."])}
+      ${h4("3. الكرة الأرضية والنجمتان")}
       <div class="bg-hero"><svg viewBox="0 0 200 200" aria-hidden="true"><g fill="none" stroke="${t.primary}" stroke-opacity=".35" stroke-width="1"><circle cx="100" cy="100" r="96"/><ellipse cx="100" cy="100" rx="96" ry="34"/><ellipse cx="100" cy="100" rx="96" ry="66"/><ellipse cx="100" cy="100" rx="34" ry="96"/><ellipse cx="100" cy="100" rx="66" ry="96"/></g><svg x="12" y="68" width="176" height="64" viewBox="0 0 2021 982"><use href="/logo.svg#m" fill="${t.primary}" style="color:${t.primary}"/></svg></svg><span><i style="color:${t.accent}">✦</i> الشريك التقني لمشاريعك <i style="color:${t.accent}">✦</i></span></div>
-      <ul class="bg-list"><li><b>كرة أرضية</b> خطية خلف الشعار، أكبر منه قليلاً (112%)، شفافة جداً (9% نهاري، 20% ليلي)، وخطوط الطول تدور ببطء (24 ثانية).</li><li>أعلى الكرة تحت الشريط العلوي مباشرة، وعبارة الشارة داخل أسفل الكرة <b>بين نجمتين ✦</b> باللون المساعد، و«نبني المستقبل الرقمي» يبدأ عند نهاية الكرة.</li><li><b>خط نيون قصير</b> باللون المساعد (السماوي نفسه في الوضعين) يرسم نفسه على حافة الشعار وينحني مع منحنياته: طوله 10% من المحيط، دورة كل 15 ثانية، توهّج خفيف.</li><li>للأداء على الجوالات الضعيفة: كل حركة في طبقة مستقلة، ولا تأثير تمويه (blur) يُعاد رسمه مع الحركة.</li></ul>
-      <h4 style="margin:18px 0 8px">الصفحات الداخلية</h4>
-      <ul class="bg-list"><li>الصفحة الداخلية تبدأ بعنوانها مباشرة، <b>بلا</b> منحنى WIXA فوقه؛ المنحنى يفصل بين أقسام الرئيسية فقط.</li><li>صفحات الخدمات والمشاريع والمقالات والخصوصية والتقييم تُبنى بنفس ملف تنسيق الموقع ونفس الشريط العلوي والقائمة وأسفل الصفحة؛ العنوان والأزرار في الوسط («ابدأ مشروعك» بلون الموجة و«تواصل معنا» بإطار).</li><li>لا تُلصق كلمة إنجليزية بحرف عربي (مثل «وAndroid») — الخط يشوّه شكلها؛ اكتبها بالعربية أو اترك مسافة.</li></ul></div>
+      ${list(["كرة خطية خلف الشعار في الواجهة الأولى فقط: 112% من حجمه، شفافة جداً (9% نهاري، 20% ليلي)، تدور ببطء (24 ثانية).", "النجمتان ✦ باللون المساعد تحيطان بعبارة الدور فقط."])}`)}
 
-    <div class="card"><div class="card__head"><div><h3>المعايير العالمية المعتمدة</h3><p>كل جزء جديد في الموقع أو لوحة التحكم يجب أن يحقق هذه القواعد. تُفحص آلياً قبل كل نشر.</p></div></div>
-      <div class="table-wrap" tabindex="0" role="region" aria-label="المعايير"><table class="bg-table"><thead><tr><th>القاعدة</th><th>الحد المطلوب</th><th>المرجع</th></tr></thead><tbody>
-        <tr><td>تباين النص العادي مع خلفيته</td><td><b>4.5:1</b> على الأقل</td><td dir="ltr">WCAG 2.2 · 1.4.3</td></tr>
-        <tr><td>تباين النص الكبير (24px، أو 19px عريض)</td><td><b>3:1</b></td><td dir="ltr">WCAG 2.2 · 1.4.3</td></tr>
-        <tr><td>تباين الأيقونات وحدود الحقول والأزرار</td><td><b>3:1</b></td><td dir="ltr">WCAG 2.2 · 1.4.11</td></tr>
-        <tr><td>حجم ما يُضغط بالإصبع</td><td><b>44px</b> للأزرار (48px معتمد عندنا)، و24px أدنى حد لأي عنصر صغير</td><td dir="ltr">Apple HIG · Material · WCAG 2.5.8</td></tr>
-        <tr><td>الروابط داخل النص</td><td>بخط تحتها، لا باللون وحده</td><td dir="ltr">WCAG 2.2 · 1.4.1</td></tr>
-        <tr><td>التنقل بلوحة المفاتيح</td><td>إطار واضح بلون الهوية (2px) حول العنصر المختار</td><td dir="ltr">WCAG 2.2 · 2.4.7</td></tr>
-        <tr><td>الحركة</td><td>تتوقف لمن فعّل «تقليل الحركة» في جهازه</td><td dir="ltr">WCAG 2.2 · 2.3.3</td></tr>
-        <tr><td>اللغة والاتجاه</td><td>عربي من اليمين وإنجليزي من اليسار، بنفس المعنى، والأرقام 1 2 3</td><td dir="ltr">W3C i18n</td></tr>
-      </tbody></table></div>
-      <ul class="bg-list"><li><b>الزوايا:</b> البطاقات 22px، النماذج الكبيرة 28px، الحقول 14px، الأزرار حبة كاملة الاستدارة.</li><li><b>الأزرار:</b> ارتفاع 48px في كل الموقع. <b>الحقول:</b> 48px.</li><li><b>العناوين:</b> 28 / 36 / 44px (جوال / تابلت / كمبيوتر)، والفقرات 16 / 18px — في الموقع ولوحة التحكم وكل الصفحات المستقلة.</li><li><b>النص الثانوي</b> في لوحة التحكم #5B6270 (بدل #6B7280 الذي كان دون الحد)، و<b>الأخضر</b> #0E7C47 للنجاح والعدّادات، و<b>البرتقالي</b> #8A5A10 للتنبيه، و<b>الأحمر</b> #C62828 للخطأ والحذف.</li><li>استثناءات مقصودة: زر واتساب بلونه الرسمي، ومعاينة جوجل بخط جوجل.</li></ul></div>
+    ${card("icons", "الأيقونات والصور", "خطية بسيطة بسمك 1.8 وزوايا دائرية، داخل مربع بخلفية فاتحة من لون الهوية.", `
+      <div class="bg-icons">${Object.entries(ICONS).map(([k, svg]) => `<span title="${k}" style="color:${t.primary};background:${t.primary}14">${svg}</span>`).join("")}</div>
+      ${h4("الصور")}
+      ${list(["صور المشاريع لقطات حقيقية من أعمالنا، بنسبة 16:10، وبزوايا البطاقات نفسها.", "لا صور جاهزة لأشخاص على أنهم زبائن أو فريق، ولا شعار شريك بلا إذن.", "شعارات الشركاء بألوانها الأصلية ودقة لا تقل عن ضعف حجم ظهورها.", "الصور بصيغة WebP مضغوطة، وكل صورة لها وصف (alt) أو تُعلَّم كزخرفية."])}`)}
 
-    <div class="card"><div class="card__head"><div><h3>7. الأيقونات</h3><p>خطية بسيطة بسمك 1.8، بزوايا دائرية، داخل مربع بخلفية فاتحة من لون الهوية.</p></div></div>
-      <div class="bg-icons">${Object.entries(ICONS).map(([k, svg]) => `<span title="${k}" style="color:${t.primary};background:${t.primary}14">${svg}</span>`).join("")}</div></div>
+    ${card("voice", "أسلوب الكتابة", `كيف نتحدث باسم ${esc(brandAr)}.`, `
+      ${table("أسلوب الكتابة", ["نكتب", "لا نكتب"], [
+        ["«نبني موقعك ونبقى معك بعد التسليم»", "«حلول رقمية رائدة واستثنائية»"],
+        ["«مشروعك»، «نتصل بك»", "«مشروعكم»، «سيتم التواصل»"],
+        ["جملة أو جملتان، الفائدة أولاً", "فقرات طويلة ومصطلحات تقنية بلا شرح"],
+      ])}
+      ${list(["العربي والإنجليزي بنفس المعنى والطول تقريباً؛ الإنجليزية بالتهجئة الأمريكية.", "كل وعد في الموقع يطابق الضمانات والهدايا الفعلية، ولا تُعرض كهدية ميزة مضمونة أصلاً.", "أزرار بأفعال واضحة: «ابدأ مشروعك»، «تتبع طلبك»، «أرسل» — لا «اضغط هنا»."])}`)}
 
-    <div class="card"><div class="card__head"><div><h3>8. أسلوب الكتابة</h3><p>كيف نتحدث باسم ${esc(brandAr)}.</p></div></div>
-      <ul class="bg-list"><li><b>واضح ومباشر:</b> جمل قصيرة، الفائدة قبل التقنية.</li><li><b>نخاطب الشخص:</b> «مشروعك» و«نبقى معك» وليس «مشروعكم».</li><li><b>بلا مبالغة:</b> لا أرقام أو وعود غير مثبتة.</li><li><b>الإنجليزية:</b> بالتهجئة الأمريكية (analyze, center) وبنفس النبرة.</li><li><b>الاسم:</b> «ويكسا» بالعربي و«WIXA» بالإنجليزي، بأحرف كبيرة دائماً.</li></ul></div>
+    ${card("apps", "التطبيقات", "الهوية خارج الموقع: الحسابات، المتصفح، المطبوعات.", `
+      <div class="bg-row">
+        <figure class="bg-logo bg-logo--sm"><div class="bg-logo__stage" style="background:${t.primary}"><img src="/icons/icon-512.png" alt="" style="width:96px;height:96px;border-radius:${R}px"></div><figcaption><b>صورة الحسابات</b><span class="muted">واتساب، إنستغرام، Google</span><span class="bg-dl"><a class="b b--sm" href="/icons/icon-512.png" download="wixa-avatar-512.png">PNG 512</a><a class="b b--sm" href="/favicon.svg" download="wixa-favicon.svg">أيقونة المتصفح</a></span></figcaption></figure>
+      </div>
+      ${list(["صورة الحساب: الرمز أبيض على اللون الأساسي — نفس الملف في كل المنصات.", "منشورات التواصل: خلفية فاتحة أو داكنة من ألوان الهوية، عنوان بخط الهوية 800، والشعار في زاوية ثابتة بمساحته الحرة.", "المطبوعات والعروض (PDF): الشعار أعلى الصفحة، منحنى WIXA تحت الترويسة، والنص بالخط نفسه."])}`)}
+
+    ${card("grid", "الشبكة والقياسات", "مقاسات واحدة لكل الصفحات في الموقع ولوحة التحكم — لا تُضبط صفحة وحدها. تُفحص تلقائياً قبل كل نشر.", `
+      ${table("القياسات الثابتة", ["القياس", "جوال", "تابلت", "كمبيوتر"], [
+        ["حدود الشاشة — الموقع", "حتى 767px", "768–1199px", "1200px فأكثر"],
+        ["حدود الشاشة — لوحة التحكم", "حتى 600px", "601–960px", "961px فأكثر"],
+        ["الهامش الجانبي", "16px", "24px", "32px"],
+        ["العنوان الأول تحت الشريط العلوي", "40px", "48px", "64px"],
+        ["المسافة بين الأقسام", "56px", "80px", "104px"],
+        ["حشوة البطاقة — الموقع", "18px", "22px", "26px"],
+        ["حشوة اللوحة الكبيرة (نموذج، طلب)", "20px", "28px", "36px"],
+        ["حشوة البطاقة — لوحة التحكم", "16px", "20px", "24px"],
+        ["المسافة بين البطاقات", "12px", "16px", "16px"],
+      ])}
+      ${h4("ثلاثة عروض فقط للمحتوى (في الوسط دائماً)")}
+      ${table("عروض المحتوى", ["العرض", "الأقصى", "يُستخدم في"], [
+        ["واسع", "1240px", "الأقسام، الشبكات، الشريط العلوي، أسفل الصفحة، صفحة الطلب"],
+        ["قراءة", "820px", "الأسئلة، الوظائف، النماذج، المقالات، الخصوصية، صفحات الخدمات والمشاريع"],
+        ["ضيق", "560px", "نموذج بحقل أو حقلين (تتبع الطلب)"],
+        ["لوحة التحكم", "1120px", "كل صفحات اللوحة"],
+      ])}
+      ${list(["<b>بطاقة وحدها</b> تأخذ عرض المحتوى كاملاً، و<b>صف بطاقات</b> يبدأ وينتهي عند حافتيه — فكل الصفحات بنفس المستطيلات.", "لا شيء أعرض من الشاشة: الجداول والصفوف المتحركة تتحرك داخل إطارها فقط.", "المسافات كلها من هذا السلّم (مبني على 4):"])}
+      <div class="bg-space">${space.map((s) => `<span><i style="width:${s}px;height:${s}px;background:${t.primary}"></i>${s}</span>`).join("")}</div>`)}
+
+    ${card("shape", "الزوايا والظلال", "ثلاثة أحجام زوايا وثلاثة مستويات ظل — لا غيرها.", `
+      ${table("الزوايا", ["العنصر", "الزاوية"], [["الحقول والاختيارات الصغيرة داخل البطاقة", "14px"], ["البطاقات (خدمة، باقة، سؤال، وظيفة…)", `${R}px`], ["اللوحات الكبيرة (النموذج، الحاسبة، المشروع، النوافذ)", `${R + 6}px`], ["الأزرار والشارات", "حبة كاملة الاستدارة"]])}
+      <div class="bg-shadows">${[["البطاقة", `0 1px 2px ${t.text}0A, 0 12px 40px -12px ${t.text}1F`], ["الزر الرئيسي", `0 12px 30px -8px ${t.primary}99`], ["النوافذ والقوائم", `0 24px 60px -20px ${t.text}40`]].map(([n, sh]) => `<span style="box-shadow:${sh}">${n}</span>`).join("")}</div>
+      ${list(["الظلال ناعمة بلون النص لا بالأسود. في الوضع الليلي تقل وتحل محلها حدود رفيعة.", "لا ظل على النصوص أو الشعار."])}`)}
+
+    ${card("motion", "الحركة", "الحركة تشرح ما حدث ولا تؤخر الزبون.", `
+      ${table("الحركة", ["النوع", "المدة", "المنحنى"], [["مرور وضغط (لون، ظل)", "0.2–0.35 ثانية", "عادي"], ["ظهور الأقسام وفتح القوائم والنماذج", "0.6–0.8 ثانية", `<span dir="ltr">cubic-bezier(.16, 1, .3, 1)</span>`], ["حركات الواجهة الأولى المستمرة", "15 ثانية (الخط) · 24 ثانية (الكرة)", "ثابت"]])}
+      ${list(["كل حركة تتوقف لمن فعّل «تقليل الحركة» في جهازه.", "للأجهزة الضعيفة: الحركة بالتحويل والشفافية فقط، كل حركة في طبقة مستقلة، ولا تمويه (blur) يُعاد رسمه."])}`)}
+
+    ${card("buttons", "الأزرار والحقول", "", `
+      <div class="bg-btns"><span class="bg-btn" style="background:${WAVE}">ابدأ مشروعك</span><span class="bg-btn" style="background:${t.primary}">زر رئيسي</span><span class="bg-btn bg-btn--ghost" style="color:${t.text};border-color:${t.muted}55">زر ثانوي</span><span class="bg-btn" style="background:#0E7C47">راسلنا على واتساب</span></div>
+      ${table("الأزرار", ["النوع", "متى"], [["لون الموجة", "«ابدأ مشروعك» و«تتبع طلبك» فقط"], ["رئيسي (اللون الأساسي)", "الإجراء الأهم في البطاقة أو النموذج — واحد فقط في كل مجموعة"], ["ثانوي (إطار)", "البدائل: تواصل معنا، رجوع، إلغاء"], ["واتساب", "أخضر داكن للأزرار المكتوبة، والأخضر الرسمي للزر الدائري"]])}
+      ${list(["الارتفاع 48px (50px على الكمبيوتر)، ولا يقل العرض عن 160px. الحقول 48px وزواياها 14px.", "على الجوال أزرار المجموعة فوق بعض بعرض كامل (حتى 360px) وفي الوسط؛ على التابلت والكمبيوتر جنباً إلى جنب.", "كل ما يُلمس 44×44px على الأقل، و8px بين عنصرين متجاورين.", "الحقل الإجباري بنجمة حمراء، والبريد اختياري في كل الموقع."])}`)}
+
+    ${card("cards", "البطاقات والأشرطة", "", `
+      ${h4("أشرطة الاختيار (القوائم الفرعية، الفلاتر، اللغة، الفترة)")}
+      <div class="bg-subnav" data-scroll tabindex="0" role="region" aria-label="مثال القائمة الفرعية"><span class="on" style="color:${t.primary};border-color:${t.primary}">المفتوحة <i style="background:${t.primary};color:#fff">3</i></span><span>جديد <i>1</i></span><span>تواصلنا <i>2</i></span><span>مكتمل <i>0</i></span></div>
+      ${list(["أزرار منفصلة داخل إطار أبيض بزوايا 14px، و<b>المختار يمتلئ بالبنفسجي</b> ونصه أبيض.", "في شريط مستقل تحت العنوان؛ أكثر من مجموعة = سطر لكل مجموعة. إذا كثرت الخيارات تُسحب جانبياً."])}
+      ${h4("الصفوف المتحركة (جوال وتابلت)")}
+      <div class="bg-dots"><i></i><i class="on" style="background:${WAVE}"></i><i></i><i></i></div>
+      ${list(["الخدمات، حسب المجال، المشاريع، الباقات: صف يُسحب جانبياً وتظهر حافة البطاقة التالية. على الكمبيوتر شبكة.", "النقطة الحالية 24px بلون الموجة، والباقي 8px رمادية، ومساحة الضغط 24px على الأقل."])}`)}
+
+    ${card("nav", "التنقل والأزرار العائمة", "", `
+      ${list(["القائمة العلوية 7 روابط أو أقل. «ابدأ مشروعك» في الشريط على الكمبيوتر فقط؛ أقل من 1240px تتحول الروابط إلى زر ☰.", "<b>أقسام الرئيسية</b> (خدماتنا، حلول حسب مجالك، نماذج من عملنا، الباقات والأسعار، الحاسبة، شركاؤنا) تنزلق إلى القسم. <b>صفحات مستقلة فقط:</b> الوظائف، تواصل معنا، المقالات، من نحن، الأسئلة الشائعة.", "الروابط الثانوية في أسفل الصفحة، وفوقها زر «تتبع طلبك» بلون الموجة.", "عند فتح قائمة أو نافذة تثبت الصفحة تحتها."])}
+      ${h4("أيقونات التواصل والأزرار العائمة")}
+      <div class="bg-social"><span style="background:${t.primary}1A;color:${t.text}">f</span><span style="background:${t.primary}1A;color:${t.text}">◎</span><span style="background:#1877F2;color:#fff">f</span><span style="background:radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285AEB 90%);color:#fff">◎</span></div>
+      ${list(["عادةً: دائرة بلون الهوية الفاتح (10%) والأيقونة بلون النص 19px. عند المرور أو الضغط فقط: لون الشبكة الرسمي.", "زرّا الزاوية بنفس الحجم والارتفاع (52px جوال، 56px كمبيوتر): واتساب أخضر، والدردشة سماوية بأيقونة داكنة #062A33.", "يختفيان تلقائياً عندما يغطيان أزرار الواجهة على الجوال."])}`)}
+
+    ${card("patterns", "أنماط الصفحات", "", `
+      ${table("أنماط الصفحات", ["النمط", "القاعدة"], [
+        ["الواجهة الأولى", "الشعار المتحرك مع الكرة، الشارة بين نجمتين، ثم «نبني المستقبل الرقمي» وزرّان في الوسط"],
+        ["عنوان القسم", "في الوسط مع سطره التوضيحي، 28 / 36 / 44px، ومنحنى WIXA فوقه في الرئيسية فقط"],
+        ["الصفحة الداخلية", "تبدأ بعنوانها مباشرة (40 / 48 / 64px تحت الشريط)، بنفس الشريط والقائمة وأسفل الصفحة، والأزرار في الوسط"],
+        ["الشركاء", "شعار يملأ معظم البطاقة؛ في الشبكة رمادي ويتلوّن عند المرور أو الضغط، وفي الشريط المتحرك ملوّن دائماً"],
+        ["الطلب", `صفحة واحدة <b dir="ltr">/order</b>: «طلبك» ثم الاسم والهاتف، وتحت الإرسال سطور طمأنة بعلامة ✓ خضراء`],
+        ["الهدايا", "بطاقة بتدرج الهوية وعلبة 🎁 تنقلب إلى وجه أبيض فيه شارة خضراء «مجاناً»"],
+        ["تتبع الطلب", `<b dir="ltr">/track</b> أو الدردشة: المنجز دائرة ممتلئة، الحالي بإطار وهالة، القادم رمادي. رقم الطلب <b dir="ltr">WX-YYMMDD-XXXX</b>`],
+      ])}
+      <div class="bg-gifts"><span style="background:linear-gradient(135deg, ${t.primary}, ${t.accent})">🎁<small>اضغط لكشف الهدية</small></span><span><em style="background:#0E7C47">مجاناً</em><b style="color:${t.primary}">هوية بصرية</b></span></div>`)}
+
+    ${card("dash", "لوحة التحكم", "نفس الهوية بكثافة أعلى: معلومات أكثر، زخرفة أقل.", `
+      ${list(["نفس الخط ولون الهوية والزوايا. العنوان بمستوى زر ☰ (19px جوال، 22px كمبيوتر) ووصفه تحته.", "سبع مجموعات: الرئيسية، خدمة الزبائن، المبيعات والتسويق، محتوى الموقع، التصميم، الإعدادات، النظام — كل صفحة في مكان واحد.", "الصفحة الطويلة مقسّمة: فرع ثم أقسامه، ويظهر قسم واحد في كل مرة.", "زر الإضافة دائرة «+» على يسار سطر البحث، والأزرار (تصدير، حفظ) بجانب العنوان.", "ألوان الحالة: النص الثانوي #5B6270، نجاح #0E7C47، تنبيه #8A5A10، خطأ #C62828."])}`)}
+
+    ${card("std", "إمكانية الوصول", "كل جزء جديد يجب أن يحقق هذه الحدود.", `
+      ${table("المعايير", ["القاعدة", "الحد المطلوب", "المرجع"], [
+        ["تباين النص العادي", "<b>4.5:1</b> على الأقل", `<span dir="ltr">WCAG 2.2 · 1.4.3</span>`],
+        ["تباين النص الكبير (24px، أو 19px عريض)", "<b>3:1</b>", `<span dir="ltr">WCAG 2.2 · 1.4.3</span>`],
+        ["الأيقونات وحدود الحقول والأزرار", "<b>3:1</b>", `<span dir="ltr">WCAG 2.2 · 1.4.11</span>`],
+        ["ما يُضغط بالإصبع", "44px (48px معتمد عندنا)، و24px لأي عنصر صغير", `<span dir="ltr">Apple HIG · Material · WCAG 2.5.8</span>`],
+        ["الروابط داخل النص", "بخط تحتها، لا باللون وحده", `<span dir="ltr">WCAG 2.2 · 1.4.1</span>`],
+        ["لوحة المفاتيح", "إطار واضح بلون الهوية (2px) حول العنصر المختار", `<span dir="ltr">WCAG 2.2 · 2.4.7</span>`],
+        ["الحركة", "تتوقف مع «تقليل الحركة»", `<span dir="ltr">WCAG 2.2 · 2.3.3</span>`],
+        ["التكبير", "النص يكبر حتى 200% دون أن يخرج شيء عن الشاشة", `<span dir="ltr">WCAG 2.2 · 1.4.4 · 1.4.10</span>`],
+      ])}`)}
+
+    ${card("content", "المحتوى واللغتان", "", `
+      ${list(["العربية من اليمين والإنجليزية من اليسار، بنفس المعنى والطول، والأرقام 1 2 3.", "رقم الهاتف والبريد ورقم الطلب تُكتب من اليسار حتى في الصفحة العربية.", "كل صفحة لها عنوان ووصف لمحركات البحث، وكل صورة لها وصف أو تُعلَّم كزخرفية.", "النماذج تقول ما المطلوب قبل الإرسال، والخطأ يظهر بجانب الحقل بجملة تشرح الحل."])}`)}
+
+    ${card("perf", "الأداء", "الموقع يُفتح بسرعة على جوال متوسط وشبكة عادية.", `
+      ${table("الأداء", ["المقياس", "الهدف", "المرجع"], [["ظهور أكبر عنصر (LCP)", "أقل من 2.5 ثانية", `<span dir="ltr">Core Web Vitals</span>`], ["الاستجابة للضغط (INP)", "أقل من 200ms", `<span dir="ltr">Core Web Vitals</span>`], ["ثبات الصفحة (CLS)", "أقل من 0.1", `<span dir="ltr">Core Web Vitals</span>`]])}
+      ${list(["الخط والصور مستضافة على الموقع نفسه، والصور WebP بالحجم الذي تظهر به.", "القيم الحقيقية من زوار الموقع تظهر في «الرئيسية» ← سلوك الزوار والسرعة."])}`)}
+
+    ${card("checks", "الفحص التلقائي قبل كل نشر", "القواعد أعلاه ليست توصيات فقط — هذه الفحوص ترفض أي تعديل يخالفها.", `
+      ${table("الفحوص", ["الفحص", "ما يتأكد منه"], [
+        [`<span dir="ltr">tests/site-layout.mjs</span>`, "كل صفحات الموقع على جوال وتابلت وكمبيوتر: لا شيء أعرض من الشاشة، الزوايا من الأحجام الثلاثة، كل صف بطاقات بأحد العروض الثلاثة وفي الوسط، والعنوان الأول على المسافة نفسها تحت الشريط"],
+        [`<span dir="ltr">tests/admin-layout.mjs</span>`, "كل صفحات لوحة التحكم على جوال وكمبيوتر: لا شيء أعرض من الشاشة، والبطاقات بعرض الصفحة"],
+        [`<span dir="ltr">tests/admin-phone.mjs</span>`, "كل صفحات اللوحة تفتح على الجوال بلا أخطاء ولا عناصر خارج الشاشة"],
+        [`<span dir="ltr">tests/smoke.mjs</span>`, "الصفحات والروابط الأساسية تعمل"],
+      ])}`)}
   </div>`;
 
   // copy colour codes
@@ -221,34 +301,12 @@ export async function viewBrand(view) {
     try { download(`${name}-${width}.png`, await toPng(svg, Number(width))); } catch { toast("تعذّر تجهيز الصورة", "err"); }
     finally { b.disabled = false; }
   }));
-  // ---- sub-menus: identity / UI components / UX standards ----
-  const doc = $("#brandDoc", view);
-  const cards = [...doc.children];
-  const h3 = (c) => (c.querySelector(".card__head h3")?.textContent || "").trim();
-  // the "interface components" card holds many topics: each h4 becomes its own card
-  const comp = cards.find((c) => h3(c).startsWith("مكوّنات الواجهة"));
-  if (comp) {
-    const parts = []; let curP = null;
-    for (const n of [...comp.children]) {
-      if (n.tagName === "H4") { curP = document.createElement("div"); curP.className = "card"; parts.push(curP); n.style.marginTop = "0"; }
-      if (curP) curP.appendChild(n);
-    }
-    comp.replaceWith(...parts);
-  }
-  const KEY = [["الشعار", "logo"], ["الألوان", "colors"], ["الوضع النهاري", "modes"], ["الخط", "type"], ["منحنى", "wave"], ["الأيقونات", "icons"], ["أسلوب الكتابة", "voice"],
-    ["العناصر والمسافات", "space"], ["القياسات الثابتة", "space"], ["الظلال", "space"], ["القائمة الفرعية", "menus"], ["القوائم", "menus"], ["البطاقات المتحركة", "swipe"], ["لون الموجة", "accent"], ["العناوين", "accent"],
-    ["الطلب والهدايا", "order"], ["تتبع الطلب", "order"], ["الشركاء", "partners"], ["أيقونات التواصل", "partners"], ["لوحة التحكم", "dash"], ["النصوص", "voice"],
-    ["الواجهة الأولى", "hero"], ["الصفحات الداخلية", "pages"], ["المعايير العالمية", "std"]];
-  for (const c of [...doc.children]) {
-    const title = (c.querySelector(".card__head h3, h4")?.textContent || "").replace(/^\d+\.\s*/, "").trim();
-    const hit = KEY.find(([t]) => title.startsWith(t));
-    c.dataset.sec = c.classList.contains("bg-cover") ? "logo" : hit ? hit[1] : "logo";
-    const h = c.querySelector(".card__head h3"); if (h) h.textContent = h.textContent.replace(/^\d+\.\s*/, ""); // numbers made sense only on one long page
-  }
+  // ---- sub-menus: identity / design system / standards (each card carries its data-sec) ----
   sectionTabs(view, "brand", [
-    { k: "id", label: "الهوية البصرية", items: [["logo", "الشعار"], ["colors", "الألوان"], ["modes", "النهاري والليلي"], ["type", "الخط"], ["wave", "منحنى WIXA"], ["icons", "الأيقونات"], ["voice", "الكتابة"]] },
-    { k: "ui", label: "مكوّنات الواجهة UI", items: [["space", "المقاسات والظلال"], ["hero", "الواجهة الأولى"], ["menus", "القوائم"], ["swipe", "البطاقات المتحركة"], ["accent", "العناوين ولون الموجة"], ["order", "الطلب والتتبع"], ["partners", "الشركاء والتواصل"], ["pages", "الصفحات الداخلية"], ["dash", "لوحة التحكم"]] },
-    { k: "ux", label: "التجربة والمعايير UX", items: [["std", "المعايير العالمية"]] },
+    { k: "id", label: "الهوية البصرية", items: [["about", "أساس العلامة"], ["logo", "الشعار"], ["colors", "الألوان"], ["type", "الخط"], ["elements", "العناصر المميزة"], ["icons", "الأيقونات والصور"], ["voice", "الكتابة"], ["apps", "التطبيقات"]] },
+    { k: "ui", label: "نظام التصميم UI", items: [["grid", "الشبكة والقياسات"], ["shape", "الزوايا والظلال"], ["motion", "الحركة"], ["buttons", "الأزرار والحقول"], ["cards", "البطاقات والأشرطة"], ["nav", "التنقل"], ["patterns", "أنماط الصفحات"], ["dash", "لوحة التحكم"]] },
+    { k: "ux", label: "التجربة والمعايير UX", items: [["std", "إمكانية الوصول"], ["content", "المحتوى واللغتان"], ["perf", "الأداء"], ["checks", "الفحص التلقائي"]] },
   ]);
+  // the PDF holds the whole guide, not only the section on screen
   $("#brandPdf").onclick = () => { document.body.classList.add("print-brand"); setTimeout(() => { print(); document.body.classList.remove("print-brand"); }, 50); };
 }

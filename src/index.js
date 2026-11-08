@@ -1050,28 +1050,28 @@ ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld).replace(
 <style id="wixa-theme">:root{${Object.entries(WIXA.themeVars(WIXA.merge(WIXA.DEFAULTS, st), st.font?.family)).map(([k, v]) => `${k}:${String(v).replace(/[<>{};]/g, "")}`).join(";")}}</style>
 <style>
 /* page body on the site's colours: the content blocks below keep their own small layout */
-.page{--p:var(--primary);--t:var(--text);--m:var(--muted);--l:var(--line);--s:var(--surface);max-width:860px;margin:0 auto;padding:clamp(104px,14vw,132px) var(--gutter) clamp(48px,8vw,80px)}
+.page{--p:var(--primary);--t:var(--text);--m:var(--muted);--l:var(--line);--s:var(--surface);max-width:var(--read,820px);margin:0 auto;padding:calc(var(--bar-end,78px) + var(--page-top,40px)) var(--gutter) clamp(48px,8vw,80px)}
 html[data-theme="dark"] .page{--p:var(--fg)}
-.page h1{font-size:var(--fs-h2,1.75rem);line-height:1.25;margin:6px 0 12px;text-align:center;text-wrap:balance}
+.page h1{font-size:var(--fs-h2,1.75rem);line-height:1.25;margin:0 0 12px;text-align:center;text-wrap:balance}
 .page h2{font-size:1.25rem;margin:30px 0 8px}
 .page>.lead,.page .lead{font-size:1.0625rem;color:var(--m);text-align:center;max-width:620px;margin-inline:auto}
 .page .cat{display:table;margin:0 auto 6px;font-size:.8rem;font-weight:700;padding:3px 12px;border-radius:99px;background:color-mix(in srgb,var(--p) 12%,transparent);color:var(--p)}
 .page p,.page li{color:var(--m);line-height:1.9}.page ul{padding-inline-start:20px}
-.page .empty{text-align:center;padding:28px 18px;border-radius:22px;border:1px dashed var(--l-2,var(--line-2));background:var(--s);margin-top:24px}
-.page .gallery{display:grid;gap:12px;margin:24px 0}.page .gallery img{width:100%;border-radius:18px;border:1px solid var(--l);display:block}.page .gallery .mob{max-width:300px;justify-self:center}
+.page .empty{text-align:center;padding:var(--panel-pad,24px);border-radius:var(--radius,22px);border:1px dashed var(--l-2,var(--line-2));background:var(--s);margin-top:24px}
+.page .gallery{display:grid;gap:12px;margin:24px 0}.page .gallery img{width:100%;border-radius:var(--radius,22px);border:1px solid var(--l);display:block}.page .gallery .mob{max-width:300px;justify-self:center}
 .page .stats{display:flex;flex-wrap:wrap;justify-content:center;gap:28px;margin:24px 0;padding:20px 0;border-top:1px solid var(--l);border-bottom:1px solid var(--l);text-align:center}
 .page .stats b{display:block;font-size:1.6rem;color:var(--t)}.page .stats span{color:var(--m);font-size:.9rem}
 .page .actions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:32px}
 .page .actions .btn{min-height:48px}
-.page .case{display:grid;gap:12px;margin:24px 0}.page .case div{padding:18px 20px;border-radius:22px;border:1px solid var(--l);background:var(--s)}.page .case h3{margin:0 0 6px;font-size:1rem;color:var(--p)}.page .case p{margin:0}
+.page .case{display:grid;gap:12px;margin:24px 0}.page .case div{padding:var(--card-pad,18px);border-radius:var(--radius,22px);border:1px solid var(--l);background:var(--s)}.page .case h3{margin:0 0 6px;font-size:1rem;color:var(--p)}.page .case p{margin:0}
 .page .more{margin-top:40px;padding-top:24px;border-top:1px solid var(--l)}.page .more h2{margin-top:0;text-align:center}.page .more__grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-.page .more__grid a{display:block;padding:16px;border-radius:22px;border:1px solid var(--l);background:var(--s);text-decoration:none;color:var(--t)}.page .more__grid b{display:block;font-size:1.0625rem;line-height:1.5}.page .more__grid span{color:var(--m);font-size:.875rem}
-.page .posts{display:grid;gap:14px;margin-top:24px}.page .post{display:grid;grid-template-columns:160px 1fr;gap:16px;padding:14px;border-radius:22px;border:1px solid var(--l);background:var(--s);text-decoration:none;color:var(--t)}
-.page .post img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:14px}.page .post b{display:block;font-size:1.1rem}.page .post span{font-size:.8rem;color:var(--m)}.page .post p{margin:6px 0 0;font-size:.92rem}
+.page .more__grid a{display:block;padding:var(--card-pad,18px);border-radius:var(--radius,22px);border:1px solid var(--l);background:var(--s);text-decoration:none;color:var(--t)}.page .more__grid b{display:block;font-size:1.0625rem;line-height:1.5}.page .more__grid span{color:var(--m);font-size:.875rem}
+.page .posts{display:grid;gap:14px;margin-top:24px}.page .post{display:grid;grid-template-columns:160px 1fr;gap:16px;padding:var(--card-pad,18px);border-radius:var(--radius,22px);border:1px solid var(--l);background:var(--s);text-decoration:none;color:var(--t)}
+.page .post img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:var(--radius-sm,14px)}.page .post b{display:block;font-size:1.1rem}.page .post span{font-size:.8rem;color:var(--m)}.page .post p{margin:6px 0 0;font-size:.92rem}
 @media(max-width:560px){.page .post{grid-template-columns:1fr}}
 .page article h2{margin-top:30px}.page article p,.page article li{font-size:1.05rem}
 .page a:not(.btn):not(.post):not(.more__grid a){color:var(--p)}
-.page .rv{display:grid;gap:14px;margin-top:20px}.page .rv label{display:grid;gap:6px;font-weight:700;color:var(--t)}.page .rv input,.page .rv textarea{font:inherit;min-height:48px;padding:12px 14px;border-radius:14px;border:1px solid var(--line-2);background:var(--s);color:var(--t);width:100%;box-sizing:border-box}
+.page .rv{display:grid;gap:14px;margin-top:20px}.page .rv label{display:grid;gap:6px;font-weight:700;color:var(--t)}.page .rv input,.page .rv textarea{font:inherit;min-height:48px;padding:12px 14px;border-radius:var(--radius-sm,14px);border:1px solid var(--line-2);background:var(--s);color:var(--t);width:100%;box-sizing:border-box}
 .page .rv fieldset{border:0;padding:0;margin:0}.page .rv legend{font-weight:700;margin-bottom:6px;color:var(--t)}.page .stars{display:flex;flex-wrap:wrap;gap:6px}
 .page .star input{position:absolute;opacity:0}.page .star span{display:inline-block;padding:6px 12px;border-radius:99px;border:1px solid var(--l);background:var(--s);color:#D9A441;cursor:pointer}
 .page .star input:checked+span{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 20%,transparent)}.page .rv .btn{justify-self:center;border:0;cursor:pointer}

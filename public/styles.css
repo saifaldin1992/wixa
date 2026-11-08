@@ -1755,3 +1755,52 @@ html[lang] .chatw__btn { color: #062A33; }
 
 /* sections reached from the menu stop just under the fixed header bar */
 [data-section], #calculator, #pricing { scroll-margin-top: 90px; }
+
+/* =====================================================================================
+   FIXED SIZES — one system for every page of the site (the dashboard uses the same numbers)
+   Widths (box including the side gutters, always centred):
+     wide 1240px — sections, grids, header, footer · reading 820px — FAQ, jobs, forms, articles · narrow 560px — one-field forms
+   Corners: controls 14px · cards var(--radius) 22px · large panels 28px
+   Padding: cards var(--card-pad) 18/22/26 · panels var(--panel-pad) 20/28/36 (phone / tablet / computer)
+   tests/site-layout.mjs checks every page on a phone, a tablet and a computer.
+   ===================================================================================== */
+:root { --read: 820px; --narrow: 560px; --radius-sm: 14px; --radius-lg: calc(var(--radius) + 6px); --panel-pad: 20px; }
+@media (min-width: 768px) { :root { --panel-pad: 28px; } }
+@media (min-width: 1200px) { :root { --panel-pad: 36px; } }
+
+/* widths */
+.careers__list, .faq__list { max-width: var(--read); }
+.order__wrap { max-width: var(--max); }
+.track__wrap { max-width: var(--narrow); }
+/* a box without its own gutters is as wide as the content of a reading column */
+.form, div.careers__empty { max-width: calc(var(--read) - var(--gutter) * 2); width: 100%; box-sizing: border-box; }
+
+/* cards: one corner, one padding */
+.svc, .tcard, .job, .apoint, .guar, .pkg, .way, .track__form, .ord__pkg, div.careers__empty, .faq__item, .story-item, .story-item.in {
+  border-radius: var(--radius);
+}
+.svc, .tcard, .job, .apoint, .guar, .pkg, .way, .track__form, .ord__pkg, div.careers__empty { padding: var(--card-pad); }
+.story-item, .story-item.in { padding: var(--card-pad) var(--panel-pad); }
+.empty { padding: var(--panel-pad); border-radius: var(--radius); }
+
+/* large panels: one bigger corner, one padding */
+.project, .calc__box, .stats__inner, .pmodal__box, .jmodal__box, .ord__pick, .form { border-radius: var(--radius-lg); }
+.ord__pick { padding: var(--panel-pad); }
+.form { padding-inline: var(--panel-pad); }
+
+/* controls and small choices inside a card */
+.ctype, .chatw__track input, .track__say { border-radius: var(--radius-sm); }
+/* the calculator panel lines up with every other section (it was 64px wider on computers) */
+.calc__box { max-width: calc(var(--max) - var(--gutter) * 2); }
+
+/* inner pages: the first title (or panel) always sits the same distance under the header bar —
+   40px phone · 48px tablet · 64px computer (the bar ends 78px from the top of the screen) */
+:root { --bar-end: 78px; --page-top: 40px; }
+@media (min-width: 768px) { :root { --page-top: 48px; } }
+@media (min-width: 1200px) { :root { --page-top: 64px; } }
+html[data-page]:not([data-page="home"]) main { padding-top: calc(var(--bar-end) + var(--page-top)); }
+html[data-page="about"] main > .about, html[data-page="careers"] main > .careers, html[data-page="contact"] main > .ways,
+html[data-page="faq"] main > .faq, html[data-page="track"] main > .track, html[data-page="order"] main > .order { padding-top: 0; margin-top: 0; }
+html[data-page="about"] .about > :first-child, html[data-page="careers"] .careers > :first-child, html[data-page="contact"] .ways > :first-child,
+html[data-page="faq"] .faq > :first-child { margin-top: 0; padding-top: 0; }
+.track__wrap > :first-child, .order__wrap > :first-child { margin-top: 0; }

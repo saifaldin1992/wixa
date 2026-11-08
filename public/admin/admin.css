@@ -435,6 +435,7 @@ html[dir=rtl] .bar__top span:first-child { direction: rtl; }
   body.print-brand .side, body.print-brand .top, body.print-brand .scrim, body.print-brand #toasts, body.print-brand .bg-dl, body.print-brand .env-bar { display: none !important; }
   body.print-brand .main, body.print-brand #view { margin: 0 !important; padding: 0 !important; }
   body.print-brand .card { break-inside: avoid; box-shadow: none !important; }
+  body.print-brand .sec-off { display: block !important; } /* the PDF holds every section */
   body.print-brand { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 
