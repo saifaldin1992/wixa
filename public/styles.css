@@ -1710,3 +1710,12 @@ html .partners__grid:not(.is-marquee) .partner:is(:hover, :focus-visible, :activ
 .header__nav .nav-cta, .head-start, .header__menu .menu-cta, .btn--primary[data-start] { background: var(--wave) !important; color: #fff !important; border-color: transparent; }
 .btn--primary[data-start] { box-shadow: 0 10px 30px -10px rgba(var(--accent-rgb), .55); }
 .btn--primary[data-start]:hover { box-shadow: 0 16px 40px -10px rgba(var(--accent-rgb), .65); }
+
+/* WhatsApp and live chat: one size, one level, mirrored corners; the chat button in the logo line's cyan */
+html[lang] .wa, html[lang] .chatw__btn { width: 56px; height: 56px; bottom: calc(20px + env(safe-area-inset-bottom)); }
+html[lang] .chatw__btn { background: var(--accent); color: #fff; box-shadow: 0 12px 30px -8px rgba(var(--accent-rgb), .6); }
+html[lang] .chatw__btn svg { width: 26px; height: 26px; stroke-width: 2.2; }
+@media (max-width: 760px) {
+  html[lang] .wa, html[lang] .chatw__btn { width: 52px; height: 52px; bottom: calc(16px + env(safe-area-inset-bottom)); }
+  html[lang] .wa svg { width: 26px; } html[lang] .chatw__btn svg { width: 24px; height: 24px; }
+}
