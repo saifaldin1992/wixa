@@ -1674,3 +1674,11 @@ html[data-page="home"] .partners .head > .wave { display: none; }
 html .lg-trace, html[data-theme="dark"] .lg-trace { stroke: var(--accent) !important; }
 .lg-trace__halo { opacity: .045 !important; }
 .lg-trace__halo2 { opacity: .09; }
+
+/* globe: a touch more visible in dark mode */
+html[data-theme="dark"] .hero__logo .hero__globe { opacity: .2; }
+/* partners: bigger logos inside their cards (both layouts) */
+.partner img, .partners__grid:not(.is-marquee) .partner img { width: 90%; height: 84%; }
+/* partners grid (not the moving strip): logos rest faded in grey and show their colours on hover, focus or tap */
+.partners__grid:not(.is-marquee) .partner img, html[data-theme="dark"] .partners__grid:not(.is-marquee) .partner img { filter: grayscale(1); opacity: .55; transition: filter .4s, opacity .4s, transform .5s var(--ease-out); }
+html .partners__grid:not(.is-marquee) .partner:is(:hover, :focus-visible, :active, .is-on) img { filter: none; opacity: 1; }

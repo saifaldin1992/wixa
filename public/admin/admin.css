@@ -732,3 +732,8 @@ body { font-size: 14.5px; }
 .top__sub { margin-top: -4px; }
 .top__actions, .subnav { align-self: center; }
 .bg-social { display: flex; gap: 10px; margin: 6px 0 10px; } .bg-social span { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 18px; }
+
+.bg-hero { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0 4px; }
+.bg-hero svg { width: 150px; height: 150px; }
+.bg-hero span { margin-top: -38px; padding: 6px 14px; border-radius: 99px; background: var(--surface, #fff); border: 1px solid var(--line); font-size: 13px; box-shadow: 0 6px 18px -10px rgba(0,0,0,.25); }
+.bg-hero i { font-style: normal; }

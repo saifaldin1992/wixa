@@ -141,6 +141,16 @@ export function render() {
     let base = partnerCards.slice(); while (base.length < 8) base = base.concat(partnerCards);
     $("#partnersGrid").innerHTML = `<div class="partners__track" style="--dur:${Math.max(20, base.length * 3)}s">${base.join("") + base.join("")}</div>`;
   } else $("#partnersGrid").innerHTML = partnerCards.join("");
+  const pg = $("#partnersGrid");
+  if (!pg.dataset.tap) {
+    pg.dataset.tap = "1";
+    pg.addEventListener("pointerdown", (e) => {
+      if (pg.classList.contains("is-marquee")) return;
+      const card = e.target.closest(".partner");
+      pg.querySelectorAll(".partner.is-on").forEach((x) => x !== card && x.classList.remove("is-on"));
+      card?.classList.add("is-on");
+    });
+  }
 
   // careers
   const jobs = (s.careers?.jobs || []).filter((j) => j.open !== false);
