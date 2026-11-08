@@ -74,7 +74,7 @@ export async function viewBrand(view) {
   const colorGroups = [
     ["ألوان الهوية", [
       ["الأساسي", "Primary", t.primary, "الشعار، الأزرار الرئيسية، الروابط، العنصر المختار"],
-      ["المساعد", "Accent", t.accent, "لمسات صغيرة: خط الشعار المتحرك، النجمتان، نهاية تدرّج الموجة — لا يُكتب به نص"],
+      ["المساعد", "Accent", t.accent, "لمسات صغيرة: خط الشعار المتحرك، نهاية تدرّج الموجة — لا يُكتب به نص"],
       ["الداكن", "Dark", t.dark, "الأقسام الداكنة والخلفيات العميقة"],
     ]],
     ["ألوان محايدة", [
@@ -172,9 +172,9 @@ export async function viewBrand(view) {
       ${h4("2. لون الموجة")}
       <div class="bg-wave"><span style="background:${WAVE}">02</span><i style="background:${WAVE}"></i><em style="background:${WAVE}">الأكثر مناسبة</em></div>
       ${list(["تدرّج من الأساسي إلى مزيج 45% من المساعد — تباين النص الأبيض عليه ≈5:1.", "<b>فقط</b> لما يجب أن يلفت النظر: أزرار «ابدأ مشروعك» كلها، زر «تتبع طلبك»، رقم الخطوة الحالية، النقطة الحالية تحت الصفوف المتحركة، شارة «الأكثر مناسبة».", "باقي الأزرار باللون الأساسي الواحد، حتى يبقى «ابدأ مشروعك» الأبرز."])}
-      ${h4("3. الكرة الأرضية والنجمتان")}
-      <div class="bg-hero"><svg viewBox="0 0 200 200" aria-hidden="true"><g fill="none" stroke="${t.primary}" stroke-opacity=".35" stroke-width="1"><circle cx="100" cy="100" r="96"/><ellipse cx="100" cy="100" rx="96" ry="34"/><ellipse cx="100" cy="100" rx="96" ry="66"/><ellipse cx="100" cy="100" rx="34" ry="96"/><ellipse cx="100" cy="100" rx="66" ry="96"/></g><svg x="12" y="68" width="176" height="64" viewBox="0 0 2021 982"><use href="/logo.svg#m" fill="${t.primary}" style="color:${t.primary}"/></svg></svg><span><i style="color:${t.accent}">✦</i> الشريك التقني لمشاريعك <i style="color:${t.accent}">✦</i></span></div>
-      ${list(["كرة خطية خلف الشعار في الواجهة الأولى فقط: 112% من حجمه، شفافة جداً (9% نهاري، 20% ليلي)، تدور ببطء (24 ثانية).", "النجمتان ✦ باللون المساعد تحيطان بعبارة الدور فقط."])}`)}
+      ${h4("3. الكرة الأرضية")}
+      <div class="bg-hero"><svg viewBox="0 0 200 200" aria-hidden="true"><g fill="none" stroke="${t.primary}" stroke-opacity=".35" stroke-width="1"><circle cx="100" cy="100" r="96"/><ellipse cx="100" cy="100" rx="96" ry="34"/><ellipse cx="100" cy="100" rx="96" ry="66"/><ellipse cx="100" cy="100" rx="34" ry="96"/><ellipse cx="100" cy="100" rx="66" ry="96"/></g><svg x="12" y="68" width="176" height="64" viewBox="0 0 2021 982"><use href="/logo.svg#m" fill="${t.primary}" style="color:${t.primary}"/></svg></svg></div>
+      ${list(["كرة خطية خلف الشعار في الواجهة الأولى فقط: 112% من حجمه، شفافة جداً (9% نهاري، 20% ليلي)، تدور ببطء (24 ثانية)."])}`)}
 
     ${card("icons", "الأيقونات والصور", "خطية بسيطة بسمك 1.8 وزوايا دائرية، داخل مربع بخلفية فاتحة من لون الهوية.", `
       <div class="bg-icons">${Object.entries(ICONS).map(([k, svg]) => `<span title="${k}" style="color:${t.primary};background:${t.primary}14">${svg}</span>`).join("")}</div>

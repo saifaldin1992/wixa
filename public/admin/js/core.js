@@ -26,7 +26,6 @@ export function sectionTabs(view, key, groups) {
     const sub = document.getElementById("subNav");
     sub.querySelectorAll("[data-g]").forEach((b) => (b.onclick = () => { cur = groups.find((x) => x.k === b.dataset.g).items[0][0]; go(); }));
     sub.querySelectorAll("[data-s]").forEach((b) => (b.onclick = () => { cur = b.dataset.s; go(); }));
-    sub.querySelector("[data-secitem] .on, [data-secgrp] .on")?.scrollIntoView({ block: "nearest", inline: "nearest" });
   };
   const go = () => { try { sessionStorage.setItem(store, cur); } catch {} paint(); scrollTo({ top: 0, behavior: "smooth" }); };
   paint();
@@ -71,7 +70,21 @@ export async function composeView(view, parts) {
     });
   }
 }
-export function setSubnav(html = "") { const n = document.getElementById("subNav"); if (!n) return; n.innerHTML = html; n.hidden = !html; }
+// The sub-menu under the page title. Re-drawing it keeps each row where it was scrolled, and the chosen item always
+// stays in view (a long row no longer jumps back to its first item after a choice near its end).
+export function setSubnav(html = "") {
+  const n = document.getElementById("subNav"); if (!n) return;
+  const key = (s, i) => s.id || `${s.className}#${i}`;
+  const was = Object.fromEntries([...n.querySelectorAll(".seg")].map((s, i) => [key(s, i), s.scrollLeft]));
+  n.innerHTML = html; n.hidden = !html;
+  [...n.querySelectorAll(".seg")].forEach((s, i) => {
+    if (key(s, i) in was) s.scrollLeft = was[key(s, i)];
+    const on = s.querySelector("button.on");
+    if (!on) return;
+    const sr = s.getBoundingClientRect(), r = on.getBoundingClientRect();
+    if (r.left < sr.left || r.right > sr.right) s.scrollLeft += (r.left + r.width / 2) - (sr.left + sr.width / 2);
+  });
+}
 export const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 export const clone = (o) => structuredClone(o);

@@ -481,4 +481,11 @@ Dashboard → صفحات الموقع:
 Routing: `wrangler.toml` `not_found_handling = "none"`, so an address that is not a file reaches the Worker
 (`src/index.js` end: custom page → extra address → the site's 404 page via `notFound()`). Published pages are added to
 the sitemap and, when `footer` is on, to the small `.footer__legal` row (`footerLegal()` in `routes/pages.js`, also on the
-home page). Under «كيف نعمل» the home page links to /terms and /payment (`#processMore`).
+home page).
+
+**Article looks:** dashboard → المقالات → «شكل صفحات المقالات»: `settings.blog.theme` (classic | magazine | minimal) for
+all articles, `settings.blog.per[<post id>]` for one article (chosen in the article editor). `handleBlog` wraps the
+article in `.art.art--<look>`; the styles are in `simplePage`.
+
+**Footer links** are one three-column grid (`.footer__nav`); company pages are appended to it with `order: 100+`.
+**Sub-menu**: `setSubnav()` keeps each row's scroll position and keeps the chosen item in view.

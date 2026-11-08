@@ -342,15 +342,11 @@ html[data-theme="dark"] .screen { border-color: rgba(255,255,255,.08); }
 
 /* footer */
 .footer { max-width: var(--max); margin: 0 auto; padding: 32px var(--gutter) 28px; border-top: 1px solid var(--line); }
-/* four centered rows: links · social, language, mode · logo · credit */
+/* centered rows: links (three columns) · track your order · social · logo · credit */
 .footer { text-align: center; }
-.footer__nav { display: flex; justify-content: center; gap: 8px 28px; flex-wrap: wrap; color: var(--muted); font-size: .95rem; }
+.footer__nav { display: grid; grid-template-columns: repeat(3, minmax(0, max-content)); justify-content: center; gap: 2px clamp(18px, 6vw, 56px); text-align: start; color: var(--muted); font-size: .875rem; }
 .footer__nav a { padding: 4px 2px; transition: color .3s; }
 .footer__nav a:hover { color: var(--fg); }
-/* company pages (terms, payments, team, status…): one smaller row under the footer links */
-.footer__legal { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px 20px; margin-top: 10px; color: var(--muted); font-size: .8125rem; }
-.footer__legal a { padding: 4px 2px; transition: color .3s; }
-.footer__legal a:hover { color: var(--fg); }
 .footer__tools { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 22px; color: var(--muted); font-size: .9rem; }
 .footer__social { display: flex; gap: 8px; }
 .footer__social:empty, .footer__social:empty + .footer__sep { display: none; }
@@ -380,8 +376,6 @@ html[dir="ltr"] .project__more svg { transform: scaleX(-1); }
 
 /* ===== process ===== */
 .process { padding: 20px 0 120px; }
-.process__more { max-width: var(--max); margin: 28px auto 0; padding: 0 var(--gutter); text-align: center; color: var(--muted); font-size: .9375rem; }
-.process__more a { color: var(--fg); text-decoration: underline; text-underline-offset: 3px; }
 .process__track { position: relative; max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); --p: 0; }
 .process__line { position: absolute; top: 34px; inset-inline: calc(var(--gutter) + 12.5%); height: 2px; background: var(--line-2); border-radius: 2px; }
 .process__line span { position: absolute; inset: 0; background: linear-gradient(90deg, var(--accent), var(--fg)); transform-origin: right; transform: scaleX(var(--p)); border-radius: 2px; }
@@ -1588,7 +1582,7 @@ html[data-theme="dark"] .hero__logo .hero__globe { opacity: .12; }
 @keyframes globeSpin { from { transform: scaleX(1); } 50% { transform: scaleX(-1); } to { transform: scaleX(1); } }
 
 /* ===== "track your order": footer button (purple, apart from the round social icons) + the /track page ===== */
-.footer__tools { flex-direction: column; align-items: center; gap: 14px; }
+.footer__tools { flex-direction: column; align-items: center; gap: 30px; } /* same space as social → logo (.footer__brand) */
 .track-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 20px; border-radius: 99px; background: var(--primary); color: #fff !important; font-weight: 700; font-size: .92rem; transition: filter .2s, transform .2s var(--ease); }
 .track-btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
 .track-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; }
@@ -1830,3 +1824,7 @@ html[data-page] main > section:not(.hero) { padding-top: 0; padding-bottom: var(
 
 /* the contact fallback in the corner (when the live chat is off) has the same size as the chat and WhatsApp buttons */
 @media (max-width: 767px) { html[lang] .mbar__btn--main { width: 52px; height: 52px; } }
+
+/* footer links: three tidy columns, a little smaller than the menu (comes last so it wins over the type scale above) */
+.footer__nav a { font-size: .875rem; }
+@media (max-width: 760px) { .footer__nav a { min-height: 38px; padding: 0 2px; } }

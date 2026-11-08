@@ -46,7 +46,7 @@ export const setPreviewLang = (v) => { previewLang = v; };
 export function previewPane() {
   return `<div class="preview" id="preview">
     <div class="preview__bar"><b>معاينة مباشرة</b>
-      <div style="display:flex;gap:6px">
+      <div class="preview__tools">
         <div class="seg" id="pvLang"><button data-v="ar" class="${previewLang === "ar" ? "on" : ""}">ع</button><button data-v="en" class="${previewLang === "en" ? "on" : ""}">EN</button></div>
         <div class="seg" id="pvDev"><button data-v="desk" class="on">سطح المكتب</button><button data-v="mob">جوال</button></div>
       </div></div>

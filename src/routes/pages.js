@@ -121,15 +121,7 @@ export async function handleHome(request, env, ctx, pageName = "home") {
       if (el.getAttribute("data-where") === "footer" ? !["both", "footer"].includes(p.at) : !["both", "menu"].includes(p.at)) el.setAttribute("hidden", ""); else if (!hide.has(el.getAttribute("data-sec") || "")) el.removeAttribute("hidden");
     } })
     .on("#langBtn", { element: (el) => el.setInnerContent(lang === "ar" ? "EN" : "ع") })
-    .on(".footer__nav", { element: (el) => { const row = footerLegal(st, lang, "/"); if (row) el.after(row, { html: true }); } })
-    .on("#processMore", { element: (el) => {
-      // under «كيف نعمل»: where the terms and the payment policy are written down
-      const q = lang === "ar" ? "" : "?lang=en";
-      const ps = sitePages(st).filter((p) => p.published && ["terms", "payment"].includes(p.id));
-      if (!ps.length) return;
-      el.setInnerContent(`${lang === "ar" ? "التفاصيل مكتوبة في:" : "It is all written down in:"} ${ps.map((p) => `<a href="${p.path}${q}">${esc(p[`title_${lang}`] || p.title_ar)}</a>`).join(" · ")}`, { html: true });
-      el.removeAttribute("hidden");
-    } })
+    .on(".footer__nav", { element: (el) => { const more = footerLegal(st, lang, "/"); if (more) el.append(more, { html: true }); } })
     .on(".hero", { element: (el) => el.setAttribute("class", `${el.getAttribute("class") || ""} in in-hero`) })
     .on("body", { element: (el) => el.removeAttribute("class") })
     .on("body", { element: (el) => {
@@ -164,7 +156,7 @@ export function detailsHtml(raw) {
 
 // The site's header (logo, menu, theme, language, "start your project") and footer for the server-built pages,
 // with the same classes as the home page so they share one stylesheet and one look.
-// The small row of company pages under the footer links: pages added from the dashboard, our team, services status
+// Company pages at the end of the footer links: pages added from the dashboard, our team, services status
 export function footerLegal(st, lang, path = "") {
   const q = lang === "ar" ? "" : "?lang=en";
   const team = { ...TEAM_DEFAULTS, ...(st.team || {}) }, status = { ...STATUS_DEFAULTS, ...(st.status_page || {}) };
@@ -173,7 +165,7 @@ export function footerLegal(st, lang, path = "") {
     ...(team.on && team.footer ? [["/team", team[`title_${lang}`] || TEAM_DEFAULTS[`title_${lang}`]]] : []),
     ...(status.on && status.footer ? [["/status", lang === "ar" ? "حالة الخدمات" : "Service status"]] : []),
   ].filter(([, t]) => t);
-  return links.length ? `<nav class="footer__legal" aria-label="${lang === "ar" ? "صفحات الشركة" : "Company pages"}">${links.map(([h, t]) => `<a href="${h}${q}"${path === h ? ' aria-current="page"' : ""}>${esc(t)}</a>`).join("")}</nav>` : "";
+  return links.map(([h, t], i) => `<a href="${h}${q}" style="order:${100 + i}"${path === h ? ' aria-current="page"' : ""}>${esc(t)}</a>`).join("");
 }
 // A page's text: [{h, p}] → headings and paragraphs; "{email}" becomes the contact email link
 const sectionsHtml = (list, email) => {
@@ -211,7 +203,7 @@ export function siteShell(st, lang, path) {
   const footer = `<footer class="footer">
     <svg class="footer__wave footer__wave--brand" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="fwv" x1="0" x2="1"><stop offset="0" style="stop-color:var(--fg)"/><stop offset=".5" style="stop-color:var(--accent)"/><stop offset="1" style="stop-color:var(--fg)"/></linearGradient></defs><path pathLength="1" stroke="url(#fwv)" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
     <svg class="footer__wave" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
-    <nav class="footer__nav">${foot.map((x) => link(x)).join("")}</nav>${footerLegal(st, lang, path)}
+    <nav class="footer__nav">${foot.map((x, i) => link(x).replace("<a ", `<a style="order:${i}" `)).join("")}${footerLegal(st, lang, path)}</nav>
     <div class="footer__tools"><a href="/track${q}" class="track-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg><span>${esc(ui.track)}</span></a><div class="footer__social">${socials}</div></div>
     <div class="footer__brand"><a href="/${q}" class="brand">${mark}${word}</a></div>
     <p class="footer__credit">${esc(st.content?.[lang]?.footer_text || (ar ? "طُوّر بواسطة فريق ويكسا" : "Developed by the WIXA team"))} · © ${new Date().getFullYear()}</p></footer>`;
@@ -270,6 +262,11 @@ html[data-theme="dark"] .page{--p:var(--fg)}
 .page .star input:checked+span{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 20%,transparent)}.page .rv .btn{justify-self:center;border:0;cursor:pointer}
 .page .hp{position:absolute;left:-9999px;opacity:0}
 .page .btn--wa{background:#25D366;color:#fff}
+.page .art--magazine .art__cover{margin:0 0 24px}.page .art--magazine .art__cover img{aspect-ratio:16/8;object-fit:cover;border-radius:var(--radius,22px)}
+.page .art--magazine h1{font-size:clamp(1.9rem,4.4vw,2.6rem);text-align:start}.page .art--magazine .cat{margin-inline:0}.page .art--magazine>.lead{text-align:start;margin-inline:0;font-size:1.15rem;max-width:none}
+.page .art--magazine article p:first-of-type::first-letter{float:inline-start;font-size:3.2em;line-height:.9;font-weight:800;color:var(--p);margin-inline-end:8px}
+.page .art--minimal{max-width:640px;margin:0 auto}.page .art--minimal h1{text-align:start;font-size:clamp(1.6rem,3.6vw,2.1rem)}.page .art--minimal .cat{margin-inline:0;background:none;padding:0;color:var(--m)}
+.page .art--minimal>.lead{text-align:start;margin-inline:0;padding-bottom:18px;border-bottom:1px solid var(--l)}.page .art--minimal article h2{padding-inline-start:12px;border-inline-start:3px solid var(--p)}.page .art--minimal article p{font-size:1.1rem;line-height:2}
 .page .team{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-top:24px}.page .team__m{padding:var(--card-pad,18px);border-radius:var(--radius,22px);border:1px solid var(--l);background:var(--s);text-align:center}
 .page .team__m img,.page .team__av{width:96px;height:96px;border-radius:50%;object-fit:cover;margin:0 auto 10px;display:grid;place-items:center;background:color-mix(in srgb,var(--p) 12%,transparent);color:var(--p);font-size:2rem;font-weight:800}
 .page .team__m b{display:block;color:var(--t);font-size:1.0625rem}.page .team__m span{display:block;color:var(--p);font-size:.875rem;font-weight:700}.page .team__m p{margin:8px 0 0;font-size:.92rem;line-height:1.7}
@@ -479,10 +476,13 @@ export async function handleBlog(request, env, ctx, slug) {
   if (!p) return notFound(request, env);
   const cover = safeHref(p.cover_url);
   const others = posts.filter((x) => x !== p).slice(0, 3);
-  const body = `<span class="cat">${esc(fmtDate(p.published_at || p.created_at, lang))}</span><h1>${esc(T(p, "title"))}</h1>
+  // the article's look: chosen for this article, or for all articles (dashboard → المقالات), else classic
+  const look = ["classic", "magazine", "minimal"].find((k) => k === (st.blog?.per?.[p.id] || st.blog?.theme)) || "classic";
+  const coverHtml = cover && look !== "minimal" ? `<div class="gallery art__cover"><img src="${esc(cover)}" alt=""></div>` : "";
+  const body = `<div class="art art--${look}">${look === "magazine" ? coverHtml : ""}<span class="cat">${esc(fmtDate(p.published_at || p.created_at, lang))}</span><h1>${esc(T(p, "title"))}</h1>
     ${T(p, "excerpt") ? `<p class="lead">${esc(T(p, "excerpt"))}</p>` : ""}
-    ${cover ? `<div class="gallery"><img src="${esc(cover)}" alt=""></div>` : ""}
-    <article>${articleHtml(T(p, "body"))}</article>
+    ${look === "classic" ? coverHtml : ""}
+    <article>${articleHtml(T(p, "body"))}</article></div>
     ${others.length ? `<section class="more"><h2>${ar ? "مقالات أخرى" : "More articles"}</h2><div class="more__grid">${others.map((o) => `<a href="/blog/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(T(o, "excerpt").slice(0, 80))}</span></a>`).join("")}</div></section>` : ""}`;
   return simplePage(request, st, {
     lang, title: T(p, "title"), description: (T(p, "excerpt") || T(p, "body")).slice(0, 160), path: `/blog/${encodeURIComponent(p.slug)}`, image: cover, body,
