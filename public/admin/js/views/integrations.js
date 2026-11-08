@@ -25,7 +25,7 @@ export async function viewIntegrations(view) {
       <button class="b b--primary" id="publishBtn">${I.reset}تحديث الآن</button></div></div>
 
     <div class="card" id="cAlerts"><div class="card__head"><div><h3>تنبيهات الرسائل الجديدة</h3>
-      <p>بريد يصلك مع كل رسالة من نموذج «تواصل معنا». عنوان الاستلام يُغيَّر من صفحة الحساب.</p></div></div>
+      <p>بريد يصلك مع كل رسالة من نموذج «تواصل معنا». عنوان الاستلام في «بريد تنبيهات الرسائل» أسفل هذه البطاقة.</p></div></div>
       <div class="stack">
         ${sw("alertsOn", cfg.alerts.on, "إرسال تنبيه بكل رسالة جديدة")}
         <label class="f"><span>اسم المُرسِل الذي يظهر في البريد</span><input id="fromName" maxlength="40" value="${esc(cfg.alerts.from_name)}"></label>
@@ -73,7 +73,7 @@ export async function viewIntegrations(view) {
       <p>الصق المعرّف فقط وتعمل الأداة على الموقع. اتركه فارغاً لإيقافها. إرسال نموذج التواصل يُحسب «عميلاً محتملاً» (Lead) في كل أداة مفعّلة.</p></div></div>
       <div class="grid2">${TAGS.map(([k, label, ph, hint]) => `<label class="f"><span>${label}</span>
         <input data-tag="${k}" dir="ltr" placeholder="${ph}" value="${esc(cfg.tags[k] || "")}"><small class="hint muted">${hint}</small></label>`).join("")}</div>
-      <p class="muted" style="margin:10px 0 0;font-size:12px">إحصاءات Cloudflare في «نظرة عامة» تعمل دائماً ولا تحتاج شيئاً من هذا.</p>
+      <p class="muted" style="margin:10px 0 0;font-size:12px">إحصاءات Cloudflare في «الرئيسية» تعمل دائماً ولا تحتاج شيئاً من هذا.</p>
       <div class="row-btns" style="margin-top:12px">${save()}</div></div>
 
     <div class="card" id="cSpam"><div class="card__head"><div><h3>الحماية من الرسائل المزعجة</h3>

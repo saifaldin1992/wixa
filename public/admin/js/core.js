@@ -6,15 +6,22 @@ export const $ = (s, el = document) => el.querySelector(s);
 // Long pages as sub-menus: the first row picks a branch, the second a section of it; only that section shows.
 // Every element of the page with data-sec="<section>" belongs to that section (several may share one).
 // groups: [{ k, label, items: [[sectionKey, label], …] }]. The choice is remembered for the visit.
+// Each page's sub-menu watchers belong to that page only: the router calls endSections() before drawing the next page.
+let secGen = 0;
+export const endSections = () => { secGen++; };
 export function sectionTabs(view, key, groups) {
+  const gen = secGen;
   const store = `wixa-sec-${key}`;
   let cur = ""; try { cur = sessionStorage.getItem(store) || ""; } catch {}
   const all = groups.flatMap((g) => g.items.map(([k]) => k));
   if (!all.includes(cur)) cur = all[0];
+  const subEl = document.getElementById("subNav");
   const paint = () => {
     const g = groups.find((x) => x.items.some(([k]) => k === cur)) || groups[0];
-    setSubnav(`<div class="seg" data-secgrp>${groups.map((x) => `<button type="button" data-g="${x.k}" class="${x === g ? "on" : ""}">${esc(x.label)}</button>`).join("")}</div>`
-      + (g.items.length > 1 ? `<div class="seg" data-secitem>${g.items.map(([k, l]) => `<button type="button" data-s="${k}" class="${k === cur ? "on" : ""}">${esc(l)}</button>`).join("")}</div>` : ""));
+    const own = [...subEl.children].filter((n) => !n.hasAttribute("data-secgrp") && !n.hasAttribute("data-secitem")); // the page's own rows (filters, period…) stay, under ours
+    setSubnav((groups.length > 1 ? `<div class="seg" data-secgrp>${groups.map((x) => `<button type="button" data-g="${x.k}" class="${x === g ? "on" : ""}">${esc(x.label)}</button>`).join("")}</div>` : "")
+      + (g.items.length > 1 || groups.length === 1 ? `<div class="seg" data-secitem>${g.items.map(([k, l]) => `<button type="button" data-s="${k}" class="${k === cur ? "on" : ""}">${esc(l)}</button>`).join("")}</div>` : ""));
+    own.forEach((n) => subEl.appendChild(n)); subEl.hidden = false;
     view.querySelectorAll("[data-sec]").forEach((el) => el.classList.toggle("sec-off", !el.dataset.sec.split(" ").includes(cur)));
     const sub = document.getElementById("subNav");
     sub.querySelectorAll("[data-g]").forEach((b) => (b.onclick = () => { cur = groups.find((x) => x.k === b.dataset.g).items[0][0]; go(); }));
@@ -23,6 +30,46 @@ export function sectionTabs(view, key, groups) {
   };
   const go = () => { try { sessionStorage.setItem(store, cur); } catch {} paint(); scrollTo({ top: 0, behavior: "smooth" }); };
   paint();
+  // a page that redraws its own sub-menu (a new period, a filter) gets our rows back on top
+  const so = new MutationObserver(() => { if (gen !== secGen) return so.disconnect(); if (!subEl.querySelector("[data-secitem], [data-secgrp]")) paint(); });
+  so.observe(subEl, { childList: true });
+  return () => { if (gen === secGen) view.querySelectorAll("[data-sec]").forEach((el) => el.classList.toggle("sec-off", !el.dataset.sec.split(" ").includes(cur))); };
+}
+
+// Split an existing page into sub-menus without rewriting it: every card is given a section from its title
+// (rules: [["#cardId" | "title starts with", "section"]]); cards drawn later (loaded data) are sorted the same way.
+export function sectionize(view, key, groups, rules, fallback) {
+  const title = (c) => (c.querySelector("h3")?.textContent || "").trim();
+  const tag = () => {
+    let changed = false;
+    view.querySelectorAll(".card, .kpis, [data-sec-auto]").forEach((c) => {
+      if (c.dataset.sec || c.parentElement?.closest("[data-sec]")) return;
+      const hit = rules.find(([m]) => (m.startsWith("#") ? c.id === m.slice(1) : m.startsWith(".") ? c.matches(m) : title(c).startsWith(m)));
+      c.dataset.sec = hit ? hit[1] : fallback || groups[0].items[0][0]; changed = true;
+    });
+    return changed;
+  };
+  tag();
+  const gen = secGen;
+  const apply = sectionTabs(view, key, groups);
+  const mo = new MutationObserver(() => { if (gen !== secGen) return mo.disconnect(); if (tag()) apply(); });
+  mo.observe(view, { childList: true, subtree: true });
+  return apply;
+}
+
+// A page made of cards from other pages (settings gathered in one place): each source page is drawn into its own
+// box, then only the cards listed are kept — their buttons and saving work exactly as on the original page.
+export async function composeView(view, parts) {
+  view.innerHTML = "";
+  for (const [render, keep] of parts) {
+    const box = document.createElement("div"); box.className = "compose"; view.appendChild(box);
+    await render(box);
+    box.querySelectorAll(".card").forEach((c) => {
+      if (c.parentElement.closest(".card")) return;
+      const t = (c.querySelector("h3")?.textContent || "").trim();
+      if (!keep.includes("*") && !keep.some((k) => (k.startsWith("#") ? c.id === k.slice(1) : t.startsWith(k)))) c.remove();
+    });
+  }
 }
 export function setSubnav(html = "") { const n = document.getElementById("subNav"); if (!n) return; n.innerHTML = html; n.hidden = !html; }
 export const $$ = (s, el = document) => [...el.querySelectorAll(s)];

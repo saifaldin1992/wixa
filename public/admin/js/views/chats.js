@@ -33,7 +33,7 @@ export async function viewChats(view) {
   const { data: myName, error: nameErr } = await sb.rpc("my_display_name");
   me = nameErr ? null : myName || "";
   $("#topActions").innerHTML = `${me === null ? "" : `<button class="b" id="myName">👤 ${me ? `اسمك: ${esc(me)}` : "اختر اسمك"}</button>`}<button class="b" id="pushBtn">🔔 الإشعارات على هذا الجهاز</button>${role === "owner" ? `<button class="b" id="chatCfg">⚙️ إعدادات الدردشة</button>` : ""}`;
-  setSubnav(`<div class="seg chat__filter">${[["open", "مفتوحة"], ["closed", "مغلقة"], ["all", "الكل"]].map(([k, n]) => `<button type="button" data-f="${k}" class="${filter === k ? "on" : ""}">${n}</button>`).join("")}</div>`);
+  setSubnav((role === "owner" ? `<div class="seg" id="chatBranch"><button type="button" class="on">المحادثات</button><button type="button" data-chatcfg>الإعدادات</button></div>` : "") + `<div class="seg chat__filter">${[["open", "مفتوحة"], ["closed", "مغلقة"], ["all", "الكل"]].map(([k, n]) => `<button type="button" data-f="${k}" class="${filter === k ? "on" : ""}">${n}</button>`).join("")}</div>`);
   view.innerHTML = `${me === "" ? `<div class="chat-off chat-off--name">اختر الاسم الذي يظهر للزبون عند ردّك (مثل «أحمد»)، بدل «فريق ويكسا». <button class="b b--sm b--primary" id="nameNow">اختيار الاسم</button></div>` : ""}${on ? "" : `<div class="chat-off">الدردشة متوقفة في الموقع — الزوار لا يرون زرها. ${role === "owner" ? '<button class="b b--sm b--primary" id="turnOn">تفعيل الدردشة الآن</button>' : "يستطيع المالك تفعيلها."}</div>`}
     <div class="chat ${current ? "chat--thread" : ""}">
       <aside class="chat__list">
@@ -164,6 +164,7 @@ export async function viewChats(view) {
   };
   if ($("#myName")) $("#myName").onclick = askName;
   if ($("#nameNow")) $("#nameNow").onclick = askName;
+  const cfgTab = document.querySelector("[data-chatcfg]"); if (cfgTab) cfgTab.onclick = () => $("#chatCfg")?.click();
   if ($("#chatCfg")) $("#chatCfg").onclick = () => {
     const c = settings.chat || {};
     const foot = document.createElement("div"); foot.style.cssText = "display:flex;gap:8px";

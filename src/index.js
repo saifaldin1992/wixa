@@ -635,7 +635,7 @@ async function handleAdminStatus(request, env, ctx) {
     link: `https://dash.cloudflare.com/${acc}/wixa.dev/email/routing/overview`, linkText: "إعدادات البريد" });
 
   const aOk = analytics.status === "fulfilled" && analytics.value?.data?.viewer?.accounts?.length > 0;
-  items.push({ name: "Cloudflare — الإحصائيات", role: "عدد الزيارات وسرعة الموقع في «نظرة عامة»", state: aOk ? "ok" : "err",
+  items.push({ name: "Cloudflare — الإحصائيات", role: "عدد الزيارات وسرعة الموقع في «الرئيسية»", state: aOk ? "ok" : "err",
     rows: [["الخدمة", "Web Analytics"], ["الحالة", aOk ? "متصلة" : env.CF_ANALYTICS_TOKEN ? "المفتاح لا يعمل" : "المفتاح غير مضاف"]],
     link: `https://dash.cloudflare.com/${acc}/web-analytics`, linkText: "الإحصائيات في Cloudflare" });
 
@@ -1727,15 +1727,15 @@ async function handleAdminDiagnose(request, env, ctx) {
   else {
     const age = mon?.at ? (Date.now() - Date.parse(mon.at)) / 60000 : Infinity;
     add("المهام المجدولة", "المراقبة كل 15 دقيقة", !cfg.reports.monitor ? "warn" : age < 40 ? (mon.state === "down" ? "fail" : "ok") : "fail",
-      !cfg.reports.monitor ? "موقوفة من التكاملات" : age < 40 ? `آخر فحص قبل ${Math.round(age)} دقيقة${mon.state === "down" ? ` — رصدت مشكلة: ${(mon.problems || []).join("، ")}` : " — كل شيء سليم"}` : "لم تعمل منذ أكثر من 40 دقيقة",
+      !cfg.reports.monitor ? "موقوفة من الإعدادات ← التكاملات" : age < 40 ? `آخر فحص قبل ${Math.round(age)} دقيقة${mon.state === "down" ? ` — رصدت مشكلة: ${(mon.problems || []).join("، ")}` : " — كل شيء سليم"}` : "لم تعمل منذ أكثر من 40 دقيقة",
       "Cloudflare ← Workers ← wixa ← Settings ← Triggers", "تأكد من وجود الجداول الزمنية (Cron Triggers) الثلاثة؛ تُضاف تلقائياً من wrangler.toml عند النشر.");
   }
   const bAge = last?.at ? (Date.now() - Date.parse(last.at)) / 864e5 : Infinity;
   const maxAge = { daily: 1.2, weekly: 7.5, monthly: 32 }[cfg.backup.freq];
   add("المهام المجدولة", "النسخة الاحتياطية", cfg.backup.freq === "off" ? "warn" : !last ? "warn" : bAge > maxAge ? "fail" : "ok",
     cfg.backup.freq === "off" ? "متوقفة" : last ? `آخر نسخة قبل ${bAge < 1 ? `${Math.round(bAge * 24)} ساعة` : `${Math.round(bAge)} يوم`} (${Math.round((last.size || 0) / 1024)} KB)` : "لم تُرسل أي نسخة بعد",
-    "لوحة التحكم ← التكاملات", "اضغط «أرسل نسخة الآن» للتأكد؛ إن فشلت فالعطل في البريد (انظر فحص Resend).");
-  if (cfg.maintenance.on) add("الموقع", "وضع الصيانة", "warn", "مفعّل — الزوار يرون صفحة «نعود قريباً»", "لوحة التحكم ← التكاملات", "أوقفه عند الانتهاء.");
+    "لوحة التحكم ← الإعدادات ← النسخ الاحتياطي", "اضغط «أرسل نسخة الآن» للتأكد؛ إن فشلت فالعطل في البريد (انظر فحص Resend).");
+  if (cfg.maintenance.on) add("الموقع", "وضع الصيانة", "warn", "مفعّل — الزوار يرون صفحة «نعود قريباً»", "لوحة التحكم ← الإعدادات ← الحماية", "أوقفه عند الانتهاء.");
   let seo = {};
   try { seo = JSON.parse(memo.text || "{}").settings?.seo || {}; } catch {}
   add("محركات البحث", "الظهور في Google", seo.index === false ? "fail" : seo.google_verification ? "ok" : "warn",

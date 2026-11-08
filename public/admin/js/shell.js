@@ -1,5 +1,5 @@
 /* Sidebar, top bar and the hash router */
-import { $, $$, setSubnav, DEFAULTS, ROLE_AR, closeModal, confirmBox, esc, merge, role, savedJSON, setSettings } from "./core.js";
+import { $, $$, setSubnav, sectionize, composeView, endSections, DEFAULTS, ROLE_AR, closeModal, confirmBox, esc, merge, role, savedJSON, setSettings } from "./core.js";
 import { viewTeam } from "./views/team.js";
 import { viewChats } from "./views/chats.js";
 import { viewCustomers } from "./views/customers.js";
@@ -22,27 +22,54 @@ import { viewDevGuide } from "./views/devguide.js";
 
 // ---------------- shell / router ----------------
 export const VIEWS = {
-  overview: { title: "نظرة عامة", sub: "زوار الموقع ونشاطه", render: viewOverview },
-  appearance: { title: "المظهر والخطوط", sub: "الألوان ونوع الخط وحجمه والحركة — مع معاينة مباشرة", render: viewAppearance },
+  overview: { title: "الرئيسية", sub: "ملخص اليوم وزوار الموقع ونشاطه", render: viewOverview },
+  appearance: { title: "المظهر", sub: "الألوان ونوع الخط وحجمه والحركة — مع معاينة مباشرة", render: viewAppearance },
   brand: { title: "UI / UX", sub: "الهوية البصرية ومكوّنات الواجهة والمعايير — خاص بك ولا يظهر في الموقع", render: viewBrand },
-  content: { title: "المحتوى والنصوص", sub: "نصوص الموقع بالعربي والإنجليزي، الأرقام، الأقسام وبيانات التواصل", render: viewContent },
+  content: { title: "صفحات الموقع", sub: "نصوص الموقع بالعربي والإنجليزي، الأرقام، الأقسام وبيانات التواصل", render: viewContent },
   projects: { title: "المشاريع", sub: "أضف مشاريعك واعرضها في قسم الإنجازات", render: () => viewList("projects") },
   services: { title: "الخدمات", sub: "الخدمات التي تظهر في الموقع", render: () => viewList("services") },
   partners: { title: "الشركاء", sub: "شعارات العملاء والشركاء", render: () => viewList("partners") },
   testimonials: { title: "آراء العملاء", sub: "بطاقات الآراء المتحركة في الموقع", render: () => viewList("testimonials") },
   posts: { title: "المقالات", sub: "اكتب مقالات تساعد الناس على إيجادك في Google", render: viewPosts },
   seo: { title: "البحث والمشاركة", sub: "كيف يظهر موقعك في Google وعند مشاركة الرابط", render: viewSeo },
-  integrations: { title: "التكاملات", sub: "التنبيهات والرد التلقائي وأدوات القياس والحماية ووضع الصيانة", render: viewIntegrations },
-  diagnose: { title: "الفحص والتشخيص", sub: "فحص كل أجزاء الموقع، مكان أي عطل وطريقة حله، وسجل الأعطال", render: viewDiagnose },
+  integrations: { title: "التكاملات", sub: "أدوات القياس والإعلانات، والتقارير والمراقبة", render: (v) => composeView(v, [[viewIntegrations, ["#cTags", "#cReports"]]]) },
+  notify: { title: "الإشعارات والبريد", sub: "تنبيهات الرسائل الجديدة، الرد التلقائي للزبون، والردود الجاهزة", render: (v) => composeView(v, [[viewIntegrations, ["#cAlerts", "#cReply", "#cTpl"]], [viewAccount, ["بريد تنبيهات"]]]) },
+  protect: { title: "الحماية", sub: "الحماية من الرسائل المزعجة ووضع الصيانة", render: (v) => composeView(v, [[viewIntegrations, ["#cSpam", "#cMaint"]]]) },
+  backup: { title: "النسخ الاحتياطي", sub: "النسخة التلقائية، نسخة المحتوى، والاسترجاع", render: (v) => composeView(v, [[viewIntegrations, ["#cBackup"]], [viewAccount, ["نسخة احتياطية"]]]) },
+  diagnose: { title: "الفحص والتشخيص", sub: "فحص كل أجزاء الموقع، مكان أي عطل وطريقة حله، وسجل الأعطال", render: (v) => composeView(v, [[viewIntegrations, ["#cPublish"]], [viewDiagnose, ["*"]]]) },
   devguide: { title: "دليل المطوّر", sub: "كيف بُني المشروع وأين يوجد كل جزء — للمطورين", render: viewDevGuide },
   orders: { title: "الطلبات", sub: "كل طلبات المشاريع من الموقع في مكان واحد: ماذا اختار الزبون، ومن أين، وهداياه وخصمه", render: viewOrders },
   messages: { title: "الرسائل", sub: "رسائل نموذج التواصل", render: viewMessages },
   sales: { title: "لوحة المبيعات", sub: "من تواصل، ومن اشترى، ومن أين جاؤوا، وكيف نخدمهم", render: viewSales },
-  campaigns: { title: "العروض والهدايا", sub: "هدايا وخصم طلب المشروع، شريط العروض، عرض الحاسبة، والحملات البريدية", render: viewCampaigns },
+  campaigns: { title: "العروض والحملات", sub: "هدايا وخصم طلب المشروع، شريط العروض، عرض الحاسبة، والحملات البريدية", render: viewCampaigns },
   customers: { title: "الزبائن", sub: "كل من تواصل معك من الموقع — للمتابعة والعروض", render: viewCustomers },
   chats: { title: "المحادثات", sub: "دردشة مباشرة مع زوار الموقع", render: viewChats },
   team: { title: "الفريق والصلاحيات", sub: "من يدخل إلى لوحة التحكم وماذا يستطيع — بالدعوة فقط", render: viewTeam },
-  account: { title: "الحساب", sub: "بيانات الدخول والأمان", render: viewAccount },
+  account: { title: "الحساب", sub: "بيانات الدخول والأمان", render: (v) => composeView(v, [[viewAccount, ["الحساب", "تغيير بريد", "التحقق بخطوتين", "تغيير كلمة"]]]) },
+};
+
+// Every long page as sub-menus (the shared rule): branch row, then its sections; one section shows at a time.
+// [match, section]: "#id" a card id, ".class" a card class, otherwise the start of the card's title.
+const ONE = (items) => [{ k: "main", label: "", items }];
+const SECTIONS = {
+  overview: { groups: ONE([["today", "ملخص اليوم"], ["visits", "الزيارات"], ["behave", "سلوك الزوار والسرعة"]]), fallback: "today",
+    rules: [[".kpis", "today"], ["اليوم في خدمة الزبائن", "today"], ["الزيارات اليومية", "visits"], ["الأجهزة", "visits"], ["أكثر الصفحات", "visits"], ["مصادر الزيارات", "visits"], ["ماذا فعل", "behave"], ["سرعة الموقع", "behave"]] },
+  sales: { groups: ONE([["sum", "الملخص"], ["stages", "مراحل البيع"], ["src", "المصادر"], ["top", "الأكثر طلباً"], ["ch", "طرق التواصل"], ["lost", "أسباب الخسارة"], ["rate", "التقييمات"]]), fallback: "sum",
+    rules: [[".cust__kpi", "sum"], ["مراحل البيع", "stages"], ["من أين", "src"], ["أكثر ما يطلبه", "top"], ["طرق التواصل", "ch"], ["لماذا نخسر", "lost"], ["آخر التقييمات", "rate"]] },
+  campaigns: { groups: ONE([["gifts", "هدايا وخصم الطلب"], ["bar", "شريط العرض"], ["calc", "عرض الحاسبة"], ["mail", "حملة بريدية"]]),
+    rules: [["🎁", "gifts"], ["شريط العرض", "bar"], ["عرض «نرسل", "calc"], ["حملة بريدية", "mail"]] },
+  seo: { groups: ONE([["google", "نتائج Google"], ["share", "الأيقونة وصورة المشاركة"], ["gsc", "Google Search Console"], ["check", "فحص سريع"]]),
+    rules: [["كيف تظهر", "google"], ["العنوان والوصف", "google"], ["أيقونة الموقع", "share"], ["صورة المشاركة", "share"], ["ربط Google", "gsc"], ["فحص سريع", "check"]] },
+  appearance: { groups: ONE([["presets", "قوالب الألوان"], ["colors", "الألوان"], ["type", "الخط والحجم والوضع"], ["reset", "إعادة الضبط"]]),
+    rules: [["قوالب ألوان", "presets"], ["الألوان", "colors"], ["نوع الخط", "type"], ["حجم الخط", "type"], ["إعادة الضبط", "reset"]] },
+  team: { groups: ONE([["invite", "دعوة شخص"], ["members", "الأعضاء"], ["pending", "الدعوات"]]), rules: [["دعوة شخص", "invite"], ["أعضاء الفريق", "members"], ["دعوات بانتظار", "pending"]] },
+  account: { groups: ONE([["me", "البيانات"], ["email", "تغيير البريد"], ["pass", "كلمة المرور"], ["mfa", "التحقق بخطوتين"]]), rules: [["الحساب", "me"], ["تغيير بريد", "email"], ["تغيير كلمة", "pass"], ["التحقق بخطوتين", "mfa"]] },
+  notify: { groups: ONE([["alerts", "تنبيهات الرسائل"], ["reply", "الرد التلقائي"], ["tpl", "الردود الجاهزة"]]), rules: [["#cAlerts", "alerts"], ["بريد تنبيهات", "alerts"], ["#cReply", "reply"], ["#cTpl", "tpl"]] },
+  integrations: { groups: ONE([["tags", "أدوات القياس والإعلانات"], ["reports", "التقارير والمراقبة"]]), rules: [["#cTags", "tags"], ["#cReports", "reports"]] },
+  protect: { groups: ONE([["spam", "الرسائل المزعجة"], ["maint", "وضع الصيانة"]]), rules: [["#cSpam", "spam"], ["#cMaint", "maint"]] },
+  backup: { groups: ONE([["auto", "النسخة التلقائية والاسترجاع"], ["manual", "نسخة المحتوى"]]), rules: [["#cBackup", "auto"], ["نسخة احتياطية", "manual"]] },
+  diagnose: { groups: ONE([["checks", "الفحص"], ["conn", "الاتصالات"], ["errors", "سجل الأعطال"], ["publish", "تحديث الموقع"]]), fallback: "checks",
+    rules: [["#diagSum", "checks"], ["الاتصالات", "conn"], ["سجل الأعطال", "errors"], ["#cPublish", "publish"]] },
 };
 export let current = null;
 
@@ -90,9 +117,10 @@ export async function route() {
   current = VIEWS[name] ? name : "overview";
   $$("#sideNav a").forEach((a) => a.classList.toggle("on", a.dataset.view === current));
   $("#viewTitle").textContent = v.title; $("#viewSub").textContent = v.sub;
-  $("#topActions").innerHTML = ""; setSubnav("");
+  endSections(); $("#topActions").innerHTML = ""; setSubnav("");
   const view = $("#view");
   view.style.animation = "none"; view.offsetHeight; view.style.animation = "";
   view.innerHTML = '<div class="skeleton" style="height:120px"></div>';
-  try { await v.render(view); } catch (e) { console.error(e); view.innerHTML = `<div class="empty">حدث خطأ: ${esc(e.message)}</div>`; }
+  try { await v.render(view); const S = SECTIONS[current]; if (S && view.querySelector(".card")) sectionize(view, current, S.groups, S.rules, S.fallback); }
+  catch (e) { console.error(e); view.innerHTML = `<div class="empty">حدث خطأ: ${esc(e.message)}</div>`; }
 }

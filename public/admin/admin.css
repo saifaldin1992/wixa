@@ -794,3 +794,9 @@ body { font-size: 14.5px; }
 @media print { .sec-off { display: revert !important; } }
 .devguide--tabs { display: block; }
 .devguide--tabs .dg-body { max-width: 900px; }
+
+/* pages built from several pages' cards: one column of cards */
+.compose { display: contents; }
+.compose .ints, .compose .acct { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+/* stacks of fields never grow wider than their card (a long choice bar wraps instead) */
+.stack { grid-template-columns: minmax(0, 1fr); }

@@ -29,11 +29,20 @@ export const TEXT_FIELDS = [
 export async function viewContent(view) {
   settingsActions();
   const tabs = [["texts", "النصوص"], ["about", "من نحن"], ["industries", "حلول حسب المجال"], ["pricing", "الباقات والأسعار"], ["guarantees", "الضمانات"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"], ["privacy", "سياسة الخصوصية"], ["booking", "المواعيد"], ["ui", "نصوص الأزرار والقوائم"], ["nav", "القوائم"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
-  setSubnav(`<div class="seg" id="ctTabs">${tabs.map(([k, l]) => `<button data-k="${k}" class="${k === contentTab ? "on" : ""}">${l}</button>`).join("")}</div>`);
+  const BR = [["home", "الصفحة الرئيسية", ["texts", "industries", "pricing", "guarantees", "story", "process", "stats", "calc", "sections"]], ["pages", "الصفحات المستقلة", ["about", "faq", "careers", "privacy", "booking"]],
+    ["menus", "القوائم والأزرار", ["nav", "ui"]], ["company", "بيانات الشركة", ["brand", "contact"]]];
+  const label = Object.fromEntries(tabs);
+  const drawTabs = () => {
+    const br = BR.find(([, , ks]) => ks.includes(contentTab)) || BR[0];
+    setSubnav(`<div class="seg" id="ctBranch">${BR.map(([k, l, ks]) => `<button data-b="${k}" class="${br[0] === k ? "on" : ""}">${l}</button>`).join("")}</div>`
+      + `<div class="seg" id="ctTabs">${br[2].filter((k) => label[k]).map((k) => `<button data-k="${k}" class="${k === contentTab ? "on" : ""}">${k === "texts" ? "الواجهة الأولى والعناوين" : label[k]}</button>`).join("")}</div>`);
+    $$("#ctBranch button").forEach((b) => (b.onclick = () => { contentTab = BR.find(([k]) => k === b.dataset.b)[2][0]; drawTabs(); renderContentTab(); }));
+    $$("#ctTabs button").forEach((b) => (b.onclick = () => { contentTab = b.dataset.k; drawTabs(); renderContentTab(); }));
+  };
+  drawTabs();
   view.innerHTML = `<div class="split"><div><div class="card">
       <div id="ctBody"></div></div></div>${previewPane()}</div>`;
   bindPreview();
-  $$("#ctTabs button").forEach((b) => (b.onclick = () => { contentTab = b.dataset.k; $$("#ctTabs button").forEach((x) => x.classList.toggle("on", x === b)); renderContentTab(); }));
   renderContentTab();
 }
 

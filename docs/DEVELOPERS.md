@@ -141,7 +141,7 @@ node scripts/build.mjs                # بناء الواجهة يدوياً
 1. أنشئ ملفاً جديداً في `supabase/migrations/` باسم يبدأ بالتاريخ: `YYYYMMDDHHMMSS_وصف.sql`.
 2. اجعله آمناً للتكرار (`if not exists`، `create or replace`، `drop policy if exists`).
 3. طبّقه على **التجريبي** ثم جرّب، ثم على **الرئيسي** — من Supabase ← SQL Editor.
-4. لا تحذف أعمدة أو بيانات دون نسخة احتياطية (اللوحة ← التكاملات ← «أرسل نسخة الآن»).
+4. لا تحذف أعمدة أو بيانات دون نسخة احتياطية (اللوحة ← الإعدادات ← النسخ الاحتياطي ← «أرسل نسخة الآن»).
 
 ---
 
@@ -244,11 +244,11 @@ node scripts/build.mjs                # بناء الواجهة يدوياً
 |---|---|
 | الموقع لا يفتح إطلاقاً | Cloudflare (حالة الـ Worker، النطاق، تجاوز حد الطلبات اليومي في الخطة المجانية) |
 | الموقع يفتح بلا محتوى أو بالمحتوى الافتراضي | Supabase متوقف أو `SUPABASE_URL` خطأ |
-| التعديلات لا تظهر | الذاكرة المؤقتة ← «تحديث الآن» في التكاملات |
+| التعديلات لا تظهر | الذاكرة المؤقتة ← «تحديث الموقع» في النظام ← الفحص والتشخيص |
 | النموذج يقول «تعذّر الإرسال» | `WRITE_TOKEN`، أو Turnstile، أو حد الطلبات |
 | لا يصل بريد التنبيه | Resend (المفتاح، توثيق النطاق) أو بريد التنبيهات غير محدد |
 | لا أستطيع الدخول للوحة | Supabase Auth، أو التحقق بخطوتين |
-| الأرقام في «نظرة عامة» لا تظهر | `CF_ANALYTICS_TOKEN` أو حد طلبات Cloudflare المؤقت |
+| الأرقام في «الرئيسية» لا تظهر | `CF_ANALYTICS_TOKEN` أو حد طلبات Cloudflare المؤقت |
 | تصميم مكسور بعد نشر | فشل البناء ← سجل البناء في Cloudflare |
 
 سجلات الخادم المباشرة: Cloudflare ← Workers ← `wixa` ← Logs (أو `npx wrangler tail`).
@@ -282,3 +282,25 @@ node scripts/build.mjs                # بناء الواجهة يدوياً
 - Every order button (hero, top menu, packages, “solution for your field”, the estimator, “a project like this one”, service and project pages) goes to **`/order`** (`public/js/site/order.js`). The choice travels in `sessionStorage` (`wixa-order`) or the link (`?pkg=`, `?project=`, `?svc=`, `?field=`). Nothing chosen → the page opens on the packages.
 - The page posts to **`POST /api/order`** (`handleOrder`): name + phone required, **email optional everywhere on the site**. The Worker numbers it (`WX-YYMMDD-XXXX`), adds the gifts/discount from the dashboard settings (`requestOffer`), writes it with `submit_order` into **`public.orders`** (migration `20261114000000_orders.sql`), alerts the team and emails the client when an email was given.
 - Dashboard → **Orders** (`views/orders.js`): status (new → contacted → quoted → in progress → done / cancelled), private team note, call / WhatsApp / email, “quote” (pre-filled with the gifts and discount), and which buttons bring orders.
+
+## Dashboard organisation (Nov 2026)
+
+The sidebar has seven groups, each page in one place only:
+
+| Group | Pages |
+|---|---|
+| الرئيسية | overview (ملخص اليوم · الزيارات · سلوك الزوار والسرعة) |
+| خدمة الزبائن | orders · messages · chats (المحادثات · الإعدادات) · customers |
+| المبيعات والتسويق | sales · campaigns · seo — invoices go here when built |
+| محتوى الموقع | content «صفحات الموقع» (الصفحة الرئيسية · الصفحات المستقلة · القوائم والأزرار · بيانات الشركة) · projects · services · partners · testimonials · posts |
+| التصميم | appearance · brand «UI / UX» |
+| الإعدادات | notify · integrations · protect · backup · team · account |
+| النظام | diagnose · devguide — the audit log goes here when built |
+
+**Long pages are sub-menus.** In `public/admin/js/shell.js`, `SECTIONS[view]` lists the page's sections and which cards
+belong to each (`["#cardId" | ".class" | "start of the card title", "section"]`); the router calls `sectionize()` after
+the page is drawn. A new card is placed by adding one rule. Pages with branches (UI / UX, the developer guide, صفحات
+الموقع) call `sectionTabs()` themselves. A page's own filters/periods stay as extra rows under the section rows.
+
+**Pages made of other pages' cards** use `composeView(view, [[renderFn, ["#cardId", "title start", "*"]], …])` — the
+cards keep their own buttons and saving (notify, integrations, protect, backup, diagnose and account do this).
