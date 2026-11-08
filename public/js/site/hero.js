@@ -52,7 +52,7 @@ function runnerDot(d) {
 // ---------- hero: the globe's top sits right under the header bar ----------
 // The bar can be pushed down (the staging strip, a promo bar), so measure where it really ends.
 export function fitHeroTop() {
-  const hero = document.querySelector(".hero"), bar = document.querySelector(".header__bar, .header");
+  const hero = document.querySelector(".hero"), bar = document.querySelector(".header__bar"); // the visible bar only (the header box also holds the hidden phone menu)
   if (!hero || !bar) return;
   const fit = () => {
     if (scrollY > 40) return; // the bar slides away on scroll; measure it only at the top of the page
