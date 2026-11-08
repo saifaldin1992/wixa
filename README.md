@@ -1,13 +1,13 @@
 # wixa
 
-Backed by the Supabase project `oswetqychjhfrwulzkjy` (Northeast Asia, Seoul).
+Backed by the Supabase project `sdtsoppvyogdfamotrvx` (Central EU, Frankfurt); staging uses `jcxzghfgvqjdkwdlrbfl`.
 
 ## Setup
 
 ```bash
 cp .env.example .env
 npx supabase login
-npx supabase link --project-ref oswetqychjhfrwulzkjy
+npx supabase link --project-ref sdtsoppvyogdfamotrvx
 ```
 
 ## Database migrations
@@ -57,7 +57,7 @@ Import a repository → `saifaldin1992/wixa`. Every push then builds and deploys
 | Git branch | `main` | `staging` |
 | Cloudflare Worker | `wixa` | `wixa-staging` |
 | Deploy command | `npx wrangler deploy` | `npx wrangler deploy --env staging` |
-| Supabase project | `oswetqychjhfrwulzkjy` | `zwusczwhlshdgnoyesde` |
+| Supabase project | `sdtsoppvyogdfamotrvx` | `jcxzghfgvqjdkwdlrbfl` |
 
 Staging shows a red "نسخة تجريبية" bar and is excluded from search engines.
 

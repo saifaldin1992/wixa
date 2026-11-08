@@ -8,7 +8,7 @@ import { saveSettings } from "../settings.js";
 import { openQuote } from "../quote.js";
 import { disablePush, enablePush, isIOS, onChat, pushState, pushSupported, refreshChatCount } from "../chat-live.js";
 
-let filter = "open", current = null, unsub = null, me = null, typingTimer = 0;
+let filter = "open", branch = "list", current = null, unsub = null, me = null, typingTimer = 0;
 const QUICK = ["أهلاً بك 👋 كيف أقدر أساعدك؟", "شكراً لتواصلك معنا، لحظات وأرد عليك.", "ممكن تعطيني تفاصيل أكثر عن المشروع؟", "سأرسل لك عرض السعر على الواتساب خلال اليوم.", "هل يناسبك اتصال هاتفي قصير لنفهم احتياجك؟", "شكراً لك! إذا احتجت أي شيء آخر نحن هنا."];
 const quick = () => (settings.chat?.quick?.length ? settings.chat.quick : QUICK);
 const when = (t) => {
@@ -32,8 +32,12 @@ export async function viewChats(view) {
   const on = !!settings.chat?.on;
   const { data: myName, error: nameErr } = await sb.rpc("my_display_name");
   me = nameErr ? null : myName || "";
-  $("#topActions").innerHTML = `${me === null ? "" : `<button class="b" id="myName">${I.user} ${me ? `اسمك: ${esc(me)}` : "اختر اسمك"}</button>`}<button class="b" id="pushBtn">${I.bell} الإشعارات على هذا الجهاز</button>${role === "owner" ? `<button class="b" id="chatCfg">${I.gear} إعدادات الدردشة</button>` : ""}`;
-  setSubnav((role === "owner" ? `<div class="seg" id="chatBranch"><button type="button" class="on">المحادثات</button><button type="button" data-chatcfg>الإعدادات</button></div>` : "") + `<div class="seg chat__filter">${[["open", "مفتوحة"], ["closed", "مغلقة"], ["all", "الكل"]].map(([k, n]) => `<button type="button" data-f="${k}" class="${filter === k ? "on" : ""}">${n}</button>`).join("")}</div>`);
+  $("#topActions").innerHTML = `${me === null ? "" : `<button class="b" id="myName">${I.user} ${me ? `اسمك: ${esc(me)}` : "اختر اسمك"}</button>`}<button class="b" id="pushBtn">${I.bell} الإشعارات على هذا الجهاز</button>`;
+  if (role !== "owner") branch = "list";
+  setSubnav((role === "owner" ? `<div class="seg" id="chatBranch">${[["list", "المحادثات"], ["cfg", "الإعدادات"]].map(([k, n]) => `<button type="button" data-branch="${k}" class="${branch === k ? "on" : ""}">${n}</button>`).join("")}</div>` : "")
+    + (branch === "cfg" ? "" : `<div class="seg chat__filter">${[["open", "مفتوحة"], ["closed", "مغلقة"], ["all", "الكل"]].map(([k, n]) => `<button type="button" data-f="${k}" class="${filter === k ? "on" : ""}">${n}</button>`).join("")}</div>`));
+  $$("#chatBranch button").forEach((b) => (b.onclick = () => { if (branch === b.dataset.branch) return; branch = b.dataset.branch; current = null; viewChats(view); }));
+  if (branch === "cfg") { renderCfg(view); wireTop(); return; }
   view.innerHTML = `${me === "" ? `<div class="chat-off chat-off--name">اختر الاسم الذي يظهر للزبون عند ردّك (مثل «أحمد»)، بدل «فريق ويكسا». <button class="b b--sm b--primary" id="nameNow">اختيار الاسم</button></div>` : ""}${on ? "" : `<div class="chat-off">الدردشة متوقفة في الموقع — الزوار لا يرون زرها. ${role === "owner" ? '<button class="b b--sm b--primary" id="turnOn">تفعيل الدردشة الآن</button>' : "يستطيع المالك تفعيلها."}</div>`}
     <div class="chat ${current ? "chat--thread" : ""}">
       <aside class="chat__list">
@@ -151,6 +155,10 @@ export async function viewChats(view) {
   // settings (owner) and notifications
   const turnOn = async () => { settings.chat = { ...(settings.chat || {}), on: true }; await saveSettings(); viewChats(view); };
   if ($("#turnOn")) $("#turnOn").onclick = turnOn;
+  wireTop();
+
+  // the buttons above the page (your name, notifications) — on both branches
+  function wireTop() {
   const askName = () => {
     const foot = document.createElement("div"); foot.style.cssText = "display:flex;gap:8px";
     foot.innerHTML = `<button class="b" data-close>إلغاء</button><button class="b b--primary" data-go>${I.save}حفظ</button>`;
@@ -164,12 +172,14 @@ export async function viewChats(view) {
   };
   if ($("#myName")) $("#myName").onclick = askName;
   if ($("#nameNow")) $("#nameNow").onclick = askName;
-  const cfgTab = document.querySelector("[data-chatcfg]"); if (cfgTab) cfgTab.onclick = () => $("#chatCfg")?.click();
-  if ($("#chatCfg")) $("#chatCfg").onclick = () => {
+  wirePush();
+  }
+}
+
+// «الإعدادات» branch of المحادثات: a full sub-page (owner only), not a floating window
+function renderCfg(view) {
     const c = settings.chat || {};
-    const foot = document.createElement("div"); foot.style.cssText = "display:flex;gap:8px";
-    foot.innerHTML = `<button class="b" data-close>إلغاء</button><button class="b b--primary" data-go>${I.save}حفظ ونشر</button>`;
-    openModal("إعدادات الدردشة", `<div class="stack">
+    view.innerHTML = `<form class="card stack" id="chatCfgForm">
       <label class="switch"><input type="checkbox" id="cOn" ${c.on ? "checked" : ""}><i></i>إظهار زر الدردشة في الموقع</label>
       <label class="f"><span>رسالة الترحيب (عربي)</span><textarea id="cGa" rows="2">${esc(c.greeting_ar || "")}</textarea></label>
       <label class="f"><span>رسالة الترحيب (English)</span><textarea id="cGe" rows="2" dir="ltr">${esc(c.greeting_en || "")}</textarea></label>
@@ -186,15 +196,19 @@ export async function viewChats(view) {
       <fieldset class="fs"><legend>رسائل حالة الطلب — يراها الزبون عند تتبع طلبه في الدردشة وصفحة «تتبع طلبك»</legend>
         <p class="muted" style="margin:0 0 8px;font-size:13px">تتغير الحالة من صفحة الطلبات. اترك الحقل فارغاً لاستخدام النص الافتراضي.</p>
         ${ORDER_MSGS.map(([k, n]) => `<div class="grid2"><label class="f"><span>${n} (عربي)</span><textarea data-sm="${k}" data-l="ar" rows="2" placeholder="${esc(DEFAULT_STATUS_MSGS[k].ar)}">${esc(c.status_msgs?.[k]?.ar || "")}</textarea></label><label class="f"><span>${n} (English)</span><textarea data-sm="${k}" data-l="en" rows="2" dir="ltr" placeholder="${esc(DEFAULT_STATUS_MSGS[k].en)}">${esc(c.status_msgs?.[k]?.en || "")}</textarea></label></div>`).join("")}</fieldset>
-      <p class="muted" style="margin:0;font-size:13px">يظهر للزائر «متصلون الآن» عندما يكون أحد الفريق فاتحاً لوحة التحكم، وإلا يظهر أنكم غير متصلين وسترد لاحقاً. تصلك رسالة على البريد عند بدء محادثة جديدة، وعند كل رسالة جديدة إذا لم يكن أحد متصلاً.</p></div>`, foot, true);
-    $("[data-go]", foot).onclick = async () => {
+      <p class="muted" style="margin:0;font-size:13px">يظهر للزائر «متصلون الآن» عندما يكون أحد الفريق فاتحاً لوحة التحكم، وإلا يظهر أنكم غير متصلين وسترد لاحقاً. تصلك رسالة على البريد عند بدء محادثة جديدة، وعند كل رسالة جديدة إذا لم يكن أحد متصلاً.</p>
+      <div><button class="b b--primary" type="submit">${I.save}حفظ ونشر</button></div></form>`;
+    $("#chatCfgForm").onsubmit = async (e) => {
+      e.preventDefault();
       settings.chat = { ...c, on: $("#cOn").checked, greeting_ar: $("#cGa").value.trim(), greeting_en: $("#cGe").value.trim(), quick: $("#cQ").value.split("\n").map((x) => x.trim()).filter(Boolean).slice(0, 30),
-        hours: { on: $("#hOn").checked, days: $$(".days input:checked", $("#modalBody")).map((x) => +x.value), from: $("#hFrom").value || "09:00", to: $("#hTo").value || "17:00" },
+        hours: { on: $("#hOn").checked, days: $$(".days input:checked", view).map((x) => +x.value), from: $("#hFrom").value || "09:00", to: $("#hTo").value || "17:00" },
         status_msgs: Object.fromEntries(ORDER_MSGS.map(([k]) => [k, { ar: $(`[data-sm="${k}"][data-l="ar"]`).value.trim(), en: $(`[data-sm="${k}"][data-l="en"]`).value.trim() }])),
         nudge: { on: $("#nOn").checked, delay: Math.min(300, Math.max(5, Number($("#nDelay").value) || 25)), text_ar: $("#nAr").value.trim(), text_en: $("#nEn").value.trim() } };
-      await saveSettings(); closeModal(); viewChats(view);
+      await saveSettings();
     };
-  };
+}
+
+function wirePush() {
   const pushBtn = $("#pushBtn");
   const paintPush = async () => {
     const st = await pushState().catch(() => "off");

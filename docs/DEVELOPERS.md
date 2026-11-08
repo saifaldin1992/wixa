@@ -29,7 +29,7 @@
 | الرابط | https://wixa.dev | https://staging.wixa.dev |
 | فرع Git | `main` | `staging` |
 | الـ Worker | `wixa` | `wixa-staging` |
-| Supabase | `oswetqychjhfrwulzkjy` | `zwusczwhlshdgnoyesde` |
+| Supabase | `sdtsoppvyogdfamotrvx` | `jcxzghfgvqjdkwdlrbfl` |
 | KV (التخزين الخاص) | `16bfe7325d144e87a3fe12e9a6cbd744` | `1dc19bbb96cb4834af33d9b2c90e86a6` |
 | المهام المجدولة | تعمل | موقوفة عمداً |
 

@@ -702,11 +702,11 @@ body { font-size: 14.5px; }
 .top__title { letter-spacing: 0; }
 @media (max-width: 600px) { body { font-size: 14px; } .top__title { font-size: 22px; } .top__sub { font-size: 13px; } .b { font-size: 14px; } }
 
-/* chats: notifications on top (full width), then "your name" and "chat settings" side by side */
+/* chats: notifications on top, then "your name" (each full width); chat settings live in the «الإعدادات» tab */
 .top__actions:has(#pushBtn) { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .top__actions:has(#pushBtn) #pushBtn { grid-column: 1 / -1; order: -1; }
 .top__actions:has(#pushBtn) .b { justify-content: center; width: 100%; }
-.top__actions:has(#pushBtn):not(:has(#myName)) #chatCfg, .top__actions:has(#pushBtn):not(:has(#chatCfg)) #myName { grid-column: 1 / -1; }
+.top__actions:has(#pushBtn) #myName { grid-column: 1 / -1; }
 @media (min-width: 961px) { .top__actions:has(#pushBtn) { width: min(460px, 100%); } }
 
 /* page header: the title always sits beside the menu button (one line), a little smaller */

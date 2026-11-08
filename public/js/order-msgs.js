@@ -1,5 +1,5 @@
 /* What a customer reads for each order stage (track page and live chat). The dashboard can replace any of them
-   (المحادثات → إعدادات الدردشة → رسائل حالة الطلب); these are the defaults. No imports: shared by site and dashboard. */
+   (المحادثات → الإعدادات → رسائل حالة الطلب); these are the defaults. No imports: shared by site and dashboard. */
 export const DEFAULT_STATUS_MSGS = {
   new: { ar: "وصلنا طلبك ونراجعه الآن، وسنتصل بك خلال يوم عمل.", en: "We've received your order and are reviewing it; we'll call you within one working day." },
   contacted: { ar: "تواصلنا معك ونحدد معك تفاصيل ما تحتاجه بالضبط.", en: "We've been in touch and are pinning down exactly what you need." },

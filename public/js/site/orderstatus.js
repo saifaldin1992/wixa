@@ -1,5 +1,5 @@
 /* Order status for the customer, shared by the track page and the live chat: the friendly message for each stage
-   (editable in the dashboard → المحادثات → إعدادات الدردشة), the stage list, and the calls to the server. */
+   (editable in the dashboard → المحادثات → الإعدادات), the stage list, and the calls to the server. */
 import { lang, state } from "./core.js";
 
 export const STAGES = ["new", "contacted", "quoted", "in_progress", "done"];
