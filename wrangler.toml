@@ -59,6 +59,10 @@ crons = ["*/15 * * * *", "17 6 * * SUN", "23 3 * * *"]
 [version_metadata]
 binding = "CF_VERSION"
 
+# request logs with timings (Workers → Observability), to measure speed on the real site
+[observability]
+enabled = true
+
 [vars]
 SITE_ENV = "production"
 CF_ACCOUNT_ID = "1816dc735005fa354d10dfef69ac1450"
@@ -98,6 +102,9 @@ id = "1dc19bbb96cb4834af33d9b2c90e86a6"
 
 [env.staging.version_metadata]
 binding = "CF_VERSION"
+
+[env.staging.observability]
+enabled = true
 
 [env.staging.vars]
 SITE_ENV = "staging"

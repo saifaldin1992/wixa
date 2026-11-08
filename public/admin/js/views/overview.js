@@ -5,6 +5,7 @@ import { textFixesCard } from "../textfixes.js";
 
 // ---------------- view: overview ----------------
 export let period = 30;
+let pre = {}; // requests started as soon as the page opens
 export async function viewOverview(view) {
   setSubnav(`<div class="seg" id="period">${[7, 30, 90].map((d) => `<button data-d="${d}" class="${d === period ? "on" : ""}">${d} يوم</button>`).join("")}</div>`);
   $$("#period button").forEach((b) => (b.onclick = () => { period = +b.dataset.d; route(); }));
@@ -12,6 +13,8 @@ export async function viewOverview(view) {
   const cacheKey = `wixa-stats-${period}`;
   let cached = null;
   try { cached = JSON.parse(sessionStorage.getItem(cacheKey) || "null"); } catch {}
+  // the three parts of this page are asked for together, not one after the other
+  pre = { days: period, funnel: adminApi(`funnel?days=${period}`).catch(() => null), today: role !== "editor" ? todayData() : null };
   if (cached) paintOverview(view, cached);
   let s;
   try {
@@ -68,7 +71,8 @@ async function funnelCard(view, s) {
   if ($("#funnel")) return;
   const days = period;
   let f;
-  try { f = await adminApi(`funnel?days=${days}`); } catch { return; }
+  try { f = pre.days === days && pre.funnel ? await pre.funnel : await adminApi(`funnel?days=${days}`); } catch { return; }
+  if (!f) return;
   const t = f.total || {};
   const rows = [
     ["زيارات الموقع", s.visitors ?? null],
@@ -134,13 +138,17 @@ export function speedCard(s, source) {
 }
 
 // "Today": who is waiting for a reply and whose follow-up is due (owner and customer service)
-async function todayCard(view) {
+function todayData() {
   const today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
-  const [ch, fu, msg] = await Promise.all([
+  return Promise.all([
     sb.from("chats").select("id,name,last_at").eq("status", "open").eq("last_from", "visitor").order("last_at").limit(50),
     sb.from("customer_notes").select("key,follow_at,stage").lte("follow_at", today).not("stage", "in", "(won,lost)").limit(50),
     sb.from("contact_messages").select("id", { count: "exact", head: true }).eq("handled", false),
   ]);
+}
+async function todayCard(view) {
+  const [ch, fu, msg] = await (pre.today || todayData());
+  pre.today = null; // used once: a later visit to this page asks again
   const waiting = ch.error ? [] : ch.data || [], due = fu.error ? [] : fu.data || [], fresh = msg.count || 0;
   const old = document.getElementById("todayCard"); if (old) old.parentNode.removeChild(old);
   if (!waiting.length && !due.length && !fresh) return;

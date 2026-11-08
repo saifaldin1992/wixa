@@ -7,6 +7,7 @@ import { EMAIL_RE, ROLE_AR, SECURITY_HEADERS, allowed, cleanText, clientIp, dayK
 import { evBuf, unsubSig } from "./forms.js";
 import { cfgMemo, cleanConfig, getConfig, getSiteData, publishNow, saveConfig } from "../services/data.js";
 import { mailBox, notifyAddress, notifyOwner, sendAutoReply, sendOwnerMail } from "../services/mail.js";
+import { cachedStats } from "../services/stats.js";
 
 // GET/PUT /api/admin/integrations — read or change the integrations (admins only)
 export async function handleAdminIntegrations(request, env) {
@@ -69,84 +70,17 @@ export async function handleAdminPage(request, env) {
 }
 
 export async function handleAdminStats(request, env, url, ctx) {
-  const auth = adminSession(request, env); // checked in parallel with the work below
-  if (!env.CF_ANALYTICS_TOKEN || !env.CF_SITE_TAG) { const { error } = await auth; return error || json({ error: "analytics_not_configured" }, 503); }
-
-  const days = Math.min(90, Math.max(1, parseInt(url.searchParams.get("days") || "30", 10) || 30));
-  const day = (d) => d.toISOString().slice(0, 10);
-  const today = new Date();
-  const since = new Date(today.getTime() - (days - 1) * 864e5);
-  const since90 = new Date(today.getTime() - 89 * 864e5);
-  const q = `query($acc: String!, $tag: String!, $hosts: [string!], $since: Date!, $since90: Date!, $today: Date!) { viewer { accounts(filter: {accountTag: $acc}) {
-    byDay: rumPageloadEventsAdaptiveGroups(limit: 100, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since}, orderBy: [date_ASC]) { count sum { visits } dimensions { date } }
-    today: rumPageloadEventsAdaptiveGroups(limit: 1, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date: $today}) { count sum { visits } }
-    total90: rumPageloadEventsAdaptiveGroups(limit: 1, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since90}) { count }
-    countries: rumPageloadEventsAdaptiveGroups(limit: 6, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since}, orderBy: [sum_visits_DESC]) { sum { visits } dimensions { countryName } }
-    devices: rumPageloadEventsAdaptiveGroups(limit: 5, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since}, orderBy: [sum_visits_DESC]) { sum { visits } dimensions { deviceType } }
-    pages: rumPageloadEventsAdaptiveGroups(limit: 6, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since}, orderBy: [count_DESC]) { count dimensions { requestPath } }
-    refs: rumPageloadEventsAdaptiveGroups(limit: 6, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since, refererHost_neq: ""}, orderBy: [sum_visits_DESC]) { sum { visits } dimensions { refererHost } }
-    vitals: rumWebVitalsEventsAdaptiveGroups(limit: 1, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since}) {
-      count
-      quantiles { largestContentfulPaintP75 interactionToNextPaintP75 cumulativeLayoutShiftP75 }
-      sum { lcpGood lcpNeedsImprovement lcpPoor inpGood inpNeedsImprovement inpPoor clsGood clsNeedsImprovement clsPoor }
-    }
-    load: rumPerformanceEventsAdaptiveGroups(limit: 1, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since}) { count quantiles { pageLoadTimeP75 } }
-  } } }`;
-  const cache = caches.default;
-  const key = new Request(`https://wixa-cache.internal/stats/${env.SITE_ENV || "production"}/${days}`);
-  const loadAnalytics = async () => {
-  const r = await fetch("https://api.cloudflare.com/client/v4/graphql", {
-    method: "POST",
-    headers: { authorization: `Bearer ${env.CF_ANALYTICS_TOKEN}`, "content-type": "application/json" },
-    body: JSON.stringify({ query: q, variables: { acc: env.CF_ACCOUNT_ID, tag: env.CF_SITE_TAG, hosts: env.SITE_ENV === "staging" ? ["staging.wixa.dev"] : ["wixa.dev", "www.wixa.dev"], since: day(since), since90: day(since90), today: day(today) } }),
-  });
-  const g = await r.json().catch(() => ({}));
-  const a = g?.data?.viewer?.accounts?.[0];
-  if (!a) throw new Error(JSON.stringify(g?.errors || g).slice(0, 300));
-
-  const byDate = new Map((a.byDay || []).map((x) => [x.dimensions.date, x]));
-  const by_day = [];
-  for (let t = since.getTime(); t <= today.getTime(); t += 864e5) {
-    const d = day(new Date(t)), x = byDate.get(d);
-    by_day.push({ day: d, views: x?.count || 0, visitors: x?.sum?.visits || 0 });
-  }
-  const rows = (list, f, v) => (list || []).map((x) => ({ label: f(x), value: v(x) })).filter((x) => x.label);
-
-  return {
-    source: "cloudflare",
-    views: by_day.reduce((n, x) => n + x.views, 0),
-    visitors: by_day.reduce((n, x) => n + x.visitors, 0),
-    today_views: a.today?.[0]?.count || 0,
-    today_visitors: a.today?.[0]?.sum?.visits || 0,
-    views_90d: a.total90?.[0]?.count || 0,
-    by_day, // (the unread-messages count is added after, per admin — reading it here threw before it existed)
-    top_pages: rows(a.pages, (x) => x.dimensions.requestPath, (x) => x.count),
-    countries: rows(a.countries, (x) => x.dimensions.countryName, (x) => x.sum.visits),
-    devices: rows(a.devices, (x) => x.dimensions.deviceType, (x) => x.sum.visits),
-    referrers: rows(a.refs, (x) => x.dimensions.refererHost, (x) => x.sum.visits),
-    speed: speedReport(a.vitals?.[0], a.load?.[0]),
-  };
-  };
-
-  // the admin check and the cache read run together; Cloudflare is only asked after the check passes
-  const [session, hit] = await Promise.all([auth, cache.match(key)]);
+  const session = await adminSession(request, env);
   if (session.error) return session.error;
-  const age = hit ? Date.now() - (Number(hit.headers.get("x-saved-at")) || 0) : Infinity;
-  let data = null;
-  if (hit && age < 5 * 60e3) data = await hit.json();
-  else {
-    try {
-      data = await loadAnalytics();
-      ctx.waitUntil(cache.put(key, new Response(JSON.stringify(data), { headers: { "content-type": "application/json", "cache-control": "public, max-age=86400", "x-saved-at": String(Date.now()) } })));
-    } catch (err) {
-      console.error("analytics", err.message);
-      if (hit) data = { ...(await hit.json()), stale: true }; // Cloudflare busy: show the last numbers
-    }
-  }
+  if (!env.CF_ANALYTICS_TOKEN || !env.CF_SITE_TAG) return json({ error: "analytics_not_configured" }, 503);
+  const days = Math.min(90, Math.max(1, parseInt(url.searchParams.get("days") || "30", 10) || 30));
+  // the numbers (saved copy, never a wait on Cloudflare) and the unread messages (the admin's own session) together
+  const [data, msg] = await Promise.all([
+    cachedStats(env, ctx, days),
+    session.asUser("contact_messages?select=id&handled=eq.false", { method: "HEAD", headers: { prefer: "count=exact" } }).catch(() => null),
+  ]);
   if (!data) return json({ error: "analytics_failed" }, 502);
-  // unread messages, read with the admin's own session
-  const msg = await session.asUser("contact_messages?select=id&handled=eq.false", { method: "HEAD", headers: { prefer: "count=exact" } });
-  const messages_new = parseInt((msg.headers.get("content-range") || "/0").split("/")[1], 10) || 0;
+  const messages_new = parseInt((msg?.headers.get("content-range") || "/0").split("/")[1], 10) || 0;
   return json({ ...data, messages_new }, 200, { "cache-control": "private, no-store" });
 }
 
@@ -226,21 +160,6 @@ export async function handleAdminStatus(request, env, ctx) {
   return json({ env: env.SITE_ENV || "production", checked_at: new Date().toISOString(), items }, 200, { "cache-control": "no-store" });
 }
 
-// Core Web Vitals from real visitors (75th percentile, the value Google uses).
-// Cloudflare reports times in microseconds; we return milliseconds.
-export function speedReport(v, load) {
-  if (!v?.count) return null;
-  const q = v.quantiles || {}, n = v.sum || {};
-  const share = (k) => { const g = n[`${k}Good`] || 0, m = n[`${k}NeedsImprovement`] || 0, p = n[`${k}Poor`] || 0, t = g + m + p; return t ? { good: g / t, mid: m / t, poor: p / t, samples: t } : null; };
-  return {
-    samples: v.count,
-    load_ms: load?.quantiles?.pageLoadTimeP75 != null ? Math.round(load.quantiles.pageLoadTimeP75 / 1000) : null,
-    lcp_ms: q.largestContentfulPaintP75 != null ? Math.round(q.largestContentfulPaintP75 / 1000) : null,
-    inp_ms: q.interactionToNextPaintP75 != null ? Math.round(q.interactionToNextPaintP75 / 1000) : null,
-    cls: q.cumulativeLayoutShiftP75 ?? null,
-    lcp: share("lcp"), inp: share("inp"), cls_share: share("cls"),
-  };
-}
 // GET/PUT /api/admin/notify — read or change where new-message alerts are sent (admins only)
 export async function handleAdminNotify(request, env) {
   const { error } = await adminSession(request, env, ["owner"]);

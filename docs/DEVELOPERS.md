@@ -48,6 +48,7 @@ src/                          الخادم (Worker) — طبقات، كل طبق
   lib/window-shim.js          يجعل public/shared.js يعمل داخل الخادم
   services/data.js            محتوى الموقع وإعداداته: القراءة، التخزين المؤقت، إعادة النشر بعد تعديل اللوحة
   services/mail.js            الرسائل البريدية: تنبيهات الفريق وتأكيدات الزبائن
+  services/stats.js           أرقام الزيارات من Cloudflare: نسخة محفوظة تظهر فوراً وتُحدَّث في الخلفية
   jobs/scheduled.js           المهام المجدولة: المراقبة، التقرير الأسبوعي، النسخ الاحتياطي، تذكيرات المبيعات
   routes/pages.js             الصفحات المبنية في الخادم: الرئيسية، الخدمات، المشاريع، المقالات، الخصوصية
   routes/forms.js             النماذج العامة: الطلب، تتبع الطلب، التواصل، الحجز، التقييم، الأحداث، إلغاء الاشتراك
@@ -75,6 +76,8 @@ scripts/build.mjs             البناء بـ esbuild ← public/build
 supabase/migrations/*.sql     كل تغييرات قاعدة البيانات بالترتيب
 tests/                        الفحوص الآلية (npm test يشغّلها كلها بالترتيب):
   structure.mjs               بنية الخادم: الطبقات، لا حلقات استيراد، لا استيراد لملف غير موجود
+  stats-cache.mjs             أرقام الزيارات لا تنتظر Cloudflare بعد أول مرة (نسخة فورية + تحديث في الخلفية)
+  admin-netfail.mjs           لوحة التحكم بلا اتصال: رسالة «إعادة المحاولة» بدل الانتظار أو تسجيل الخروج
   smoke.mjs                   الصفحات والروابط والحماية الأساسية تعمل (Playwright)
   admin-phone.mjs             كل صفحات اللوحة تفتح على الجوال بلا أخطاء
   admin-layout.mjs            قياسات اللوحة على الجوال والكمبيوتر
@@ -385,3 +388,17 @@ at the page edge. Spacing between cards comes from the container's `gap` only.
 supabase-js 2.45.4 (dashboard), gsap 3.12.5 + ScrollTrigger and lenis 1.1.13 (site effects) are served from
 `public/vendor/`, one file per version — never from a CDN. The CSP allows scripts only from the site itself, Cloudflare
 Insights and Turnstile. To upgrade: add the new file with its version in the name, point the page at it, delete the old.
+
+## Dashboard speed (Nov 2026)
+
+- **Visitor numbers** (`services/stats.js`): Cloudflare can take ~6 s to answer a query it has not seen for a while.
+  The last numbers are kept in the edge cache and in KV (`stats:<days>`) and shown at once; when older than 5 minutes
+  they are refreshed in the background. Only the very first query of an environment waits.
+- **Sign-in check** (`lib/auth.js`): the role of a dashboard session is remembered for one minute (by a fingerprint of
+  the token, never past its expiry), so the several API calls of one page do not each ask the database. A role change or
+  removal takes effect within that minute.
+- **Home page** (`views/overview.js`): the numbers, the «today» card and the visitor-behaviour card are requested
+  together.
+- **Request logs**: Workers observability is on for both environments (Cloudflare → Workers → wixa / wixa-staging →
+  Observability) to read real timings per path.
+
