@@ -1307,7 +1307,7 @@ html[data-page]:not([data-page="home"]) main > section:first-of-type:not(.hero) 
 /* partners right under the hero on the homepage: a compact strip */
 html[data-page="home"] .partners { padding-top: clamp(32px, 5vw, 56px); }
 html[data-page="home"] .partners .head { margin-bottom: 20px; text-align: center; }
-html[data-page="home"] .partners .head__title { font-size: clamp(1.1rem, 2vw, 1.4rem); color: var(--muted); font-weight: 600; }
+/* "شركاؤنا" is a full-size section title like "خدماتنا" */
 html[data-page="home"] .partners .head__sub { display: none; }
 
 /* contact: "send" first, then WhatsApp; the main buttons share one size; the phone moved to the contact page */
@@ -1666,3 +1666,11 @@ html[data-theme="dark"] .lg-trace { stroke: color-mix(in srgb, var(--accent) 55%
 .hero__logo .hero__globe--spin { will-change: transform; }
 @media (prefers-reduced-motion: no-preference) { .hero__logo .hero__globe--spin { animation: globeSpinLayer 24s linear infinite; } }
 @keyframes globeSpinLayer { from { transform: scaleX(1); } 50% { transform: scaleX(-1); } to { transform: scaleX(1); } }
+
+/* home: no wave above "شركاؤنا" (it follows the hero directly) */
+html[data-page="home"] .partners .head > .wave { display: none; }
+/* tracing line: a little longer (10% of the outline), the site's exact cyan in both themes, a little less glow */
+.lg-trace, .lg-trace__edge, .lg-trace__halo, .lg-trace__halo2 { stroke-dasharray: .1 .9 !important; }
+html .lg-trace, html[data-theme="dark"] .lg-trace { stroke: var(--accent) !important; }
+.lg-trace__halo { opacity: .045 !important; }
+.lg-trace__halo2 { opacity: .09; }
