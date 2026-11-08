@@ -41,7 +41,7 @@ export async function buildHeroLogo() {
 function runnerDot(d) {
   const outer = d.split(/(?=M)/).sort((a, b) => b.length - a.length)[0];
   return `<g class="lg-runner">
-    <path class="lg-trace__edge" d="${outer}" pathLength="1"/><path class="lg-trace" d="${outer}" pathLength="1"/></g>`;
+    <path class="lg-trace__halo" d="${outer}" pathLength="1"/><path class="lg-trace__edge" d="${outer}" pathLength="1"/><path class="lg-trace" d="${outer}" pathLength="1"/></g>`;
 }
 
 // ---------- hero: floating particles ----------
