@@ -1,11 +1,12 @@
-// Dashboard API: sign-in check, roles, stats, settings, integrations, team, campaigns.
+// Dashboard API: stats, settings, integrations, team, campaigns, bookings, review links.
 
-import DEV_GUIDE from "../docs/DEVELOPERS.md";
-import { EMAIL_RE, SECURITY_HEADERS, allowed, cleanText, clientIp, dayKey, esc, fmtDate, json, newCode, rpcToken, sb, versionAssets } from "./core.js";
-import { cfgMemo, cleanConfig, getConfig, getSiteData, publishNow, saveConfig } from "./data.js";
+import DEV_GUIDE from "../../docs/DEVELOPERS.md";
+import { runBackup, runWeeklyReport } from "../jobs/scheduled.js";
+import { adminSession, sessionUser } from "../lib/auth.js";
+import { EMAIL_RE, ROLE_AR, SECURITY_HEADERS, allowed, cleanText, clientIp, dayKey, esc, fmtDate, json, newCode, rpcToken, sb, versionAssets } from "../lib/core.js";
 import { evBuf, unsubSig } from "./forms.js";
-import { runBackup, runWeeklyReport } from "./jobs.js";
-import { mailBox, notifyAddress, notifyOwner, sendAutoReply, sendOwnerMail } from "./mail.js";
+import { cfgMemo, cleanConfig, getConfig, getSiteData, publishNow, saveConfig } from "../services/data.js";
+import { mailBox, notifyAddress, notifyOwner, sendAutoReply, sendOwnerMail } from "../services/mail.js";
 
 // GET/PUT /api/admin/integrations — read or change the integrations (admins only)
 export async function handleAdminIntegrations(request, env) {
@@ -65,27 +66,6 @@ export async function handleAdminPage(request, env) {
   headers.set("cache-control", "no-cache");
   headers.set("x-robots-tag", "noindex, nofollow");
   return new Response(res.body, { status: res.status, headers });
-}
-
-// Admin-only endpoints: the caller's own Supabase session must belong to an admin.
-// Roles: owner (everything) · editor (content and look) · support (messages and appointments).
-// `roles` lists who may use an endpoint; omitted = any dashboard user.
-export async function adminSession(request, env, roles) {
-  const auth = request.headers.get("authorization") || "";
-  if (!auth.startsWith("Bearer ")) return { error: json({ error: "unauthorized" }, 401) };
-  const asUser = (path, init = {}) => fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, { ...init, headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, authorization: auth, "content-type": "application/json", ...(init.headers || {}) } });
-  let role = null;
-  try {
-    const r = await asUser("rpc/admin_role", { method: "POST", body: "{}" });
-    if (r.ok) role = await r.json();
-    else if (r.status === 404) { // before the team update is applied: every dashboard user is the owner
-      const adm = await asUser("rpc/is_admin", { method: "POST", body: "{}" });
-      role = adm.ok && (await adm.json()) === true ? "owner" : null;
-    }
-  } catch { return { error: json({ error: "auth_unavailable" }, 503) }; }
-  if (!role) return { error: json({ error: "forbidden" }, 403) };
-  if (roles && !roles.includes(role)) return { error: json({ error: "role_forbidden", role }, 403) };
-  return { asUser, role };
 }
 
 export async function handleAdminStats(request, env, url, ctx) {
@@ -278,15 +258,6 @@ export async function handleAdminNotify(request, env) {
   await env.PRIVATE.put("notify_email", email);
   return json({ email, source: "dashboard" });
 }
-export async function countMessage(env, row, isJob) {
-  if (!env.PRIVATE) return;
-  const key = `count:${dayKey()}`;
-  const c = (await env.PRIVATE.get(key, { type: "json" }).catch(() => null)) || { total: 0, jobs: 0, services: {} };
-  c.total++;
-  if (isJob) c.jobs++;
-  else { const s = row.services?.[0] || "استشارة عامة"; c.services[s] = (c.services[s] || 0) + 1; }
-  await env.PRIVATE.put(key, JSON.stringify(c), { expirationTtl: 60 * 864e2 });
-}
 
 // ---------------------------------------------------------------- message status + notes (dashboard)
 // Kept in the private store by message id: { status: new|working|won|lost, note }.
@@ -352,18 +323,6 @@ export async function handleAdminDevGuide(request, env) {
   const { error } = await adminSession(request, env, ["owner", "editor"]);
   if (error) return error;
   return new Response(DEV_GUIDE, { headers: { ...SECURITY_HEADERS, "content-type": "text/markdown; charset=utf-8", "cache-control": "no-store" } });
-}
-
-// ---------------------------------------------------------------- team: invitations and roles
-// owner: everything · editor: content and look · support: messages and appointments
-export const ROLE_AR = { owner: "مالك", editor: "محرر محتوى", support: "خدمة العملاء" };
-export async function sessionUser(request, env) {
-  const auth = request.headers.get("authorization") || "";
-  if (!auth.startsWith("Bearer ") || auth.length < 20) return null;
-  try {
-    const r = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, { headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, authorization: auth } });
-    return r.ok ? await r.json() : null;
-  } catch { return null; }
 }
 
 // GET /api/admin/team — members and pending invitations (owner)
@@ -443,9 +402,6 @@ export async function handleInviteClaim(request, env, ctx) {
   ctx.waitUntil(sendOwnerMail(env, `${inv.email} قبل الدعوة`, mailBox("عضو جديد في لوحة التحكم", `<p><b>${esc(inv.email)}</b> قبل الدعوة وصار بإمكانه الدخول بصلاحية <b>${ROLE_AR[inv.role]}</b>.</p><p>يمكنك تغيير صلاحيته أو إزالته من لوحة التحكم ← الفريق والصلاحيات.</p>`)).catch(() => {}));
   return json({ ok: true, role: inv.role });
 }
-
-// ---------- sales: chat ratings, email campaigns, unsubscribe links, daily reminders ----------
-export const STAGE_AR = { new: "جديد", contacted: "تواصلنا", quoted: "أُرسل العرض", won: "تم البيع", lost: "خسرناه" };
 
 // GET: audience size + sent campaigns · POST {subject, body, test}: send (test → only to the alerts address)
 export async function handleAdminCampaign(request, env) {

@@ -1,7 +1,6 @@
 // Site content and settings: read from Supabase, cached at the edge and in KV, republished after a dashboard change.
 
-import { CSP, SECURITY_HEADERS, SITE_TTL, deepMerge, esc, sb } from "./core.js";
-import { pickLang } from "./pages.js";
+import { CSP, SECURITY_HEADERS, SITE_TTL, deepMerge, esc, pickLang, sb } from "../lib/core.js";
 
 // ---------------------------------------------------------------- site content (cached)
 export let memo = { at: 0, checked: 0, text: null }; // per-isolate copy

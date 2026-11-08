@@ -1,4 +1,4 @@
-// Public pages rendered on the server: home and its sections, services, projects, blog, privacy, review.
+// Public pages rendered on the server: home and its sections, services, projects, blog, privacy.
 
 // WIXA — Cloudflare Worker: serves the site (public/) and the API.
 //
@@ -10,11 +10,11 @@
 //    token-checked database function, so nobody can write to the database directly.
 //  • Visits are counted by Cloudflare Web Analytics, not by this Worker.
 
-import { PRIVACY_DEFAULTS } from "../public/js/privacy-defaults.js";
-import { UI_DEFAULTS } from "../public/js/ui-strings.js";
-import { SOCIAL } from "../public/js/social-icons.js";
-import { SECURITY_HEADERS, WIXA, esc, fmtDate, notFound, safeHref, versionAssets, versioned } from "./core.js";
-import { cspWithTags, getConfig, getPosts, getSiteData, hasBypass, maintenancePage } from "./data.js";
+import { PRIVACY_DEFAULTS } from "../../public/js/privacy-defaults.js";
+import { UI_DEFAULTS } from "../../public/js/ui-strings.js";
+import { SOCIAL } from "../../public/js/social-icons.js";
+import { SECURITY_HEADERS, WIXA, esc, fmtDate, notFound, pickLang, safeHref, versionAssets, versioned } from "../lib/core.js";
+import { cspWithTags, getConfig, getPosts, getSiteData, hasBypass, maintenancePage } from "../services/data.js";
 
 // Cloudflare Web Analytics: privacy-friendly, cookie-less visit counting that never touches our database.
 export const beacon = (env) => env.CF_BEACON_TOKEN
@@ -29,24 +29,6 @@ export const HERO_DEFAULTS = {
 export const SEO_DEFAULTS = {
   en: { title: "WIXA — Websites, apps & software development in Iraq", description: "WIXA designs and builds websites, digital platforms, mobile apps and custom business systems in Iraq — from idea to launch." },
 };
-
-// Which language a visit opens in: ?lang= link → the visitor's saved choice (cookie) → dashboard setting →
-// the device language or the visitor's country. No header at all (most crawlers) → Arabic.
-export const ARAB_COUNTRIES = new Set(["IQ", "SA", "AE", "KW", "QA", "BH", "OM", "JO", "SY", "LB", "PS", "EG", "LY", "TN", "DZ", "MA", "SD", "YE", "MR"]);
-
-export function pickLang(request, setting) {
-  const q = new URL(request.url).searchParams.get("lang");
-  if (q === "ar" || q === "en") return q;
-  const c = (request.headers.get("cookie") || "").match(/(?:^|;\s*)wixa-lang=(ar|en)/);
-  if (c) return c[1];
-  if (setting === "ar" || setting === "en") return setting;
-  // Arabic anywhere in the device languages, or a visitor in an Arab country → Arabic; otherwise English.
-  // (Many phones and in-app browsers send English first even when the phone itself is in Arabic.)
-  const al = (request.headers.get("accept-language") || "").toLowerCase();
-  if (!al.trim() || /(^|,)\s*ar\b/.test(al)) return "ar";
-  if (ARAB_COUNTRIES.has(request.cf?.country)) return "ar";
-  return "en";
-}
 
 // Questions & answers for search engines (only when the FAQ section is shown)
 export function faqLd(st, lang) {

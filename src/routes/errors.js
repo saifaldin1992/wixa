@@ -1,7 +1,7 @@
 // Error log: browser and server errors kept in KV for the dashboard's diagnostics page.
 
-import { adminSession } from "./admin.js";
-import { allowed, clientIp, json } from "./core.js";
+import { adminSession } from "../lib/auth.js";
+import { allowed, clientIp, json } from "../lib/core.js";
 
 // ---------------------------------------------------------------- error log (site + server)
 // The last 50 problems, kept in the private store: errors in visitors' browsers (sent by the page) and on the server.

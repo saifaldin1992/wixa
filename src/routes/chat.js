@@ -1,8 +1,8 @@
 // Live chat for visitors, and web push notifications to the team.
 
-import { adminSession, sessionUser } from "./admin.js";
-import { PHONE_RE, allowed, b64u, cleanText, clientIp, esc, hex, json, rpcToken, sha256hex } from "./core.js";
-import { mailBox, sendOwnerMail } from "./mail.js";
+import { adminSession, sessionUser } from "../lib/auth.js";
+import { PHONE_RE, allowed, b64u, cleanText, clientIp, esc, hex, json, rpcToken, sha256hex } from "../lib/core.js";
+import { mailBox, sendOwnerMail } from "../services/mail.js";
 
 export async function chatError(r) {
   const t = await r.text().catch(() => "");

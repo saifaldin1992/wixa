@@ -1,10 +1,9 @@
 // Public forms and endpoints: project orders, order tracking, contact, booking, review, visit events, unsubscribe.
 
-import { countMessage } from "./admin.js";
-import { EMAIL_RE, SECURITY_HEADERS, allowed, baghdadNow, clientIp, dayKey, esc, hex, json, rpc, rpcToken, safeHref, sameText, sb, toHM, toMin, turnstileOk } from "./core.js";
-import { getConfig, getSiteData } from "./data.js";
-import { mailBox, notifyOwner, requestOffer, sendAutoReply, sendOwnerMail, sendRequestConfirmation } from "./mail.js";
-import { pickLang, simplePage } from "./pages.js";
+import { EMAIL_RE, SECURITY_HEADERS, allowed, baghdadNow, clientIp, dayKey, esc, hex, json, pickLang, rpc, rpcToken, safeHref, sameText, sb, toHM, toMin, turnstileOk } from "../lib/core.js";
+import { simplePage } from "./pages.js";
+import { getConfig, getSiteData } from "../services/data.js";
+import { mailBox, notifyOwner, requestOffer, sendAutoReply, sendOwnerMail, sendRequestConfirmation } from "../services/mail.js";
 
 // POST /api/order — the one order page (/order): whatever the visitor picked (a package, a field, the estimator,
 // a project like one of ours, a service) + name and phone. Gets a number, the gifts/discount from the dashboard,
@@ -164,6 +163,15 @@ export async function handleContact(request, env, ctx) {
   else ctx.waitUntil(sendAutoReply(env, cfg, row).catch((e) => console.error("autoreply", e)));
   ctx.waitUntil(countMessage(env, row, isJob).catch((e) => console.error("count", e)));
   return json({ ok: true, ...(reqNo ? { number: reqNo } : {}) }, 201);
+}
+export async function countMessage(env, row, isJob) {
+  if (!env.PRIVATE) return;
+  const key = `count:${dayKey()}`;
+  const c = (await env.PRIVATE.get(key, { type: "json" }).catch(() => null)) || { total: 0, jobs: 0, services: {} };
+  c.total++;
+  if (isJob) c.jobs++;
+  else { const s = row.services?.[0] || "استشارة عامة"; c.services[s] = (c.services[s] || 0) + 1; }
+  await env.PRIVATE.put(key, JSON.stringify(c), { expirationTtl: 60 * 864e2 });
 }
 export function bookingRules(st) {
   const b = st.booking || {};

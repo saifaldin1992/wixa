@@ -1,8 +1,8 @@
 // Shared building blocks: security headers, JSON responses, Supabase calls, rate limits, small text helpers.
 
 import "./window-shim.js";
-import "../public/shared.js";
-import BUILD_MANIFEST from "../public/build/manifest.json";
+import "../../public/shared.js";
+import BUILD_MANIFEST from "../../public/build/manifest.json";
 
 export const WIXA = globalThis.WIXA;
 // /build/site.js → /build/site.js?v=<fingerprint of its content> (see scripts/build.mjs)
@@ -47,6 +47,24 @@ export const deepMerge = (a, b) => {
   return out;
 };
 
+// Which language a visit opens in: ?lang= link → the visitor's saved choice (cookie) → dashboard setting →
+// the device language or the visitor's country. No header at all (most crawlers) → Arabic.
+export const ARAB_COUNTRIES = new Set(["IQ", "SA", "AE", "KW", "QA", "BH", "OM", "JO", "SY", "LB", "PS", "EG", "LY", "TN", "DZ", "MA", "SD", "YE", "MR"]);
+
+export function pickLang(request, setting) {
+  const q = new URL(request.url).searchParams.get("lang");
+  if (q === "ar" || q === "en") return q;
+  const c = (request.headers.get("cookie") || "").match(/(?:^|;\s*)wixa-lang=(ar|en)/);
+  if (c) return c[1];
+  if (setting === "ar" || setting === "en") return setting;
+  // Arabic anywhere in the device languages, or a visitor in an Arab country → Arabic; otherwise English.
+  // (Many phones and in-app browsers send English first even when the phone itself is in Arabic.)
+  const al = (request.headers.get("accept-language") || "").toLowerCase();
+  if (!al.trim() || /(^|,)\s*ar\b/.test(al)) return "ar";
+  if (ARAB_COUNTRIES.has(request.cf?.country)) return "ar";
+  return "en";
+}
+
 export const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 // ---------------------------------------------------------------- protection helpers
@@ -90,6 +108,10 @@ export const BAGHDAD_OFFSET = 3 * 3600e3; // Iraq: UTC+3, no daylight saving
 export const baghdadNow = () => new Date(Date.now() + BAGHDAD_OFFSET); // read with getUTC* = Baghdad wall clock
 export const toMin = (hm) => { const [h, m] = String(hm || "").split(":").map(Number); return (h || 0) * 60 + (m || 0); };
 export const toHM = (n) => `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`;
+
+// ---------------------------------------------------------------- team: invitations and roles
+// owner: everything · editor: content and look · support: messages and appointments
+export const ROLE_AR = { owner: "مالك", editor: "محرر محتوى", support: "خدمة العملاء" };
 export const rpcToken = (env, fn, body) => sb(env, `rpc/${fn}`, { method: "POST", body: JSON.stringify({ token: env.WRITE_TOKEN || "", ...body }) });
 export const newCode = () => [...crypto.getRandomValues(new Uint8Array(12))].map((b) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b % 32]).join("").replace(/(.{4})(?=.)/g, "$1-");
 
@@ -105,6 +127,9 @@ export const PHONE_RE = /^\+?[\d\s()-]{6,30}$/;
 // Web Push to the team's devices. The notification carries no content (the service worker shows a fixed text),
 // so no payload encryption is needed — only a VAPID signature. The key pair is created once and kept in KV.
 export const b64u = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+
+// ---------- sales: chat ratings, email campaigns, unsubscribe links, daily reminders ----------
+export const STAGE_AR = { new: "جديد", contacted: "تواصلنا", quoted: "أُرسل العرض", won: "تم البيع", lost: "خسرناه" };
 
 // unsubscribe links carry a signature, so nobody can unsubscribe someone else
 // compares two strings in the same time whatever they contain, so a signature cannot be guessed one character at a time

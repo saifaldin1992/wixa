@@ -1,9 +1,8 @@
-// Scheduled jobs: uptime monitor, weekly report, backups, sales reminders.
+// Scheduled jobs (cron): uptime monitor, weekly report, backups, sales reminders.
 
-import { STAGE_AR } from "./admin.js";
-import { baghdadNow, dayKey, esc, rpcToken, sb } from "./core.js";
-import { getConfig } from "./data.js";
-import { mailBox, notifyAddress, sendOwnerMail } from "./mail.js";
+import { STAGE_AR, baghdadNow, dayKey, esc, rpcToken, sb } from "../lib/core.js";
+import { getConfig } from "../services/data.js";
+import { mailBox, notifyAddress, sendOwnerMail } from "../services/mail.js";
 
 // Every 15 minutes: is the database answering, and does the site have its content? Emails only when the state changes
 // (two failed checks in a row before "down", to ignore a single hiccup).

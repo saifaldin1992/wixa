@@ -1,11 +1,11 @@
-// Dashboard → النظام → الفحص والتشخيص: checks every part of the site and how to fix it.
+// Dashboard → النظام → الفحص والتشخيص: checks every part of the site and says how to fix it.
 
-import { adminSession } from "./admin.js";
-import { json, rpcToken, sb } from "./core.js";
-import { getConfig, getSiteData, loadFromSupabase, memo } from "./data.js";
+import { adminSession } from "../lib/auth.js";
+import { json, rpcToken, sb } from "../lib/core.js";
 import { errBuf } from "./errors.js";
-import { notifyAddress } from "./mail.js";
 import { handleHome } from "./pages.js";
+import { getConfig, getSiteData, loadFromSupabase, memo } from "../services/data.js";
+import { notifyAddress } from "../services/mail.js";
 
 // ---------------------------------------------------------------- diagnostics
 // GET /api/admin/diagnose — checks every part the site depends on and says, for each problem, where it is and what to do.
@@ -138,7 +138,7 @@ export async function handleAdminDiagnose(request, env, ctx) {
       const html = await r.text();
       const ok = r.status === 200 && html.includes('id="wixa-data"');
       return ok ? { state: t > 1500 ? "warn" : "ok", detail: `تُبنى خلال ${t}ms`, fix: "بطء: افحص «الاتصال بـ Supabase» أعلاه." } : { state: "fail", detail: `حالة ${r.status}${r.status === 503 ? " — وضع الصيانة مفعّل؟" : ""}`, fix: "إن كان وضع الصيانة مفعّلاً أوقفه من التكاملات؛ وإلا راجع سجل الأعطال أدناه." };
-    }, "src/pages.js ← handleHome · سجلات Cloudflare ← Workers ← Logs", "راجع سجل الأعطال أدناه وسجلات الخادم في Cloudflare."),
+    }, "src/routes/pages.js ← handleHome · سجلات Cloudflare ← Workers ← Logs", "راجع سجل الأعطال أدناه وسجلات الخادم في Cloudflare."),
   ]);
 
   // 8. scheduled jobs, backups, SEO, maintenance

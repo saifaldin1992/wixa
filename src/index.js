@@ -8,17 +8,19 @@
 //    token-checked database function, so nobody can write to the database directly.
 //  • Visits are counted by Cloudflare Web Analytics, not by this Worker.
 //
-// The code is split by job into the files next to this one (see docs/DEVELOPERS.md → «الخادم»).
+// The code is split into layers next to this file — lib/ → services/ → jobs/ → routes/ → index.js — and a file
+// only imports from layers below it or beside it (tests/structure.mjs checks there are no import cycles).
+// See docs/DEVELOPERS.md → «الخادم».
 
-import { handleAdminBooking, handleAdminCampaign, handleAdminDevGuide, handleAdminFunnel, handleAdminIntegrations, handleAdminMsgMeta, handleAdminNotify, handleAdminPage, handleAdminRefresh, handleAdminReviewLink, handleAdminStats, handleAdminStatus, handleAdminTeam, handleAdminTest, handleInviteClaim } from "./admin.js";
-import { handleAdminPush, handleChat, handleChatRate } from "./chat.js";
-import { SECURITY_HEADERS, SITE_TTL, json, serveBuild } from "./core.js";
-import { getConfig, getPosts, getSiteData } from "./data.js";
-import { handleAdminDiagnose } from "./diagnose.js";
-import { handleAdminErrors, handleClientError, recordError } from "./errors.js";
-import { handleContact, handleEvent, handleOrder, handleOrderFind, handleReview, handleSlots, handleTrack, handleUnsubscribe } from "./forms.js";
-import { runBackup, runMonitor, runReminders, runWeeklyReport } from "./jobs.js";
-import { handleBlog, handleHome, handlePrivacy, handleProjectPage, handleServicePage } from "./pages.js";
+import { runBackup, runMonitor, runReminders, runWeeklyReport } from "./jobs/scheduled.js";
+import { SECURITY_HEADERS, SITE_TTL, json, serveBuild } from "./lib/core.js";
+import { handleAdminBooking, handleAdminCampaign, handleAdminDevGuide, handleAdminFunnel, handleAdminIntegrations, handleAdminMsgMeta, handleAdminNotify, handleAdminPage, handleAdminRefresh, handleAdminReviewLink, handleAdminStats, handleAdminStatus, handleAdminTeam, handleAdminTest, handleInviteClaim } from "./routes/admin.js";
+import { handleAdminPush, handleChat, handleChatRate } from "./routes/chat.js";
+import { handleAdminDiagnose } from "./routes/diagnose.js";
+import { handleAdminErrors, handleClientError, recordError } from "./routes/errors.js";
+import { handleContact, handleEvent, handleOrder, handleOrderFind, handleReview, handleSlots, handleTrack, handleUnsubscribe } from "./routes/forms.js";
+import { handleBlog, handleHome, handlePrivacy, handleProjectPage, handleServicePage } from "./routes/pages.js";
+import { getConfig, getPosts, getSiteData } from "./services/data.js";
 
 let health = { at: 0, supabase: "unknown" };
 

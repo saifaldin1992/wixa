@@ -1,6 +1,6 @@
-// Emails: alerts to the team, confirmation and auto-replies to customers.
+// Emails: alerts to the team, confirmations and auto-replies to customers.
 
-import { EMAIL_RE, WIXA, esc } from "./core.js";
+import { EMAIL_RE, WIXA, esc } from "../lib/core.js";
 import { getConfig, getSiteData, loadFromSupabase, memo } from "./data.js";
 
 export async function notifyAddress(env) {
