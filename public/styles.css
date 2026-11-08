@@ -1706,3 +1706,7 @@ html .partners__grid:not(.is-marquee) .partner:is(:hover, :focus-visible, :activ
 .pstep.on .pstep__num { background: var(--wave); border-color: transparent; color: #fff; }          /* how we work 1·2·3·4 */
 .cdots button.on { background: var(--wave); }                                                        /* dots under the swipe rows */
 .pkg__badge { background: var(--wave); }                                                             /* "best fit" tag */
+/* every "start your project" button (header, menu, hero, closing section) wears the wave colour */
+.header__nav .nav-cta, .head-start, .header__menu .menu-cta, .btn--primary[data-start] { background: var(--wave) !important; color: #fff !important; border-color: transparent; }
+.btn--primary[data-start] { box-shadow: 0 10px 30px -10px rgba(var(--accent-rgb), .55); }
+.btn--primary[data-start]:hover { box-shadow: 0 16px 40px -10px rgba(var(--accent-rgb), .65); }
