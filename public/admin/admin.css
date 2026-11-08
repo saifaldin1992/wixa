@@ -821,3 +821,10 @@ body { font-size: 14.5px; }
 .view > .card, .view > div > .card { margin: 0; }
 /* in a grid of cards the gap is the only spacing — no extra top margin on the 2nd card onwards */
 :is([class*="grid"], [class*="kpis"]) > .card + .card { margin-top: 0; }
+
+/* connection failed at start-up: a message and a retry button instead of a loading screen that never ends */
+.netfail { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 16px; background: color-mix(in srgb, #FBFAFE 92%, transparent); }
+.netfail__box { max-width: 420px; width: 100%; padding: 24px; border-radius: 22px; background: #fff; border: 1px solid var(--line, #E7E3EF); box-shadow: 0 24px 60px -20px rgba(20, 15, 31, .25); text-align: center; display: grid; gap: 10px; }
+.netfail__box b { font-size: 1.15rem; }
+.netfail__box p { margin: 0 0 6px; color: var(--muted, #5B6270); line-height: 1.8; }
+.netfail__box .b { justify-self: center; min-height: 48px; padding: 0 24px; }

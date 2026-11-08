@@ -129,9 +129,25 @@ async function claimInvite() {
   return r.ok ? "ok" : d.error || "failed";
 }
 
+// a request that never reached the database (no connection, or it took too long) — not an answer from it
+const netError = (e) => !!e && !e.code && /fetch|network|abort|timed?\s?out|load failed|connection/i.test(`${e.message || e}`);
+// shown instead of a loading screen that never ends: the connection failed, try again (the session is kept)
+function connectionFailed(retry) {
+  document.getElementById("netFail")?.remove();
+  const box = document.createElement("div");
+  box.id = "netFail"; box.className = "netfail"; box.setAttribute("role", "alert");
+  box.innerHTML = '<div class="netfail__box"><b>تعذّر الوصول إلى الخادم</b><p>الاتصال بطيء أو منقطع. تحقّق من الإنترنت ثم أعد المحاولة — لن تحتاج إلى تسجيل الدخول من جديد.</p><button type="button" class="b b--primary">إعادة المحاولة</button></div>';
+  box.querySelector("button").onclick = () => { box.remove(); retry(); };
+  document.body.append(box);
+}
+
 export async function enter(u) {
   // the admin check, the role and the site settings load together (one round trip instead of two)
-  let [{ data: isAdmin, error }, roleRes] = await Promise.all([sb.rpc("is_admin"), sb.rpc("admin_role"), loadSettings()]);
+  let isAdmin, error, roleRes, setRes;
+  try {
+    [{ data: isAdmin, error }, roleRes, setRes] = await Promise.all([sb.rpc("is_admin"), sb.rpc("admin_role"), loadSettings()]);
+  } catch (e) { error = e; }
+  if (netError(error) || netError(roleRes?.error) || netError(setRes?.error)) return connectionFailed(() => enter(u));
   if (!error && !isAdmin) {
     const claim = await claimInvite().catch(() => null);
     if (claim === "ok") ({ data: isAdmin, error } = await sb.rpc("is_admin"));

@@ -3,14 +3,19 @@ import { $, $$, DEFAULTS, I, merge, publishNow, savedJSON, sb, setSaved, setSett
 import { route } from "./shell.js";
 
 // ---------------- settings ----------------
+// true only after the real settings arrived: saving defaults over the site's settings must never happen
+let loaded = false;
 export async function loadSettings() {
   const { data, error } = await sb.from("site_settings").select("data").eq("id", 1).maybeSingle();
+  loaded = !error;
   if (error) toast("تعذّر تحميل الإعدادات", "err");
   setSettings(merge(DEFAULTS, data?.data || {}));
   setSaved(JSON.stringify(settings));
+  return { error };
 }
 export const isDirty = () => settings && JSON.stringify(settings) !== savedJSON;
 export async function saveSettings() {
+  if (!loaded) { toast("لم تُحمَّل إعدادات الموقع بعد — حدّث الصفحة ثم احفظ، حتى لا تُستبدل إعداداتك بالقيم الافتراضية.", "err"); return false; }
   const btn = $("#saveBtn"); if (btn) btn.disabled = true;
   const { error } = await sb.from("site_settings").upsert({ id: 1, data: settings, updated_at: new Date().toISOString() });
   if (btn) btn.disabled = false;

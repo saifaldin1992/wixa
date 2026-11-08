@@ -16,7 +16,15 @@ import { sb, setSb, toast } from "./js/core.js";
     const cfg = inline ? JSON.parse(inline.textContent) : await fetch("/api/config").then((r) => r.json());
     window.WIXA.markEnv(cfg.env);
     if (cfg.env === "staging") document.title = `[تجريبي] ${document.title}`;
-    setSb(window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, { auth: { persistSession: true, autoRefreshToken: true } }));
+    // every database request gives up after 20 s (uploads excepted), so a stalled phone connection shows a "try again"
+    // message instead of a loading screen that never ends
+    const timedFetch = (url, opts = {}) => {
+      if (String(url).includes("/storage/v1/")) return fetch(url, opts);
+      const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 20000);
+      opts.signal?.addEventListener("abort", () => ctl.abort());
+      return fetch(url, { ...opts, signal: ctl.signal }).finally(() => clearTimeout(timer));
+    };
+    setSb(window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, { auth: { persistSession: true, autoRefreshToken: true }, global: { fetch: timedFetch } }));
   } catch (e) {
     document.body.innerHTML = '<p style="padding:40px;text-align:center">تعذّر الاتصال بالخادم. حدّث الصفحة.</p>';
     return;
