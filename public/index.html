@@ -50,7 +50,17 @@
 </head>
 <body class="is-loading">
 
-  <div class="loader" aria-hidden="true"><div class="loader__mark"><svg viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg></div></div>
+  <!-- loading screen, the same as the dashboard's: only while the page's script has not started (slow connection);
+       shown by /home-pre.js, so a browser without scripts never sees it -->
+  <div class="boot" id="boot" role="status">
+    <svg class="boot__mark" viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg>
+    <p class="boot__wait"><span lang="ar">جارٍ التحميل…</span><span lang="en">Loading…</span></p>
+    <p class="boot__slow"><span lang="ar">التحميل يتأخر — الاتصال بطيء أو منقطع.</span><span lang="en">This is taking a while — the connection is slow.</span></p>
+    <div class="boot__btns">
+      <button type="button" class="btn btn--primary" id="bootRetry"><span lang="ar">إعادة المحاولة</span><span lang="en">Try again</span></button>
+      <button type="button" class="btn btn--ghost" id="bootShow"><span lang="ar">عرض الصفحة</span><span lang="en">Show the page</span></button>
+    </div>
+  </div>
 
   <!-- Header -->
   <header class="header" id="header">

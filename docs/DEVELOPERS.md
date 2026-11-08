@@ -413,12 +413,14 @@ Nothing may leave a white page or wait for ever (`tests/no-white-page.mjs`, `tes
 
 | Where | Rule | File |
 |---|---|---|
-| Home page | sections stay hidden until `main.js` reveals them; if it has not marked `html.site-ready` within 4 s, `html.no-anim` shows everything statically | `public/home-pre.js`, `public/js/main.js` |
+| Home page | `#boot` loading screen (logo + «جارٍ التحميل», the same as the dashboard) while `html.booting` is set and `html.site-ready` is not; after 10 s «التحميل يتأخر» + «إعادة المحاولة» / «عرض الصفحة» (shows the content without animations). Without scripts the screen never shows | `public/home-pre.js`, `public/index.html`, `styles.css` |
 | Dashboard start | `#boot` loading screen until `#auth` or `#app` shows (CSS `:has`); after 10 s «التحميل يتأخر» + reload button | `public/admin/boot.js`, `admin.css` |
 | Dashboard → Supabase | every request gives up after 20 s (uploads excepted) — the client's `global.fetch` | `public/admin/admin.js` |
 | Dashboard → `/api/admin/*` | `timedFetch()`: 20 s for reads, 60 s for sending; a toast says the connection is slow | `public/admin/js/core.js` |
 | Start-up network failure | `connectionFailed()` retry box; the session is kept (a network error is never «no admin permission») | `public/admin/js/auth.js` |
 | Settings not loaded | `saveSettings()` refuses, so defaults never overwrite the real settings | `public/admin/js/settings.js` |
+
+**Every dashboard button responds** (`tests/admin-buttons.mjs`): each page is opened with sample data and every button is clicked; one that changes nothing fails the test. It caught the round «+» add button of projects / services / partners / reviews, whose handler had ended up in unreachable code.
 
 **Event handlers:** read `e.currentTarget` into a variable *before* the first `await` — after it the event is gone
 (`null`), which broke «رابط رأي لعميل».

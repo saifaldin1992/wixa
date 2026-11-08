@@ -122,7 +122,6 @@ export async function handleHome(request, env, ctx, pageName = "home") {
     .on("#langBtn", { element: (el) => el.setInnerContent(lang === "ar" ? "EN" : "ع") })
     .on(".hero", { element: (el) => el.setAttribute("class", `${el.getAttribute("class") || ""} in in-hero`) })
     .on("body", { element: (el) => el.removeAttribute("class") })
-    .on(".loader", { element: (el) => el.remove() })
     .on("body", { element: (el) => {
       if (!preview) el.append(beacon(env), { html: true });
       if (Object.keys(tags).length) el.append(`<script id="wixa-tags" type="application/json">${JSON.stringify(tags)}</script><script type="module" src="${versioned("/build/tags.js")}"></script>`, { html: true });

@@ -1,6 +1,6 @@
 // Never a white page, even when the connection breaks:
-//  1. home page whose script never arrives → after 4 s the content is shown without animations;
-//  2. home page normally → the script reveals it (and the safety net stays out of the way);
+//  1. home page whose script never arrives → the loading screen at once, after 10 s «إعادة المحاولة» / «عرض الصفحة»;
+//  2. home page normally → the loading screen gives way to the page;
 //  3. dashboard whose database never answers → a loading screen at once, then «إعادة المحاولة» after 10 s;
 //  4. dashboard normally → the loading screen is gone.
 // Usage: BASE=http://localhost:8787 node tests/no-white-page.mjs
@@ -18,11 +18,22 @@ for (const blocked of [true, false]) {
   if (blocked) await ctx.route(/\/build\/site\.js/, () => {}); // the request never finishes
   const p = await ctx.newPage();
   await p.goto(`${BASE}/`, { waitUntil: "commit" });
-  await p.waitForTimeout(blocked ? 5000 : 2500);
-  const title = await visible(p, ".hero__title, .hero h1");
-  const cls = await p.evaluate(() => document.documentElement.className);
-  if (blocked) check(title && /no-anim/.test(cls), "home page without its script: content shown after 4 s", cls);
-  else check(title && /site-ready/.test(cls), "home page normally: shown by its script", cls);
+  if (blocked) {
+    await p.waitForTimeout(1500);
+    const early = await visible(p, "#boot") && await visible(p, "#boot .boot__wait") && await p.evaluate(() => !!document.querySelector("#boot .boot__mark")?.getBoundingClientRect().height);
+    await p.waitForTimeout(9500);
+    const slow = await visible(p, "#bootRetry") && await visible(p, "#bootShow");
+    check(early && slow, "home page without its script: logo + «جارٍ التحميل» at once, retry / show-the-page after 10 s");
+    await p.click("#bootShow");
+    await p.waitForTimeout(400);
+    const title = await visible(p, ".hero__title, .hero h1"), gone = !(await visible(p, "#boot"));
+    check(title && gone, "…«عرض الصفحة» shows the content");
+  } else {
+    await p.waitForTimeout(2500);
+    const title = await visible(p, ".hero__title, .hero h1");
+    const cls = await p.evaluate(() => document.documentElement.className);
+    check(title && /site-ready/.test(cls) && !(await visible(p, "#boot")), "home page normally: the loading screen gives way to the page", cls);
+  }
   await ctx.close();
 }
 

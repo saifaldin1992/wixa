@@ -67,7 +67,6 @@ if (PREVIEW) addEventListener("message", (e) => {
   try { setupChat(); } catch (e) { reportError(`chat: ${e.message}`, "chat.js", 0); } // the chat can never stop the site from opening
   try { setupPromo(); setupExitOffer(); } catch (e) { reportError(`promo: ${e.message}`, "promo.js", 0); }
   // reveal right away (the content is already in the page); scroll effects start once everything has loaded
-  $(".loader")?.classList.add("done");
   document.body.classList.remove("is-loading");
   requestAnimationFrame(() => { $(".hero").classList.add("in", "in-hero"); document.documentElement.classList.add("site-ready"); });
   let moving = false;
