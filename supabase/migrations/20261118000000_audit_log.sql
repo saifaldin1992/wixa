@@ -1,4 +1,4 @@
--- STATUS: written, not yet applied to staging or production (waiting for the owner's approval of the database change).
+-- STATUS: applied on staging 2026-11-08 (by the owner in the SQL editor); production: not yet.
 -- Runs once on a fresh database (no "drop … if exists": nothing to replace).
 -- Change log («سجل التعديلات»): every change made from the dashboard — who (email + role at the time), what
 -- (table, row, field: before → after) and when. Read by the owner only. Nobody can edit or delete an entry, not even
