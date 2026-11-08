@@ -27,6 +27,14 @@ export async function handleChat(request, env, ctx, action) {
   if (action === "start") {
     const name = cleanText(b.name, 80), phone = cleanText(b.phone, 30), body = cleanText(b.body, 2000);
     if (!name || !body || !PHONE_RE.test(phone)) return json({ error: "invalid" }, 422);
+    // at most 6 new chats a day from one address (a real visitor never needs more): stops a flood of fake chats and the
+    // team notifications they would trigger. The address is kept only as a fingerprint, for one day.
+    if (env.PRIVATE) {
+      const dayKey = `chatday:${new Date().toISOString().slice(0, 10)}:${(await sha256hex(`${env.WRITE_TOKEN || ""}:${ip}`)).slice(0, 24)}`;
+      const used = parseInt((await env.PRIVATE.get(dayKey).catch(() => null)) || "0", 10) || 0;
+      if (used >= 6) return json({ error: "rate_limited" }, 429);
+      ctx.waitUntil(env.PRIVATE.put(dayKey, String(used + 1), { expirationTtl: 86400 }).catch(() => {}));
+    }
     const key = hex(crypto.getRandomValues(new Uint8Array(32)));
     const topic = cleanText(b.topic, 120);
     const r = await rpcToken(env, "chat_start", { p: { secret: await sha256hex(key), name, phone, body, topic, marketing: b.marketing === true, source: cleanText(b.source, 60), page: cleanText(b.page, 200) } });
