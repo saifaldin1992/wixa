@@ -43,7 +43,8 @@ export async function textFixesCard(host) {
       <p>صياغة أوضح بالعربي («مشروعك» بدل «مشروعكم»، «ونبقى معك بعدها»…) وإنجليزي موحّد (launch, analyze, catalog, Our services…). اضغط مرة واحدة لتطبيقها على الموقع.</p></div>
       <button class="b b--primary" id="applyFixes">تطبيق التصحيحات</button></div></div>`);
   $("#applyFixes").onclick = async (e) => {
-    e.currentTarget.disabled = true;
+    const btn = e.currentTarget; // the event's target is gone once a request returns
+    btn.disabled = true;
     try {
       const next = JSON.parse(fixed);
       for (const k of Object.keys(next)) settings[k] = next[k];
@@ -56,7 +57,7 @@ export async function textFixesCard(host) {
       $("#fixesCard")?.remove();
     } catch (err) {
       toast(`تعذّر التطبيق: ${esc(err.message || "")}`, "err");
-      e.currentTarget.disabled = false;
+      btn.disabled = false;
     }
   };
 }

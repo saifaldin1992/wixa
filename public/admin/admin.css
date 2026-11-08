@@ -828,3 +828,14 @@ body { font-size: 14.5px; }
 .netfail__box b { font-size: 1.15rem; }
 .netfail__box p { margin: 0 0 6px; color: var(--muted, #5B6270); line-height: 1.8; }
 .netfail__box .b { justify-self: center; min-height: 48px; padding: 0 24px; }
+
+/* loading screen until the sign-in screen or the dashboard appears (public/admin/boot.js) */
+.boot { position: fixed; inset: 0; z-index: 150; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 16px; background: #FBFAFE; text-align: center; color: #5B6270; }
+.boot__mark { width: 84px; height: auto; color: #5B21B6; animation: bootPulse 1.4s ease-in-out infinite; }
+.boot p { margin: 0; font-size: 1rem; }
+.boot .b { min-height: 48px; padding: 0 24px; }
+@keyframes bootPulse { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .boot__mark { animation: none; } }
+body:has(#auth:not([hidden])) .boot, body:has(#app:not([hidden])) .boot, body:has(#netFail) .boot { display: none; }
+
+.boot__mark { fill: currentColor; }

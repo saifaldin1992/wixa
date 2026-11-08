@@ -191,14 +191,15 @@ function reviewLinkDialog() {
       <div style="display:flex;flex-wrap:wrap;gap:8px"><button class="b b--sm" id="rlCopy">نسخ الرابط</button><a class="b b--sm" id="rlWa" target="_blank" rel="noopener">إرسال عبر واتساب</a></div></div>`;
   openModal("رابط رأي لعميل", body, "", true);
   $("#rlMake").onclick = async (e) => {
-    e.currentTarget.disabled = true;
+    const btn = e.currentTarget; // the event's target is gone once the request returns
+    btn.disabled = true;
     try {
       const r = await adminApi("review-link", "POST", { name: $("#rlName").value.trim(), lang: $("#rlLang").value });
       $("#rlUrl").value = r.url; $("#rlOut").hidden = false;
       const msg = $("#rlLang").value === "en" ? `Thank you for working with WIXA! We'd love your feedback: ${r.url}` : `شكراً لثقتك بويكسا! يسعدنا أن تكتب رأيك في تجربتك معنا من هنا: ${r.url}`;
       $("#rlWa").href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
     } catch { toast("تعذّر إنشاء الرابط", "err"); }
-    finally { e.currentTarget.disabled = false; }
+    finally { btn.disabled = false; }
   };
   $("#rlCopy").onclick = async () => { try { await navigator.clipboard.writeText($("#rlUrl").value); toast("تم النسخ ✓"); } catch { $("#rlUrl").select(); } };
 }

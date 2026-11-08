@@ -19,6 +19,14 @@
 </head>
 <body>
 
+  <!-- shown until the sign-in screen or the dashboard appears: never a white page -->
+  <div class="boot" id="boot" role="status">
+    <svg class="boot__mark" viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg>
+    <p>جارٍ التحميل…</p>
+    <button type="button" class="b b--primary" id="bootRetry" hidden>إعادة المحاولة</button>
+  </div>
+  <script src="/admin/boot.js"></script>
+
   <!-- Auth: one centred column — logo, form, "forgot password", then "I have an invitation" -->
   <section class="auth" id="auth" hidden>
     <div class="auth__box">

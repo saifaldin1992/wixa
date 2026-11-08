@@ -21,8 +21,8 @@ export async function serveBuild(request, env, url) {
 }
 
 export const SITE_TTL = 60; // seconds the site content may be served from cache
-// Keep in sync with public/_headers. The sha256 is the inline theme script in index.html.
-export const CSP = "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com https://challenges.cloudflare.com 'sha256-NVKT0UrdROLsGcatClpvEhxXytwpjLyEshzIKuByDnE='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://cloudflareinsights.com https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'";
+// Keep in sync with public/_headers. No inline scripts anywhere: the home page's early script is /home-pre.js.
+export const CSP = "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://cloudflareinsights.com https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'";
 export const SECURITY_HEADERS = {
   "content-security-policy": CSP,
   "permissions-policy": "camera=(), microphone=(), geolocation=()",

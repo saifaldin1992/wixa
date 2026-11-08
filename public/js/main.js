@@ -41,7 +41,7 @@ if (PREVIEW) addEventListener("message", (e) => {
   if (d.settings) { state.settings = merge(DEFAULTS, d.settings); applyUiTexts(state.settings); }
   for (const k of ["projects", "services", "partners", "testimonials"]) if (d[k]) state[k] = d[k];
   if (d.lang) setLang(d.lang);
-  render(); $(".hero").classList.add("in", "in-hero");
+  render(); $(".hero").classList.add("in", "in-hero"); document.documentElement.classList.add("site-ready");
 });
 
 // ---------- boot ----------
@@ -69,7 +69,7 @@ if (PREVIEW) addEventListener("message", (e) => {
   // reveal right away (the content is already in the page); scroll effects start once everything has loaded
   $(".loader")?.classList.add("done");
   document.body.classList.remove("is-loading");
-  requestAnimationFrame(() => $(".hero").classList.add("in", "in-hero"));
+  requestAnimationFrame(() => { $(".hero").classList.add("in", "in-hero"); document.documentElement.classList.add("site-ready"); });
   let moving = false;
   const motion = () => { if (!moving) { moving = true; setupMotion(); } };
   if (document.readyState === "complete") motion();

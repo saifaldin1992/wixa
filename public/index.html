@@ -45,12 +45,7 @@
   <link rel="preload" href="/fonts/alexandria/alexandria-arabic-400-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link id="wixa-font" rel="stylesheet" href="/fonts/alexandria.css">
   <link rel="stylesheet" href="/build/site.css">
-  <script>
-    // Apply the saved (or system) theme before first paint to avoid a flash.
-    (function () { var t, m; try { t = localStorage.getItem("wixa-theme"); m = (JSON.parse(localStorage.getItem("wixa-site") || "{}").settings || {}).mode; } catch (e) {}
-      if (t !== "light" && t !== "dark") t = (m === "light" || m === "dark") ? m : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-      document.documentElement.setAttribute("data-theme", t); })();
-  </script>
+  <script src="/home-pre.js"></script>
   <script src="/build/shared.js" defer></script>
 </head>
 <body class="is-loading">
