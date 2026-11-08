@@ -36,16 +36,12 @@ export async function buildHeroLogo() {
     ${runnerDot(logoD)}`;
 }
 
-// A short piece of the site's wave line (the curve that separates the sections, same colours) travels along the
-// logo's outer outline (the longest sub-path), turning with it.
+// A short stroke in the site's wave colours that draws itself along the logo's outer outline (the longest sub-path),
+// bending with every curve as if a pen were tracing the logo.
 function runnerDot(d) {
   const outer = d.split(/(?=M)/).sort((a, b) => b.length - a.length)[0];
-  const motion = anim ? `<animateMotion dur="11s" begin="2.8s" repeatCount="indefinite" rotate="auto" path="${outer}"/>` : "";
-  // without animation the dot simply rests at the start of the outline
-  const start = outer.match(/M\s*([-\d.]+)[ ,]([-\d.]+)/) || [0, 0, 0];
-  return `<g class="lg-runner" ${anim ? "" : `transform="translate(${start[1]} ${start[2]})"`}>
-    <defs><linearGradient id="lgWave" x1="0" x2="1"><stop offset="0" style="stop-color:var(--fg)"/><stop offset=".5" style="stop-color:var(--accent)"/><stop offset="1" style="stop-color:var(--fg)"/></linearGradient></defs>
-    <path class="lg-runner__edge" d="M-190 0 C -127 -36, -63 -36, 0 0 S 127 36, 190 0"/><path class="lg-runner__wave" d="M-190 0 C -127 -36, -63 -36, 0 0 S 127 36, 190 0"/>${motion}</g>`;
+  return `<g class="lg-runner">
+    <path class="lg-trace__edge" d="${outer}" pathLength="1"/><path class="lg-trace" d="${outer}" pathLength="1"/></g>`;
 }
 
 // ---------- hero: floating particles ----------

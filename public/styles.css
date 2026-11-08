@@ -1623,3 +1623,9 @@ html[data-theme="dark"] .hero__logo .hero__globe { opacity: .12; }
 /* the wave piece that runs along the hero logo */
 .lg-runner__wave { fill: none; stroke: url(#lgWave); stroke-width: 18; stroke-linecap: round; filter: drop-shadow(0 0 10px rgba(var(--accent-rgb), .55)); }
 .lg-runner__edge { fill: none; stroke: var(--bg); stroke-width: 34; stroke-linecap: round; opacity: .9; }
+/* the tracing stroke: a short dash (7% of the outline) that runs round the logo every 11s */
+.lg-trace, .lg-trace__edge { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: .07 .93; stroke-dashoffset: 0; }
+.lg-trace { stroke: var(--accent); stroke-width: 16; filter: drop-shadow(0 0 10px rgba(var(--accent-rgb), .6)); }
+.lg-trace__edge { stroke: var(--bg); stroke-width: 30; opacity: .85; }
+@media (prefers-reduced-motion: no-preference) { .hero.in :is(.lg-trace, .lg-trace__edge) { animation: lgTrace 11s linear 2.8s infinite; } }
+@keyframes lgTrace { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -1; } }
