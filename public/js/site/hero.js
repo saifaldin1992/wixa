@@ -36,14 +36,15 @@ export async function buildHeroLogo() {
     ${runnerDot(logoD)}`;
 }
 
-// A glowing dot that travels along the logo's outer outline (the longest sub-path).
+// A small WIXA mark (with a soft halo) that travels along the logo's outer outline (the longest sub-path).
+// It stays upright while it moves, so the little mark always reads the right way up.
 function runnerDot(d) {
   const outer = d.split(/(?=M)/).sort((a, b) => b.length - a.length)[0];
-  const motion = anim ? `<animateMotion dur="11s" begin="2.8s" repeatCount="indefinite" rotate="auto" path="${outer}"/>` : "";
+  const motion = anim ? `<animateMotion dur="11s" begin="2.8s" repeatCount="indefinite" path="${outer}"/>` : "";
   // without animation the dot simply rests at the start of the outline
   const start = outer.match(/M\s*([-\d.]+)[ ,]([-\d.]+)/) || [0, 0, 0];
   return `<g class="lg-runner" ${anim ? "" : `transform="translate(${start[1]} ${start[2]})"`}>
-    <circle class="lg-runner__halo" r="60"/><circle class="lg-runner__dot" r="22"/>${motion}</g>`;
+    <ellipse class="lg-runner__halo" rx="150" ry="90"/><path class="lg-runner__dot" d="${d}" fill-rule="evenodd" transform="scale(.11) translate(-1010.5 -491)"/>${motion}</g>`;
 }
 
 // ---------- hero: floating particles ----------

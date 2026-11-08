@@ -1611,4 +1611,11 @@ html[data-theme="dark"] .hero__logo .hero__globe { opacity: .12; }
 .hero__logo { --lw: min(400px, 72vw); --ov: calc(var(--lw) * .317); margin: var(--ov) 0 calc(var(--ov) - 52px) !important; }
 @media (min-width: 761px) and (max-height: 860px) { .hero__logo { --lw: min(400px, 72vw, 26vh); width: var(--lw); } }
 .hero .hero__stage .hero__title { margin-top: 10px; }
+/* the badge sits higher, well inside the globe; the title still starts where the globe ends */
+.hero__content { --lw: min(400px, 72vw); --ov: calc(var(--lw) * .317); --bm: max(6px, calc(var(--ov) - 84px)); }
+@media (min-width: 761px) and (max-height: 860px) { .hero__content { --lw: min(400px, 72vw, 26vh); } }
+.hero__content .hero__logo { margin-bottom: var(--bm) !important; }
+.hero .hero__stage .hero__title { margin-top: max(4px, calc(var(--ov) - var(--bm) - 40px)); }
+.hero__badge { gap: 8px; }
+.badge__star { font-style: normal; color: var(--accent); font-size: .8em; line-height: 1; }
 @media (min-width: 761px) { .hero { min-height: auto; padding-bottom: 110px !important; } }
