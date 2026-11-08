@@ -120,6 +120,9 @@ export const I = {
   save: icon('<path d="M5 13l4 4L19 7"/>'), upload: icon('<path d="M12 16V4M6 10l6-6 6 6M4 20h16"/>'), x: icon('<path d="M6 6l12 12M18 6L6 18"/>'),
   search: icon('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>'), img: icon('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>'),
   users: icon('<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-7 7-7s7 3 7 7M17 4a4 4 0 010 8M22 21c0-3-2-5.5-4-6.5"/>'), views: icon('<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
+  bell: icon('<path d="M6 16V11a6 6 0 0112 0v5l2 2H4z"/><path d="M10 20a2 2 0 004 0"/>'), user: icon('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/>'),
+  gear: icon('<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>'), copy: icon('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 00-1-1H5a1 1 0 00-1 1v10a1 1 0 001 1h3"/>'), download: icon('<path d="M12 4v12M6 10l6 6 6-6M4 20h16"/>'),
+  print: icon('<path d="M7 9V3h10v6M7 17H4v-7h16v7h-3"/><path d="M7 14h10v7H7z"/>'), quote: icon('<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/>'), bolt: icon('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'),
   mail: icon('<path d="M4 5h16v14H4z"/><path d="M4 6l8 7 8-7"/>'), reset: icon('<path d="M4 4v6h6M4 10a8 8 0 112 6"/>'), out: icon('<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/>'),
 };
 

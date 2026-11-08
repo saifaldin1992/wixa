@@ -1,13 +1,13 @@
 /* A quote for a customer, built from the site's cost calculator (types, features, rush) with an optional final price.
    It can be printed / saved as PDF, sent on WhatsApp, or posted straight into the live chat.
    The customer moves to the "quote sent" stage of the sales pipeline. */
-import { $, $$, closeModal, esc, openModal, sb, settings, toast } from "./core.js";
+import { $, $$, I, closeModal, esc, openModal, sb, settings, toast } from "./core.js";
 import { normPhone } from "./views/customers.js";
 
 export function openQuote({ name = "", phone = "", chatId = null, onSent } = {}) {
   const cfg = settings.calculator || {}, types = cfg.types || [], feats = cfg.features || [], cur = cfg.currency || "$";
   const foot = document.createElement("div"); foot.style.cssText = "display:flex;flex-wrap:wrap;gap:8px";
-  foot.innerHTML = `<button class="b" data-close>إلغاء</button><button class="b" data-print>🖨️ PDF</button>${phone ? '<button class="b" data-wa>واتساب</button>' : ""}${chatId ? '<button class="b b--primary" data-chat>إرسال في المحادثة</button>' : ""}`;
+  foot.innerHTML = `<button class="b" data-close>إلغاء</button><button class="b" data-print>${I.print} PDF</button>${phone ? '<button class="b" data-wa>واتساب</button>' : ""}${chatId ? '<button class="b b--primary" data-chat>إرسال في المحادثة</button>' : ""}`;
   openModal(`عرض سعر${name ? ` — ${name}` : ""}`, `<div class="stack quote">
     <label class="f"><span>نوع المشروع</span><select id="qType">${types.map((t, i) => `<option value="${i}">${esc(t.label_ar)}</option>`).join("")}</select></label>
     <div class="f"><span>الميزات</span><div class="quote__feats">${feats.map((f, i) => `<label class="chk"><input type="checkbox" value="${i}"> ${esc(f.label_ar)}</label>`).join("")}</div></div>

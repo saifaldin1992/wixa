@@ -2,7 +2,7 @@
    merged into one card per person (by phone number, otherwise by email): what they asked about, where they came from,
    whether they agreed to receive offers, private notes, and the sales pipeline (stage, follow-up date, deal value).
    Owner and customer service only. */
-import { $, setSubnav, $$, closeModal, esc, openModal, sb, toast } from "../core.js";
+import { $, setSubnav, $$, I, closeModal, esc, openModal, sb, toast } from "../core.js";
 
 let seg = "all", q = "", mode = "list";
 const day = (t) => new Date(t).toLocaleDateString("ar-IQ", { day: "numeric", month: "short", year: "numeric" });
@@ -74,7 +74,7 @@ export async function viewCustomers(view) {
   const due = all.filter((c) => c.follow && c.follow <= today() && !["won", "lost"].includes(c.stage));
   const kpi = { total: all.length, yes: all.filter((c) => consent(c) === "yes").length, fresh: all.filter((c) => new Date(c.first) > month).length, won: all.filter((c) => c.stage === "won").reduce((a, c) => a + c.value, 0) };
 
-  $("#topActions").innerHTML = `    <button class="b" id="copyNums">📋 نسخ أرقام الموافقين</button><button class="b b--primary" id="csv">⬇️ تصدير Excel</button>`;
+  $("#topActions").innerHTML = `    <button class="b" id="copyNums">${I.copy} نسخ أرقام الموافقين</button><button class="b b--primary" id="csv">${I.download} تصدير Excel</button>`;
   setSubnav(`<div class="seg"><button type="button" data-mode="list" class="${mode === "list" ? "on" : ""}">قائمة</button><button type="button" data-mode="board" class="${mode === "board" ? "on" : ""}">مراحل البيع</button></div><span class="subnav__sep" aria-hidden="true"></span><div class="seg" id="custSeg">${[["all", "الكل"], ["yes", "يقبلون العروض"], ["follow", "متابعة اليوم"], ["chat", "من الدردشة"], ["form", "من النموذج"], ["booking", "حجزوا موعداً"]].map(([k, l]) => `<button type="button" data-seg="${k}" class="${seg === k ? "on" : ""}">${l}</button>`).join("")}</div>`);
   view.innerHTML = `${notesReady ? "" : `<div class="chat-off">لحفظ الملاحظات ومراحل البيع يلزم تطبيق تحديث قاعدة البيانات الأخير.</div>`}
     ${due.length ? `<div class="chat-off chat-off--name">⏰ <b>${due.length}</b> زبون حان موعد متابعته: ${due.slice(0, 4).map((c) => `<a href="#" data-due="${esc(c.key)}">${esc(c.name)}</a>`).join("، ")}${due.length > 4 ? "…" : ""}</div>` : ""}

@@ -1547,7 +1547,7 @@ html.menu-open, html.menu-open body, html:has(> body[style*="overflow: hidden"])
 .head-start { display: none !important; }
 
 /* "how we work" ends with the guarantees strip: no extra empty band before the packages */
-.process:has(.guar-strip:not([hidden])) { padding-bottom: clamp(48px, 7vw, 80px); }
+/* (the guarantees strip no longer shortens the gap after the process section: every section ends with --sec) */
 
 /* careers: no open roles — a clear, friendly card instead of plain grey text */
 div.careers__empty { max-width: 640px; margin: 0 auto; padding: clamp(22px, 4vw, 34px); text-align: center; background: var(--surface); border: 1px dashed color-mix(in srgb, var(--primary) 35%, var(--line)); border-radius: calc(var(--radius) + 4px); }
@@ -1804,3 +1804,13 @@ html[data-page="faq"] main > .faq, html[data-page="track"] main > .track, html[d
 html[data-page="about"] .about > :first-child, html[data-page="careers"] .careers > :first-child, html[data-page="contact"] .ways > :first-child,
 html[data-page="faq"] .faq > :first-child { margin-top: 0; padding-top: 0; }
 .track__wrap > :first-child, .order__wrap > :first-child { margin-top: 0; }
+
+/* one gap between sections everywhere: a section has no top spacing and ends with --sec (56 / 80 / 104px).
+   The first section of an inner page starts --page-top under the header bar (rule above). */
+html[data-page] main > section:not(.hero) { padding-top: 0; padding-bottom: var(--sec); margin-top: 0; margin-bottom: 0; }
+
+/* calculator extras: two-line labels on narrow phones get the card corner instead of a squeezed pill */
+.cfeat { border-radius: var(--radius-sm); line-height: 1.35; }
+
+/* the contact fallback in the corner (when the live chat is off) has the same size as the chat and WhatsApp buttons */
+@media (max-width: 767px) { html[lang] .mbar__btn--main { width: 52px; height: 52px; } }

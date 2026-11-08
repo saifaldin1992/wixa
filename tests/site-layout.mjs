@@ -4,7 +4,8 @@
 //  3. every row of cards is centred and as wide as one of the three page widths
 //     (wide 1240 · reading 820 · narrow 560, minus the side gutters), or is one column of a two-column section that
 //     starts at the page edge — so no page or section has its own width;
-//  4. on inner pages the first title or panel sits the same distance under the header bar (40 / 48 / 64px).
+//  4. on inner pages the first title or panel sits the same distance under the header bar (40 / 48 / 64px);
+//  5. every section has the same gap after it (56 / 80 / 104px) and none above it.
 // Usage: BASE=http://localhost:8787 node tests/site-layout.mjs [paths…]
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
 const BASE = process.env.BASE || "http://localhost:8787";
@@ -64,6 +65,13 @@ for (const [name, viewport] of SIZES) {
         if (Math.abs(gapL - gapR) > 3 && !(edge(gapL) || edge(gapR))) out.push(`${what} is off-centre (${Math.round(gapL)} / ${Math.round(gapR)})`);
         else if (row.length === 1 && !widths.some((x) => Math.abs(x - w) <= 3)) out.push(`${what} is ${Math.round(w)}px wide (allowed ${widths.map(Math.round).join("/")})`);
         else if (row.length > 1 && !widths.some((x) => Math.abs(x - w) <= 3) && w > widths[2] + 3 && !(Math.abs(gapL - gapR) > 3 && (edge(gapL) || edge(gapR)))) out.push(`row of ${what} is ${Math.round(w)}px wide (allowed ${widths.map(Math.round).join("/")})`);
+      }
+      // 5. one gap between sections: none above, --sec below
+      const sec = px("var(--sec)");
+      for (const el of document.querySelectorAll("main > section:not(.hero)")) {
+        if (!shown(el)) continue;
+        const cs = getComputedStyle(el);
+        if (parseFloat(cs.paddingTop) > 0.5 || Math.abs(parseFloat(cs.paddingBottom) - sec) > 1) out.push(`section ${name(el)} spacing ${cs.paddingTop} / ${cs.paddingBottom} (should be 0 / ${Math.round(sec)}px)`);
       }
       // 4. inner pages: the first title or panel sits --page-top under the header bar
       if (document.documentElement.dataset.page !== "home" && location.pathname !== "/") {

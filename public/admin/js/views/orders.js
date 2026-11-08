@@ -60,7 +60,7 @@ export async function viewOrders(view) {
             <a class="b b--sm" href="tel:${esc(o.phone)}">${I.phone || ""}اتصال</a>
             ${wa(o.phone) ? `<a class="b b--sm" target="_blank" rel="noopener" href="https://wa.me/${wa(o.phone)}?text=${encodeURIComponent(`مرحباً ${o.name}، بخصوص طلبك رقم ${o.number} من ويكسا`)}">واتساب</a>` : ""}
             ${o.email ? `<a class="b b--sm" href="mailto:${esc(o.email)}?subject=${encodeURIComponent(`طلبك ${o.number} — ويكسا`)}">${I.mail}بريد</a>` : ""}
-            <button class="b b--sm b--primary" data-quote="${o.id}">💰 عرض سعر</button>
+            <button class="b b--sm b--primary" data-quote="${o.id}">${I.quote} عرض سعر</button>
           </div></div></div>`;
     }).join("") : `<div class="empty">${I.mail}<p>${rows.length ? "لا توجد طلبات هنا." : "لم تصل طلبات بعد. كل زر «ابدأ مشروعك» و«اطلب هذه الباقة» و«اطلب حلّك» و«اطلب مشروعاً مشابهاً» والحاسبة يوصل الطلب إلى هنا."}</p></div>`}`;
 

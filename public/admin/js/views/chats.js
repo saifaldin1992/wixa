@@ -32,7 +32,7 @@ export async function viewChats(view) {
   const on = !!settings.chat?.on;
   const { data: myName, error: nameErr } = await sb.rpc("my_display_name");
   me = nameErr ? null : myName || "";
-  $("#topActions").innerHTML = `${me === null ? "" : `<button class="b" id="myName">👤 ${me ? `اسمك: ${esc(me)}` : "اختر اسمك"}</button>`}<button class="b" id="pushBtn">🔔 الإشعارات على هذا الجهاز</button>${role === "owner" ? `<button class="b" id="chatCfg">⚙️ إعدادات الدردشة</button>` : ""}`;
+  $("#topActions").innerHTML = `${me === null ? "" : `<button class="b" id="myName">${I.user} ${me ? `اسمك: ${esc(me)}` : "اختر اسمك"}</button>`}<button class="b" id="pushBtn">${I.bell} الإشعارات على هذا الجهاز</button>${role === "owner" ? `<button class="b" id="chatCfg">${I.gear} إعدادات الدردشة</button>` : ""}`;
   setSubnav((role === "owner" ? `<div class="seg" id="chatBranch"><button type="button" class="on">المحادثات</button><button type="button" data-chatcfg>الإعدادات</button></div>` : "") + `<div class="seg chat__filter">${[["open", "مفتوحة"], ["closed", "مغلقة"], ["all", "الكل"]].map(([k, n]) => `<button type="button" data-f="${k}" class="${filter === k ? "on" : ""}">${n}</button>`).join("")}</div>`);
   view.innerHTML = `${me === "" ? `<div class="chat-off chat-off--name">اختر الاسم الذي يظهر للزبون عند ردّك (مثل «أحمد»)، بدل «فريق ويكسا». <button class="b b--sm b--primary" id="nameNow">اختيار الاسم</button></div>` : ""}${on ? "" : `<div class="chat-off">الدردشة متوقفة في الموقع — الزوار لا يرون زرها. ${role === "owner" ? '<button class="b b--sm b--primary" id="turnOn">تفعيل الدردشة الآن</button>' : "يستطيع المالك تفعيلها."}</div>`}
     <div class="chat ${current ? "chat--thread" : ""}">
@@ -70,14 +70,14 @@ export async function viewChats(view) {
     thread.innerHTML = `<header class="chat__head">
         <button class="b b--icon b--ghost chat__back" type="button" title="رجوع">${BACK}</button>
         <div class="chat__who"><b>${esc(c.name)}${c.rating ? ` <span class="stars" title="${esc(c.rating_note || "")}">${"★".repeat(c.rating)}</span>` : ""}</b>${c.topic ? `<em class="chat__topic">${esc(c.topic)}</em>` : ""}${c.rating_note ? `<small class="muted">«${esc(c.rating_note)}»</small>` : ""}<small class="muted">${c.source ? `جاء من: ${esc(c.source)} · ` : ""}<a href="tel:${esc(c.phone)}" dir="ltr">${esc(c.phone)}</a>${c.page ? ` · من صفحة <span dir="ltr">${esc(c.page)}</span>` : ""} · بدأت ${when(c.created_at)}</small></div>
-        <div class="chat__acts"><button class="b b--sm" type="button" id="chatQuote">💰 عرض سعر</button>${wa ? `<a class="b b--sm" href="https://wa.me/${wa}" target="_blank" rel="noopener">واتساب</a>` : ""}
+        <div class="chat__acts"><button class="b b--sm" type="button" id="chatQuote">${I.quote} عرض سعر</button>${wa ? `<a class="b b--sm" href="https://wa.me/${wa}" target="_blank" rel="noopener">واتساب</a>` : ""}
           <button class="b b--sm" type="button" id="chatStatus">${c.status === "open" ? "إغلاق المحادثة" : "إعادة فتح"}</button>
           ${role === "owner" ? `<button class="b b--icon b--ghost b--danger" type="button" id="chatDel" title="حذف">${I.trash}</button>` : ""}</div>
       </header>
       <div class="chat__msgs"></div>
       <p class="chat__typing" hidden>${esc(c.name)} يكتب…</p>
       <div class="chat__quick" hidden>${quick().map((q) => `<button type="button">${esc(q)}</button>`).join("")}</div>
-      <form class="chat__compose"><button class="b b--icon b--ghost" type="button" id="quickBtn" title="ردود جاهزة">⚡</button><textarea name="body" rows="1" maxlength="2000" placeholder="اكتب ردك…" required></textarea><button class="b b--primary" type="submit">إرسال</button></form>`;
+      <form class="chat__compose"><button class="b b--icon b--ghost" type="button" id="quickBtn" title="ردود جاهزة" aria-label="ردود جاهزة">${I.bolt}</button><textarea name="body" rows="1" maxlength="2000" placeholder="اكتب ردك…" required></textarea><button class="b b--primary" type="submit">إرسال</button></form>`;
     $("#chatQuote").onclick = () => openQuote({ name: c.name, phone: c.phone, chatId: c.status === "open" ? c.id : null });
     $(".chat__back", thread).onclick = () => { current = null; $(".chat", view).classList.remove("chat--thread"); thread.innerHTML = ""; paintList(); };
     $("#chatStatus").onclick = async () => {
@@ -198,7 +198,7 @@ export async function viewChats(view) {
   const pushBtn = $("#pushBtn");
   const paintPush = async () => {
     const st = await pushState().catch(() => "off");
-    pushBtn.textContent = st === "on" ? "🔔 الإشعارات مفعّلة على هذا الجهاز" : "🔔 فعّل الإشعارات على هذا الجهاز";
+    pushBtn.innerHTML = `${I.bell} ${st === "on" ? "الإشعارات مفعّلة على هذا الجهاز" : "فعّل الإشعارات على هذا الجهاز"}`;
     pushBtn.classList.toggle("b--primary", st !== "on");
     pushBtn.dataset.state = st;
   };
