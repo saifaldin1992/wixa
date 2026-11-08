@@ -48,7 +48,7 @@ h1, h2, h3 { font-weight: var(--hw); line-height: 1.2; margin: 0; letter-spacing
 html[dir="rtl"] h1, html[dir="rtl"] h2, html[dir="rtl"] h3 { letter-spacing: 0; line-height: 1.38; }
 
 /* loading screen (same as the dashboard's): html.booting is set by /home-pre.js and the screen leaves as soon as the
-   page's script has started (site-ready) or the visitor chooses «عرض الصفحة». Its content fades in after a moment,
+   page's script has started (site-ready). Its content fades in after a moment,
    so a fast open never looks like a loading screen. After 10 s (boot-slow) it offers to try again. */
 .boot { display: none; }
 html.booting:not(.site-ready) .boot { position: fixed; inset: 0; z-index: 200; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 16px; background: var(--bg); color: var(--text); text-align: center; }

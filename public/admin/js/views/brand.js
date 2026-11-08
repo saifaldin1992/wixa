@@ -301,7 +301,8 @@ export async function viewBrand(view) {
         [`<span dir="ltr">tests/smoke.mjs</span>`, "الصفحات والروابط الأساسية تعمل"],
         [`<span dir="ltr">tests/structure.mjs</span>`, "بنية الخادم: كل ملف يستورد من الطبقات التي قبله فقط، ولا حلقات استيراد"],
         [`<span dir="ltr">tests/stats-cache.mjs</span>`, "أرقام الزيارات لا تنتظر Cloudflare بعد أول مرة"],
-        [`<span dir="ltr">tests/no-white-page.mjs</span>`, "لا صفحة بيضاء: الموقع يظهر بلا حركات إذا تأخر كوده، واللوحة تعرض شاشة تحميل ثم «إعادة المحاولة»"],
+        [`<span dir="ltr">tests/no-white-page.mjs</span>`, "لا صفحة بيضاء: الموقع واللوحة يعرضان الشعار و«جارٍ التحميل»، ثم «إعادة المحاولة» بعد 10 ثوانٍ"],
+        [`<span dir="ltr">tests/admin-buttons.mjs</span>`, "كل زر في لوحة التحكم يستجيب: يُضغط كل زر في كل صفحة، والزر الذي لا يفعل شيئاً يُفشل الفحص"],
         [`<span dir="ltr">tests/admin-netfail.mjs</span>`, "انقطاع الاتصال عند فتح اللوحة: رسالة «إعادة المحاولة» بدل الانتظار أو تسجيل الخروج"],
       ])}`)}
   </div>`;

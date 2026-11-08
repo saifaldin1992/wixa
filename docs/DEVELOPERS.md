@@ -413,7 +413,7 @@ Nothing may leave a white page or wait for ever (`tests/no-white-page.mjs`, `tes
 
 | Where | Rule | File |
 |---|---|---|
-| Home page | `#boot` loading screen (logo + «جارٍ التحميل», the same as the dashboard) while `html.booting` is set and `html.site-ready` is not; after 10 s «التحميل يتأخر» + «إعادة المحاولة» / «عرض الصفحة» (shows the content without animations). Without scripts the screen never shows | `public/home-pre.js`, `public/index.html`, `styles.css` |
+| Home page | `#boot` loading screen (logo + «جارٍ التحميل», the same as the dashboard) while `html.booting` is set and `html.site-ready` is not; after 10 s «التحميل يتأخر» + «إعادة المحاولة» (reload). Without scripts the screen never shows | `public/home-pre.js`, `public/index.html`, `styles.css` |
 | Dashboard start | `#boot` loading screen until `#auth` or `#app` shows (CSS `:has`); after 10 s «التحميل يتأخر» + reload button | `public/admin/boot.js`, `admin.css` |
 | Dashboard → Supabase | every request gives up after 20 s (uploads excepted) — the client's `global.fetch` | `public/admin/admin.js` |
 | Dashboard → `/api/admin/*` | `timedFetch()`: 20 s for reads, 60 s for sending; a toast says the connection is slow | `public/admin/js/core.js` |
