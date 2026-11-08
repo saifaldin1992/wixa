@@ -1695,3 +1695,14 @@ html .partners__grid:not(.is-marquee) .partner:is(:hover, :focus-visible, :activ
 .about__text > .head__title { grid-column: 1 / -1; margin-bottom: 0; }
 /* the "by service / by your field" switch sits in the middle under the title */
 .svc-tabs { justify-content: center; margin-inline: auto; }
+
+/* ===== consistency: every page title the same size as the section titles (order, track) ===== */
+.ord__pick > h2, .track__wrap > h1 { font-size: var(--fs-h2); line-height: 1.25; }
+
+/* ===== the WIXA wave colour: purple into cyan, like the section curve and the logo's line.
+   A small accent used very sparingly — a few things that should catch the eye ===== */
+:root { --wave: linear-gradient(100deg, var(--primary) 0%, color-mix(in srgb, var(--accent) 50%, var(--primary)) 100%); }
+.track-btn { background: var(--wave); box-shadow: 0 8px 22px -12px rgba(var(--accent-rgb), .7); }   /* track your order */
+.pstep.on .pstep__num { background: var(--wave); border-color: transparent; color: #fff; }          /* how we work 1·2·3·4 */
+.cdots button.on { background: var(--wave); }                                                        /* dots under the swipe rows */
+.pkg__badge { background: var(--wave); }                                                             /* "best fit" tag */

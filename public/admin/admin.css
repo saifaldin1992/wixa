@@ -737,3 +737,8 @@ body { font-size: 14.5px; }
 .bg-hero svg { width: 150px; height: 150px; }
 .bg-hero span { margin-top: -38px; padding: 6px 14px; border-radius: 99px; background: var(--surface, #fff); border: 1px solid var(--line); font-size: 13px; box-shadow: 0 6px 18px -10px rgba(0,0,0,.25); }
 .bg-hero i { font-style: normal; }
+
+.bg-wave { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 4px 0; }
+.bg-wave span { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 800; }
+.bg-wave i { width: 24px; height: 8px; border-radius: 99px; }
+.bg-wave em { font-style: normal; color: #fff; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 99px; }
