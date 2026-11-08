@@ -1643,3 +1643,7 @@ html[data-theme="dark"] .lg-trace__core { stroke: color-mix(in srgb, var(--accen
   .hero.in .lg-trace__core { animation: lgTraceCore 15s linear 2.8s infinite; }
 }
 @keyframes lgTraceCore { from { stroke-dashoffset: -.0175; } to { stroke-dashoffset: -1.0175; } }
+/* back to the single cyan line (previous colour), keeping the softer glow and the slower pace */
+.lg-trace__core { display: none; }
+html .lg-trace { stroke: var(--accent) !important; }
+html[data-theme="dark"] .lg-trace { stroke: color-mix(in srgb, var(--accent) 55%, #fff) !important; }
