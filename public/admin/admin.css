@@ -745,3 +745,46 @@ body { font-size: 14.5px; }
 
 /* links inside text are underlined, not told apart by colour alone (WCAG 1.4.1) */
 .card p a, .card li a, .help a { text-decoration: underline; text-underline-offset: 3px; }
+
+/* =====================================================================================================
+   ONE RULE FOR EVERY CHOICE BAR (page sub-menus, filters, language, periods…): separate pill buttons,
+   the chosen one filled with the brand purple. Applies to every .seg in the dashboard automatically.
+   ===================================================================================================== */
+.seg, .subnav .seg { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; width: max-content; max-width: 100%; box-sizing: border-box;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px; }
+.seg button, .subnav .seg button { flex: none; min-height: 40px; padding: 0 14px; border: 0; border-radius: 10px; background: transparent; color: var(--muted);
+  font: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; box-shadow: none; cursor: pointer; transition: background .2s, color .2s; }
+.seg button:hover, .subnav .seg button:hover { background: color-mix(in srgb, var(--brand) 8%, transparent); color: var(--text); }
+.seg button.on, .subnav .seg button.on { background: var(--brand); color: #fff; box-shadow: 0 6px 14px -8px var(--brand); }
+.subnav .seg button.on::after { display: none; }
+.seg button small, .subnav .seg button small { margin-inline-start: 6px; padding: 1px 7px; border-radius: 99px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 700; }
+.seg button.on small, .subnav .seg button.on small { background: rgba(255,255,255,.22); border-color: transparent; color: #fff; }
+
+/* the page sub-menu: its own bar under the title; several groups stack one above the other; long bars slide sideways */
+.subnav { display: grid; gap: 8px; flex: 1 1 100%; order: 10; margin: 0; padding: 0; border-bottom: 0; overflow: visible; -webkit-mask-image: none; mask-image: none; }
+.subnav .seg { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
+.subnav .seg::-webkit-scrollbar { display: none; }
+.subnav__sep { display: none; }
+
+/* the page header: a solid background (nothing shows through it); on phones it scrolls away with the page */
+.top { background: var(--bg); }
+@media (min-width: 961px) { .top { box-shadow: 0 1px 0 var(--line); } }
+@media (max-width: 960px) { .top { position: static; } }
+
+/* nothing leaves its white card: long words wrap, rows shrink, buttons drop to the next line */
+.card, .msg, .stat, .item { min-width: 0; max-width: 100%; }
+.card__head { flex-wrap: wrap; }
+.card__head > div { min-width: 0; flex: 1 1 200px; }
+.card p, .card li, .card h3, .msg p, .msg b { overflow-wrap: anywhere; }
+.msg__who { min-width: 0; }
+.msg__meta { min-width: 0; }
+@media (max-width: 600px) { .ord-grid { grid-template-columns: 1fr; } .msg__head { grid-template-columns: auto 1fr; } .msg__meta { grid-column: 1 / -1; justify-items: start; text-align: start; display: flex; gap: 8px; align-items: center; } }
+
+/* brand guide sample of the sub-menu, in the same pill style */
+.bg-subnav { display: flex; gap: 4px; padding: 4px; width: max-content; max-width: 100%; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); overflow-x: auto; margin-bottom: 10px; }
+.bg-subnav span { padding: 9px 14px; border: 0; border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.bg-subnav span.on { background: var(--brand) !important; color: #fff !important; }
+.bg-subnav span.on i { background: rgba(255,255,255,.22) !important; color: #fff !important; border-color: transparent; }
+/* the sub-menu never widens the page: its bars slide sideways inside the screen width */
+.subnav { grid-template-columns: minmax(0, 1fr); min-width: 0; max-width: 100%; }
+.subnav .seg { min-width: 0; max-width: 100%; }
