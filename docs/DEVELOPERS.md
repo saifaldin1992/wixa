@@ -304,3 +304,23 @@ the page is drawn. A new card is placed by adding one rule. Pages with branches 
 
 **Pages made of other pages' cards** use `composeView(view, [[renderFn, ["#cardId", "title start", "*"]], …])` — the
 cards keep their own buttons and saving (notify, integrations, protect, backup, diagnose and account do this).
+
+## Fixed sizes (dashboard + site)
+
+One set of sizes for every page — no page sets its own width. Tokens live at the end of `public/admin/admin.css`
+(`--page`, `--gutter`, `--card-pad`, `--gap`, `--r-lg`) and in `public/styles.css` (`--max`, `--gutter`, `--card-pad`, `--radius`).
+
+| | phone | tablet | computer |
+|---|---|---|---|
+| dashboard breakpoints | ≤600 | 601–960 | ≥961 |
+| site breakpoints | ≤767 | 768–1199 | ≥1200 |
+| content width | dashboard 1120 · site 1240 | | |
+| side gutter | 16 | 24 | 32 |
+| card padding (dashboard / site) | 16 / 18 | 20 / 22 | 24 / 26 |
+| gap between cards | 12 | 16 | 16 |
+| radius | 22 | 22 | 22 |
+
+`tests/admin-layout.mjs` (part of `npm test`) opens every dashboard page on an iPhone 13 and at 1440×900 and fails if
+the page is wider than the screen, if a card on its own is narrower than the page, or if a row of cards does not start
+at the page edge. Spacing between cards comes from the container's `gap` only.
+

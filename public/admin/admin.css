@@ -800,3 +800,23 @@ body { font-size: 14.5px; }
 .compose .ints, .compose .acct { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
 /* stacks of fields never grow wider than their card (a long choice bar wraps instead) */
 .stack { grid-template-columns: minmax(0, 1fr); }
+
+/* =====================================================================================================
+   ONE SIZE SYSTEM FOR EVERY DASHBOARD PAGE (same steps as the public site)
+   phone ≤600px · tablet 601–960px · computer ≥961px
+   - the page: one width for all pages (--page), centred; edge spacing --gutter
+   - cards: one corner radius (22px), one inner padding (--card-pad), one gap between cards (--gap)
+   - no page sets its own width any more: every card fills the page width (or a row of cards does)
+   ===================================================================================================== */
+:root { --page: 1120px; --gutter: 16px; --card-pad: 16px; --gap: 12px; --r-lg: 22px; }
+@media (min-width: 601px) { :root { --gutter: 24px; --card-pad: 20px; --gap: 16px; } }
+@media (min-width: 961px) { :root { --gutter: 32px; --card-pad: 24px; --gap: 16px; } }
+.main { padding: 0 var(--gutter) 48px; }
+.main > .top, .main > .view { width: 100%; max-width: var(--page); margin-inline: auto; box-sizing: border-box; }
+.card, .kpi { padding: var(--card-pad); border-radius: var(--r-lg); }
+.ints, .brand-doc, .diag, .devguide, .team, .acct, .devguide--tabs .dg-body { max-width: none; gap: var(--gap); }
+.view > * + *, .compose > * + * { margin-top: 0; }
+.view, .compose .ints, .compose .acct { display: grid; gap: var(--gap); grid-template-columns: minmax(0, 1fr); align-content: start; }
+.view > .card, .view > div > .card { margin: 0; }
+/* in a grid of cards the gap is the only spacing — no extra top margin on the 2nd card onwards */
+:is([class*="grid"], [class*="kpis"]) > .card + .card { margin-top: 0; }
