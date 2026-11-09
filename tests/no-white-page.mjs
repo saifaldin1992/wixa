@@ -33,6 +33,23 @@ for (const blocked of [true, false]) {
   await ctx.close();
 }
 
+// stand-alone pages (/terms, articles, services…): the same loading screen while the stylesheet has not arrived
+for (const blocked of [true, false]) {
+  const ctx = await b.newContext({ ...devices["Galaxy S9+"] });
+  if (blocked) await ctx.route(/\/build\/site\.css/, () => {}); // the stylesheet never arrives
+  const p = await ctx.newPage();
+  await p.goto(`${BASE}/terms`, { waitUntil: "commit" });
+  await p.waitForTimeout(1500);
+  if (blocked) {
+    const early = await visible(p, "#boot") && await visible(p, "#boot .boot__wait");
+    await p.waitForTimeout(9500);
+    check(early && await visible(p, "#bootRetry"), "page without its stylesheet: logo + «جارٍ التحميل» at once, «إعادة المحاولة» after 10 s");
+  } else {
+    check(!(await visible(p, "#boot")) && await visible(p, "main.page h1"), "page normally: no loading screen, the content shows");
+  }
+  await ctx.close();
+}
+
 // 3 + 4: dashboard
 for (const hang of [true, false]) {
   const ctx = await b.newContext({ ...devices["Galaxy S9+"] });

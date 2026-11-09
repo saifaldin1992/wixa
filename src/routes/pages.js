@@ -210,6 +210,21 @@ export function siteShell(st, lang, path) {
   return { header, footer, ui };
 }
 
+// Loading screen of the stand-alone pages, the same as the home page's and the dashboard's. It is painted first
+// (the stylesheets come right after it in <body>, so the browser can show it while they load) and the site's
+// stylesheet hides it (.boot { display: none }) the moment it arrives — on a good connection it is never seen.
+// After 10 s /theme-pre.js adds «boot-slow»: «التحميل يتأخر» + «إعادة المحاولة».
+const BOOT_CSS = `.boot{position:fixed;inset:0;z-index:200;display:grid;place-content:center;justify-items:center;gap:14px;padding:16px;background:#FBFAFE;color:#140F1F;text-align:center;font:500 1rem/1.6 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
+html[data-theme="dark"] .boot{background:#130C1F;color:#F2F0F7}
+.boot>*{opacity:0;animation:bootIn .3s ease .4s forwards}.boot__mark{width:84px;height:auto;color:#5B21B6;animation:bootIn .3s ease .4s forwards,bootPulse 1.4s ease-in-out .7s infinite}
+html[data-theme="dark"] .boot__mark{color:#A574F1}.boot p{margin:0}
+.boot__slow,.boot__btns{display:none}.boot-slow .boot__wait{display:none}.boot-slow .boot__slow{display:block}.boot-slow .boot__btns{display:flex}
+.boot__btns button{min-height:48px;padding:0 24px;border:0;border-radius:99px;background:#5B21B6;color:#fff;font:inherit;font-weight:700;cursor:pointer}
+@keyframes bootIn{to{opacity:1}}@keyframes bootPulse{50%{opacity:.45}}`;
+const bootHtml = (lang) => { const ar = lang === "ar"; return `<div class="boot" id="boot" role="status"><svg class="boot__mark" viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg>
+<p class="boot__wait">${ar ? "جارٍ التحميل…" : "Loading…"}</p><p class="boot__slow">${ar ? "التحميل يتأخر — الاتصال بطيء أو منقطع." : "This is taking a while — the connection is slow."}</p>
+<div class="boot__btns"><button type="button" id="bootRetry">${ar ? "إعادة المحاولة" : "Try again"}</button></div></div>`; };
+
 // One page layout shared by service and project pages, articles, the privacy policy and the review form:
 // the site's own stylesheet, header, menu and footer, with the page's content in the middle.
 export function simplePage(request, st, { lang, title, description, path, image, body, jsonld, status = 200, orderQ = "" }) {
@@ -228,10 +243,10 @@ export function simplePage(request, st, { lang, title, description, path, image,
 <meta property="og:type" content="website"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${origin}${path}">
 ${image ? `<meta property="og:image" content="${esc(image)}"><meta name="twitter:card" content="summary_large_image">` : ""}
 <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
-${font === "Alexandria" ? '<link rel="preload" href="/fonts/alexandria/alexandria-arabic-800-normal.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="/fonts/alexandria.css">' : `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;500;700;800&display=swap">`}
+${font === "Alexandria" ? '<link rel="preload" href="/fonts/alexandria/alexandria-arabic-800-normal.woff2" as="font" type="font/woff2" crossorigin>' : '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'}
 ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld).replace(/</g, "\\u003c")}</script>` : ""}
 <script src="/theme-pre.js"></script>
-<link rel="stylesheet" href="${versioned("/build/site.css")}">
+<style>${BOOT_CSS}</style>
 <style id="wixa-theme">:root{${Object.entries(WIXA.themeVars(WIXA.merge(WIXA.DEFAULTS, st), st.font?.family)).map(([k, v]) => `${k}:${String(v).replace(/[<>{};]/g, "")}`).join(";")}}</style>
 <style>
 /* page body on the site's colours: the content blocks below keep their own small layout */
@@ -276,6 +291,9 @@ html[data-theme="dark"] .page{--p:var(--fg)}
 .footer__wave path{stroke-dashoffset:0}
 .header .lang-btn{display:inline-grid;place-items:center;text-decoration:none;color:var(--text);line-height:1}
 </style></head><body>
+${bootHtml(lang)}
+${font === "Alexandria" ? '<link rel="stylesheet" href="/fonts/alexandria.css">' : `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;500;700;800&display=swap">`}
+<link rel="stylesheet" href="${versioned("/build/site.css")}">
 ${shell.header}
 <div class="scrim" id="scrim"></div>
 <main class="page">${body}
