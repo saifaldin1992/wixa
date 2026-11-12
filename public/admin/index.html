@@ -14,6 +14,7 @@
   <meta name="apple-mobile-web-app-title" content="ويكسا">
   <link rel="preload" href="/fonts/alexandria/alexandria-arabic-400-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/fonts/alexandria.css">
+  <script src="/admin/theme.js"></script>
   <link rel="stylesheet" href="/build/admin.css">
   <script src="/build/shared.js" defer></script>
 </head>
@@ -88,6 +89,7 @@
         <a href="#audit" data-view="audit"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 2"/><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>سجل التعديلات</a>
         <a href="#devguide" data-view="devguide"><svg viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg>دليل المطوّر</a>
       </nav>
+      <button type="button" class="side__theme" id="themeBtn"><svg class="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/></svg><span id="themeLabel">المظهر: تلقائي</span></button>
       <a class="side__site" href="/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg>عرض الموقع</a>
     </aside>
     <div class="scrim" id="scrim"></div>
@@ -107,8 +109,12 @@
   </div>
 
   <!-- Modal -->
+  <!-- phones: the most used pages in a bar at the bottom, «المزيد» opens the full menu (filled in by shell.js) -->
+  <nav class="tabbar" id="tabbar" aria-label="الصفحات الأكثر استخداماً" hidden></nav>
+
   <div class="modal" id="modal" hidden>
     <div class="modal__box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <span class="modal__grab" aria-hidden="true"></span>
       <header class="modal__head"><h2 id="modalTitle"></h2><button class="x" type="button" data-close aria-label="إغلاق">✕</button></header>
       <div class="modal__body" id="modalBody"></div>
       <footer class="modal__foot" id="modalFoot"></footer>

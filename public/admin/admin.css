@@ -930,3 +930,83 @@ small.err { color: #B91C1C; }
   .top { background: var(--bg); }
 }
 @media (prefers-reduced-motion: reduce) { .b:active, .add-fab:active, .seg button:active { transform: none; } }
+
+/* ================= Apple touch 2 (Nov 2026) ================= */
+/* 1. dark mode (public/admin/theme.js sets html[data-theme]; «المظهر» in the sidebar: تلقائي / فاتح / داكن) */
+html[data-theme="dark"] {
+  --bg: #0E0B14; --panel: #1A1622; --text: #F2F0F7; --muted: #A9A3B6; --line: #2A2433; --line-2: #3A3346;
+  --brand: #8B5CF6; --brand-50: #261C3D; --ok: #3DD68C; --ok-50: #10291C; --warn: #F5B454; --danger: #F26D6D; --danger-50: #3A1717;
+  --shadow: 0 0 0 1px rgba(255, 255, 255, .05), 0 12px 32px -14px rgba(0, 0, 0, .6);
+  --shadow-lg: 0 0 0 1px rgba(255, 255, 255, .06), 0 30px 70px -20px rgba(0, 0, 0, .7);
+  color-scheme: dark;
+}
+html[data-theme="dark"] .card { border-color: rgba(255, 255, 255, .06); }
+html[data-theme="dark"] .b:hover { border-color: #5A5268; }
+html[data-theme="dark"] .boot { background: #0E0B14; color: #A9A3B6; }
+html[data-theme="dark"] .boot__mark { color: #A78BFA; }
+html[data-theme="dark"] .auth__card { background: var(--panel); border-color: var(--line); }
+html[data-theme="dark"] .auth__fields .f input:not([type=checkbox]) { background: var(--bg); border-color: var(--line-2); }
+html[data-theme="dark"] .auth__btn--outline { background: transparent; color: #C4B5FD; }
+html[data-theme="dark"] .netfail__box, html[data-theme="dark"] .mfa__qr { background: var(--panel); }
+html[data-theme="dark"] .toast { background: rgba(40, 34, 52, .9); }
+html[data-theme="dark"] .modal { background: rgba(0, 0, 0, .5); }
+html[data-theme="dark"] .f input:focus, html[data-theme="dark"] .f select:focus, html[data-theme="dark"] .f textarea:focus { box-shadow: 0 0 0 4px rgba(139, 92, 246, .25); }
+html[data-theme="dark"] .side__nav a.on { color: #C4B5FD; }
+@media (min-width: 961px) { html[data-theme="dark"] .top { background: rgba(14, 11, 20, .72); } }
+.side__theme { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 12px; color: var(--muted); font-size: 14px; }
+.side__theme:hover { background: var(--bg); color: var(--text); }
+.side__theme svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+html[data-theme="dark"] .side__theme .i-sun, html:not([data-theme="dark"]) .side__theme .i-moon { display: none; }
+
+/* 2. phones: dialogs are bottom sheets that slide up, with a handle to drag them down */
+.modal__grab { display: none; }
+@media (max-width: 640px) {
+  .modal { place-items: end center; padding: 0; }
+  .modal__box, .modal__box.sm { width: 100%; max-height: 92vh; border-radius: 26px 26px 0 0; padding-bottom: env(safe-area-inset-bottom); animation: sheetUp .45s var(--spring); transition: transform .3s var(--spring); }
+  .modal__grab { display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--line-2); margin: 8px auto 0; flex: none; }
+  .modal__head { padding-top: 10px; touch-action: none; }
+}
+@keyframes sheetUp { from { transform: translateY(100%); } }
+
+/* 3. Apple's continuous corners where the browser can draw them (others keep the round corners) */
+@supports (corner-shape: squircle) {
+  .card, .b, .modal__box, .seg, .seg button, .f input, .f select, .f textarea, .item, .lnk, .theme-opt, .addon, .side__nav a, .top__menu, .tabbar, .empty { corner-shape: squircle; }
+  .card, .modal__box { border-radius: calc(var(--r-lg) * 1.5); }
+  .b, .f input, .f select, .f textarea, .seg button { border-radius: 16px; }
+}
+
+/* 5. large title that shrinks into the bar when the page scrolls (phones keep the bar on top too) */
+.top__title { transition: font-size .3s var(--spring); }
+.top__sub { transition: opacity .2s, max-height .3s; max-height: 3em; overflow: hidden; }
+.top--compact .top__title { font-size: 17px; }
+.top--compact .top__sub { opacity: 0; max-height: 0; }
+.top--compact { padding-block: 10px; }
+@media (max-width: 960px) {
+  .top { position: sticky; top: 0; background: rgba(244, 245, 248, .82); -webkit-backdrop-filter: blur(16px) saturate(1.6); backdrop-filter: blur(16px) saturate(1.6); }
+  html[data-theme="dark"] .top { background: rgba(14, 11, 20, .82); }
+  .top--compact .top__actions, .top--compact .subnav { display: none; }
+}
+
+/* 6. page changes cross-fade (View Transitions) */
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .22s; }
+.side, .tabbar { view-transition-name: none; }
+
+/* 7. phones: tab bar at the bottom */
+.tabbar { display: none; }
+@media (max-width: 960px) {
+  body:has(#app:not([hidden])) .tabbar:not([hidden]) {
+    position: fixed; inset: auto 10px calc(10px + env(safe-area-inset-bottom)) 10px; z-index: 60; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+    padding: 6px; border-radius: 24px; border: 1px solid var(--line);
+    background: rgba(255, 255, 255, .78); -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8); box-shadow: var(--shadow-lg);
+  }
+  html[data-theme="dark"] body:has(#app:not([hidden])) .tabbar:not([hidden]) { background: rgba(26, 22, 34, .8); }
+  body:has(#app:not([hidden])) .main, body:has(#app:not([hidden])) main { padding-bottom: 96px; }
+  .tabbar a, .tabbar button { position: relative; display: grid; justify-items: center; gap: 2px; min-height: 52px; padding: 6px 2px; border-radius: 18px; color: var(--muted); font: inherit; font-size: 11.5px; text-align: center; }
+  .tabbar svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .tabbar a.on { color: var(--brand); background: var(--brand-50); }
+  .tabbar .count { position: absolute; top: 2px; inset-inline-end: calc(50% - 22px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--danger); color: #fff; font-size: 11px; font-style: normal; display: grid; place-items: center; }
+  .tabbar .count[hidden] { display: none; }
+  .tabbar a:active, .tabbar button:active { transform: scale(.94); }
+  .toasts { bottom: 92px; }
+}
+@media (prefers-reduced-transparency: reduce) { .tabbar, .top { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; } }

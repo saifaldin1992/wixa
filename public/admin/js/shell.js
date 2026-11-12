@@ -91,7 +91,32 @@ function applyRoleNav() {
     g.hidden = !any;
   });
   const tag = $(".side .logo small"); if (tag) tag.textContent = role === "owner" ? "لوحة التحكم" : ROLE_AR[role];
+  buildTabbar();
 }
+
+// Phones: the four most used pages this person may open, in a bar at the bottom (like an iPhone app), and «المزيد»
+// for the full menu. The counters follow the sidebar's own counters.
+const TAB_ORDER = ["overview", "orders", "messages", "chats", "content", "projects", "posts", "services", "customers"];
+function buildTabbar() {
+  const bar = $("#tabbar"); if (!bar) return;
+  if (bar.dataset.role === role) return;
+  bar.dataset.role = role;
+  const picks = TAB_ORDER.filter((v) => canSee(v) && $(`#sideNav a[data-view="${v}"]`)).slice(0, 4);
+  bar.innerHTML = picks.map((v) => {
+    const a = $(`#sideNav a[data-view="${v}"]`), icon = a.querySelector("svg")?.outerHTML || "", count = a.querySelector(".count");
+    const label = [...a.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent.trim()).join(" ");
+    return `<a href="#${v}" data-view="${v}">${icon}<span>${esc(label)}</span>${count ? `<i class="count" data-of="${count.id}" hidden></i>` : ""}</a>`;
+  }).join("") + `<button type="button" id="tabMore"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>المزيد</span></button>`;
+  $("#tabMore").onclick = () => $("#menuBtn").click();
+  $$("[data-of]", bar).forEach((i) => {
+    const src = document.getElementById(i.dataset.of);
+    const copy = () => { i.hidden = src.hidden; i.textContent = src.textContent; };
+    copy(); new MutationObserver(copy).observe(src, { attributes: true, childList: true, characterData: true, subtree: true });
+  });
+  bar.hidden = false;
+  markTabs();
+}
+const markTabs = () => $$("#tabbar a").forEach((a) => a.classList.toggle("on", a.dataset.view === current));
 
 export function setupShell() {
   if (setupShell.done) return; setupShell.done = true;
@@ -101,6 +126,25 @@ export function setupShell() {
   $("#menuBtn").onclick = () => { side.classList.add("open"); scrim.classList.add("open"); };
   scrim.onclick = close;
   $$("#sideNav a").forEach((a) => a.addEventListener("click", close));
+  // light / dark / follow the device (public/admin/theme.js applies it before the page paints)
+  const T = { auto: "تلقائي", light: "فاتح", dark: "داكن" }, NEXT = { auto: "light", light: "dark", dark: "auto" };
+  const paintTheme = () => { $("#themeLabel").textContent = `المظهر: ${T[window.wixaTheme?.get() || "auto"]}`; };
+  paintTheme();
+  $("#themeBtn").onclick = () => { window.wixaTheme?.set(NEXT[window.wixaTheme.get()] || "auto"); paintTheme(); };
+  // large title: shrinks into the bar as soon as the page scrolls (like iOS)
+  const top = $(".top");
+  const onScroll = () => top.classList.toggle("top--compact", scrollY > 24);
+  addEventListener("scroll", onScroll, { passive: true }); onScroll();
+  // phones: dialogs are bottom sheets — drag the handle or the title down to close
+  const box = $(".modal__box");
+  let y0 = null, dy = 0;
+  const grab = (e) => e.target.closest(".modal__grab, .modal__head") && matchMedia("(max-width: 640px)").matches;
+  box.addEventListener("touchstart", (e) => { if (!grab(e)) return; y0 = e.touches[0].clientY; dy = 0; box.style.transition = "none"; }, { passive: true });
+  box.addEventListener("touchmove", (e) => { if (y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); box.style.transform = `translateY(${dy}px)`; }, { passive: true });
+  box.addEventListener("touchend", () => {
+    if (y0 === null) return; y0 = null; box.style.transition = ""; box.style.transform = "";
+    if (dy > 90) closeModal();
+  });
   addEventListener("beforeunload", (e) => { if (isDirty()) { e.preventDefault(); e.returnValue = ""; } });
   $("#modal").addEventListener("click", (e) => { if (e.target.id === "modal" || e.target.closest("[data-close]")) closeModal(); });
   addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#modal").hidden) closeModal(); });
@@ -118,11 +162,16 @@ export async function route() {
   }
   current = VIEWS[name] ? name : "overview";
   $$("#sideNav a").forEach((a) => a.classList.toggle("on", a.dataset.view === current));
-  $("#viewTitle").textContent = v.title; $("#viewSub").textContent = v.sub;
-  endSections(); $("#topActions").innerHTML = ""; setSubnav("");
+  markTabs();
   const view = $("#view");
-  view.style.animation = "none"; view.offsetHeight; view.style.animation = "";
-  view.innerHTML = '<div class="skeleton" style="height:120px"></div>';
+  // the page changes with a short cross-fade (View Transitions), only for the switch itself — never while loading
+  const swap = () => {
+    $("#viewTitle").textContent = v.title; $("#viewSub").textContent = v.sub;
+    endSections(); $("#topActions").innerHTML = ""; setSubnav("");
+    view.innerHTML = '<div class="skeleton" style="height:120px"></div>';
+  };
+  if (document.startViewTransition && !matchMedia("(prefers-reduced-motion: reduce)").matches) { try { await document.startViewTransition(swap).updateCallbackDone; } catch { swap(); } }
+  else { swap(); view.style.animation = "none"; view.offsetHeight; view.style.animation = ""; }
   try { await v.render(view); const S = SECTIONS[current]; if (S && view.querySelector(".card")) sectionize(view, current, S.groups, S.rules, S.fallback); }
   catch (e) { console.error(e); view.innerHTML = `<div class="empty">حدث خطأ: ${esc(e.message)}</div>`; }
 }

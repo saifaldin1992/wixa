@@ -504,3 +504,17 @@ Dashboard → التكاملات → «الإضافات» / «Webhooks» / «ا�
   «رابط جديد» replaces the token (the old address stops at once).
 - Still to do after signing: create the payment link from an order / quote, show «ادفع الآن», verify Wayl's signature on
   notifications, and mark the order paid.
+
+## Apple-style details (Nov 2026)
+
+- **Dashboard dark mode:** `public/admin/theme.js` (in `<head>`, before paint) sets `html[data-theme]` from the choice saved
+  on the device (`wixa-admin-theme`: auto | light | dark; auto follows the device). The sidebar «المظهر» button cycles it.
+  Colours are the tokens at the top of `admin.css`, overridden under `html[data-theme="dark"]` at the end.
+- **Bottom sheets:** on phones (≤ 640px) `.modal` slides up from the bottom; dragging the handle or the title down 90px
+  closes it (`setupShell` in `shell.js`).
+- **Continuous corners:** `corner-shape: squircle` inside `@supports`, with a larger radius; other browsers keep round corners.
+- **Large title:** `.top--compact` once the page has scrolled 24px (title 17px, description, actions and sub-menu hidden on phones).
+- **Page changes:** the dashboard uses `document.startViewTransition` only for the switch itself (never while a page
+  loads); the site uses cross-document `@view-transition { navigation: auto }` with the header kept in place.
+- **Phone tab bar:** `#tabbar`, built from the sidebar for the current role (first four of overview, orders, messages,
+  chats, content, projects, posts…) + «المزيد»; its counters mirror the sidebar's.
