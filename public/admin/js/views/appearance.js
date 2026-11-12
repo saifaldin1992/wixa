@@ -32,7 +32,7 @@ export async function viewAppearance(view) {
       <div class="card"><div class="card__head"><div><h3>الألوان</h3><p>كل لون في الموقع قابل للتغيير</p></div></div>
         <div class="colors">${COLOR_FIELDS.map(([k, label, hint]) => `<label class="color"><input type="color" data-color="${k}" value="${esc(t[k])}"><div><b style="font-size:13px">${label}</b><span>${hint}</span></div><input type="text" data-hex="${k}" value="${esc(t[k])}" maxlength="7" spellcheck="false"></label>`).join("")}</div></div>
       <div class="card"><div class="card__head"><div><h3>نوع الخط</h3><p>خطوط عربية احترافية من Google Fonts</p></div></div>
-        <div class="fonts">${Object.keys(FONTS).map((name) => `<button class="font-opt ${name === f.family ? "on" : ""}" data-font="${esc(name)}"><b style="font-family:'${esc(name)}'">ويكسا Wixa</b><span>${esc(name)}</span></button>`).join("")}</div></div>
+        <div class="fonts">${Object.keys(FONTS).map((name) => `<button class="font-opt ${name === f.family ? "on" : ""}" data-font="${esc(name)}"><b style="font-family:'${esc(name)}'">ويكسا Wixa</b><span>${esc(name)}${name === "Noto Sans Arabic" ? " · الأقرب لخط Apple" : ""}</span></button>`).join("")}</div></div>
       <div class="card"><div class="card__head"><div><h3>حجم الخط والشكل</h3></div></div>
         <div class="stack">
           <label class="f"><span>حجم الخط العام</span><div class="range-row"><input type="range" min="80" max="130" step="5" id="scale" value="${Math.round(f.scale * 100)}"><output id="scaleOut">${Math.round(f.scale * 100)}%</output></div></label>

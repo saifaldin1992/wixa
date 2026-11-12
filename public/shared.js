@@ -2,6 +2,7 @@
 (function () {
   const FONTS = {
     "Alexandria": "400;500;700;800",
+    "Noto Sans Arabic": "300;400;500;600;700;800", // the closest to Apple's own Arabic font (SF Arabic), which is not offered on the web
     "Cairo": "300;400;500;700;800",
     "Tajawal": "300;400;500;700;800",
     "IBM Plex Sans Arabic": "300;400;500;600;700",
@@ -10,7 +11,6 @@
     "Noto Kufi Arabic": "300;400;500;700;800",
     "Rubik": "300;400;500;700;800",
     "Changa": "300;400;500;700;800",
-    "El Messiri": "400;500;600;700",
   };
 
   const DEFAULTS = {
