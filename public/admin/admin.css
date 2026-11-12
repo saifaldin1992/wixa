@@ -905,3 +905,28 @@ small.err { color: #B91C1C; }
 /* the sidebar: «لوحة التحكم» as a pill centred under the logo */
 .side .logo { display: grid; grid-template-columns: auto auto; justify-content: center; align-items: center; gap: 12px 10px; padding: 4px 8px 6px; }
 .side .logo small { grid-column: 1 / -1; justify-self: center; padding: 4px 16px; font-size: 12.5px; }
+
+/* ================= Apple touch (Nov 2026) =================
+   Softer layered shadows, a glass page bar on the computer, glass behind dialogs, spring motion and a light press. */
+:root {
+  --shadow: 0 0 0 1px rgba(16, 20, 34, .03), 0 1px 2px rgba(16, 20, 34, .04), 0 10px 28px -12px rgba(16, 20, 34, .10);
+  --shadow-lg: 0 0 0 1px rgba(16, 20, 34, .03), 0 2px 6px rgba(16, 20, 34, .05), 0 30px 70px -20px rgba(16, 20, 34, .22);
+  --spring: cubic-bezier(.34, 1.36, .64, 1);
+}
+.card { border-color: rgba(16, 20, 34, .06); }
+@media (min-width: 961px) {
+  .top { background: rgba(244, 245, 248, .72); -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8); }
+}
+.modal { background: rgba(16, 20, 34, .32); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.modal__box { box-shadow: var(--shadow-lg); animation-timing-function: var(--spring); }
+.scrim { -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+.side { transition-timing-function: var(--spring); }
+.toast { background: rgba(16, 20, 34, .88); -webkit-backdrop-filter: blur(16px) saturate(1.6); backdrop-filter: blur(16px) saturate(1.6); box-shadow: var(--shadow-lg); }
+.b, .add-fab, .seg button, .theme-opt, .lnk__btns .b { transition: transform .12s ease-out, background-color .2s, border-color .2s, box-shadow .2s; }
+.b:active, .add-fab:active, .seg button:active, .theme-opt:active { transform: scale(.97); }
+.add-fab:hover { transform: scale(1.05); transition: transform .4s var(--spring); }
+@media (prefers-reduced-transparency: reduce) {
+  .top, .modal, .scrim, .toast { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .top { background: var(--bg); }
+}
+@media (prefers-reduced-motion: reduce) { .b:active, .add-fab:active, .seg button:active { transform: none; } }

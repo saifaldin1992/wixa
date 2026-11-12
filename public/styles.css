@@ -1828,3 +1828,38 @@ html[data-page] main > section:not(.hero) { padding-top: 0; padding-bottom: var(
 /* footer links: three tidy columns, a little smaller than the menu (comes last so it wins over the type scale above) */
 .footer__nav a { font-size: .875rem; }
 @media (max-width: 760px) { .footer__nav a { min-height: 38px; padding: 0 2px; } }
+
+/* ================= Apple touch (Nov 2026) =================
+   Softer layered shadows, glass bars (blur + translucency) on every device, spring-like motion and a light press.
+   The purple identity stays; only depth, materials and motion change. Rules in the brand guide (UI ← الظلال والمواد). */
+:root {
+  /* three soft layers: edge, contact, lift — never a hard dark shadow */
+  --shadow: 0 0 0 1px rgba(var(--text-rgb), .03), 0 1px 2px rgba(var(--text-rgb), .04), 0 10px 30px -10px rgba(var(--text-rgb), .10);
+  --shadow-lg: 0 0 0 1px rgba(var(--text-rgb), .03), 0 2px 6px rgba(var(--text-rgb), .04), 0 28px 64px -18px rgba(var(--text-rgb), .18);
+  --spring: cubic-bezier(.34, 1.36, .64, 1); /* a short overshoot, like a spring */
+  --glass: rgba(var(--surface-rgb), .66);
+}
+/* dark mode: depth comes from a lighter surface and a fine light edge, not from black shadows */
+html[data-theme="dark"] {
+  --shadow: 0 0 0 1px rgba(255, 255, 255, .06), 0 12px 32px -14px rgba(0, 0, 0, .55);
+  --shadow-lg: 0 0 0 1px rgba(255, 255, 255, .07), 0 30px 70px -20px rgba(0, 0, 0, .65);
+  --glass: rgba(var(--surface-rgb), .62);
+}
+/* glass: the top bar and the phone menu, everywhere (a single element: cheap even on tablets) */
+.header__bar, .header__menu { background: var(--glass); border-color: rgba(var(--text-rgb), .07); -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8); box-shadow: var(--shadow); }
+@media (hover: none), (pointer: coarse) {
+  .header__bar, .header__menu { -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6); background: rgba(var(--surface-rgb), .78); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .header__bar, .header__menu { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--surface); }
+}
+/* cards lift with a spring and the large shadow */
+.svc, .ind, .way, .tcard, .project, .post, .more__grid a { transition: transform .55s var(--spring), box-shadow .4s var(--ease-out), border-color .3s; }
+.svc:hover, .ind:hover, .way:hover { box-shadow: var(--shadow-lg); }
+.form, .calc__box, .ord__sum, .ord__form, .ord__done, .ord__pick { box-shadow: var(--shadow-lg); }
+/* a light press on everything you tap */
+.btn:active, .pill-btn:active, .theme-btn:active, .menu-btn:active, .track-btn:active, .footer__social a:active { transform: scale(.97); transition: transform .12s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .svc, .ind, .way, .tcard, .project { transition: none; }
+  .btn:active, .pill-btn:active { transform: none; }
+}
