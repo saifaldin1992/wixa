@@ -1870,10 +1870,8 @@ html[data-theme="dark"] {
 .header { view-transition-name: site-header; }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .25s; }
 @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
-/* 3. Apple's continuous corners where the browser can draw them (others keep the round corners) */
+/* 3. Apple's continuous corners where the browser can draw them, with the same three corner sizes (others keep round corners) */
 @supports (corner-shape: squircle) {
   .svc, .ind, .way, .tcard, .project, .post, .form, .calc__box, .ord__sum, .ord__form, .ord__done, .ord__pick, .header__bar, .header__menu,
   .price, .faq__item, .story-item, .gcard__box, .page .more__grid a, .page .case div, .page .team__m, .page .status__row, .page .empty, .pmodal__box, .boot__btns button { corner-shape: squircle; }
-  .svc, .ind, .way, .tcard, .project, .post, .price, .faq__item, .story-item { border-radius: calc(var(--radius) * 1.45); }
-  .form, .calc__box, .header__bar, .pmodal__box { border-radius: calc((var(--radius) + 6px) * 1.45); }
 }

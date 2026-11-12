@@ -968,11 +968,9 @@ html[data-theme="dark"] .side__theme .i-sun, html:not([data-theme="dark"]) .side
 }
 @keyframes sheetUp { from { transform: translateY(100%); } }
 
-/* 3. Apple's continuous corners where the browser can draw them (others keep the round corners) */
+/* 3. Apple's continuous corners where the browser can draw them, with the same three corner sizes (others keep round corners) */
 @supports (corner-shape: squircle) {
   .card, .b, .modal__box, .seg, .seg button, .f input, .f select, .f textarea, .item, .lnk, .theme-opt, .addon, .side__nav a, .top__menu, .tabbar, .empty { corner-shape: squircle; }
-  .card, .modal__box { border-radius: calc(var(--r-lg) * 1.5); }
-  .b, .f input, .f select, .f textarea, .seg button { border-radius: 16px; }
 }
 
 /* 5. large title that shrinks into the bar when the page scrolls (phones keep the bar on top too) */

@@ -512,7 +512,7 @@ Dashboard → التكاملات → «الإضافات» / «Webhooks» / «ا�
   Colours are the tokens at the top of `admin.css`, overridden under `html[data-theme="dark"]` at the end.
 - **Bottom sheets:** on phones (≤ 640px) `.modal` slides up from the bottom; dragging the handle or the title down 90px
   closes it (`setupShell` in `shell.js`).
-- **Continuous corners:** `corner-shape: squircle` inside `@supports`, with a larger radius; other browsers keep round corners.
+- **Continuous corners:** `corner-shape: squircle` inside `@supports`, same three corner sizes (14 / 22 / 28 — `tests/site-layout.mjs` checks them); other browsers keep round corners.
 - **Large title:** `.top--compact` once the page has scrolled 24px (title 17px, description, actions and sub-menu hidden on phones).
 - **Page changes:** the dashboard uses `document.startViewTransition` only for the switch itself (never while a page
   loads); the site uses cross-document `@view-transition { navigation: auto }` with the header kept in place.
