@@ -4,7 +4,7 @@
   --primary: #5B21B6; --primary-rgb: 91,33,182; --primary-ink: #fff;
   --accent: #1FC8E3; --accent-rgb: 31,200,227;
   /* light palette (overridden from the dashboard via applyTheme) */
-  --l-bg: #FFFFFF; --l-surface: #F7F7F7; --l-surface-rgb: 247,247,247; --l-text: #140F1F; --l-text-rgb: 20,15,31; --l-muted: #625C70;
+  --l-bg: #FFFFFF; --l-surface: #F5F5F7; --l-surface-rgb: 245,245,247; --l-text: #140F1F; --l-text-rgb: 20,15,31; --l-muted: #625C70;
   --l-dark: #120A24; --l-dark-rgb: 18,10,36; --l-fg: #5B21B6; --l-fg-rgb: 91,33,182;
   /* dark palette (derived from the brand color) */
   --dk-bg: #130C1F; --dk-surface: #201731; --dk-surface-rgb: 32,23,49; --dk-text: #F2F0F7; --dk-text-rgb: 242,240,247; --dk-muted: #B2ACBF;
@@ -1712,14 +1712,15 @@ html .partners__grid:not(.is-marquee) .partner:is(:hover, :focus-visible, :activ
 /* ===== the WIXA wave colour: purple into cyan, like the section curve and the logo's line.
    A small accent used very sparingly — a few things that should catch the eye ===== */
 :root { --wave: linear-gradient(100deg, var(--primary) 0%, color-mix(in srgb, var(--accent) 50%, var(--primary)) 100%); }
-.track-btn { background: var(--wave); box-shadow: 0 8px 22px -12px rgba(var(--accent-rgb), .7); }   /* track your order */
+.track-btn { background: var(--primary); box-shadow: 0 8px 22px -12px rgba(var(--primary-rgb), .7); }   /* track your order: one solid purple (buttons never wear the gradient) */
 .pstep.on .pstep__num { background: var(--wave); border-color: transparent; color: #fff; }          /* how we work 1·2·3·4 */
-.cdots button.on { background: var(--wave); }                                                        /* dots under the swipe rows */
+.cdots button.on { background: var(--primary); }                                                     /* dots under the swipe rows */
 .pkg__badge { background: var(--wave); }                                                             /* "best fit" tag */
-/* every "start your project" button (header, menu, hero, closing section) wears the wave colour */
-.header__nav .nav-cta, .head-start, .header__menu .menu-cta, .btn--primary[data-start] { background: var(--wave) !important; color: #fff !important; border-color: transparent; }
-.btn--primary[data-start] { box-shadow: 0 10px 30px -10px rgba(var(--accent-rgb), .55); }
-.btn--primary[data-start]:hover { box-shadow: 0 16px 40px -10px rgba(var(--accent-rgb), .65); }
+/* every "start your project" button (header, menu, hero, closing section): one solid purple, like every button —
+   the wave gradient is kept for lines and small markers only (Apple: buttons are flat colour) */
+.header__nav .nav-cta, .head-start, .header__menu .menu-cta, .btn--primary[data-start] { background: var(--primary) !important; color: var(--primary-ink, #fff) !important; border-color: transparent; }
+.btn--primary[data-start] { box-shadow: 0 10px 30px -12px rgba(var(--primary-rgb), .55); }
+.btn--primary[data-start]:hover { box-shadow: 0 16px 40px -12px rgba(var(--primary-rgb), .6); }
 
 /* WhatsApp and live chat: one size, one level, mirrored corners; the chat button in the logo line's cyan */
 html[lang] .wa, html[lang] .chatw__btn { width: 56px; height: 56px; bottom: calc(20px + env(safe-area-inset-bottom)); }

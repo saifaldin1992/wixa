@@ -24,7 +24,7 @@
       primaryInk: "#FFFFFF",
       accent: "#1FC8E3",
       bg: "#FFFFFF",
-      surface: "#F7F7F7",
+      surface: "#F5F5F7",
       text: "#140F1F",
       muted: "#625C70",
       dark: "#120A24",

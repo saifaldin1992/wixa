@@ -19,7 +19,7 @@ export async function notifyOwner(env, row, test = false) {
   const staging = env.SITE_ENV === "staging";
   const admin = `${staging ? "https://staging.wixa.dev" : "https://wixa.dev"}/admin/#${row.order ? "orders" : "messages"}`;
   const wa = row.phone ? `https://wa.me/${row.phone.replace(/\D/g, "")}` : "";
-  const html = `<div dir="rtl" style="font-family:'Noto Sans Arabic',Tahoma,Arial,sans-serif;background:#F7F7F7;padding:24px">
+  const html = `<div dir="rtl" style="font-family:'Noto Sans Arabic',Tahoma,Arial,sans-serif;background:#F5F5F7;padding:24px">
     <div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #ECE6E8">
       <div style="background:#5B21B6;color:#fff;padding:18px 22px;font-size:18px;font-weight:bold">${row.order ? `طلب جديد ${esc(row.order)}` : "رسالة جديدة"} من موقع ويكسا${staging ? " (النسخة التجريبية)" : ""}</div>
       <div style="padding:22px;color:#1A0E12;font-size:15px;line-height:1.8">
@@ -51,7 +51,7 @@ export async function sendAutoReply(env, cfg, row, test = false) {
   let contact = "";
   try { contact = JSON.parse(memo.text || (await loadFromSupabase(env)))?.settings?.contact?.email || ""; } catch {}
   const site = env.SITE_ENV === "staging" ? "https://staging.wixa.dev" : "https://wixa.dev";
-  const html = `<div dir="${lang === "ar" ? "rtl" : "ltr"}" style="font-family:'Noto Sans Arabic',Tahoma,Arial,sans-serif;background:#F7F7F7;padding:24px">
+  const html = `<div dir="${lang === "ar" ? "rtl" : "ltr"}" style="font-family:'Noto Sans Arabic',Tahoma,Arial,sans-serif;background:#F5F5F7;padding:24px">
     <div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #ECE6E8">
       <div style="background:#5B21B6;color:#fff;padding:18px 22px;font-size:18px;font-weight:bold">${lang === "ar" ? "ويكسا" : "WIXA"}</div>
       <div style="padding:22px;color:#1A0E12;font-size:15px;line-height:1.9;white-space:pre-wrap">${esc(text)}</div>
@@ -97,7 +97,7 @@ export async function sendRequestConfirmation(env, cfg, row) {
   const intro = ar ? `أهلاً ${name}،\nوصلنا طلب مشروعك ورقمه ${row.request_no}. سيراجعه فريقنا ونعود إليك خلال يوم عمل بالخطوة التالية أو بأسئلة لتوضيح التفاصيل.`
     : `Hi ${name},\nWe've received your project request, number ${row.request_no}. Our team will review it and get back to you within one working day with the next step or a few questions.`;
   const keep = ar ? "احتفظ برقم الطلب، واذكره عند تواصلك معنا." : "Keep this number and mention it when you contact us.";
-  const html = `<div dir="${ar ? "rtl" : "ltr"}" style="font-family:'Noto Sans Arabic',Tahoma,Arial,sans-serif;background:#F7F7F7;padding:24px">
+  const html = `<div dir="${ar ? "rtl" : "ltr"}" style="font-family:'Noto Sans Arabic',Tahoma,Arial,sans-serif;background:#F5F5F7;padding:24px">
     <div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E9E4F2">
       <div style="background:#5B21B6;color:#fff;padding:18px 22px;font-size:18px;font-weight:bold">${ar ? "ويكسا" : "WIXA"}</div>
       <div style="padding:22px;color:#140F1F;font-size:15px;line-height:1.9">
@@ -131,5 +131,5 @@ export async function sendOwnerMail(env, subject, html) {
   if (!r.ok) console.error("owner mail failed", r.status, await r.text());
   return r.ok;
 }
-export const mailBox = (title, inner, color = "#5B21B6") => `<div dir="rtl" style="font-family:'Noto Sans Arabic',Tahoma,Arial,sans-serif;background:#F7F7F7;padding:24px"><div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #ECE6E8">
+export const mailBox = (title, inner, color = "#5B21B6") => `<div dir="rtl" style="font-family:'Noto Sans Arabic',Tahoma,Arial,sans-serif;background:#F5F5F7;padding:24px"><div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #ECE6E8">
   <div style="background:${color};color:#fff;padding:18px 22px;font-size:18px;font-weight:bold">${title}</div><div style="padding:22px;color:#1A0E12;font-size:15px;line-height:1.9">${inner}</div></div></div>`;
