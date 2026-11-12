@@ -88,8 +88,9 @@ export async function handleHome(request, env, ctx, pageName = "home") {
   const vars = WIXA.themeVars(full, full.font?.family);
   const navAt = Object.fromEntries(WIXA.navPlan(st).map((x, i) => [x.k, { at: x.at, i }]));
   const themeCss = `<style id="wixa-theme">:root{${Object.entries(vars).map(([k, v]) => `${k}:${String(v).replace(/[<>{};]/g, "")}`).join(";")}}</style>`;
-  const fontHref = full.font?.family && full.font.family !== "Alexandria" && WIXA.FONTS[full.font.family]
-    ? `https://fonts.googleapis.com/css2?family=${encodeURIComponent(full.font.family).replace(/%20/g, "+")}:wght@${WIXA.FONTS[full.font.family]}&display=swap` : "";
+  const fam = WIXA.FONTS[full.font?.family] ? full.font.family : WIXA.BRAND_FONT;
+  const fontHref = WIXA.HOSTED[fam] ? (WIXA.HOSTED[fam] === "/fonts/noto-sans-arabic.css" ? "" : WIXA.HOSTED[fam])
+    : `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fam).replace(/%20/g, "+")}:wght@${WIXA.FONTS[fam]}&display=swap`;
   const res = versionAssets(new HTMLRewriter())
     .on("head", { element: (el) => el.append(`${headTags}<script id="wixa-data" type="application/json">${safe}</script>`, { html: true }) })
     .on("html", { element: (el) => { el.setAttribute("lang", lang); el.setAttribute("dir", lang === "ar" ? "rtl" : "ltr"); el.setAttribute("data-page", pageName); } })
@@ -214,7 +215,7 @@ export function siteShell(st, lang, path) {
 // (the stylesheets come right after it in <body>, so the browser can show it while they load) and the site's
 // stylesheet hides it (.boot { display: none }) the moment it arrives — on a good connection it is never seen.
 // After 10 s /theme-pre.js adds «boot-slow»: «التحميل يتأخر» + «إعادة المحاولة».
-const BOOT_CSS = `.boot{position:fixed;inset:0;z-index:200;display:grid;place-content:center;justify-items:center;gap:14px;padding:16px;background:#FBFAFE;color:#140F1F;text-align:center;font:500 1rem/1.6 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
+const BOOT_CSS = `.boot{position:fixed;inset:0;z-index:200;display:grid;place-content:center;justify-items:center;gap:14px;padding:16px;background:#FFFFFF;color:#140F1F;text-align:center;font:500 1rem/1.6 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
 html[data-theme="dark"] .boot{background:#130C1F;color:#F2F0F7}
 .boot>*{opacity:0;animation:bootIn .3s ease .4s forwards}.boot__mark{width:84px;height:auto;color:#5B21B6;animation:bootIn .3s ease .4s forwards,bootPulse 1.4s ease-in-out .7s infinite}
 html[data-theme="dark"] .boot__mark{color:#A574F1}.boot p{margin:0}
@@ -232,7 +233,7 @@ export function simplePage(request, st, { lang, title, description, path, image,
   const origin = new URL(request.url).origin;
   const t = st.theme || {};
   const color = /^#[0-9a-f]{3,8}$/i.test(t.primary || "") ? t.primary : "#5B21B6";
-  const font = String(st.font?.family || "Alexandria").replace(/[^\w\s-]/g, "");
+  const font = WIXA.FONTS[st.font?.family] ? st.font.family : WIXA.BRAND_FONT, hosted = WIXA.HOSTED[font];
   const brand = (ar ? st.brand?.name_ar : st.brand?.name_en) || (ar ? "ويكسا" : "WIXA");
   const c = st.contact || {};
   const wa = String(c.whatsapp || "").replace(/\D/g, "");
@@ -243,7 +244,7 @@ export function simplePage(request, st, { lang, title, description, path, image,
 <meta property="og:type" content="website"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${origin}${path}">
 ${image ? `<meta property="og:image" content="${esc(image)}"><meta name="twitter:card" content="summary_large_image">` : ""}
 <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
-${font === "Alexandria" ? '<link rel="preload" href="/fonts/alexandria/alexandria-arabic-800-normal.woff2" as="font" type="font/woff2" crossorigin>' : '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'}
+${font === WIXA.BRAND_FONT ? '<link rel="preload" href="/fonts/noto-sans-arabic/noto-sans-arabic-arabic-600-normal.woff2" as="font" type="font/woff2" crossorigin>' : hosted ? "" : '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'}
 ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld).replace(/</g, "\\u003c")}</script>` : ""}
 <script src="/theme-pre.js"></script>
 <style>${BOOT_CSS}</style>
@@ -292,7 +293,7 @@ html[data-theme="dark"] .page{--p:var(--fg)}
 .header .lang-btn{display:inline-grid;place-items:center;text-decoration:none;color:var(--text);line-height:1}
 </style></head><body>
 ${bootHtml(lang)}
-${font === "Alexandria" ? '<link rel="stylesheet" href="/fonts/alexandria.css">' : `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;500;700;800&display=swap">`}
+${hosted ? `<link rel="stylesheet" href="${hosted}">` : `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g, "+")}:wght@${WIXA.FONTS[font]}&display=swap">`}
 <link rel="stylesheet" href="${versioned("/build/site.css")}">
 ${shell.header}
 <div class="scrim" id="scrim"></div>

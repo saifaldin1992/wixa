@@ -5,7 +5,7 @@
   --r: 14px; --r-lg: 20px;
   --shadow: 0 1px 2px rgba(16,20,34,.04), 0 8px 24px -10px rgba(16,20,34,.12);
   --ease: cubic-bezier(.16,1,.3,1);
-  font-family: "Alexandria", system-ui, sans-serif; /* the brand font, same as the website */
+  font-family: "Noto Sans Arabic", system-ui, sans-serif; /* the brand font, same as the website (hosted: /fonts/noto-sans-arabic.css) */
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
@@ -482,7 +482,7 @@ html[dir=rtl] .bar__top span:first-child { direction: rtl; }
 @media (max-width: 900px) { .devguide { grid-template-columns: 1fr; } .dg-toc { position: static; max-height: none; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } }
 
 /* ---------- sign-in (one centred column, WIXA identity) ---------- */
-.auth { min-height: 100vh; min-height: 100svh; display: grid; place-items: center; padding: 32px 16px; background: radial-gradient(70% 45% at 50% 0%, #EFE7FC, transparent 70%), #FBFAFE; grid-template-columns: 1fr; }
+.auth { min-height: 100vh; min-height: 100svh; display: grid; place-items: center; padding: 32px 16px; background: radial-gradient(70% 45% at 50% 0%, #EFE7FC, transparent 70%), #FFFFFF; grid-template-columns: 1fr; }
 .auth__box { width: min(420px, 100%); display: grid; justify-items: center; }
 .auth__brand { display: flex; align-items: center; gap: 18px; direction: ltr; color: #5B21B6; }
 .auth__mark { width: 112px; height: 54px; display: block; } .auth__mark svg { width: 100%; height: 100%; display: block; }
@@ -704,7 +704,7 @@ html[dir="rtl"] .chat__back svg { transform: none; }
 .bg-gifts span small { font-size: 11px; } .bg-gifts span:last-child { background: #fff; border: 1.5px solid var(--line); font-size: 14px; }
 .bg-gifts em { font-style: normal; color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 700; }
 
-/* Alexandria is wider than the old font: a touch smaller text keeps the same density; phones a little smaller still (never under 13px) */
+/* the brand font: a touch smaller text keeps the density; phones a little smaller still (never under 13px) */
 body { font-size: 14.5px; }
 .top__title { letter-spacing: 0; }
 @media (max-width: 600px) { body { font-size: 14px; } .top__title { font-size: 22px; } .top__sub { font-size: 13px; } .b { font-size: 14px; } }
@@ -830,14 +830,14 @@ body { font-size: 14.5px; }
 :is([class*="grid"], [class*="kpis"]) > .card + .card { margin-top: 0; }
 
 /* connection failed at start-up: a message and a retry button instead of a loading screen that never ends */
-.netfail { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 16px; background: color-mix(in srgb, #FBFAFE 92%, transparent); }
+.netfail { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 16px; background: color-mix(in srgb, #FFFFFF 92%, transparent); }
 .netfail__box { max-width: 420px; width: 100%; padding: 24px; border-radius: 22px; background: #fff; border: 1px solid var(--line, #E7E3EF); box-shadow: 0 24px 60px -20px rgba(20, 15, 31, .25); text-align: center; display: grid; gap: 10px; }
 .netfail__box b { font-size: 1.15rem; }
 .netfail__box p { margin: 0 0 6px; color: var(--muted, #5B6270); line-height: 1.8; }
 .netfail__box .b { justify-self: center; min-height: 48px; padding: 0 24px; }
 
 /* loading screen until the sign-in screen or the dashboard appears (public/admin/boot.js) */
-.boot { position: fixed; inset: 0; z-index: 150; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 16px; background: #FBFAFE; text-align: center; color: #5B6270; }
+.boot { position: fixed; inset: 0; z-index: 150; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 16px; background: #FFFFFF; text-align: center; color: #5B6270; }
 .boot__mark { width: 84px; height: auto; color: #5B21B6; animation: bootPulse 1.4s ease-in-out infinite; }
 .boot p { margin: 0; font-size: 1rem; }
 .boot .b { min-height: 48px; padding: 0 24px; }
@@ -991,3 +991,5 @@ html[data-theme="dark"] .side__theme .i-sun, html:not([data-theme="dark"]) .side
 .side { view-transition-name: none; }
 
 @media (prefers-reduced-transparency: reduce) { .top { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; } }
+html[data-theme="dark"] .auth { background: radial-gradient(70% 45% at 50% 0%, #241A3D, transparent 70%), var(--bg); }
+html[data-theme="dark"] .auth__brand { color: #C4B5FD; }

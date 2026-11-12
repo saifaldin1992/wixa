@@ -123,7 +123,7 @@ export async function handleAdminDiagnose(request, env, ctx) {
     }, "Cloudflare ← My Profile ← API Tokens", ""),
     // 7. site files and pages
     run("الموقع", "ملفات الموقع (التصميم والبرمجة والخط)", async () => {
-      const files = ["/build/site.js", "/build/site.css", "/build/shared.js", "/build/admin.js", "/fonts/alexandria.css", "/logo.svg"];
+      const files = ["/build/site.js", "/build/site.css", "/build/shared.js", "/build/admin.js", "/fonts/noto-sans-arabic.css", "/logo.svg"];
       const res = await Promise.all(files.map((f) => env.ASSETS.fetch(new Request(origin + f)).then((r) => [f, r.status, r.headers.get("content-type") || ""])));
       const bad = res.filter(([f, s, ct]) => s !== 200 || (f.endsWith(".js") && !/javascript/.test(ct)) || (f.endsWith(".css") && !/css/.test(ct)));
       return bad.length ? { state: "fail", detail: `مشكلة في: ${bad.map(([f, s]) => `${f} (${s})`).join("، ")}`, fix: "غالباً فشل البناء الأخير: افتح Cloudflare ← Workers ← Deployments وراجع سجل البناء (Build log)." } : { detail: `الملفات الأساسية الستة سليمة` };

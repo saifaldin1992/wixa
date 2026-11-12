@@ -69,7 +69,7 @@ public/                       الملفات الثابتة
     index.html, admin.css, admin.js
     js/core.js, auth.js, shell.js (القائمة والتنقل), settings.js, fields.js (رفع الصور وضغطها)
     js/views/*.js             صفحة لكل قسم في اللوحة
-  fonts/                      خط Alexandria مستضاف محلياً (SIL OFL)
+  fonts/                      خط الهوية Noto Sans Arabic (وAlexandria) مستضافان محلياً (SIL OFL)
   icons/, logo.svg, wordmark.svg, favicon.*
   build/                      ناتج البناء (لا يُعدَّل يدوياً)
 scripts/build.mjs             البناء بـ esbuild ← public/build

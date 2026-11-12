@@ -55,10 +55,10 @@ export async function viewBrand(view) {
   $("#topActions").innerHTML = `<button class="b b--primary" id="brandPdf">حفظ الدليل PDF</button>`;
   await loadArt();
   // the brand font, so the samples below show it (hosted on the site)
-  if (!document.getElementById("brandFont")) document.head.insertAdjacentHTML("beforeend", '<link id="brandFont" rel="stylesheet" href="/fonts/alexandria.css">');
-  const t = settings.theme, dk = darkPalette(t), font = settings.font?.family || "Alexandria";
+  if (!document.getElementById("brandFont")) document.head.insertAdjacentHTML("beforeend", '<link id="brandFont" rel="stylesheet" href="/fonts/noto-sans-arabic.css">');
+  const t = settings.theme, dk = darkPalette(t), font = settings.font?.family || window.WIXA.BRAND_FONT;
   const brandAr = settings.brand?.name_ar || "ويكسا", brandEn = settings.brand?.name_en || "WIXA";
-  const R = Number(t.radius) || 22;
+  const R = Number(t.radius) || 36;
   const WAVE = `linear-gradient(100deg, ${t.primary}, color-mix(in srgb, ${t.accent} 45%, ${t.primary}))`;
   const card = (sec, title, sub, body) => `<div class="card" data-sec="${sec}"><div class="card__head"><div><h3>${title}</h3>${sub ? `<p>${sub}</p>` : ""}</div></div>${body}</div>`;
   const list = (items) => `<ul class="bg-list">${items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
@@ -158,12 +158,12 @@ export async function viewBrand(view) {
 
     ${card("type", "الخط", `الخط الرسمي: <b>${esc(font)}</b> — عائلة واحدة للعربية والإنجليزية، في الموقع ولوحة التحكم والمطبوعات.${font === "Alexandria" ? " مستضاف على الموقع نفسه، ومرخّص للاستخدام التجاري (SIL OFL)." : ""}`, `
       <div class="bg-type" style="font-family:'${esc(font)}', system-ui">
-        ${[[800, "عريض جداً — العناوين"], [700, "عريض — عناوين البطاقات"], [500, "متوسط — الأزرار"], [400, "عادي — النصوص"]].map(([w, n]) => `<div class="bg-type__row"><span class="muted">${w}</span><p style="font-weight:${w}">نبني المستقبل الرقمي · Building the digital future</p><small class="muted">${n}</small></div>`).join("")}
+        ${[[600, "شبه عريض — العناوين"], [700, "عريض — الأرقام والأسعار"], [500, "متوسط — الأزرار وعناوين البطاقات"], [400, "عادي — النصوص"]].map(([w, n]) => `<div class="bg-type__row"><span class="muted">${w}</span><p style="font-weight:${w}">نبني المستقبل الرقمي · Building the digital future</p><small class="muted">${n}</small></div>`).join("")}
       </div>
       ${h4("سلّم الأحجام (بكسل)")}
       ${table("سلّم الأحجام", ["العنصر", "جوال", "تابلت", "كمبيوتر", "الوزن", "ارتفاع السطر"], scale)}
-      ${list(["أربعة أوزان فقط: 400 و500 و700 و800، ولا أكثر من وزنين في السطر الواحد.", "كل حجم من هذا السلّم، والأصغر 14px. لا تُكتب أحجام يدوية في صفحة وحدها.", "الأرقام بالشكل 1 2 3 في اللغتين (الأسعار، الهواتف، أرقام الطلبات).", "لا تُلصق كلمة إنجليزية بحرف عربي (مثل «وAndroid») — اكتبها بالعربية أو اترك مسافة."])}
-      ${font === "Alexandria" ? `<p style="margin:0"><a href="/fonts/alexandria/OFL.txt" target="_blank" rel="noopener">ترخيص الخط</a> · <a href="https://fonts.google.com/specimen/Alexandria" target="_blank" rel="noopener">تنزيل الخط للتصميم (Google Fonts)</a></p>` : ""}`)}
+      ${list(["أربعة أوزان فقط: 400 و500 و600 و700، ولا أكثر من وزنين في السطر الواحد. العناوين 600 مثل Apple: واضحة بلا ثقل.", "كل حجم من هذا السلّم، والأصغر 14px. لا تُكتب أحجام يدوية في صفحة وحدها.", "الأرقام بالشكل 1 2 3 في اللغتين (الأسعار، الهواتف، أرقام الطلبات).", "لا تُلصق كلمة إنجليزية بحرف عربي (مثل «وAndroid») — اكتبها بالعربية أو اترك مسافة."])}
+      ${window.WIXA.HOSTED[font] ? `<p style="margin:0"><a href="/fonts/${font === "Alexandria" ? "alexandria" : "noto-sans-arabic"}/OFL.txt" target="_blank" rel="noopener">ترخيص الخط</a> · <a href="https://fonts.google.com/specimen/${encodeURIComponent(font).replace(/%20/g, "+")}" target="_blank" rel="noopener">تنزيل الخط للتصميم (Google Fonts)</a></p>` : ""}`)}
 
     ${card("elements", "العناصر المميزة", "عناصر مأخوذة من الشعار تجعل الهوية معروفة حتى بلا شعار. تُستخدم بقلة.", `
       <svg class="bg-wave" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="bgwv" x1="0" x2="1"><stop offset="0" stop-color="${t.primary}"/><stop offset=".5" stop-color="${t.accent}"/><stop offset="1" stop-color="${t.primary}"/></linearGradient></defs><path fill="none" stroke="url(#bgwv)" stroke-width="2.5" stroke-linecap="round" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>

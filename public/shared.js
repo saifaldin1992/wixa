@@ -1,8 +1,10 @@
 /* WIXA — defaults and theme helpers shared by the site and the admin dashboard. */
 (function () {
+  // Noto Sans Arabic is the brand font (closest to Apple's SF Arabic, which is not offered on the web).
+  // HOSTED fonts are served by the site itself; the others come from Google Fonts.
   const FONTS = {
+    "Noto Sans Arabic": "400;500;600;700;800",
     "Alexandria": "400;500;700;800",
-    "Noto Sans Arabic": "300;400;500;600;700;800", // the closest to Apple's own Arabic font (SF Arabic), which is not offered on the web
     "Cairo": "300;400;500;700;800",
     "Tajawal": "300;400;500;700;800",
     "IBM Plex Sans Arabic": "300;400;500;600;700",
@@ -13,19 +15,22 @@
     "Changa": "300;400;500;700;800",
   };
 
+  const HOSTED = { "Noto Sans Arabic": "/fonts/noto-sans-arabic.css", "Alexandria": "/fonts/alexandria.css" };
+  const BRAND_FONT = "Noto Sans Arabic";
+
   const DEFAULTS = {
     theme: {
       primary: "#5B21B6",
       primaryInk: "#FFFFFF",
       accent: "#1FC8E3",
-      bg: "#FBFAFE",
-      surface: "#FFFFFF",
+      bg: "#FFFFFF",
+      surface: "#F7F7F7",
       text: "#140F1F",
       muted: "#625C70",
       dark: "#120A24",
-      radius: 22,
+      radius: 36,
     },
-    font: { family: "Alexandria", scale: 1, headingWeight: 800 },
+    font: { family: "Noto Sans Arabic", scale: 1, headingWeight: 600 },
     brand: { name_ar: "ويكسا", name_en: "WIXA", logo_url: "" },
     contact: {
       email: "info@wixa.dev", phone: "", whatsapp: "",
@@ -34,7 +39,7 @@
     },
     // visitors' language: "auto" follows the visitor's device (Arabic devices → Arabic, others → English)
     default_lang: "auto",
-    partners_style: "grid",
+    partners_style: "marquee",
     iraq_map_size: 100,
     // search engines & link previews (edited in the dashboard → البحث والمشاركة)
     seo: {
@@ -322,10 +327,10 @@
   }
 
   function loadFont(family) {
-    if (!FONTS[family]) family = "Alexandria";
+    if (!FONTS[family]) family = BRAND_FONT;
     const id = "wixa-font";
-    // Alexandria (the brand font) is hosted on the site; the other choices come from Google Fonts
-    const href = family === "Alexandria" ? new URL("/fonts/alexandria.css", location.href).href
+    // the brand font (and Alexandria) are hosted on the site; the other choices come from Google Fonts
+    const href = HOSTED[family] ? new URL(HOSTED[family], location.href).href
       : `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g, "+")}:wght@${FONTS[family]}&display=swap`;
     let link = document.getElementById(id);
     if (!link) { link = document.createElement("link"); link.id = id; link.rel = "stylesheet"; document.head.appendChild(link); }
@@ -368,7 +373,7 @@
   // The CSS variables of the theme — also used by the server to paint the right colours on the first frame
   function themeVars(settings, fam) {
     const t = settings.theme, f = settings.font;
-    if (!FONTS[fam]) fam = "Alexandria";
+    if (!FONTS[fam]) fam = BRAND_FONT;
     const dk = darkPalette(t);
     const vars = {
       "--primary": t.primary, "--primary-rgb": hexToRgb(t.primary), "--primary-ink": t.primaryInk,
@@ -420,5 +425,5 @@
   }
   if (typeof document !== "undefined") markEnv();
 
-  window.WIXA = { DEFAULTS, FONTS, ICONS, merge, navPlan, applyTheme, themeVars, loadFont, markEnv, darkPalette, vivid, mix };
+  window.WIXA = { DEFAULTS, FONTS, HOSTED, BRAND_FONT, ICONS, merge, navPlan, applyTheme, themeVars, loadFont, markEnv, darkPalette, vivid, mix };
 })();

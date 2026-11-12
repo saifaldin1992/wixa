@@ -4,7 +4,7 @@
   --primary: #5B21B6; --primary-rgb: 91,33,182; --primary-ink: #fff;
   --accent: #1FC8E3; --accent-rgb: 31,200,227;
   /* light palette (overridden from the dashboard via applyTheme) */
-  --l-bg: #FBFAFE; --l-surface: #fff; --l-surface-rgb: 255,255,255; --l-text: #140F1F; --l-text-rgb: 20,15,31; --l-muted: #625C70;
+  --l-bg: #FFFFFF; --l-surface: #F7F7F7; --l-surface-rgb: 247,247,247; --l-text: #140F1F; --l-text-rgb: 20,15,31; --l-muted: #625C70;
   --l-dark: #120A24; --l-dark-rgb: 18,10,36; --l-fg: #5B21B6; --l-fg-rgb: 91,33,182;
   /* dark palette (derived from the brand color) */
   --dk-bg: #130C1F; --dk-surface: #201731; --dk-surface-rgb: 32,23,49; --dk-text: #F2F0F7; --dk-text-rgb: 242,240,247; --dk-muted: #B2ACBF;
@@ -12,7 +12,7 @@
   /* active tokens */
   --bg: var(--l-bg); --surface: var(--l-surface); --surface-rgb: var(--l-surface-rgb); --text: var(--l-text); --text-rgb: var(--l-text-rgb);
   --muted: var(--l-muted); --dark: var(--l-dark); --dark-rgb: var(--l-dark-rgb); --fg: var(--l-fg); --fg-rgb: var(--l-fg-rgb);
-  --radius: 22px; --font: "Alexandria", system-ui, sans-serif; --scale: 1; --hw: 800;
+  --radius: 36px; --font: "Noto Sans Arabic", system-ui, sans-serif; --scale: 1; --hw: 600;
   --line: rgba(var(--text-rgb), .08);
   --line-2: rgba(var(--text-rgb), .14);
   --gutter: clamp(16px, 4vw, 48px);

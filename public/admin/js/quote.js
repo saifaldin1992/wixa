@@ -46,7 +46,7 @@ export function openQuote({ name = "", phone = "", chatId = null, onSent } = {})
     const w = open("", "_blank");
     if (!w) return toast("اسمح بالنوافذ المنبثقة لطباعة العرض", "err");
     w.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>عرض سعر — ${esc(name)}</title><style>
-      body{font-family:Tahoma,Arial,sans-serif;color:#1A1424;margin:0;padding:40px;line-height:1.8}header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #5B21B6;padding-bottom:16px;margin-bottom:24px}
+      body{font-family:"Noto Sans Arabic",Tahoma,Arial,sans-serif;color:#1A1424;margin:0;padding:40px;line-height:1.8}header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #5B21B6;padding-bottom:16px;margin-bottom:24px}
       h1{margin:0;color:#5B21B6;font-size:26px}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{text-align:start;padding:12px;border-bottom:1px solid #E9E3F3;vertical-align:top}th{width:32%;color:#5E5670;font-weight:normal}
       .price{background:#F3EEFB;border-radius:14px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;margin:20px 0}.price b{font-size:24px;color:#5B21B6}footer{margin-top:40px;color:#8A8296;font-size:13px;border-top:1px solid #E9E3F3;padding-top:12px}
       @media print{body{padding:0}}</style></head><body>

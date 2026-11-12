@@ -5,7 +5,7 @@ import { route } from "../shell.js";
 
 // ---------------- view: appearance ----------------
 export const PRESETS = [
-  { name: "ويكسا بنفسجي", theme: { primary: "#5B21B6", primaryInk: "#FFFFFF", accent: "#1FC8E3", bg: "#FBFAFE", surface: "#FFFFFF", text: "#140F1F", muted: "#625C70", dark: "#120A24" } },
+  { name: "ويكسا بنفسجي", theme: { primary: "#5B21B6", primaryInk: "#FFFFFF", accent: "#1FC8E3", bg: "#FFFFFF", surface: "#F7F7F7", text: "#140F1F", muted: "#625C70", dark: "#120A24" } },
   { name: "خمري تقني", theme: { primary: "#570622", primaryInk: "#FFFFFF", accent: "#1FC8E3", bg: "#F7F6F8", surface: "#FFFFFF", text: "#140C12", muted: "#665C64", dark: "#12070C" } },
   { name: "خمري ذهبي", theme: { primary: "#570622", primaryInk: "#FFFFFF", accent: "#D9A441", bg: "#FAF7F6", surface: "#FFFFFF", text: "#1A0E12", muted: "#6E5F64", dark: "#2A0711" } },
   { name: "أزرق", theme: { primary: "#1F5BFF", primaryInk: "#FFFFFF", accent: "#FFC83D", bg: "#F5F7FB", surface: "#FFFFFF", text: "#0B1220", muted: "#5E6878", dark: "#0B1220" } },
@@ -32,7 +32,7 @@ export async function viewAppearance(view) {
       <div class="card"><div class="card__head"><div><h3>الألوان</h3><p>كل لون في الموقع قابل للتغيير</p></div></div>
         <div class="colors">${COLOR_FIELDS.map(([k, label, hint]) => `<label class="color"><input type="color" data-color="${k}" value="${esc(t[k])}"><div><b style="font-size:13px">${label}</b><span>${hint}</span></div><input type="text" data-hex="${k}" value="${esc(t[k])}" maxlength="7" spellcheck="false"></label>`).join("")}</div></div>
       <div class="card"><div class="card__head"><div><h3>نوع الخط</h3><p>خطوط عربية احترافية من Google Fonts</p></div></div>
-        <div class="fonts">${Object.keys(FONTS).map((name) => `<button class="font-opt ${name === f.family ? "on" : ""}" data-font="${esc(name)}"><b style="font-family:'${esc(name)}'">ويكسا Wixa</b><span>${esc(name)}${name === "Noto Sans Arabic" ? " · الأقرب لخط Apple" : ""}</span></button>`).join("")}</div></div>
+        <div class="fonts">${Object.keys(FONTS).map((name) => `<button class="font-opt ${name === f.family ? "on" : ""}" data-font="${esc(name)}"><b style="font-family:'${esc(name)}'">ويكسا Wixa</b><span>${esc(name)}${name === "Noto Sans Arabic" ? " · خط الهوية — الأقرب لخط Apple" : ""}</span></button>`).join("")}</div></div>
       <div class="card"><div class="card__head"><div><h3>حجم الخط والشكل</h3></div></div>
         <div class="stack">
           <label class="f"><span>حجم الخط العام</span><div class="range-row"><input type="range" min="80" max="130" step="5" id="scale" value="${Math.round(f.scale * 100)}"><output id="scaleOut">${Math.round(f.scale * 100)}%</output></div></label>
