@@ -58,7 +58,7 @@ export async function viewBrand(view) {
   if (!document.getElementById("brandFont")) document.head.insertAdjacentHTML("beforeend", '<link id="brandFont" rel="stylesheet" href="/fonts/noto-sans-arabic.css">');
   const t = settings.theme, dk = darkPalette(t), font = settings.font?.family || window.WIXA.BRAND_FONT;
   const brandAr = settings.brand?.name_ar || "ويكسا", brandEn = settings.brand?.name_en || "WIXA";
-  const R = Number(t.radius) || 36;
+  const R = Number(t.radius) || 28;
   const WAVE = `linear-gradient(100deg, ${t.primary}, color-mix(in srgb, ${t.accent} 45%, ${t.primary}))`;
   const card = (sec, title, sub, body) => `<div class="card" data-sec="${sec}"><div class="card__head"><div><h3>${title}</h3>${sub ? `<p>${sub}</p>` : ""}</div></div>${body}</div>`;
   const list = (items) => `<ul class="bg-list">${items.map((i) => `<li>${i}</li>`).join("")}</ul>`;

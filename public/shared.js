@@ -28,7 +28,7 @@
       text: "#140F1F",
       muted: "#625C70",
       dark: "#120A24",
-      radius: 36,
+      radius: 28,
     },
     font: { family: "Noto Sans Arabic", scale: 1, headingWeight: 600 },
     brand: { name_ar: "ويكسا", name_en: "WIXA", logo_url: "" },

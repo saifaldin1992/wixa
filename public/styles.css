@@ -12,7 +12,7 @@
   /* active tokens */
   --bg: var(--l-bg); --surface: var(--l-surface); --surface-rgb: var(--l-surface-rgb); --text: var(--l-text); --text-rgb: var(--l-text-rgb);
   --muted: var(--l-muted); --dark: var(--l-dark); --dark-rgb: var(--l-dark-rgb); --fg: var(--l-fg); --fg-rgb: var(--l-fg-rgb);
-  --radius: 36px; --font: "Noto Sans Arabic", system-ui, sans-serif; --scale: 1; --hw: 600;
+  --radius: 28px; --font: "Noto Sans Arabic", system-ui, sans-serif; --scale: 1; --hw: 600;
   --line: rgba(var(--text-rgb), .08);
   --line-2: rgba(var(--text-rgb), .14);
   --gutter: clamp(16px, 4vw, 48px);
@@ -179,7 +179,7 @@ html[data-theme="dark"] .hero__logo .lg-shine { mix-blend-mode: screen; }
 .hero__title { font-size: clamp(2.6rem, calc(7vw * var(--scale)), 5.8rem); line-height: 1.15; margin: 40px auto 30px; max-width: 9.6em; }
 /* the last word (the highlighted one) always gets its own line, so the title keeps the same height whichever font is showing */
 html[lang="ar"] .hero__title .word:last-child:not(:first-child) { display: block; width: max-content; margin-inline: auto; }
-.hero__title .word:last-child > span { padding-bottom: .3em; margin-bottom: -.3em; background: linear-gradient(100deg, var(--fg), var(--accent-ink, var(--accent)) 60%, var(--fg)); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 6s ease-in-out infinite; }
+.hero__title .word:last-child > span { padding-bottom: .3em; margin-bottom: -.3em; background: linear-gradient(100deg, var(--fg), color-mix(in srgb, var(--fg) 58%, #fff) 60%, var(--fg)); /* one purple, light to dark (no cyan) */ background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 6s ease-in-out infinite; }
 @keyframes shimmer { 50% { background-position: 100% 0; } }
 .hero__sub { max-width: 620px; font-size: clamp(1.02rem, 1.4vw, 1.2rem); color: var(--muted); margin: 0 auto 34px; }
 .hero__ctas { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
@@ -589,7 +589,7 @@ html[dir="ltr"] .progress span { transform-origin: left; }
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
 }
 
-html[data-theme="dark"] .hero__title .word:last-child > span { background-image: linear-gradient(100deg, var(--fg), var(--accent) 60%, var(--fg)); }
+html[data-theme="dark"] .hero__title .word:last-child > span { background-image: linear-gradient(100deg, var(--fg), color-mix(in srgb, var(--fg) 55%, #fff) 60%, var(--fg)); }
 
 /* the cyan dot that travels along the logo outline */
 .lg-runner { opacity: 0; }
