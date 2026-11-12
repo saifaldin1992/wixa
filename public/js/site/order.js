@@ -78,7 +78,7 @@ function paint() {
     <aside class="ord__sum">
       <div class="ord__sumHead"><span class="muted">${t("yours")}</span><button type="button" class="ord__change" data-change>${t("change")}</button></div>
       <span class="ord__src">${esc(t("src")[sel.source] || t("src").start)}</span>
-      <h2 class="ord__item">${esc(sel.item)}</h2>
+      <h1 class="ord__item">${esc(sel.item)}</h1>
       ${sel.price ? `<p class="ord__price" dir="auto">${esc(sel.price)}</p>` : ""}
       ${(sel.features || []).length ? `<ul class="ord__feats">${sel.features.slice(0, 8).map((f) => `<li>${esc(f)}</li>`).join("")}</ul>` : ""}
       ${sel.timeline ? `<p class="muted">${esc(sel.timeline)}</p>` : ""}
@@ -123,7 +123,7 @@ function paint() {
 
 function paintPick(root) {
   const pk = packages();
-  root.innerHTML = `<div class="ord__pick"><h2>${t("pickT")}</h2><p class="muted">${t("pickS")}</p>
+  root.innerHTML = `<div class="ord__pick"><h1>${t("pickT")}</h1><p class="muted">${t("pickS")}</p>
     <div class="ord__pkgs">${pk.map((p, i) => `<button type="button" class="ord__pkg${p.featured ? " is-featured" : ""}" data-p="${i}">
       <b>${esc(p.name)}</b><small>${esc(p.desc || "")}</small><span>${p.from && /\d/.test(p.price || "") ? `<i>${t("from")}</i> ` : ""}<bdi dir="ltr">${esc(p.price || "")}</bdi></span></button>`).join("")}
       ${pk.some((p) => !/\d/.test(p.price || "")) ? "" : `<button type="button" class="ord__pkg ord__pkg--custom" data-p="custom"><b>${t("custom")}</b><small>${t("customD")}</small><span>${t("customP")}</span></button>`}</div></div>`;
@@ -138,7 +138,7 @@ function paintPick(root) {
 function paintDone(root, no, mailed, rw) {
   const wa = (state.settings.contact?.whatsapp || "").replace(/\D/g, "");
   root.innerHTML = `<div class="ord__done">
-    <div class="ord__ok" aria-hidden="true">✓</div><h2>${t("done")}</h2>
+    <div class="ord__ok" aria-hidden="true">✓</div><h1>${t("done")}</h1>
     ${no ? `<div class="rq__ticket"><span class="muted">${t("doneNo")}</span><div class="rq__no" dir="ltr">${esc(no)}</div><button type="button" class="btn btn--ghost rq__copy">${t("copy")}</button><a class="track-btn" href="/track?n=${encodeURIComponent(no)}${lang === "en" ? "&lang=en" : ""}">${lang === "en" ? "Track your order" : "تتبع طلبك"}</a></div>` : ""}
     <p class="rq__hint">${t("next")} ${mailed ? t("mailed") : ""}</p>
     ${rw.length ? `<p class="rq__hint">${t("tap")}</p><div class="rq__gifts${rw.length === 3 ? " rq__gifts--3" : ""}">${rw.map(({ tag, h, p }) => `<button type="button" class="gcard" aria-label="${t("tap")}">

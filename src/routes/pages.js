@@ -94,6 +94,12 @@ export async function handleHome(request, env, ctx, pageName = "home") {
   const res = versionAssets(new HTMLRewriter())
     .on("head", { element: (el) => el.append(`${headTags}<script id="wixa-data" type="application/json">${safe}</script>`, { html: true }) })
     .on("html", { element: (el) => { el.setAttribute("lang", lang); el.setAttribute("dir", lang === "ar" ? "rtl" : "ltr"); el.setAttribute("data-page", pageName); el.setAttribute("data-look", full.look === "soft" ? "soft" : "flat"); } })
+    // one main heading per page: «تواصل معنا» is the main heading only on /contact; elsewhere it is a section heading
+    .on("h1.head__title", { element: (el) => { if (pageName !== "contact") el.tagName = "h2"; } })
+    // the inner pages that are a section of the home page: that section's title becomes the page's main heading
+    .on(`section#${pageName} h2.head__title`, { element: (el) => { if (["about", "pricing", "careers", "faq"].includes(pageName)) el.tagName = "h1"; } })
+    // inner pages hide the home headline; keep it out of their outline so each page has a single main heading
+    .on("h1.hero__title", { element: (el) => { if (pageName !== "home") el.tagName = "div"; } })
     .on(...attr('link[rel="canonical"]', "href", `${origin}${pagePath}`))
     .on(...attr('meta[property="og:url"]', "content", `${origin}${pagePath}`))
     .on("title", { element: (el) => { if (title) el.setInnerContent(title); } })

@@ -128,8 +128,8 @@ export function render() {
   $("#statsGrid").innerHTML = (s.stats || []).map((st) => `
     <div class="stat reveal-up"><b><span data-count="${Number(st.value) || 0}">${anim ? 0 : Number(st.value) || 0}</span><em>${esc(st.suffix || "")}</em></b><span>${esc(st[`label_${lang}`] || st.label_ar || "")}</span></div>`).join("");
 
-  // partners
-  const marquee = s.partners_style === "marquee";
+  // the moving row needs motion: with animations off (or "reduce motion" on the device) the logos stand still in the grid, each once
+  const marquee = s.partners_style === "marquee" && anim;
   $("#partnersGrid").classList.toggle("is-marquee", marquee);
   const partnerCards = state.partners.map((p) => {
     const inner = p.logo_url ? `<img src="${esc(safeUrl(p.logo_url))}" alt="${esc(p.name)}" loading="lazy">` : `<span>${esc(p.name)}</span>`;
