@@ -188,12 +188,14 @@ export function siteShell(st, lang, path) {
   const HREF = { home: "/", services: "/#services", industries: "/#industries", projects: "/#projects", pricing: "/#pricing", calc: "/#calculator", about: "/about", partners: "/#partners", careers: "/careers", contact: "/contact", faq: "/faq", blog: "/blog", privacy: "/privacy" };
   const LABEL = (k) => ui[k === "privacy" ? "privacy" : `nav_${k}`] || k;
   const href = (k) => { const h = HREF[k] || "/"; const [p, hash] = h.split("#"); return `${p}${q}${hash ? `#${hash}` : ""}`; };
-  const plan = WIXA.navPlan(st);
+  const SEC = { services: "services", industries: "industries", projects: "projects", pricing: "pricing", calc: "calculator", about: "about", partners: "partners", careers: "careers", faq: "faq" };
+  const off = (x) => SEC[x.k] && (st.sections || {})[SEC[x.k]] === false;
+  const plan = WIXA.navPlan(st).filter((x) => !off(x));
   const link = (x, where) => `<a href="${href(x.k)}"${path === HREF[x.k] ? ' aria-current="page"' : ""}>${esc(LABEL(x.k))}</a>`;
   const top = plan.filter((x) => x.at === "both" || x.at === "menu"), foot = plan.filter((x) => x.at === "both" || x.at === "footer");
   const mark = '<span class="brand__mark"><svg viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg></span>';
   const word = `<span class="brand__name"><svg class="wm" viewBox="0 0 716.6 150" aria-hidden="true"><use href="/wordmark.svg#wm"/></svg><span class="sr-only">${ar ? "ويكسا" : "WIXA"}</span></span>`;
-  const c = st.contact || {};
+  const c = WIXA.merge(WIXA.DEFAULTS, st).contact || {};
   const host = { instagram: "www.instagram.com", x: "x.com", linkedin: "www.linkedin.com", facebook: "www.facebook.com" };
   const social = (k) => { let v = String(c[k] || "").trim(); if (!v) return ""; if (!/^https?:\/\/[^/]+\.[a-z]{2,}/i.test(v)) v = `https://${host[k]}/${v.replace(/^https?:\/\//i, "").replace(/^@/, "").replace(/^(www\.)?(instagram|facebook|linkedin|x|twitter)(\.com)?\/?/i, "").replace(/^\/+/, "")}`; return safeHref(v); };
   const socials = ["instagram", "x", "linkedin", "facebook"].map((k) => [k, social(k)]).filter(([, u]) => u).map(([k, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener" aria-label="${k}">${SOCIAL[k]}</a>`).join("")
@@ -295,7 +297,7 @@ html[data-theme="dark"] .page{--p:var(--fg)}
 .page .status{display:grid;gap:10px;margin:24px 0}.page .status__row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:14px 18px;border-radius:var(--radius,22px);border:1px solid var(--l);background:var(--s)}
 .page .status__row b{color:var(--t)}.page .status__row small{grid-column:2/-1;color:var(--m);font-size:.85rem}.page .status__st{font-weight:700;color:var(--m)}
 .page .status__dot{width:12px;height:12px;border-radius:50%;background:#0E7C47;box-shadow:0 0 0 4px color-mix(in srgb,#0E7C47 18%,transparent)}.page .status__dot--warn{background:#B45309;box-shadow:0 0 0 4px color-mix(in srgb,#B45309 18%,transparent)}.page .status__dot--down{background:#B91C1C;box-shadow:0 0 0 4px color-mix(in srgb,#B91C1C 18%,transparent)}.page .status__dot--off{background:#9CA3AF;box-shadow:none}
-.footer__wave path{stroke-dashoffset:0}
+.footer .footer__wave path{stroke-dashoffset:0} /* no scroll script on these pages: the waves are drawn from the start (this wins over site.css, which loads later) */
 .header .lang-btn{display:inline-grid;place-items:center;text-decoration:none;color:var(--text);line-height:1}
 </style></head><body>
 ${bootHtml(lang)}
