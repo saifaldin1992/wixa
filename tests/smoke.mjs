@@ -48,6 +48,7 @@ try {
   const miss = await fetch(`${BASE}/no-such-page`);
   check(miss.status === 404 && (await miss.text()).includes("<title>"), "an unknown address shows the site's 404 page", String(miss.status));
   check((await fetch(`${BASE}/api/admin/order`, { method: "POST", body: "{}" })).status === 401, "manual orders require sign-in");
+  check((await fetch(`${BASE}/api/pay/wayl/0123456789abcdef0123456789abcdef`, { method: "POST", body: "{}" })).status === 404, "payment notifications refused while off or with a wrong address");
   check((await fetch(`${BASE}/api/admin/msgmeta`)).status === 401, "message notes require sign-in");
   check((await fetch(`${BASE}/api/admin/diagnose`)).status === 401, "diagnostics require sign-in");
   check((await fetch(`${BASE}/api/admin/team`)).status === 401, "team management requires sign-in");

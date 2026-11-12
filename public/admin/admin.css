@@ -891,3 +891,17 @@ small.err { color: #B91C1C; }
 .theme-opt__pic--minimal { padding-inline: 22%; }
 .theme-opt__pic--minimal i { display: none; }
 .theme-opt__pic--minimal b:first-of-type { height: 7px; background: var(--muted); }
+
+/* التكاملات ← الإضافات / Webhooks / المفاتيح (Wayl) */
+.addon { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px; border: 1px solid var(--line); border-radius: 14px; }
+.addon__ico { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; font-size: 20px; color: #fff; flex: none; }
+.addon__ico--wayl { background: #7C3AED; }
+.addon__main { flex: 1 1 200px; display: grid; gap: 2px; min-width: 0; }
+.addon__main span { font-size: 13px; }
+.hook-url { display: flex; gap: 8px; }
+.hook-url input { flex: 1; min-width: 0; font-size: 13px; }
+.hook-ev { display: grid; gap: 6px; }
+.hook-ev div { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; }
+/* the sidebar: «لوحة التحكم» as a pill centred under the logo */
+.side .logo { display: grid; grid-template-columns: auto auto; justify-content: center; align-items: center; gap: 12px 10px; padding: 4px 8px 6px; }
+.side .logo small { grid-column: 1 / -1; justify-self: center; padding: 4px 16px; font-size: 12.5px; }

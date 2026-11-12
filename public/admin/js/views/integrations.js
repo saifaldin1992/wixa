@@ -1,6 +1,6 @@
 /* Integrations: new-message alerts, auto-reply to visitors, analytics & ad pixels, spam protection,
-   maintenance mode and "publish now". Stored privately on the server (Cloudflare), not in the public site settings. */
-import { $, $$, I, adminApi, esc, rememberOwner, toast } from "../core.js";
+   maintenance mode, "publish now", and the Wayl payment gateway (add-on, webhooks, key). Stored privately on the server (Cloudflare), not in the public site settings. */
+import { $, $$, I, adminApi, confirmBox, esc, rememberOwner, toast } from "../core.js";
 import { restoreDialog } from "../restore.js";
 
 const TAGS = [
@@ -19,6 +19,8 @@ export async function viewIntegrations(view) {
   const sw = (id, on, label) => `<label class="switch"><input type="checkbox" id="${id}" ${on ? "checked" : ""}><i></i>${label}</label>`;
   const save = (label = "حفظ") => `<button class="b b--primary" data-save style="justify-self:start">${I.save}${label}</button>`;
   const a = cfg.autoreply, m = cfg.maintenance;
+  const pay = cfg.payments || {}, wayl = cfg.wayl || {}, events = cfg.pay_events || [];
+  const hookUrl = pay.webhook_token ? `${location.origin}/api/pay/wayl/${pay.webhook_token}` : "يُنشأ عند أول حفظ";
   view.innerHTML = `<div class="ints">
     <div class="card" id="cPublish"><div class="card__head"><div><h3>تحديث الموقع الآن</h3>
       <p>تعديلاتك تظهر تلقائياً فور الحفظ. استخدم هذا الزر إن لم تظهر بعد لسبب ما.</p></div>
@@ -96,6 +98,38 @@ export async function viewIntegrations(view) {
         </div>
         <div class="row-btns">${save()}</div>
       </div></div>
+
+    <div class="card" id="cAddons"><div class="card__head"><div><h3>الإضافات</h3><p>خدمات خارجية تُربط بالموقع.</p></div></div>
+      <div class="addon">
+        <span class="addon__ico addon__ico--wayl" aria-hidden="true">W</span>
+        <div class="addon__main"><b>Wayl — بوابة الدفع الإلكتروني</b><span class="muted">فيزا وماستركارد وزين كاش وكي كارد، من صفحة الطلب ومن عرض السعر.</span></div>
+        <span class="pill ${pay.on ? "ok" : wayl.has_key ? "warn" : "off"}">${pay.on ? "مفعّل" : wayl.has_key ? "مربوط — غير مفعّل" : "غير مربوط"}</span>
+      </div>
+      <div class="stack" style="margin-top:12px">
+        ${sw("payOn", pay.on, "تفعيل الدفع الإلكتروني في الموقع")}
+        <label class="f" style="max-width:260px"><span>الوضع</span><select id="payMode"><option value="test" ${pay.mode !== "live" ? "selected" : ""}>تجريبي (لا تُسحب أموال)</option><option value="live" ${pay.mode === "live" ? "selected" : ""}>حقيقي</option></select></label>
+        <p class="muted" style="margin:0;font-size:12px">${wayl.has_key ? "" : "يلزم حفظ مفتاح Wayl أولاً من «المفاتيح». "}زر الدفع يظهر للزبائن بعد توقيع العقد وإكمال الربط وتجربته في الوضع التجريبي.</p>
+        <div class="row-btns">${save()}</div>
+      </div></div>
+
+    <div class="card" id="cHooks"><div class="card__head"><div><h3>Webhooks</h3><p>رابط يرسل إليه Wayl إشعاراً عند كل دفعة أو استرجاع. انسخه وضعه في لوحة Wayl.</p></div></div>
+      <div class="stack">
+        ${sw("hookOn", pay.webhook_on, "استقبال إشعارات Wayl")}
+        <label class="f"><span>رابط الإشعارات</span><div class="hook-url"><input id="hookUrl" dir="ltr" readonly value="${esc(hookUrl)}"><button type="button" class="b b--sm" id="hookCopy">نسخ</button></div></label>
+        <p class="muted" style="margin:0;font-size:12px">الرابط سرّي: لا تنشره. إذا ظننت أن أحداً عرفه اضغط «رابط جديد» ثم ضع الجديد في لوحة Wayl.</p>
+        <div class="row-btns">${save()}<button type="button" class="b" id="hookNew">${I.reset}رابط جديد</button></div>
+        <div class="sec-title">آخر الإشعارات</div>
+        ${events.length ? `<div class="hook-ev">${events.map((e) => `<div><span dir="ltr">${esc(new Date(e.at).toLocaleString("ar-IQ-u-nu-latn", { timeZone: "Asia/Baghdad", dateStyle: "short", timeStyle: "short" }))}</span><b dir="ltr">${esc(e.event)}</b>${e.ref ? `<span dir="ltr">${esc(e.ref)}</span>` : ""}${e.amount ? `<span dir="ltr">${esc(e.amount)}</span>` : ""}</div>`).join("")}</div>`
+          : '<p class="muted" style="margin:0">لم يصل أي إشعار بعد.</p>'}
+      </div></div>
+
+    <div class="card" id="cKeys"><div class="card__head"><div><h3>المفاتيح</h3><p>مفتاح Wayl (API key) من لوحة Wayl ← المفاتيح ← «إنشاء مفتاح».</p></div></div>
+      <div class="stack">
+        <p style="margin:0">${wayl.has_key ? `<span class="pill ok">محفوظ</span> ينتهي بـ <b dir="ltr">••••${esc(wayl.key_hint)}</b>` : '<span class="pill off">لا يوجد مفتاح</span>'}</p>
+        <label class="f"><span>${wayl.has_key ? "استبدال المفتاح" : "المفتاح"}</span><input id="waylKey" type="password" dir="ltr" autocomplete="off" spellcheck="false" maxlength="300" placeholder="الصق المفتاح هنا"></label>
+        <p class="muted" style="margin:0;font-size:12px">يُحفظ على الخادم فقط ولا يظهر مرة أخرى، ولا يراه أي عضو في الفريق.</p>
+        <div class="row-btns"><button type="button" class="b b--primary" id="keySave">${I.save}حفظ المفتاح</button>${wayl.has_key ? `<button type="button" class="b b--danger" id="keyDel">${I.trash}حذف المفتاح</button>` : ""}</div>
+      </div></div>
   </div>`;
 
   const val = (id) => $(`#${id}`).value;
@@ -109,8 +143,29 @@ export async function viewIntegrations(view) {
     cTags: () => ({ tags: Object.fromEntries($$("[data-tag]").map((i) => [i.dataset.tag, i.value.trim()])) }),
     cSpam: () => ({ spam: { turnstile: chk("tsOn"), blocked: val("blocked") } }),
     cMaint: () => ({ maintenance: { on: chk("maintOn"), message_ar: val("mAr"), message_en: val("mEn") } }),
+    cAddons: () => ({ payments: { ...pay, on: chk("payOn"), mode: val("payMode") } }),
+    cHooks: () => ({ payments: { ...pay, webhook_on: chk("hookOn") } }),
   };
   $("#restoreBtn").onclick = () => restoreDialog();
+  // Wayl: the secret key goes to the server only; the page never receives it back
+  const reload = () => viewIntegrations(view);
+  $("#keySave").onclick = async () => {
+    const k = $("#waylKey").value.trim();
+    if (k.length < 8) return toast("الصق مفتاح Wayl كاملاً", "err");
+    try { await adminApi("integrations", "PUT", { wayl_key: k }); toast("حُفظ المفتاح ✓"); reload(); }
+    catch (e) { toast(e.message === "bad_key" ? "المفتاح فيه رموز غير صحيحة" : `تعذّر الحفظ (${e.message})`, "err"); }
+  };
+  if ($("#keyDel")) $("#keyDel").onclick = async () => {
+    if (!(await confirmBox("حذف المفتاح", "يتوقف الدفع الإلكتروني إلى أن تحفظ مفتاحاً جديداً.", "حذف"))) return;
+    try { if (pay.on) await adminApi("integrations", "PUT", { payments: { ...pay, on: false } }); await adminApi("integrations", "PUT", { wayl_key: "" }); toast("حُذف المفتاح"); reload(); }
+    catch (e) { toast(`تعذّر الحذف (${e.message})`, "err"); }
+  };
+  $("#hookCopy").onclick = async () => { try { await navigator.clipboard.writeText($("#hookUrl").value); toast("نُسخ الرابط ✓"); } catch { $("#hookUrl").select(); } };
+  $("#hookNew").onclick = async () => {
+    if (!(await confirmBox("رابط جديد", "يتوقف الرابط الحالي فوراً. ضع الرابط الجديد في لوحة Wayl.", "إنشاء رابط جديد", false))) return;
+    try { await adminApi("integrations", "PUT", { payments: { ...pay, webhook_on: chk("hookOn"), new_token: true } }); toast("أُنشئ رابط جديد ✓"); reload(); }
+    catch (e) { toast(`تعذّر (${e.message})`, "err"); }
+  };
   $$("#bkFreq button").forEach((b) => (b.onclick = () => $$("#bkFreq button").forEach((x) => x.classList.toggle("on", x === b))));
   const drawTpl = (list) => {
     $("#tplList").innerHTML = list.map((t) => `<div class="tpl"><input class="tpl__t" maxlength="60" placeholder="عنوان الرد" value="${esc(t.title)}"><textarea class="tpl__b" rows="3" maxlength="2000" placeholder="نص الرد">${esc(t.body)}</textarea><button type="button" class="b b--icon b--ghost b--danger" data-tpldel title="حذف">${I.trash}</button></div>`).join("") || '<p class="muted" style="margin:0">لا توجد ردود جاهزة.</p>';
@@ -125,11 +180,12 @@ export async function viewIntegrations(view) {
       cfg = await adminApi("integrations", "PUT", bodyFor[card.id]());
       rememberOwner(cfg);
       if (card.id === "cTags") $$("[data-tag]").forEach((i) => (i.value = cfg.tags[i.dataset.tag] || ""));
+      if (card.id === "cAddons" || card.id === "cHooks") { toast("تم الحفظ ✓"); return reload(); }
       if (card.id === "cMaint") { const p = $("#maintPill"); p.textContent = cfg.maintenance.on ? "مفعّل" : "متوقف"; p.classList.toggle("warn", cfg.maintenance.on); }
       toast(card.id === "cMaint" && cfg.maintenance.on ? "تم ✓ الزوار يرون صفحة «نعود قريباً» خلال دقيقة" : "تم الحفظ ✓ يعمل خلال دقيقة");
     } catch (e) {
       const names = Object.fromEntries(TAGS.map(([k, l]) => [k, l]));
-      toast(e.message === "bad_tag" ? `المعرّف غير صحيح: ${names[e.data?.field] || ""}` : `تعذّر الحفظ (${e.message})`, "err");
+      toast(e.message === "bad_tag" ? `المعرّف غير صحيح: ${names[e.data?.field] || ""}` : e.message === "no_key" ? "احفظ مفتاح Wayl أولاً من «المفاتيح»" : `تعذّر الحفظ (${e.message})`, "err");
     } finally { btn.disabled = false; }
   }));
   $$("[data-test]", view).forEach((btn) => (btn.onclick = async () => {

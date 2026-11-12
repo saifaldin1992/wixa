@@ -19,18 +19,47 @@ export async function handleAdminIntegrations(request, env) {
   cfgMemo.at = 0; // always read the stored copy here
   const cfg = await getConfig(env);
   if (request.method === "GET" && role !== "owner") return json({ templates: cfg.templates }, 200, { "cache-control": "no-store" }); // the team sees only the ready replies
+  // the Wayl key: only "is there one" and its last 4 characters ever leave the server
+  const keyInfo = async () => { const k = await env.PRIVATE.get("secret:wayl_key").catch(() => null); return { has_key: !!k, key_hint: k ? k.slice(-4) : "" }; };
   if (request.method === "GET") {
-    const last = await env.PRIVATE.get("backup:last", { type: "json" }).catch(() => null);
-    return json({ ...cfg, backup_last: last }, 200, { "cache-control": "no-store" });
+    const [last, events, key] = await Promise.all([env.PRIVATE.get("backup:last", { type: "json" }).catch(() => null), env.PRIVATE.get("pay:events", { type: "json" }).catch(() => null), keyInfo()]);
+    return json({ ...cfg, backup_last: last, pay_events: events || [], wayl: key }, 200, { "cache-control": "no-store" });
   }
   let body = {};
   try { body = await request.json(); } catch {}
+  if (typeof body.wayl_key === "string") {
+    const k = body.wayl_key.trim();
+    if (k && !/^[\x21-\x7e]{8,300}$/.test(k)) return json({ error: "bad_key" }, 422);
+    if (k) await env.PRIVATE.put("secret:wayl_key", k); else await env.PRIVATE.delete("secret:wayl_key");
+    await audit(env, s, { area: "integrations", action: k ? "update" : "delete", target: "مفتاح Wayl", summary: k ? "حفظ مفتاح بوابة الدفع" : "حذف مفتاح بوابة الدفع" });
+    return json({ ...cfg, wayl: await keyInfo() }, 200, { "cache-control": "no-store" });
+  }
   let next;
   try { next = cleanConfig(cfg, body); } catch (e) { return json({ error: e.message, field: e.field }, 422); }
+  if (next.payments.on && !(await keyInfo()).has_key) return json({ error: "no_key" }, 422);
   await saveConfig(env, next);
   const changed = Object.keys(next).filter((k) => JSON.stringify(next[k]) !== JSON.stringify(cfg[k]));
   if (changed.length) await audit(env, s, { area: "integrations", action: "update", target: changed.join("، "), summary: "تعديل إعدادات التكاملات والتنبيهات والحماية" });
-  return json(next, 200, { "cache-control": "no-store" });
+  return json({ ...next, wayl: await keyInfo() }, 200, { "cache-control": "no-store" });
+}
+
+// POST /api/pay/wayl/<token> — Wayl's notifications (order paid, refunded…). Accepted only while «Webhooks» is on and
+// the address carries our secret token. Each one is kept (last 30) for the dashboard to show; nothing is changed
+// automatically until the contract is signed and Wayl's message format is confirmed.
+export async function handlePayWebhook(request, env, token) {
+  if (!(await allowed(env.TRACK_LIMITER, clientIp(request)))) return json({ error: "rate_limited" }, 429);
+  const cfg = await getConfig(env);
+  const p = cfg.payments || {};
+  if (!env.PRIVATE || !p.webhook_on || !p.webhook_token || token !== p.webhook_token) return json({ error: "not_found" }, 404);
+  const raw = (await request.text()).slice(0, 32_000);
+  let data = null;
+  try { data = JSON.parse(raw); } catch {}
+  const pick = (...ks) => { for (const k of ks) { const v = data?.[k] ?? data?.data?.[k]; if (v !== undefined && v !== null && typeof v !== "object") return String(v).slice(0, 80); } return ""; };
+  const ev = { at: new Date().toISOString(), event: pick("event", "type", "status") || (data ? "json" : "text"), ref: pick("referenceId", "reference", "order_id", "orderId", "id"),
+    amount: pick("total", "amount"), size: raw.length };
+  const list = ((await env.PRIVATE.get("pay:events", { type: "json" }).catch(() => null)) || []).slice(0, 29);
+  await env.PRIVATE.put("pay:events", JSON.stringify([ev, ...list]));
+  return json({ ok: true });
 }
 
 // POST /api/admin/integrations/test — send a sample alert or auto-reply to the alerts address

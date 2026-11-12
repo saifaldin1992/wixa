@@ -490,3 +490,17 @@ article in `.art.art--<look>`; the styles are in `simplePage`.
 
 **Footer links** are one three-column grid (`.footer__nav`); company pages are appended to it with `order: 100+`.
 **Sub-menu**: `setSubnav()` keeps each row's scroll position and keeps the chosen item in view.
+
+## Payments — Wayl (Nov 2026, contract not signed yet)
+
+Dashboard → التكاملات → «الإضافات» / «Webhooks» / «المفاتيح».
+- Config `payments: { on, mode: test|live, webhook_on, webhook_token }` (`services/data.js`, `cleanConfig`). `on` is refused
+  (`no_key`) until a key is saved.
+- **The API key** goes to KV `secret:wayl_key` through `PUT /api/admin/integrations {wayl_key}` (owner only, audited). The
+  browser only ever gets `{ has_key, key_hint }` (last 4 characters).
+- **Webhooks:** `POST /api/pay/wayl/<webhook_token>` (`handlePayWebhook`): answered only while `webhook_on` and with the right
+  token (else 404), rate limited, body ≤ 32 KB. Each notification is stored (KV `pay:events`, last 30) and shown in the
+  dashboard; nothing changes an order automatically until Wayl's message format is confirmed after signing.
+  «رابط جديد» replaces the token (the old address stops at once).
+- Still to do after signing: create the payment link from an order / quote, show «ادفع الآن», verify Wayl's signature on
+  notifications, and mark the order paid.

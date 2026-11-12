@@ -98,6 +98,9 @@ export const CONFIG_DEFAULTS = {
     { title: "طلب موعد اجتماع", body: "أهلاً {name}،\nشكراً لاهتمامك. نود ترتيب اجتماع قصير لفهم متطلباتك بشكل أدق. ما الوقت المناسب لك هذا الأسبوع؟" },
     { title: "إرسال عرض السعر", body: "أهلاً {name}،\nمرفق لك عرض السعر الخاص بمشروعك. يسعدنا الإجابة عن أي سؤال." },
   ],
+  // online payments through Wayl (Iraqi gateway: Visa, Mastercard, Zain Cash, Qi Card). Off until the contract is signed.
+  // The API key itself is never kept here: it is in KV "secret:wayl_key" and never sent back to the browser.
+  payments: { on: false, mode: "test", webhook_on: false, webhook_token: "" },
   maintenance: {
     on: false,
     message_ar: "نعمل على تحديث الموقع وسنعود قريباً. للتواصل العاجل راسلنا عبر البريد أو واتساب.",
@@ -137,6 +140,12 @@ export function cleanConfig(prev, body) {
       if (v && !re.test(v)) throw Object.assign(new Error("bad_tag"), { field: k });
       next.tags[k] = v;
     }
+  }
+  if (b.payments) {
+    const p = b.payments;
+    next.payments = { on: p.on === true, mode: p.mode === "live" ? "live" : "test", webhook_on: p.webhook_on === true,
+      // the secret part of the address Wayl calls: made once, replaced only when asked («رابط جديد»)
+      webhook_token: p.new_token || !prev.payments?.webhook_token ? crypto.randomUUID().replace(/-/g, "") : prev.payments.webhook_token };
   }
   if (b.maintenance) {
     const m = b.maintenance, d = CONFIG_DEFAULTS.maintenance;

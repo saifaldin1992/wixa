@@ -15,7 +15,7 @@
 import { runBackup, runMonitor, runReminders, runWeeklyReport } from "./jobs/scheduled.js";
 import { SECURITY_HEADERS, SITE_TTL, json, notFound, serveBuild } from "./lib/core.js";
 import { PATH_RE, STATUS_DEFAULTS, sitePages } from "../public/js/site-pages.js";
-import { handleAdminBooking, handleAdminCampaign, handleAdminOrder, handleAdminDevGuide, handleAdminFunnel, handleAdminIntegrations, handleAdminMsgMeta, handleAdminNotify, handleAdminPage, handleAdminRefresh, handleAdminReviewLink, handleAdminStats, handleAdminStatus, handleAdminTeam, handleAdminTest, handleInviteClaim } from "./routes/admin.js";
+import { handleAdminBooking, handleAdminCampaign, handleAdminOrder, handlePayWebhook, handleAdminDevGuide, handleAdminFunnel, handleAdminIntegrations, handleAdminMsgMeta, handleAdminNotify, handleAdminPage, handleAdminRefresh, handleAdminReviewLink, handleAdminStats, handleAdminStatus, handleAdminTeam, handleAdminTest, handleInviteClaim } from "./routes/admin.js";
 import { handleAdminPush, handleChat, handleChatRate } from "./routes/chat.js";
 import { handleAdminDiagnose } from "./routes/diagnose.js";
 import { handleAdminErrors, handleClientError, recordError } from "./routes/errors.js";
@@ -171,6 +171,8 @@ export default {
           return json({ worker: "ok", env: env.SITE_ENV || "production", supabase: health.supabase }, 200, { "cache-control": "no-store" });
         }
       }
+      const hook = url.pathname.match(/^\/api\/pay\/wayl\/([a-f0-9]{32})$/);
+      if (hook && request.method === "POST") return await handlePayWebhook(request, env, hook[1]);
       const svc = url.pathname.match(/^\/services\/([^/]+)\/?$/);
       if (svc && (request.method === "GET" || request.method === "HEAD")) return await handleServicePage(request, env, ctx, decodeURIComponent(svc[1]));
       const post = url.pathname.match(/^\/blog\/([^/]+)\/?$/);
