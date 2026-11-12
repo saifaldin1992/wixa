@@ -516,5 +516,3 @@ Dashboard → التكاملات → «الإضافات» / «Webhooks» / «ا�
 - **Large title:** `.top--compact` once the page has scrolled 24px (title 17px, description, actions and sub-menu hidden on phones).
 - **Page changes:** the dashboard uses `document.startViewTransition` only for the switch itself (never while a page
   loads); the site uses cross-document `@view-transition { navigation: auto }` with the header kept in place.
-- **Phone tab bar:** `#tabbar`, built from the sidebar for the current role (first four of overview, orders, messages,
-  chats, content, projects, posts…) + «المزيد»; its counters mirror the sidebar's.

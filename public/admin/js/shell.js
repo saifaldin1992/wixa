@@ -91,32 +91,7 @@ function applyRoleNav() {
     g.hidden = !any;
   });
   const tag = $(".side .logo small"); if (tag) tag.textContent = role === "owner" ? "لوحة التحكم" : ROLE_AR[role];
-  buildTabbar();
 }
-
-// Phones: the four most used pages this person may open, in a bar at the bottom (like an iPhone app), and «المزيد»
-// for the full menu. The counters follow the sidebar's own counters.
-const TAB_ORDER = ["overview", "orders", "messages", "chats", "content", "projects", "posts", "services", "customers"];
-function buildTabbar() {
-  const bar = $("#tabbar"); if (!bar) return;
-  if (bar.dataset.role === role) return;
-  bar.dataset.role = role;
-  const picks = TAB_ORDER.filter((v) => canSee(v) && $(`#sideNav a[data-view="${v}"]`)).slice(0, 4);
-  bar.innerHTML = picks.map((v) => {
-    const a = $(`#sideNav a[data-view="${v}"]`), icon = a.querySelector("svg")?.outerHTML || "", count = a.querySelector(".count");
-    const label = [...a.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent.trim()).join(" ");
-    return `<a href="#${v}" data-view="${v}">${icon}<span>${esc(label)}</span>${count ? `<i class="count" data-of="${count.id}" hidden></i>` : ""}</a>`;
-  }).join("") + `<button type="button" id="tabMore"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>المزيد</span></button>`;
-  $("#tabMore").onclick = () => $("#menuBtn").click();
-  $$("[data-of]", bar).forEach((i) => {
-    const src = document.getElementById(i.dataset.of);
-    const copy = () => { i.hidden = src.hidden; i.textContent = src.textContent; };
-    copy(); new MutationObserver(copy).observe(src, { attributes: true, childList: true, characterData: true, subtree: true });
-  });
-  bar.hidden = false;
-  markTabs();
-}
-const markTabs = () => $$("#tabbar a").forEach((a) => a.classList.toggle("on", a.dataset.view === current));
 
 export function setupShell() {
   if (setupShell.done) return; setupShell.done = true;
@@ -162,7 +137,6 @@ export async function route() {
   }
   current = VIEWS[name] ? name : "overview";
   $$("#sideNav a").forEach((a) => a.classList.toggle("on", a.dataset.view === current));
-  markTabs();
   const view = $("#view");
   // the page changes with a short cross-fade (View Transitions), only for the switch itself — never while loading
   const swap = () => {

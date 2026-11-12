@@ -970,7 +970,7 @@ html[data-theme="dark"] .side__theme .i-sun, html:not([data-theme="dark"]) .side
 
 /* 3. Apple's continuous corners where the browser can draw them, with the same three corner sizes (others keep round corners) */
 @supports (corner-shape: squircle) {
-  .card, .b, .modal__box, .seg, .seg button, .f input, .f select, .f textarea, .item, .lnk, .theme-opt, .addon, .side__nav a, .top__menu, .tabbar, .empty { corner-shape: squircle; }
+  .card, .b, .modal__box, .seg, .seg button, .f input, .f select, .f textarea, .item, .lnk, .theme-opt, .addon, .side__nav a, .top__menu, .empty { corner-shape: squircle; }
 }
 
 /* 5. large title that shrinks into the bar when the page scrolls (phones keep the bar on top too) */
@@ -987,24 +987,6 @@ html[data-theme="dark"] .side__theme .i-sun, html:not([data-theme="dark"]) .side
 
 /* 6. page changes cross-fade (View Transitions) */
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .22s; }
-.side, .tabbar { view-transition-name: none; }
+.side { view-transition-name: none; }
 
-/* 7. phones: tab bar at the bottom */
-.tabbar { display: none; }
-@media (max-width: 960px) {
-  body:has(#app:not([hidden])) .tabbar:not([hidden]) {
-    position: fixed; inset: auto 10px calc(10px + env(safe-area-inset-bottom)) 10px; z-index: 60; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
-    padding: 6px; border-radius: 24px; border: 1px solid var(--line);
-    background: rgba(255, 255, 255, .78); -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8); box-shadow: var(--shadow-lg);
-  }
-  html[data-theme="dark"] body:has(#app:not([hidden])) .tabbar:not([hidden]) { background: rgba(26, 22, 34, .8); }
-  body:has(#app:not([hidden])) .main, body:has(#app:not([hidden])) main { padding-bottom: 96px; }
-  .tabbar a, .tabbar button { position: relative; display: grid; justify-items: center; gap: 2px; min-height: 52px; padding: 6px 2px; border-radius: 18px; color: var(--muted); font: inherit; font-size: 11.5px; text-align: center; }
-  .tabbar svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .tabbar a.on { color: var(--brand); background: var(--brand-50); }
-  .tabbar .count { position: absolute; top: 2px; inset-inline-end: calc(50% - 22px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--danger); color: #fff; font-size: 11px; font-style: normal; display: grid; place-items: center; }
-  .tabbar .count[hidden] { display: none; }
-  .tabbar a:active, .tabbar button:active { transform: scale(.94); }
-  .toasts { bottom: 92px; }
-}
-@media (prefers-reduced-transparency: reduce) { .tabbar, .top { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; } }
+@media (prefers-reduced-transparency: reduce) { .top { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; } }
