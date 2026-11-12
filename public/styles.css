@@ -1910,3 +1910,53 @@ html[data-theme="dark"] .hero__title .word:last-child > span {
 .footer__nav { grid-template-columns: repeat(3, minmax(0, 1fr)); justify-items: center; text-align: center; width: 100%; max-width: 640px; margin-inline: auto; }
 .footer__nav { column-gap: clamp(10px, 4vw, 40px); }
 .footer__nav a { justify-content: center; white-space: nowrap; font-size: clamp(.8rem, 3.4vw, .875rem); }
+
+/* ── Look option «ناعم ثلاثي الأبعاد» (settings.look = "soft") ─────────────────
+   Same colours, softer depth: a gentle grey gradient behind the page, cards almost the
+   page colour with a white top rim and a wide soft shadow, round buttons shaped like
+   spheres, capsules with a white rim. Text keeps its normal contrast. */
+html[data-look="soft"] {
+  --soft-bg-a: #F6F6F8; --soft-bg-b: #E9E9EE;
+  --soft-card: linear-gradient(180deg, #FAFAFB, #F1F1F4);
+  --soft-rim: inset 0 1.5px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(0,0,0,.035);
+  --soft-drop: 0 1px 2px rgba(20,15,31,.04), 0 24px 48px -22px rgba(20,15,31,.22);
+  --soft-line: rgba(255,255,255,.7);
+}
+html[data-look="soft"][data-theme="dark"] {
+  --soft-bg-a: color-mix(in srgb, var(--dk-bg) 94%, #fff); --soft-bg-b: color-mix(in srgb, var(--dk-bg) 90%, #000);
+  --soft-card: linear-gradient(180deg, color-mix(in srgb, var(--dk-surface) 92%, #fff), var(--dk-surface));
+  --soft-rim: inset 0 1px 0 rgba(255,255,255,.09), inset 0 -1px 0 rgba(0,0,0,.25);
+  --soft-drop: 0 1px 2px rgba(0,0,0,.3), 0 26px 50px -22px rgba(0,0,0,.7);
+  --soft-line: rgba(255,255,255,.06);
+}
+html[data-look="soft"], html[data-look="soft"] body { background: linear-gradient(180deg, var(--soft-bg-a), var(--soft-bg-b)) fixed; background-color: var(--soft-bg-b); }
+
+/* cards */
+html[data-look="soft"] :is(.svc, .ind, .guar, .pkg, .way, .apoint, .tcard, .faq__item, .job, .project, .form, .calc__box,
+  .track__form, .track__res, .ord__sum, .ord__form, .ord__done, .ord__pick, .careers__empty, .header__menu) {
+  background: var(--soft-card); border-color: var(--soft-line); box-shadow: var(--soft-rim), var(--soft-drop);
+}
+html[data-look="soft"] .partner { border-color: var(--soft-line); box-shadow: var(--soft-rim), var(--soft-drop); }
+
+/* icon tiles: slightly raised */
+html[data-look="soft"] :is(.svc__ico, .ind__ico, .way__ico, .rq__ico) {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 8px 16px -10px rgba(var(--accent-rgb), .55);
+}
+
+/* capsules: ghost buttons, the service/industry switch, chips, small round buttons */
+html[data-look="soft"] :is(.btn--ghost, .svc-tabs button:not(.on), .rq__chip:not(.on), .icon-btn, .theme-btn, .pill-btn) {
+  background: var(--soft-card); border-color: var(--soft-line); box-shadow: var(--soft-rim), 0 10px 22px -16px rgba(20,15,31,.3);
+}
+
+/* solid buttons: light from above, like a raised capsule */
+html[data-look="soft"] :is(.btn--primary, .svc-tabs button.on, .track-btn, .nav-cta, .head-start, .menu-cta) {
+  background-image: linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,0) 55%, rgba(0,0,0,.12)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -2px 4px rgba(0,0,0,.18), 0 14px 28px -14px rgba(var(--primary-rgb), .7);
+}
+/* floating round buttons: spheres */
+html[data-look="soft"] :is(.wa, .chatw__btn, .totop) {
+  background-image: radial-gradient(circle at 38% 26%, rgba(255,255,255,.55), rgba(255,255,255,0) 52%),
+                    radial-gradient(circle at 60% 90%, rgba(0,0,0,.2), rgba(0,0,0,0) 60%);
+  box-shadow: inset 0 2px 3px rgba(255,255,255,.45), inset 0 -4px 8px rgba(0,0,0,.18), 0 16px 30px -12px rgba(20,15,31,.45);
+}
+html[data-look="soft"] .wa { box-shadow: inset 0 2px 3px rgba(255,255,255,.45), inset 0 -4px 8px rgba(0,0,0,.18), 0 16px 30px -12px rgba(37,211,102,.7); }

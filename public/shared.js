@@ -40,6 +40,7 @@
     // visitors' language: "auto" follows the visitor's device (Arabic devices → Arabic, others → English)
     default_lang: "auto",
     partners_style: "marquee",
+    look: "flat",   // "soft" = the «ناعم ثلاثي الأبعاد» look (Appearance)
     iraq_map_size: 100,
     // search engines & link previews (edited in the dashboard → البحث والمشاركة)
     seo: {
@@ -369,6 +370,7 @@
   function applyTheme(settings, root = document.documentElement) {
     const vars = themeVars(settings, loadFont(settings.font.family));
     for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v);
+    root.dataset.look = settings.look === "soft" ? "soft" : "flat";
   }
   // The CSS variables of the theme — also used by the server to paint the right colours on the first frame
   function themeVars(settings, fam) {

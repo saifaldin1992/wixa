@@ -516,3 +516,13 @@ Dashboard → التكاملات → «الإضافات» / «Webhooks» / «ا�
 - **Large title:** `.top--compact` once the page has scrolled 24px (title 17px, description, actions and sub-menu hidden on phones).
 - **Page changes:** the dashboard uses `document.startViewTransition` only for the switch itself (never while a page
   loads); the site uses cross-document `@view-transition { navigation: auto }` with the header kept in place.
+
+## Look option «ناعم ثلاثي الأبعاد» and one highlight colour (Nov 2026)
+- `settings.look`: `"flat"` (default) or `"soft"`, chosen in المظهر → حجم الخط والشكل → شكل الواجهة.
+  The server writes it as `<html data-look>` (no flash), and `applyTheme` in `public/shared.js` sets it again for the live preview.
+- All the soft styles live in one block at the end of `public/styles.css` (`html[data-look="soft"] …`):
+  page gradient, cards with a white top rim and a wide soft shadow, capsules, raised icon tiles, sphere-like round buttons.
+  Colours are unchanged; only depth changes.
+- Highlight colour: icon tiles and the last word of the main headline use `--hl`
+  (the accent; on light backgrounds its darker tone `--accent-ink`, for readability). WhatsApp keeps its green.
+- Footer links: three equal columns, each column centred, names on one line.

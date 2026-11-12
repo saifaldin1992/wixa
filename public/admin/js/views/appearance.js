@@ -38,6 +38,9 @@ export async function viewAppearance(view) {
           <label class="f"><span>حجم الخط العام</span><div class="range-row"><input type="range" min="80" max="130" step="5" id="scale" value="${Math.round(f.scale * 100)}"><output id="scaleOut">${Math.round(f.scale * 100)}%</output></div></label>
           <label class="f"><span>سماكة العناوين</span><div class="range-row"><input type="range" min="400" max="800" step="100" id="hw" value="${f.headingWeight}"><output id="hwOut">${f.headingWeight}</output></div></label>
           <label class="f"><span>استدارة الزوايا</span><div class="range-row"><input type="range" min="0" max="36" step="2" id="radius" value="${t.radius}"><output id="radiusOut">${t.radius}px</output></div></label>
+          <label class="f"><span>شكل الواجهة</span>
+            <div class="seg" id="lookSeg">${[["flat", "مسطّح (الحالي)"], ["soft", "ناعم ثلاثي الأبعاد"]].map(([v, l]) => `<button type="button" data-v="${v}" class="${(settings.look || "flat") === v ? "on" : ""}">${l}</button>`).join("")}</div>
+            <small style="color:var(--muted)">«ناعم ثلاثي الأبعاد»: خلفية رمادية متدرجة، بطاقات بحافة بيضاء وظل ناعم، وأزرار دائرية مجسّمة — بنفس ألوانك.</small></label>
           <label class="switch"><input type="checkbox" id="anim" ${settings.animations !== false ? "checked" : ""}><i></i>تفعيل الحركات والتأثيرات</label>
           <label class="switch"><input type="checkbox" id="cursorOn" ${settings.cursor !== false ? "checked" : ""}><i></i>مؤشر الفأرة المخصص (على الكمبيوتر فقط)</label>
           <label class="f"><span>الوضع الافتراضي للزائر الجديد (يستطيع الزائر تغييره من زر 🌙)</span>
@@ -72,10 +75,11 @@ export async function viewAppearance(view) {
   range("radius", (v) => (settings.theme.radius = v), (v) => `${v}px`);
   $("#anim").onchange = (e) => { settings.animations = e.target.checked; changed(); };
   $("#cursorOn").onchange = (e) => { settings.cursor = e.target.checked; changed(); };
+  $$("#lookSeg button").forEach((b) => (b.onclick = () => { settings.look = b.dataset.v; $$("#lookSeg button").forEach((x) => x.classList.toggle("on", x === b)); changed(); }));
   $$("#modeSeg button").forEach((b) => (b.onclick = () => { settings.mode = b.dataset.v; $$("#modeSeg button").forEach((x) => x.classList.toggle("on", x === b)); changed(); }));
   $("#resetTheme").onclick = async () => {
     if (!(await confirmBox("إعادة الافتراضي", "سيتم استرجاع الألوان والخط الافتراضية (لن يُحفظ حتى تضغط حفظ).", "استرجاع", false))) return;
-    settings.theme = clone(DEFAULTS.theme); settings.font = clone(DEFAULTS.font); settings.animations = true; route();
+    settings.theme = clone(DEFAULTS.theme); settings.font = clone(DEFAULTS.font); settings.animations = true; settings.look = DEFAULTS.look; route();
   };
 }
 export const loadedFonts = new Set();

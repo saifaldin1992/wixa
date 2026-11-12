@@ -93,7 +93,7 @@ export async function handleHome(request, env, ctx, pageName = "home") {
     : `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fam).replace(/%20/g, "+")}:wght@${WIXA.FONTS[fam]}&display=swap`;
   const res = versionAssets(new HTMLRewriter())
     .on("head", { element: (el) => el.append(`${headTags}<script id="wixa-data" type="application/json">${safe}</script>`, { html: true }) })
-    .on("html", { element: (el) => { el.setAttribute("lang", lang); el.setAttribute("dir", lang === "ar" ? "rtl" : "ltr"); el.setAttribute("data-page", pageName); } })
+    .on("html", { element: (el) => { el.setAttribute("lang", lang); el.setAttribute("dir", lang === "ar" ? "rtl" : "ltr"); el.setAttribute("data-page", pageName); el.setAttribute("data-look", full.look === "soft" ? "soft" : "flat"); } })
     .on(...attr('link[rel="canonical"]', "href", `${origin}${pagePath}`))
     .on(...attr('meta[property="og:url"]', "content", `${origin}${pagePath}`))
     .on("title", { element: (el) => { if (title) el.setInnerContent(title); } })
@@ -238,7 +238,7 @@ export function simplePage(request, st, { lang, title, description, path, image,
   const c = st.contact || {};
   const wa = String(c.whatsapp || "").replace(/\D/g, "");
   const shell = siteShell(st, lang, path), ui = shell.ui;
-  const html = `<!doctype html><html lang="${lang}" dir="${ar ? "rtl" : "ltr"}" data-mode="${st.mode === "light" || st.mode === "dark" ? st.mode : ""}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  const html = `<!doctype html><html lang="${lang}" dir="${ar ? "rtl" : "ltr"}" data-mode="${st.mode === "light" || st.mode === "dark" ? st.mode : ""}" data-look="${st.look === "soft" ? "soft" : "flat"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)} — ${esc(brand)}</title><meta name="description" content="${esc(description)}">
 <link rel="canonical" href="${origin}${path}?lang=${lang}"><link rel="alternate" hreflang="ar" href="${origin}${path}?lang=ar"><link rel="alternate" hreflang="en" href="${origin}${path}?lang=en">
 <meta property="og:type" content="website"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${origin}${path}">
