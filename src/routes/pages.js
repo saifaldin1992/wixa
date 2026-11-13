@@ -43,7 +43,7 @@ export function faqLd(st, lang) {
 
 // GET / — static HTML with the content embedded (no flash of default text, one request per visit).
 // /about, /pricing and /careers are the homepage's HTML showing only their own sections (html[data-page])
-export const PAGE_TITLES = { services: { ar: "خدماتنا", en: "Our services" }, projects: { ar: "أعمالنا", en: "Our work" }, pricing: { ar: "الباقات والأسعار", en: "Packages & pricing" }, about: { ar: "من نحن", en: "About us" }, careers: { ar: "الوظائف", en: "Careers" }, contact: { ar: "تواصل معنا", en: "Contact us" }, order: { ar: "اطلب مشروعك", en: "Order your project" }, track: { ar: "تتبع طلبك", en: "Track your order" }, faq: { ar: "الأسئلة الشائعة", en: "Frequently asked questions" } };
+export const PAGE_TITLES = { services: { ar: "خدماتنا", en: "Our services" }, projects: { ar: "نماذج من عملنا", en: "Our work" }, pricing: { ar: "الباقات والأسعار", en: "Packages & pricing" }, about: { ar: "من نحن", en: "About us" }, careers: { ar: "الوظائف", en: "Careers" }, contact: { ar: "تواصل معنا", en: "Contact us" }, order: { ar: "اطلب مشروعك", en: "Order your project" }, track: { ar: "تتبع طلبك", en: "Track your order" }, faq: { ar: "الأسئلة الشائعة", en: "Frequently asked questions" } };
 export async function handleHome(request, env, ctx, pageName = "home") {
   const [page, raw, cfg] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx), getConfig(env)]);
   const data = cfg.spam.turnstile ? raw : raw.replace(/"turnstile":"[^"]*"/, '"turnstile":""');
@@ -63,7 +63,7 @@ export async function handleHome(request, env, ctx, pageName = "home") {
   const abs = (u) => (/^https?:\/\//.test(u) ? u : `${origin}${u.startsWith("/") ? "" : "/"}${u}`);
   const attr = (sel, name, val) => [sel, { element: (el) => { if (val) el.setAttribute(name, val); } }];
   const siteTitle = seo[`title_${lang}`] || (lang === "en" ? SEO_DEFAULTS.en.title : ""), siteDesc = seo[`description_${lang}`] || (lang === "en" ? SEO_DEFAULTS.en.description : ""), img = seo.og_image ? abs(seo.og_image) : "";
-  const pc = st.content?.[lang] || {}, brandName = (lang === "en" ? st.brand?.name_en : st.brand?.name_ar) || "WIXA";
+  const pc = { ...(WIXA.DEFAULTS.content?.[lang] || {}), ...Object.fromEntries(Object.entries(st.content?.[lang] || {}).filter(([, v]) => v)) }, brandName = (lang === "en" ? st.brand?.name_en : st.brand?.name_ar) || "WIXA";
   const pageDesc = { services: pc.services_sub, projects: pc.projects_sub, pricing: pc.pricing_sub, about: pc.about_text, careers: pc.careers_sub, contact: pc.cta_sub, faq: pc.faq_sub, order: pc.pricing_sub, track: pc.pricing_sub }[pageName];
   const title = pageName === "home" ? siteTitle : `${PAGE_TITLES[pageName][lang]} — ${brandName}`;
   const desc = pageName === "home" ? siteDesc : String(pageDesc || siteDesc || "").replace(/\s+/g, " ").slice(0, 160);
@@ -205,7 +205,7 @@ export function siteShell(st, lang, path, { empty } = {}) {
   const link = (x, i, footer) => {
     const t = navLink(st, x.k, gone);
     const place = x.at === "both" || x.at === (footer ? "footer" : "menu");
-    return `<a href="${withLang(t.href)}"${footer ? ' data-where="footer"' : ""} data-nav="${x.k}" data-t="${tkey(x.k)}" style="order:${i}"${t.href === path ? ' aria-current="page"' : ""}${place && t.shown ? "" : " hidden"}>${esc(ui[tkey(x.k)] || x.k)}</a>`;
+    return `<a href="${withLang(t.href)}"${footer ? ' data-where="footer"' : ""} data-nav="${x.k}" data-t="${tkey(x.k)}" style="order:${i}"${t.href === path ? ' aria-current="page"' : t.href !== "/" && !t.href.includes("#") && path.startsWith(t.href + "/") ? ' aria-current="true"' : ""}${place && t.shown ? "" : " hidden"}>${esc(ui[tkey(x.k)] || x.k)}</a>`;
   };
   const menu = plan.map((x, i) => link(x, i, false)).join("");
   // footer: the links in their groups (site-structure.js → FOOTER_GROUPS), each group titled; «قانوني» is one small line

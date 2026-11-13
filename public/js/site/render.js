@@ -39,7 +39,8 @@ export function render() {
   applyTheme(s);
   applyDefaultMode();
   const brand = lang === "ar" ? s.brand.name_ar : s.brand.name_en;
-  document.title = (s.seo && s.seo[`title_${lang}`]) || `${brand} — ${c.hero_title}`;
+  // the home page only: every other page keeps the title the server gave it («خدماتنا — WIXA»…)
+  if ((document.documentElement.dataset.page || "home") === "home") document.title = (s.seo && s.seo[`title_${lang}`]) || `${brand} — ${c.hero_title}`;
 
   $$("[data-c]").forEach((el) => { if (el.id !== "heroTitle") el.textContent = c[el.dataset.c] ?? ""; });
   $$("[data-t]").forEach((el) => {

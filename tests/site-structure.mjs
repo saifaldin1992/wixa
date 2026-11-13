@@ -85,6 +85,15 @@ if (BASE) {
   const ref = shells.get("/");
   for (const [path, s] of shells) check(s === ref, `${path}: same header and footer as the home page`);
   for (const h of links) { const r = await p.request.get(BASE + h); check(r.status() === 200, `menu link ${h} opens`); }
+  // old links to a section that moved to its own page open that page, on the section
+  for (const [from, to] of [["/#calculator", "/pricing#calculator"], ["/#about", "/about#about"], ["/?lang=en#calculator", "/pricing?lang=en#calculator"]]) {
+    await p.goto(BASE + from, { waitUntil: "load" }); await p.waitForURL((u) => u.pathname !== "/", { timeout: 4000 }).catch(() => {});
+    check(await p.evaluate(() => location.pathname + location.search + location.hash) === to, `old link ${from} opens ${to}`);
+  }
+  // inner pages have their own title (not the home page's)
+  const titles = new Set();
+  for (const path of ["/services", "/projects", "/pricing", "/about"]) { await p.goto(BASE + path, { waitUntil: "load" }); await p.waitForTimeout(300); titles.add(await p.title()); }
+  check(titles.size === 4, "each section page keeps its own title");
   await b.close();
 }
 process.exit(bad ? 1 : 0);
