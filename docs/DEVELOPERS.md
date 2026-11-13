@@ -535,3 +535,11 @@ Dashboard → التكاملات → «الإضافات» / «Webhooks» / «ا�
   the space is held before the bar shrinks (no moment where the page is shorter); it shrinks past 40px and grows back only under 4px.
   `public/admin/admin.css` turns scroll anchoring off (`overflow-anchor: none`) and the title size no longer animates.
 - `tests/admin-scroll.mjs` scrolls each long page slowly on a phone: the bar may change once each way, and the content may not jump.
+
+## Funnel counters in the database (Nov 2026)
+- The sales funnel events (calculator used, WhatsApp clicked, form opened…) are added with `public.events_add` — one atomic
+  "add n" per event and day in `public.event_counts` — instead of read-add-write on a KV object (two server instances
+  flushing at once used to lose one update). If the database can't be reached, a flush falls back to KV (`ev:<day>`).
+  The funnel (`/api/admin/funnel`) adds `public.events_total` and the KV days. Migration: `20261119000000_event_counts.sql`.
+- `20261119010000_split_admin_policies.sql`: the five content tables keep one read rule each (the public one, which already
+  lets the team read everything); the team rule covers only add / change / delete.

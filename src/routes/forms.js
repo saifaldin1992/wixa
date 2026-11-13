@@ -250,10 +250,16 @@ export async function handleReview(request, env, ctx, url) {
 // at most every 30 s per instance, so busy days stay far below the store's write limits.
 export const EVENTS = ["calc_used", "calc_quote", "calc_wa", "calc_pdf", "wa_click", "form_open", "form_sent", "booking_open", "booking_sent", "job_open", "faq_open"];
 export let evBuf = { day: "", counts: {}, at: 0 };
+// The counts go to the database as one atomic "add n" per event (public.events_add), so two server instances
+// flushing at the same moment never overwrite each other. Only if the database can't be reached are they kept in KV
+// (the old way; the funnel adds both, and days before the switch are still read from KV).
 export async function flushEvents(env) {
-  if (!env.PRIVATE || !Object.keys(evBuf.counts).length) return;
+  if (!Object.keys(evBuf.counts).length) return;
   const { day, counts } = evBuf;
   evBuf = { day: dayKey(), counts: {}, at: Date.now() };
+  const r = await rpcToken(env, "events_add", { p: { day, counts } }).catch(() => null);
+  if (r?.ok) return;
+  if (!env.PRIVATE) return;
   const key = `ev:${day}`;
   const cur = (await env.PRIVATE.get(key, { type: "json" }).catch(() => null)) || {};
   for (const [k, v] of Object.entries(counts)) cur[k] = (cur[k] || 0) + v;
@@ -282,7 +288,7 @@ export async function handleUnsubscribe(request, env, url) {
   if (ok) { const r = await rpcToken(env, "campaign_optout", { email }); done = r.ok; }
   const msg = done ? ["تم إلغاء اشتراكك", "لن تصلك رسائل العروض من ويكسا بعد الآن. إذا كان هذا خطأً راسلنا وسنعيد اشتراكك."]
     : ok ? ["تعذّر الإلغاء الآن", "حدث خطأ مؤقت، حاول بعد دقائق أو راسلنا وسنلغيه لك."] : ["الرابط غير صالح", "تأكد أنك فتحت الرابط كاملاً من البريد."];
-  return new Response(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${msg[0]} — WIXA</title>
-    <style>body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:system-ui,Tahoma,sans-serif;background:#F5F5F7;color:#1A1424}main{max-width:440px;margin:16px;background:#fff;border-radius:20px;padding:32px;text-align:center;box-shadow:0 20px 60px -30px rgba(91,33,182,.4)}h1{font-size:22px;margin:0 0 10px;color:#5B21B6}p{line-height:1.9;color:#5E5670;margin:0 0 18px}a{color:#5B21B6;font-weight:700}</style></head>
+  return new Response(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${msg[0]} — WIXA</title><link rel="stylesheet" href="/fonts/noto-sans-arabic.css">
+    <style>body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:"Noto Sans Arabic",system-ui,Tahoma,sans-serif;background:#F5F5F7;color:#1A1424}main{max-width:440px;margin:16px;background:#fff;border-radius:20px;padding:32px;text-align:center;box-shadow:0 20px 60px -30px rgba(91,33,182,.4)}h1{font-size:22px;margin:0 0 10px;color:#5B21B6}p{line-height:1.9;color:#5E5670;margin:0 0 18px}a{color:#5B21B6;font-weight:700}</style></head>
     <body><main><h1>${msg[0]}</h1><p>${msg[1]}</p><a href="/">العودة إلى الموقع</a></main></body></html>`, { status: ok ? 200 : 400, headers: { ...SECURITY_HEADERS, "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
 }

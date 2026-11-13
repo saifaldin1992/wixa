@@ -293,9 +293,13 @@ export async function handleAdminFunnel(request, env, url) {
   if (error) return error;
   const days = Math.min(90, Math.max(1, parseInt(url.searchParams.get("days") || "30", 10) || 30));
   const keys = [...Array(days)].map((_, i) => dayKey(new Date(Date.now() - i * 864e5)));
-  const rows = await Promise.all(keys.map((d) => (env.PRIVATE ? env.PRIVATE.get(`ev:${d}`, { type: "json" }).catch(() => null) : null)));
+  // the database (atomic counts) + KV (days before the switch, or a flush made while the database was unreachable)
+  const [db, ...rows] = await Promise.all([
+    rpcToken(env, "events_total", { p: { since: keys[keys.length - 1] } }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+    ...keys.map((d) => (env.PRIVATE ? env.PRIVATE.get(`ev:${d}`, { type: "json" }).catch(() => null) : null)),
+  ]);
   const total = {};
-  for (const r of rows) if (r) for (const [k, v] of Object.entries(r)) total[k] = (total[k] || 0) + v;
+  for (const r of [db, ...rows]) if (r) for (const [k, v] of Object.entries(r)) total[k] = (total[k] || 0) + Number(v || 0);
   for (const [k, v] of Object.entries(evBuf.counts)) total[k] = (total[k] || 0) + v; // not saved yet
   return json({ days, total }, 200, { "cache-control": "no-store" });
 }
