@@ -1,4 +1,4 @@
--- STATUS: run by the owner in the SQL editor (it replaces policies, so it is not applied automatically).
+-- STATUS: applied on staging and production 2026-11-13 (by the owner in the SQL editor; it replaces policies).
 -- Five content tables had two "read" rules for a signed-in person: "Admins manage …" (FOR ALL, which includes
 -- reading) and "Published … are public" (which already lets the team read everything). Postgres checked both on
 -- every read. The team rule now covers only adding, changing and deleting; reading stays with the public rule.
