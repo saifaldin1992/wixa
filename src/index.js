@@ -139,11 +139,9 @@ export default {
         case "POST /api/contact": return await handleContact(request, env, ctx);
         case "GET /sitemap.xml": {
           const today = new Date().toISOString().slice(0, 10);
-          let projects = [], services = [];
-          try { const d = JSON.parse(await getSiteData(env, ctx)); projects = d.projects || []; services = d.services || []; } catch {}
+          let projects = [], services = [], st = {};
+          try { const d = JSON.parse(await getSiteData(env, ctx)); projects = d.projects || []; services = d.services || []; st = d.settings || {}; } catch {}
           const posts = await getPosts(env);
-          let st = {};
-          try { st = JSON.parse(await getSiteData(env, ctx)).settings || {}; } catch {}
           const extra = [...sitePages(st).filter((p) => p.published).map((p) => p.path), ...(st.team?.on ? ["/team"] : []), ...({ ...STATUS_DEFAULTS, ...(st.status_page || {}) }.on ? ["/status"] : [])];
           const urls = ["/", "/about", "/careers", "/contact", "/faq", "/privacy", "/blog", ...extra, ...services.map((x) => `/services/${encodeURIComponent(x.slug)}`), ...projects.map((x) => `/projects/${encodeURIComponent(x.slug)}`), ...posts.map((x) => `/blog/${encodeURIComponent(x.slug)}`)].map((p) => `<url><loc>https://wixa.dev${p}</loc><lastmod>${today}</lastmod></url>`).join("");
           return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>\n`, {
