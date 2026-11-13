@@ -5,7 +5,7 @@
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
 import { readFileSync } from "node:fs";
 const BASE = process.env.BASE || "http://localhost:8787";
-const ALL = ["overview", "orders", "messages", "chats", "customers", "sales", "campaigns", "content", "appearance", "brand", "projects", "services", "partners", "testimonials", "posts", "seo", "integrations", "notify", "protect", "backup", "diagnose", "audit", "devguide", "team", "account"];
+const ALL = ["overview", "orders", "messages", "chats", "customers", "sales", "campaigns", "content", "appearance", "brand", "projects", "services", "partners", "testimonials", "posts", "media", "seo", "integrations", "notify", "protect", "backup", "diagnose", "audit", "devguide", "team", "account"];
 const VIEWS = process.argv.slice(2).length ? process.argv.slice(2) : ALL;
 // buttons that legitimately change nothing visible in a stubbed dashboard
 const SKIP = /^(تسجيل الخروج|خروج)$/;

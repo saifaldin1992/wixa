@@ -16,6 +16,7 @@ import { viewList } from "./views/lists.js";
 import { viewMessages } from "./views/messages.js";
 import { viewOverview } from "./views/overview.js";
 import { viewPosts } from "./views/posts.js";
+import { viewMedia } from "./views/media.js";
 import { viewSeo } from "./views/seo.js";
 import { viewDiagnose } from "./views/diagnose.js";
 import { viewDevGuide } from "./views/devguide.js";
@@ -32,6 +33,7 @@ export const VIEWS = {
   partners: { title: "الشركاء", sub: "شعارات العملاء والشركاء", render: () => viewList("partners") },
   testimonials: { title: "آراء العملاء", sub: "بطاقات الآراء المتحركة في الموقع", render: () => viewList("testimonials") },
   posts: { title: "المقالات", sub: "اكتب مقالات تساعد الناس على إيجادك في Google", render: viewPosts },
+  media: { title: "مكتبة الوسائط", sub: "كل صور الموقع في مكان واحد: ارفع، انسخ الرابط، واعرف أين تُستخدم كل صورة", render: viewMedia },
   seo: { title: "البحث والمشاركة", sub: "كيف يظهر موقعك في Google وعند مشاركة الرابط", render: viewSeo },
   integrations: { title: "التكاملات", sub: "بوابة الدفع، أدوات القياس والإعلانات، والتقارير والمراقبة", render: (v) => composeView(v, [[viewIntegrations, ["#cAddons", "#cHooks", "#cKeys", "#cTags", "#cReports"]]]) },
   notify: { title: "الإشعارات والبريد", sub: "تنبيهات الرسائل الجديدة، الرد التلقائي للزبون، والردود الجاهزة", render: (v) => composeView(v, [[viewIntegrations, ["#cAlerts", "#cReply", "#cTpl"]], [viewAccount, ["بريد تنبيهات"]]]) },
@@ -78,7 +80,7 @@ export let current = null;
 // which pages each role sees (the server and the database enforce the same rules)
 const ROLE_VIEWS = {
   owner: null, // everything
-  editor: ["overview", "content", "projects", "services", "partners", "testimonials", "posts", "appearance", "brand", "seo", "devguide", "account"],
+  editor: ["overview", "content", "projects", "services", "partners", "testimonials", "posts", "media", "appearance", "brand", "seo", "devguide", "account"],
   support: ["overview", "orders", "messages", "chats", "customers", "account"],
 };
 export const canSee = (name) => !ROLE_VIEWS[role] || ROLE_VIEWS[role].includes(name);

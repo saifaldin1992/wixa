@@ -1014,3 +1014,25 @@ html { overflow-anchor: none; }
   .ly__row { grid-template-columns: auto 1fr auto; }
   .ly__end { grid-column: 2 / -1; justify-content: flex-end; }
 }
+
+/* «مكتبة الوسائط» and its picker */
+.media { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin: 14px 0; border-radius: 16px; }
+.media.over { outline: 2px dashed var(--brand); outline-offset: 6px; }
+.media > .empty, .media > p { grid-column: 1 / -1; }
+.media__item { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--panel); }
+.media__thumb { aspect-ratio: 4 / 3; border: 0; padding: 0; cursor: pointer; background: var(--bg) center / contain no-repeat; }
+.media__thumb:hover { filter: brightness(.96); }
+.media__meta { display: grid; gap: 4px; padding: 10px 12px 6px; font-size: 12px; min-width: 0; }
+.media__meta b { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.media__meta span { color: var(--muted); }
+.media__meta .tag { justify-self: start; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.media__acts { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 4px 8px 8px; margin-top: auto; }
+.media__bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 12px; }
+.media__bar input[type=search] { flex: 1 1 220px; min-height: 42px; }
+.mpick { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,.45); display: grid; place-items: center; padding: 16px; }
+.mpick__box { width: min(900px, 100%); max-height: min(86vh, 800px); display: flex; flex-direction: column; background: var(--panel); border-radius: 20px; box-shadow: var(--shadow-lg, 0 20px 60px rgba(0,0,0,.25)); overflow: hidden; }
+.mpick__box header { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.mpick__box header b { flex: 1; font-size: 16px; }
+.media--pick { overflow: auto; margin: 0; padding: 14px 16px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.media--pick .media__thumb { aspect-ratio: 1; }
+@media (max-width: 600px) { .media { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mpick { padding: 0; } .mpick__box { max-height: 100dvh; height: 100dvh; border-radius: 0; } }

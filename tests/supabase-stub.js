@@ -33,7 +33,9 @@
       from: query,
       channel: () => { const c = { on: () => c, subscribe: () => c }; return c; },
       removeChannel: () => ok(null),
-      storage: { from: () => ({ upload: () => ok({ path: "x" }), getPublicUrl: () => ({ data: { publicUrl: "" } }) }) },
+      storage: { from: () => ({ upload: () => ok({ path: "x" }), getPublicUrl: (p) => ({ data: { publicUrl: p ? `https://example.com/media/${p}` : "" } }), remove: (ps) => ok((ps || []).map((name) => ({ name }))),
+        // the media library: one folder at the top, one image in it
+        list: (prefix) => ok(prefix ? [{ id: "f1", name: "a.webp", created_at: new Date().toISOString(), metadata: { size: 123456, mimetype: "image/webp" } }] : [{ id: null, name: "projects" }]) }) },
     }),
   };
 })();

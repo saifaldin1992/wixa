@@ -1,5 +1,6 @@
 /* Image upload field shared by the editors */
 import { $, I, sb, toast } from "./core.js";
+import { pickMedia } from "./views/media.js";
 
 // Large photos are resized and converted to WebP before upload, so the site stays fast whatever is uploaded.
 // GIFs (may be animated) and small images are uploaded as they are.
@@ -23,6 +24,7 @@ export function imageField(url, folder, onChange, contain = false) {
   wrap.className = "img-field drop";
   wrap.innerHTML = `<div class="img-field__prev ${contain ? "contain" : ""}"></div>
     <div><div class="img-field__btns"><label class="b b--sm">${I.upload}<span>رفع صورة</span><input type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden></label>
+    <button class="b b--sm b--ghost" type="button" data-lib>${I.img}من المكتبة</button>
     <button class="b b--sm b--ghost b--danger" type="button" data-rm>${I.x}إزالة</button></div>
     <p class="muted" style="font-size:12px;margin:6px 0 0">أو اسحب الصورة وأفلتها هنا · تُضغط الصور الكبيرة تلقائياً</p></div>`;
   const prev = $(".img-field__prev", wrap), rm = $("[data-rm]", wrap);
@@ -47,6 +49,7 @@ export function imageField(url, folder, onChange, contain = false) {
   };
   $("input[type=file]", wrap).onchange = (e) => upload(e.target.files[0]);
   rm.onclick = () => { show(""); onChange(""); };
+  $("[data-lib]", wrap).onclick = async () => { const u = await pickMedia(); if (u) { show(u); onChange(u); } };
   wrap.addEventListener("dragover", (e) => { e.preventDefault(); wrap.classList.add("over"); });
   wrap.addEventListener("dragleave", () => wrap.classList.remove("over"));
   wrap.addEventListener("drop", (e) => { e.preventDefault(); wrap.classList.remove("over"); upload(e.dataTransfer.files[0]); });

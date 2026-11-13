@@ -579,6 +579,12 @@ One list of the site's pages, the sections each page is made of, and where every
   has one main heading, shows only its own sections, has the same header and footer as the home page, and every visible
   menu link opens a real page).
 
+## «مكتبة الوسائط» — the media library (Nov 2026)
+- `public/admin/js/views/media.js`: lists every image in the Supabase Storage bucket `media` (each editor uploads to its own folder; the library uploads to `library/`), several uploads at once with the same compression as the image fields, copy link, delete.
+- «مستخدمة / غير مستخدمة»: a file is «used» when its path appears in a saved row of `site_settings`, `projects`, `services`, `partners`, `testimonials` or `posts`. Deleting a used image asks first and names where it is used.
+- `pickMedia()` opens the library as a picker on its own layer (works from inside an editor modal); every image field has «من المكتبة».
+- Listing needs read access to `storage.objects`: migration `20261121000000_media_library.sql` (owner and editor only; the support role does not see the page).
+
 ## Inner pages: breadcrumbs, endings, one contact button, more counts (Nov 2026)
 - `simplePage(..., { crumbs, startLabel })`: `crumbs` is a list of `[ui key or label, path]` after «الرئيسية»; the page title is the last step. It also adds a `BreadcrumbList` for search engines. Used by service, project and article pages.
 - Service page ending: «اطلب هذه الخدمة» (the order form opens with the service chosen). Project page: «مشاريع مشابهة» (same category first), «اطلب مشروعاً مشابهاً», and previous / next only when the similar cards do not already list every other project.
