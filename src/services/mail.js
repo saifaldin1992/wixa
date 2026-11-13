@@ -17,7 +17,7 @@ export async function notifyOwner(env, row, test = false) {
   const to = (await notifyAddress(env)) || ""; // dashboard setting (private store) or the NOTIFY_EMAIL secret
   if (!to) return false;
   const staging = env.SITE_ENV === "staging";
-  const admin = `${staging ? "https://staging.wixa.dev" : "https://wixa.dev"}/admin/#${row.order ? "orders" : "messages"}`;
+  const admin = `${staging ? "https://staging.wixa.dev" : "https://wixa.dev"}/admin/#${row.order ? "orders" : "inbox"}`;
   const wa = row.phone ? `https://wa.me/${row.phone.replace(/\D/g, "")}` : "";
   const html = `<div dir="rtl" style="font-family:'Noto Sans Arabic',Tahoma,Arial,sans-serif;background:#F5F5F7;padding:24px">
     <div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #ECE6E8">

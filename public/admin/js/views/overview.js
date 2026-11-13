@@ -50,7 +50,7 @@ function paintOverview(view, s) {
       ${kpi("زيارات اليوم", s.today_visitors, `${fmt(s.today_views)} مشاهدة صفحة اليوم`, I.users)}
       ${kpi(`الزيارات (${period} يوم)`, s.visitors, s.source === "cloudflare" ? "عبر Cloudflare Web Analytics" : "زائر فريد يومياً", I.users)}
       ${kpi(`المشاهدات (${period} يوم)`, s.views, `${fmt(s.views_90d)} خلال 90 يوماً`, I.views)}
-      ${kpi("رسائل جديدة", s.messages_new, `<a href="#messages" style="color:var(--brand)">عرض الرسائل ←</a>`, I.mail)}
+      ${kpi("رسائل جديدة", s.messages_new, `<a href="#inbox" style="color:var(--brand)">افتح الوارد ←</a>`, I.mail)}
     </div>
     <div class="two">
       <div class="card"><div class="card__head"><div><h3>الزيارات اليومية</h3><p>آخر ${period} يوم</p></div><div class="legend"><span><i></i>مشاهدات</span><span><i class="u"></i>زيارات</span></div></div><div id="chart"></div></div>
@@ -159,7 +159,7 @@ async function todayCard(view) {
     <div class="today__grid">
       <a href="#chats" class="today__item ${waiting.length ? "hot" : ""}"><b>${waiting.length}</b><span>محادثة تنتظر ردك</span>${waiting[0] ? `<small>أقدمها: ${esc(waiting[0].name)}</small>` : ""}</a>
       <a href="#customers" class="today__item ${due.length ? "hot" : ""}"><b>${due.length}</b><span>زبون حان موعد متابعته</span></a>
-      <a href="#messages" class="today__item ${fresh ? "hot" : ""}"><b>${fresh}</b><span>رسالة جديدة لم تُعالج</span></a>
+      <a href="#inbox" class="today__item ${fresh ? "hot" : ""}"><b>${fresh}</b><span>رسالة جديدة لم تُعالج</span></a>
     </div>`;
   view.prepend(el);
 }

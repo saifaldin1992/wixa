@@ -13,12 +13,11 @@ import { viewContent } from "./views/content.js";
 import { viewBrand } from "./views/brand.js";
 import { viewIntegrations } from "./views/integrations.js";
 import { viewList } from "./views/lists.js";
-import { viewMessages } from "./views/messages.js";
 import { viewOverview } from "./views/overview.js";
 import { viewPosts } from "./views/posts.js";
 import { viewMedia } from "./views/media.js";
 import { viewDevice } from "./views/device.js";
-import { viewInbox } from "./views/inbox.js";
+import { setInboxFilter, viewInbox } from "./views/inbox.js";
 import { viewSeo } from "./views/seo.js";
 import { viewDiagnose } from "./views/diagnose.js";
 import { viewDevGuide } from "./views/devguide.js";
@@ -44,9 +43,9 @@ export const VIEWS = {
   diagnose: { title: "الفحص والتشخيص", sub: "فحص كل أجزاء الموقع، مكان أي عطل وطريقة حله، وسجل الأعطال", render: (v) => composeView(v, [[viewIntegrations, ["#cPublish"]], [viewDiagnose, ["*"]]]) },
   audit: { title: "سجل التعديلات", sub: "من عدّل ماذا ومتى — للمالك فقط، ولا يمكن تعديله أو حذفه", render: viewAudit },
   devguide: { title: "دليل المطوّر", sub: "كيف بُني المشروع وأين يوجد كل جزء — للمطورين", render: viewDevGuide },
-  inbox: { title: "الوارد", sub: "كل ما وصلك من الموقع في مكان واحد: المحادثات، الطلبات، الرسائل، الحجوزات — وما ينتظر ردك أولاً", render: viewInbox },
+  inbox: { title: "الوارد", sub: "كل ما وصلك من الموقع: المحادثات، الطلبات، الرسائل، المواعيد، التوظيف — ما ينتظر ردك أولاً، والرسائل تُعالَج هنا مباشرة", render: viewInbox },
   orders: { title: "الطلبات", sub: "كل طلبات المشاريع من الموقع في مكان واحد: ماذا اختار الزبون، ومن أين، وهداياه وخصمه", render: viewOrders },
-  messages: { title: "الرسائل", sub: "رسائل نموذج التواصل", render: viewMessages },
+  messages: { title: "الوارد", sub: "كل ما وصلك من الموقع في مكان واحد", render: (v) => { setInboxFilter("message"); history.replaceState(null, "", "#inbox"); return viewInbox(v); } },
   sales: { title: "لوحة المبيعات", sub: "من تواصل، ومن اشترى، ومن أين جاؤوا، وكيف نخدمهم", render: viewSales },
   campaigns: { title: "العروض والحملات", sub: "هدايا وخصم طلب المشروع، شريط العروض، عرض الحاسبة، والحملات البريدية", render: viewCampaigns },
   customers: { title: "الزبائن", sub: "كل من تواصل معك من الموقع — للمتابعة والعروض", render: viewCustomers },
@@ -84,7 +83,7 @@ export let current = null;
 const ROLE_VIEWS = {
   owner: null, // everything
   editor: ["overview", "content", "projects", "services", "partners", "testimonials", "posts", "media", "appearance", "brand", "seo", "devguide", "account"],
-  support: ["overview", "inbox", "orders", "messages", "chats", "customers", "account"],
+  support: ["overview", "inbox", "orders", "messages", "chats", "customers", "account"], // «messages» opens «الوارد»
 };
 export const canSee = (name) => !ROLE_VIEWS[role] || ROLE_VIEWS[role].includes(name);
 function applyRoleNav() {

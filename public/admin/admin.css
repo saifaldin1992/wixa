@@ -1071,3 +1071,8 @@ html { overflow-anchor: none; }
 
 /* a page being split into its sub-tabs stays hidden until it is ready (shell.js → route) */
 #view.is-building { visibility: hidden; pointer-events: none; max-height: 0; overflow: hidden; }
+
+/* «الوارد»: a message, booking or job application opens in place as its full card */
+.inbox__msg { display: grid; gap: 4px; }
+.inbox__msg > .inbox__kind { margin-inline-start: 4px; }
+.inbox__msg .msg { margin: 0; }
