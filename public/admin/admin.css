@@ -1036,3 +1036,35 @@ html { overflow-anchor: none; }
 .media--pick { overflow: auto; margin: 0; padding: 14px 16px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 .media--pick .media__thumb { aspect-ratio: 1; }
 @media (max-width: 600px) { .media { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mpick { padding: 0; } .mpick__box { max-height: 100dvh; height: 100dvh; border-radius: 0; } }
+
+/* orders: the updates the customer sees in the client portal */
+.ord-ups { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
+.ord-ups h4 { margin: 0 0 8px; }
+.ord-up { padding: 8px 12px; border-inline-start: 3px solid var(--brand); background: var(--bg); border-radius: 10px; margin-bottom: 8px; }
+.ord-up p { margin: 2px 0; white-space: pre-wrap; }
+.ord-up span { font-size: 12px; }
+.ord-up a { font-size: 13px; color: var(--brand); word-break: break-all; }
+.ord-upnew { display: grid; gap: 8px; }
+.ord-upact { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.ord-upact .chk { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+
+/* «الوارد»: everything sent through the site in one list */
+.inbox { display: grid; gap: 8px; }
+.inbox__row { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; width: 100%; text-align: start; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); color: var(--text); font: inherit; cursor: pointer; }
+.inbox__row:hover { border-color: var(--brand); }
+.inbox__row.is-todo { border-inline-start: 3px solid var(--brand); }
+.inbox__ico { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; }
+.inbox__ico svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.inbox__main { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; min-width: 0; align-items: center; }
+.inbox__main b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inbox__main small { grid-column: 1 / -1; color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inbox__kind { justify-self: start; font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 99px; }
+.inbox__side { display: grid; justify-items: end; gap: 4px; }
+.inbox__side small { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.inbox__side .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--brand); display: block; }
+.k-chat { background: color-mix(in srgb, #0EA5E9 14%, transparent); color: #0369A1; }
+.k-order { background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--brand); }
+.k-msg { background: color-mix(in srgb, #64748B 16%, transparent); color: #475569; }
+.k-book { background: color-mix(in srgb, #10B981 16%, transparent); color: #047857; }
+.k-job { background: color-mix(in srgb, #F59E0B 18%, transparent); color: #B45309; }
+:root[data-theme="dark"] .k-chat, :root[data-theme="dark"] .k-msg, :root[data-theme="dark"] .k-book, :root[data-theme="dark"] .k-job { filter: brightness(1.6); }

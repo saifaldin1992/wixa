@@ -579,6 +579,13 @@ One list of the site's pages, the sections each page is made of, and where every
   has one main heading, shows only its own sections, has the same header and footer as the home page, and every visible
   menu link opens a real page).
 
+## Customer care batch (Nov 2026): notifications, reviews, reminders, client portal, inbox
+- **Notifications on the team's phones:** `pushTeam(env, kind, label)` (`src/routes/chat.js`) for chat, order, message, booking, job and the booking reminder. A push has no text; the dashboard's service worker (`public/admin/sw.js`) asks `GET /api/push/last?endpoint=…` (answers only a subscribed device) and shows the right title and opens the right page. «الإشعارات والبريد → التطبيق والإشعارات» (`views/device.js`) installs the dashboard as an app and turns the notifications on.
+- **Review after delivery:** marking an order «مكتمل» calls `POST /api/admin/order-notify {kind:"done"}` (`src/routes/portal.js`): one review link per order (KV `review-order:<id>`), emailed when the customer left an address, and shown to copy. On `/review`, 4–5 stars invite the customer to Google too when «رابط تقييمك على Google» (`settings.contact.google_review`) is set.
+- **Booking reminders:** a booking saves `remind:<date>` in KV; `runBookingReminders` (every 15 minutes with the health check) emails the customer a day and two hours before, and pushes + emails the team an hour before. Cancelling a booking removes its reminder.
+- **Client portal `/portal`:** sign in with an order number + its phone (`portal_login`), a token signed by the Worker (HMAC, key in KV `portal_key`, 30 days, holds only the phone's last 10 digits), then `portal_orders` lists every order with that phone and the updates the team shared (`order_updates`, added in «الطلبات» → «تحديثات يراها الزبون», optionally emailed). Migration `20261122000000_customer_portal.sql`. Linked from the footer («الدعم») and the order confirmation email.
+- **«الوارد» (`views/inbox.js`):** chats, orders, messages, bookings and job applications in one list, what needs an answer first; a tap opens it in its own page (a chat opens directly).
+
 ## The live chat instead of WhatsApp (Nov 2026)
 When the live chat is on (`settings.chat.on`), it is the way to talk to us everywhere: no WhatsApp bubble, card or button is shown.
 - Any element with `data-open-chat` opens the chat (`chat.js`), with `data-topic` («svc», «quote», «other», «track»…) and `data-service` pre-filled.

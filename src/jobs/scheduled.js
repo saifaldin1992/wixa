@@ -2,7 +2,8 @@
 
 import { STAGE_AR, baghdadNow, dayKey, esc, rpcToken, sb } from "../lib/core.js";
 import { getConfig } from "../services/data.js";
-import { mailBox, notifyAddress, sendOwnerMail } from "../services/mail.js";
+import { mailBox, notifyAddress, sendCustomerMail, sendOwnerMail } from "../services/mail.js";
+import { pushTeam } from "../services/push.js";
 
 // Every 15 minutes: is the database answering, and does the site have its content? Emails only when the state changes
 // (two failed checks in a row before "down", to ignore a single hiccup).
@@ -116,4 +117,47 @@ export async function runReminders(env) {
     ${d.waiting.length ? `<p><b>محادثات تنتظر ردك منذ أكثر من يوم (${d.waiting.length}):</b></p><ul>${d.waiting.map((w) => li(`<b>${esc(w.name)}</b> <span dir="ltr">${esc(w.phone)}</span><br><span style="color:#6B6478">${esc(w.text)}</span>`)).join("")}</ul>` : ""}
     <p><a href="${site}/admin/#customers" style="display:inline-block;background:#5B21B6;color:#fff;padding:12px 22px;border-radius:99px;text-decoration:none">فتح لوحة التحكم</a></p>`);
   await sendOwnerMail(env, `متابعات اليوم: ${d.follow.length + d.waiting.length} — ويكسا`, html);
+}
+
+// Booking reminders, every 15 minutes (with the health check). Bookings are kept in KV by day (remind:YYYY-MM-DD,
+// Baghdad dates and times, saved by POST /api/contact). The customer gets an email a day before and two hours before
+// (when they left an address); the team gets a push and an email an hour before. Each one is sent once ("sent").
+const REMIND = [["day", 24 * 60, "customer"], ["soon", 120, "customer"], ["team", 60, "team"]];
+export async function runBookingReminders(env) {
+  if (!env.PRIVATE) return;
+  const now = baghdadNow(), nowMin = now.getTime() / 60e3;
+  const day = (d) => d.toISOString().slice(0, 10);
+  const site = env.SITE_ENV === "staging" ? "https://staging.wixa.dev" : "https://wixa.dev";
+  for (const date of [day(now), day(new Date(now.getTime() + 864e5)), day(new Date(now.getTime() + 2 * 864e5))]) {
+    const key = `remind:${date}`;
+    const list = (await env.PRIVATE.get(key, { type: "json" }).catch(() => null)) || [];
+    if (!list.length) continue;
+    let changed = false;
+    for (const b of list) {
+      const at = new Date(`${date}T${b.time}:00Z`).getTime() / 60e3; // Baghdad wall clock, read as UTC like baghdadNow()
+      const left = at - nowMin;
+      if (left < 0) continue;
+      for (const [k, before, who] of REMIND) {
+        if (b.sent.includes(k) || left > before) continue;
+        // a reminder whose moment passed long ago (booked late) is skipped, not sent late: only the closest one goes
+        if (k === "day" && left < 180) { b.sent.push(k); changed = true; continue; }
+        const ar = b.lang !== "en", first = String(b.name || "").trim().split(/\s+/)[0];
+        const when = `${date} ${ar ? "الساعة" : "at"} ${b.time} ${ar ? "(بتوقيت بغداد)" : "(Baghdad time)"}`;
+        if (who === "customer" && b.email) {
+          await sendCustomerMail(env, { to: b.email, lang: b.lang,
+            subject: ar ? (k === "day" ? "تذكير: موعدك غداً مع ويكسا" : "تذكير: موعدك مع ويكسا بعد قليل") : (k === "day" ? "Reminder: your meeting with WIXA tomorrow" : "Reminder: your meeting with WIXA soon"),
+            title: ar ? "تذكير بموعدك" : "Meeting reminder",
+            lines: ar ? [`أهلاً ${first}،`, `نذكّرك بموعدك معنا: ${when}.`, "إذا احتجت تغيير الموعد، راسلنا من المحادثة في الموقع."]
+              : [`Hi ${first},`, `A reminder of your meeting with us: ${when}.`, "If you need to change it, message us in the chat on our site."],
+            button: { href: `${site}${ar ? "" : "/?lang=en"}`, label: ar ? "افتح الموقع" : "Open the site" } }).catch(() => {});
+        }
+        if (who === "team") {
+          await pushTeam(env, "reminder", `${first} ${b.time}`).catch(() => {});
+          await sendOwnerMail(env, `موعد بعد ساعة: ${b.name} — ${b.time}`, mailBox("موعد بعد ساعة", `<p><b>${esc(b.name)}</b> · <span dir="ltr">${esc(b.phone || "")}</span></p><p>${esc(when)}</p>`)).catch(() => {});
+        }
+        b.sent.push(k); changed = true;
+      }
+    }
+    if (changed) await env.PRIVATE.put(key, JSON.stringify(list), { expirationTtl: 40 * 864e2 });
+  }
 }

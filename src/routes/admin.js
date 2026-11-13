@@ -269,6 +269,9 @@ export async function handleAdminBooking(request, env) {
   const key = `book:${date}`;
   const taken = ((await env.PRIVATE.get(key, { type: "json" }).catch(() => null)) || []).filter((t) => t !== time);
   await env.PRIVATE.put(key, JSON.stringify(taken), { expirationTtl: 90 * 864e2 });
+  // no reminders for a cancelled booking
+  const rk = `remind:${date}`, rl = (await env.PRIVATE.get(rk, { type: "json" }).catch(() => null)) || [];
+  if (rl.some((x) => x.time === time)) await env.PRIVATE.put(rk, JSON.stringify(rl.filter((x) => x.time !== time)), { expirationTtl: 40 * 864e2 });
   await audit(env, s, { area: "bookings", action: "cancel", target: `${date} ${time}`, summary: "إلغاء موعد" });
   return json({ ok: true, free: time });
 }

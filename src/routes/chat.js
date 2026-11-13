@@ -1,8 +1,10 @@
 // Live chat for visitors, and web push notifications to the team.
 
 import { adminSession, sessionUser } from "../lib/auth.js";
-import { PHONE_RE, allowed, b64u, cleanText, clientIp, esc, hex, json, rpcToken, sha256hex } from "../lib/core.js";
+import { PHONE_RE, allowed, cleanText, clientIp, esc, hex, json, rpcToken, sha256hex } from "../lib/core.js";
 import { mailBox, sendOwnerMail } from "../services/mail.js";
+import { PUSH_HOSTS, pushTeam, vapidKeys, webPush } from "../services/push.js";
+export { pushTeam };
 
 export async function chatError(r) {
   const t = await r.text().catch(() => "");
@@ -63,7 +65,7 @@ export async function handleChat(request, env, ctx, action) {
 export async function notifyChat(env, request, m) {
   const origin = new URL(request.url).origin;
   const jobs = [];
-  if (m.push) jobs.push(pushTeam(env));
+  if (m.push) jobs.push(pushTeam(env, "chat", String(m.name || "").trim().split(/\s+/)[0]));
   if (m.email) jobs.push(sendOwnerMail(env, m.isNew ? `محادثة جديدة في الموقع — ${m.name}` : `رسالة جديدة في الدردشة — ${m.name}`,
     mailBox(m.isNew ? "محادثة جديدة في الموقع" : "رسالة جديدة في الدردشة", `<p><b>${esc(m.name)}</b> · <span dir="ltr">${esc(m.phone)}</span>${m.topic ? `<br>الموضوع: <b>${esc(m.topic)}</b>` : ""}</p>
       <p style="background:#F3EEFB;padding:12px 14px;border-radius:12px;white-space:pre-wrap">${esc(m.body)}</p>
@@ -71,32 +73,16 @@ export async function notifyChat(env, request, m) {
       <p><a href="${origin}/admin/#chats" style="display:inline-block;background:#5B21B6;color:#fff;padding:12px 22px;border-radius:99px;text-decoration:none">الرد من لوحة التحكم</a></p>`)));
   await Promise.allSettled(jobs);
 }
-export const PUSH_HOSTS = /(^|\.)(fcm\.googleapis\.com|push\.services\.mozilla\.com|push\.apple\.com|notify\.windows\.com)$/;
-export async function vapidKeys(env) {
-  let v = await env.PRIVATE.get("vapid", { type: "json" });
-  if (!v) {
-    const kp = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
-    v = { pub: b64u(await crypto.subtle.exportKey("raw", kp.publicKey)), jwk: await crypto.subtle.exportKey("jwk", kp.privateKey) };
-    await env.PRIVATE.put("vapid", JSON.stringify(v));
-  }
-  return v;
-}
-export async function webPush(env, endpoint) {
-  const v = await vapidKeys(env);
-  const enc = (o) => b64u(new TextEncoder().encode(JSON.stringify(o)));
-  const unsigned = `${enc({ typ: "JWT", alg: "ES256" })}.${enc({ aud: new URL(endpoint).origin, exp: Math.floor(Date.now() / 1000) + 12 * 3600, sub: "mailto:info@wixa.dev" })}`;
-  const key = await crypto.subtle.importKey("jwk", v.jwk, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
-  const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, new TextEncoder().encode(unsigned));
-  const r = await fetch(endpoint, { method: "POST", headers: { authorization: `vapid t=${unsigned}.${b64u(sig)}, k=${v.pub}`, ttl: "3600", urgency: "high", "content-length": "0" } });
-  return r.status;
-}
-export async function pushTeam(env) {
-  if (!env.PRIVATE) return;
+// GET /api/push/last?endpoint=… — what the latest push was about. Only a device subscribed to the team's pushes gets an
+// answer (its push address is the proof, it is never shown anywhere else); nothing else about the customer comes back.
+export async function handlePushLast(request, env, url) {
+  const endpoint = (url.searchParams.get("endpoint") || "").slice(0, 1000);
+  const none = json({ kind: "chat" }, 200, { "cache-control": "no-store" });
+  if (!env.PRIVATE || !endpoint) return none;
   const subs = (await env.PRIVATE.get("push_subs", { type: "json" })) || [];
-  if (!subs.length) return;
-  const res = await Promise.all(subs.map((x) => webPush(env, x.endpoint).catch(() => 0)));
-  const keep = subs.filter((x, i) => res[i] !== 404 && res[i] !== 410); // the device unsubscribed
-  if (keep.length !== subs.length) await env.PRIVATE.put("push_subs", JSON.stringify(keep));
+  if (!subs.some((x) => x.endpoint === endpoint)) return none;
+  const last = await env.PRIVATE.get("push_last", { type: "json" });
+  return json(last && Date.now() - last.at < 10 * 60e3 ? { kind: last.kind, label: last.label } : { kind: "chat" }, 200, { "cache-control": "no-store" });
 }
 export async function handleAdminPush(request, env) {
   const s = await adminSession(request, env, ["owner", "support"]);

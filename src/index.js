@@ -12,13 +12,14 @@
 // only imports from layers below it or beside it (tests/structure.mjs checks there are no import cycles).
 // See docs/DEVELOPERS.md → «الخادم».
 
-import { runBackup, runMonitor, runReminders, runWeeklyReport } from "./jobs/scheduled.js";
+import { runBackup, runBookingReminders, runMonitor, runReminders, runWeeklyReport } from "./jobs/scheduled.js";
 import { SECURITY_HEADERS, SITE_TTL, json, notFound, serveBuild } from "./lib/core.js";
 import { PATH_RE, STATUS_DEFAULTS, sitePages } from "../public/js/site-pages.js";
 import { handleAdminBooking, handleAdminCampaign, handleAdminOrder, handleAdminRestore, handlePayWebhook, handleAdminDevGuide, handleAdminFunnel, handleAdminIntegrations, handleAdminMsgMeta, handleAdminNotify, handleAdminPage, handleAdminRefresh, handleAdminReviewLink, handleAdminStats, handleAdminStatus, handleAdminTeam, handleAdminTest, handleInviteClaim } from "./routes/admin.js";
-import { handleAdminPush, handleChat, handleChatRate } from "./routes/chat.js";
+import { handleAdminPush, handleChat, handleChatRate, handlePushLast } from "./routes/chat.js";
 import { handleAdminDiagnose } from "./routes/diagnose.js";
 import { handleAdminErrors, handleClientError, recordError } from "./routes/errors.js";
+import { handleAdminOrderNotify, handlePortalData, handlePortalLogin, handlePortalPage } from "./routes/portal.js";
 import { handleContact, handleEvent, handleOrder, handleOrderFind, handleReview, handleSlots, handleTrack, handleUnsubscribe } from "./routes/forms.js";
 import { handleBlog, handleCustomPage, handleHome, handlePrivacy, handleProjectPage, handleServicePage, handleStatus, handleTeam } from "./routes/pages.js";
 import { getConfig, getPosts, getSiteData } from "./services/data.js";
@@ -33,7 +34,10 @@ export default {
       ctx.waitUntil(runBackup(env).catch((e) => console.error("backup", e)));
       ctx.waitUntil(runReminders(env).catch((e) => console.error("reminders", e))); // 06:23 Baghdad
     }
-    else ctx.waitUntil(runMonitor(env).catch((e) => console.error("monitor", e)));
+    else {
+      ctx.waitUntil(runMonitor(env).catch((e) => console.error("monitor", e)));
+      ctx.waitUntil(runBookingReminders(env).catch((e) => console.error("booking reminders", e)));
+    }
   },
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -85,6 +89,12 @@ export default {
         case "POST /api/order": return await handleOrder(request, env, ctx);
         case "POST /api/order-status": return await handleTrack(request, env);
         case "POST /api/order-find": return await handleOrderFind(request, env);
+        case "POST /api/portal/login": return await handlePortalLogin(request, env);
+        case "POST /api/portal": return await handlePortalData(request, env);
+        case "GET /portal":
+        case "HEAD /portal": return await handlePortalPage(request, env, ctx);
+        case "POST /api/admin/order-notify": return await handleAdminOrderNotify(request, env);
+        case "GET /api/push/last": return await handlePushLast(request, env, url);
         case "POST /api/chat/rate": return await handleChatRate(request, env);
         case "GET /unsubscribe":
         case "POST /unsubscribe":

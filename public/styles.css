@@ -2002,3 +2002,30 @@ html[data-page="home"] .sec-more { display: flex; }
 
 /* phones: «ابدأ مشروعك» opens the ☰ menu (its first item); the top bar has no room for it next to the menu, theme and language buttons */
 @media (min-width: 761px) { .fgroup__title { pointer-events: none; } } /* computers: the groups are always open */
+
+/* «بوابة العملاء» (/portal) */
+.portal { margin-top: 24px; display: grid; gap: 16px; text-align: start; }
+.portal__in { display: grid; gap: 12px; max-width: 460px; margin: 0 auto; width: 100%; padding: var(--panel-pad, 24px); border-radius: var(--radius, 22px); border: 1px solid var(--line); background: var(--surface); }
+.portal__in h2 { margin: 0; font-size: 1.2rem; text-align: center; }
+.portal__in > p { margin: 0; text-align: center; font-size: .92rem; }
+.portal__in label { display: grid; gap: 6px; font-weight: 700; color: var(--text); }
+.portal__in input { font: inherit; min-height: 48px; padding: 12px 14px; border-radius: var(--radius-sm, 14px); border: 1px solid var(--line-2, var(--line)); background: var(--bg); color: var(--text); width: 100%; box-sizing: border-box; }
+.portal__in .btn { border: 0; cursor: pointer; justify-content: center; }
+.portal__err { color: #E11D48; font-size: .9rem; text-align: center; margin: 0; }
+.portal__err[hidden] { display: none; }
+.portal__hint { font-size: .82rem !important; }
+.portal__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.portal__top span { display: flex; gap: 8px; flex-wrap: wrap; }
+.portal__top .btn { min-height: 40px; padding: 0 16px; border: 1px solid var(--line); cursor: pointer; font: inherit; font-weight: 600; }
+.portal__ord { padding: var(--panel-pad, 22px); border-radius: var(--radius, 22px); border: 1px solid var(--line); background: var(--surface); display: grid; gap: 12px; }
+.portal__ord header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; align-items: baseline; }
+.portal__ord header div { display: grid; gap: 2px; }
+.portal__ord header b { font-size: 1.05rem; color: var(--text); }
+.portal__ord header span, .portal__ord header small { color: var(--muted); font-size: .88rem; }
+.portal__ord h3 { margin: 6px 0 0; font-size: 1rem; }
+.portal__say { margin: 0; padding: 10px 14px; border-radius: 14px; background: rgba(var(--primary-rgb), .08); color: var(--text) !important; }
+.portal__ups { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.portal__ups li { padding: 10px 14px; border-inline-start: 3px solid var(--primary); background: var(--bg); border-radius: 12px; }
+.portal__ups small { color: var(--muted); font-size: .8rem; }
+.portal__ups p { margin: 4px 0; white-space: pre-wrap; }
+.portal__ord .btn--chat { justify-self: start; min-height: 44px; border: 1px solid var(--line); cursor: pointer; font: inherit; font-weight: 600; }

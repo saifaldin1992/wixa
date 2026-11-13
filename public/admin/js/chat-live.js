@@ -48,7 +48,7 @@ export async function startChatLive() {
   ping(); beat = setInterval(ping, 45000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { ping(); refreshChatCount(); } });
   // a tap on a chat notification opens the conversations page
-  navigator.serviceWorker?.addEventListener("message", (e) => { if (e.data?.type === "open-chats") location.hash = "#chats"; });
+  navigator.serviceWorker?.addEventListener("message", (e) => { if (e.data?.type === "open-chats") location.hash = "#chats"; else if (e.data?.type === "open-view" && /^[a-z]+$/.test(e.data.view || "")) location.hash = `#${e.data.view}`; });
 }
 export function stopChatLive() {
   clearInterval(beat);

@@ -17,6 +17,8 @@ import { viewMessages } from "./views/messages.js";
 import { viewOverview } from "./views/overview.js";
 import { viewPosts } from "./views/posts.js";
 import { viewMedia } from "./views/media.js";
+import { viewDevice } from "./views/device.js";
+import { viewInbox } from "./views/inbox.js";
 import { viewSeo } from "./views/seo.js";
 import { viewDiagnose } from "./views/diagnose.js";
 import { viewDevGuide } from "./views/devguide.js";
@@ -36,12 +38,13 @@ export const VIEWS = {
   media: { title: "مكتبة الوسائط", sub: "كل صور الموقع في مكان واحد: ارفع، انسخ الرابط، واعرف أين تُستخدم كل صورة", render: viewMedia },
   seo: { title: "البحث والمشاركة", sub: "كيف يظهر موقعك في Google وعند مشاركة الرابط", render: viewSeo },
   integrations: { title: "التكاملات", sub: "بوابة الدفع، أدوات القياس والإعلانات، والتقارير والمراقبة", render: (v) => composeView(v, [[viewIntegrations, ["#cAddons", "#cHooks", "#cKeys", "#cTags", "#cReports"]]]) },
-  notify: { title: "الإشعارات والبريد", sub: "تنبيهات الرسائل الجديدة، الرد التلقائي للزبون، والردود الجاهزة", render: (v) => composeView(v, [[viewIntegrations, ["#cAlerts", "#cReply", "#cTpl"]], [viewAccount, ["بريد تنبيهات"]]]) },
+  notify: { title: "الإشعارات والبريد", sub: "تنبيهات الرسائل الجديدة، الرد التلقائي للزبون، والردود الجاهزة", render: (v) => composeView(v, [[viewDevice, ["#cDevice"]], [viewIntegrations, ["#cAlerts", "#cReply", "#cTpl"]], [viewAccount, ["بريد تنبيهات"]]]) },
   protect: { title: "الحماية", sub: "الحماية من الرسائل المزعجة ووضع الصيانة", render: (v) => composeView(v, [[viewIntegrations, ["#cSpam", "#cMaint"]]]) },
   backup: { title: "النسخ الاحتياطي", sub: "النسخة التلقائية، نسخة المحتوى، والاسترجاع", render: (v) => composeView(v, [[viewIntegrations, ["#cBackup"]], [viewAccount, ["نسخة احتياطية"]]]) },
   diagnose: { title: "الفحص والتشخيص", sub: "فحص كل أجزاء الموقع، مكان أي عطل وطريقة حله، وسجل الأعطال", render: (v) => composeView(v, [[viewIntegrations, ["#cPublish"]], [viewDiagnose, ["*"]]]) },
   audit: { title: "سجل التعديلات", sub: "من عدّل ماذا ومتى — للمالك فقط، ولا يمكن تعديله أو حذفه", render: viewAudit },
   devguide: { title: "دليل المطوّر", sub: "كيف بُني المشروع وأين يوجد كل جزء — للمطورين", render: viewDevGuide },
+  inbox: { title: "الوارد", sub: "كل ما وصلك من الموقع في مكان واحد: المحادثات، الطلبات، الرسائل، الحجوزات — وما ينتظر ردك أولاً", render: viewInbox },
   orders: { title: "الطلبات", sub: "كل طلبات المشاريع من الموقع في مكان واحد: ماذا اختار الزبون، ومن أين، وهداياه وخصمه", render: viewOrders },
   messages: { title: "الرسائل", sub: "رسائل نموذج التواصل", render: viewMessages },
   sales: { title: "لوحة المبيعات", sub: "من تواصل، ومن اشترى، ومن أين جاؤوا، وكيف نخدمهم", render: viewSales },
@@ -68,7 +71,7 @@ const SECTIONS = {
     rules: [["قوالب ألوان", "presets"], ["الألوان", "colors"], ["نوع الخط", "type"], ["حجم الخط", "type"], ["إعادة الضبط", "reset"]] },
   team: { groups: ONE([["invite", "دعوة شخص"], ["members", "الأعضاء"], ["pending", "الدعوات"]]), rules: [["دعوة شخص", "invite"], ["أعضاء الفريق", "members"], ["دعوات بانتظار", "pending"]] },
   account: { groups: ONE([["me", "البيانات"], ["email", "تغيير البريد"], ["pass", "كلمة المرور"], ["mfa", "التحقق بخطوتين"]]), rules: [["الحساب", "me"], ["تغيير بريد", "email"], ["تغيير كلمة", "pass"], ["التحقق بخطوتين", "mfa"]] },
-  notify: { groups: ONE([["alerts", "تنبيهات الرسائل"], ["reply", "الرد التلقائي"], ["tpl", "الردود الجاهزة"]]), rules: [["#cAlerts", "alerts"], ["بريد تنبيهات", "alerts"], ["#cReply", "reply"], ["#cTpl", "tpl"]] },
+  notify: { groups: ONE([["device", "التطبيق والإشعارات"], ["alerts", "تنبيهات الرسائل"], ["reply", "الرد التلقائي"], ["tpl", "الردود الجاهزة"]]), rules: [["#cDevice", "device"], ["#cAlerts", "alerts"], ["بريد تنبيهات", "alerts"], ["#cReply", "reply"], ["#cTpl", "tpl"]] },
   integrations: { groups: ONE([["addons", "الإضافات"], ["hooks", "Webhooks"], ["keys", "المفاتيح"], ["tags", "أدوات القياس والإعلانات"], ["reports", "التقارير والمراقبة"]]), rules: [["#cAddons", "addons"], ["#cHooks", "hooks"], ["#cKeys", "keys"], ["#cTags", "tags"], ["#cReports", "reports"]] },
   protect: { groups: ONE([["spam", "الرسائل المزعجة"], ["maint", "وضع الصيانة"]]), rules: [["#cSpam", "spam"], ["#cMaint", "maint"]] },
   backup: { groups: ONE([["auto", "النسخة التلقائية والاسترجاع"], ["manual", "نسخة المحتوى"]]), rules: [["#cBackup", "auto"], ["نسخة احتياطية", "manual"]] },
@@ -81,7 +84,7 @@ export let current = null;
 const ROLE_VIEWS = {
   owner: null, // everything
   editor: ["overview", "content", "projects", "services", "partners", "testimonials", "posts", "media", "appearance", "brand", "seo", "devguide", "account"],
-  support: ["overview", "orders", "messages", "chats", "customers", "account"],
+  support: ["overview", "inbox", "orders", "messages", "chats", "customers", "account"],
 };
 export const canSee = (name) => !ROLE_VIEWS[role] || ROLE_VIEWS[role].includes(name);
 function applyRoleNav() {

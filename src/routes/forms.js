@@ -2,6 +2,7 @@
 
 import { EMAIL_RE, SECURITY_HEADERS, allowed, baghdadNow, clientIp, dayKey, esc, hex, json, newOrderNumber, pickLang, rpc, rpcToken, safeHref, sameText, sb, toHM, toMin, turnstileOk } from "../lib/core.js";
 import { simplePage } from "./pages.js";
+import { pushTeam } from "../services/push.js";
 import { getConfig, getSiteData } from "../services/data.js";
 import { mailBox, notifyOwner, requestOffer, sendAutoReply, sendOwnerMail, sendRequestConfirmation } from "../services/mail.js";
 
@@ -50,6 +51,7 @@ export async function handleOrder(request, env, ctx) {
   const row = { name, email, phone, lang, message: lines, services: [`${SRC[source][0]}: ${item || "-"}`], order: number, request_no: number, offer };
   ctx.waitUntil(notifyOwner(env, row).catch((e) => console.error("notify", e)));
   ctx.waitUntil(sendRequestConfirmation(env, cfg, row).catch((e) => console.error("order mail", e)));
+  ctx.waitUntil(pushTeam(env, "order", name.split(/\s+/)[0]).catch(() => {}));
   ctx.waitUntil(countMessage(env, { services: ["طلب مشروع"] }, false).catch(() => {}));
   return json({ ok: true, number }, 201);
 }
@@ -113,6 +115,12 @@ export async function handleContact(request, env, ctx) {
     const dayName = new Date(`${date}T00:00:00Z`).toLocaleDateString("ar-IQ", { weekday: "long", timeZone: "UTC" });
     row.services = [`حجز موعد: ${dayName} ${date} الساعة ${time}`];
     row.message = row.message || "حجز موعد";
+    // kept for the reminders (jobs/scheduled.js → runBookingReminders): the customer a day and two hours before, the team an hour before
+    if (env.PRIVATE) {
+      const k = `remind:${date}`, list = (await env.PRIVATE.get(k, { type: "json" }).catch(() => null)) || [];
+      list.push({ time, name: row.name, email: row.email || "", phone: row.phone, lang: row.lang, sent: [] });
+      ctx.waitUntil(env.PRIVATE.put(k, JSON.stringify(list), { expirationTtl: 40 * 864e2 }));
+    }
   }
   // the smart project request: answers become a readable summary with a request number
   let reqNo = "";
@@ -158,6 +166,7 @@ export async function handleContact(request, env, ctx) {
   if (reqNo) ctx.waitUntil(sendRequestConfirmation(env, cfg, row).catch((e) => console.error("request mail", e)));
   else ctx.waitUntil(sendAutoReply(env, cfg, row).catch((e) => console.error("autoreply", e)));
   ctx.waitUntil(countMessage(env, row, isJob).catch((e) => console.error("count", e)));
+  ctx.waitUntil(pushTeam(env, body.kind === "booking" ? "booking" : isJob ? "job" : reqNo ? "order" : "message", row.name.split(/\s+/)[0]).catch(() => {}));
   return json({ ok: true, ...(reqNo ? { number: reqNo } : {}) }, 201);
 }
 export async function countMessage(env, row, isJob) {
@@ -228,6 +237,10 @@ export async function handleReview(request, env, ctx, url) {
     if (!r.ok) { console.error("review", r.status, await r.text()); return page(`<h1>${ar ? "تعذّر الإرسال" : "Couldn't send"}</h1><p class="lead">${ar ? "حاول مرة أخرى لاحقاً." : "Please try again later."}</p>`, 502); }
     await env.PRIVATE.delete(`review:${code}`);
     ctx.waitUntil(sendOwnerMail(env, `رأي جديد من ${name}`, mailBox("رأي عميل جديد بانتظار موافقتك", `<p><b>${esc(name)}</b>${p.role ? ` — ${esc(p.role)}` : ""}</p><p style="color:#D9A441;font-size:20px">${"★".repeat(p.rating)}</p><div style="padding:14px;background:#F8EEF1;border-radius:12px;white-space:pre-wrap">${esc(quote)}</div><p>الرأي مخفي حتى تنشره من لوحة التحكم ← آراء العملاء.</p>`)).catch(() => {}));
+    const g = safeHref(st.contact?.google_review || "");
+    if (g && p.rating >= 4) return page(`<h1>${ar ? "شكراً لك" : "Thank you"}</h1><p class="lead">${ar ? "وصل رأيك، ونقدّر وقتك وثقتك بنا." : "We've received your review. We appreciate your time and trust."}</p>
+      <p class="lead">${ar ? "هل تساعدنا بنشر نفس الرأي على Google؟ يأخذ دقيقة ويساعد غيرك على إيجادنا." : "Would you share the same review on Google? It takes a minute and helps others find us."}</p>
+      <div class="actions"><a class="btn btn--primary" href="${esc(g)}" target="_blank" rel="noopener">${ar ? "قيّمنا على Google" : "Review us on Google"}</a></div>`);
     return done(ar ? "وصل رأيك، ونقدّر وقتك وثقتك بنا." : "We've received your review. We appreciate your time and trust.");
   }
   const code = (url.searchParams.get("c") || "").slice(0, 32);

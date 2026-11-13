@@ -295,6 +295,7 @@ export function renderContentTab() {
     body.innerHTML = `<div class="stack">
       <div class="grid2">${input("contact.email", "البريد الإلكتروني", false, 'dir="ltr" type="email"')}${input("contact.phone", "رقم الهاتف", false, 'dir="ltr" placeholder="+964 7xx xxx xxxx"')}</div>
       ${input("contact.whatsapp", "رقم واتساب (بالصيغة الدولية بدون + أو أصفار، مثل 9647701234567)", false, 'dir="ltr"')}
+      ${input("contact.google_review", "رابط تقييمك على Google (من ملف شركتك في خرائط Google ← «اطلب تقييمات» ← نسخ الرابط). من يقيّمك بـ 4 أو 5 نجوم يُدعى لنشر رأيه هناك أيضاً", false, 'dir="ltr" placeholder="https://g.page/r/…"')}
       <div class="grid2">${input("contact.address_ar", "العنوان بالعربي")}${input("contact.address_en", "العنوان بالإنجليزي", false, 'dir="ltr"')}</div>
       <div class="sec-title">روابط التواصل الاجتماعي</div>
       <div class="grid2">${input("contact.instagram", "Instagram", false, 'dir="ltr" placeholder="https://instagram.com/..."')}${input("contact.x", "X (Twitter)", false, 'dir="ltr" placeholder="https://x.com/..."')}

@@ -176,6 +176,7 @@ export function footerExtra(st, lang, path = "") {
   const out = sitePages(st).filter((p) => p.published && p.footer).map((p, i) => ({ g: ["services", "company", "support", "legal"].includes(p.group) ? p.group : "legal", html: a(p.path, p[`title_${lang}`] || p.title_ar || p.title_en, i) }));
   if (team.on && team.footer) out.push({ g: "company", html: a("/team", team[`title_${lang}`] || TEAM_DEFAULTS[`title_${lang}`], 50) });
   if (status.on && status.footer) out.push({ g: "support", html: a("/status", lang === "ar" ? "حالة الخدمات" : "Service status", 60) });
+  out.push({ g: "support", html: a("/portal", lang === "ar" ? "بوابة العملاء" : "Client portal", 55) });
   return out;
 }
 // A page's text: [{h, p}] → headings and paragraphs; "{email}" becomes the contact email link
@@ -294,7 +295,7 @@ const bootHtml = (lang) => { const ar = lang === "ar"; return `<div class="boot"
 
 // One page layout shared by service and project pages, articles, the privacy policy and the review form:
 // the site's own stylesheet, header, menu and footer, with the page's content in the middle.
-export function simplePage(request, st, { lang, title, description, path, image, body, jsonld, status = 200, orderQ = "", ending = true, crumbs = null, startLabel = "" }) {
+export function simplePage(request, st, { lang, title, description, path, image, body, jsonld, status = 200, orderQ = "", ending = true, crumbs = null, startLabel = "", scripts = [], noindex = false }) {
   const ar = lang === "ar";
   const origin = new URL(request.url).origin;
   const t = st.theme || {};
@@ -312,7 +313,7 @@ export function simplePage(request, st, { lang, title, description, path, image,
     jsonld = jsonld ? [jsonld, crumbLd] : crumbLd;
   }
   const html = `<!doctype html><html lang="${lang}" dir="${ar ? "rtl" : "ltr"}" data-mode="${st.mode === "light" || st.mode === "dark" ? st.mode : ""}" data-look="${st.look === "soft" ? "soft" : "flat"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(title)} — ${esc(brand)}</title><meta name="description" content="${esc(description)}">
+<title>${esc(title)} — ${esc(brand)}</title><meta name="description" content="${esc(description)}">${noindex ? '<meta name="robots" content="noindex">' : ""}
 <link rel="canonical" href="${origin}${path}?lang=${lang}"><link rel="alternate" hreflang="ar" href="${origin}${path}?lang=ar"><link rel="alternate" hreflang="en" href="${origin}${path}?lang=en">
 <meta property="og:type" content="website"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${origin}${path}">
 ${image ? `<meta property="og:image" content="${esc(image)}"><meta name="twitter:card" content="summary_large_image">` : ""}
@@ -378,7 +379,7 @@ ${shell.header}
 <main class="page">${crumbHtml}${body}
 ${ending ? `<div class="actions"><a class="btn btn--primary" data-start href="/order?lang=${lang}${orderQ}">${esc(startLabel || ui.nav_start)}</a><a class="btn btn--ghost" href="/contact?lang=${lang}">${ui.nav_contact}</a></div>` : ""}</main>
 ${shell.footer}
-${st.chat?.on ? `<script src="${versioned("/build/shared.js")}" defer></script><script type="module" src="${versioned("/build/chat.js")}"></script>` : ""}
+${st.chat?.on || scripts.length ? `<script src="${versioned("/build/shared.js")}" defer></script>` : ""}${scripts.map((u) => `<script type="module" src="${versioned(u)}"></script>`).join("")}${st.chat?.on && !scripts.length ? `<script type="module" src="${versioned("/build/chat.js")}"></script>` : ""}
 </body></html>`;
   return new Response(request.method === "HEAD" ? null : html, { status, headers: { ...SECURITY_HEADERS, "speculation-rules": '"/speculation-rules.json"', "content-type": "text/html; charset=utf-8", "cache-control": "no-cache", "content-language": lang, vary: "Accept-Language, Cookie" } });
 }

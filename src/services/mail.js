@@ -106,6 +106,7 @@ export async function sendRequestConfirmation(env, cfg, row) {
         ${row.offer && (row.offer.gifts.length || row.offer.discount) ? `<div style="border:1.5px dashed #C4B5FD;border-radius:12px;padding:12px 16px;margin:0 0 16px;background:#FBF9FF"><div style="font-weight:bold;color:#5B21B6;margin-bottom:4px">🎁 ${ar ? "محفوظ لك مع هذا الطلب" : "Saved for you with this request"}</div><div style="color:#3A3446;font-size:14px">${[...row.offer.gifts.map((g) => `✓ ${esc(g)}`), ...(row.offer.discount ? [`✓ ${esc(row.offer.discount)}`] : [])].join("<br>")}</div></div>` : ""}
         <div style="white-space:pre-wrap;color:#3A3446;font-size:14px;border-top:1px solid #EEE;padding-top:12px">${esc(row.message)}</div>
         <p style="margin:16px 0 0;color:#625C70;font-size:13px">${esc(keep)}</p>
+        <p style="margin:14px 0 0"><a href="${site}/portal${ar ? "" : "?lang=en"}" style="display:inline-block;background:#5B21B6;color:#fff;padding:11px 20px;border-radius:99px;text-decoration:none;font-weight:bold">${ar ? "تابع طلبك في بوابة العملاء" : "Follow your order in the client portal"}</a></p>
         ${wa ? `<p style="margin:14px 0 0"><a href="https://wa.me/${wa}?text=${encodeURIComponent((ar ? "مرحباً، بخصوص طلبي رقم " : "Hello, about my request ") + row.request_no)}" style="display:inline-block;background:#0E7C47;color:#fff;text-decoration:none;padding:10px 18px;border-radius:99px;font-weight:bold">${ar ? "تابع طلبك على واتساب" : "Follow up on WhatsApp"}</a></p>` : ""}
       </div>
       <div style="padding:0 22px 20px"><a href="${site}" style="color:#5B21B6;text-decoration:none">${site.replace("https://", "")}</a></div></div></div>`;
@@ -133,3 +134,30 @@ export async function sendOwnerMail(env, subject, html) {
 }
 export const mailBox = (title, inner, color = "#5B21B6") => `<div dir="rtl" style="font-family:'Noto Sans Arabic',Tahoma,Arial,sans-serif;background:#F5F5F7;padding:24px"><div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #ECE6E8">
   <div style="background:${color};color:#fff;padding:18px 22px;font-size:18px;font-weight:bold">${title}</div><div style="padding:22px;color:#1A0E12;font-size:15px;line-height:1.9">${inner}</div></div></div>`;
+
+// A short email to a customer (review request, order update, booking reminder). Plain layout in their language;
+// replies go to the site's contact address. Needs RESEND_API_KEY; silently skipped without it or without an address.
+export async function sendCustomerMail(env, { to, lang = "ar", subject, title, lines = [], button = null }) {
+  if (!env.RESEND_API_KEY || !EMAIL_RE.test(String(to || ""))) return false;
+  const ar = lang !== "en";
+  const cfg = await getConfig(env);
+  let contact = "";
+  try { contact = JSON.parse(memo.text || (await loadFromSupabase(env)))?.settings?.contact?.email || ""; } catch {}
+  const site = env.SITE_ENV === "staging" ? "https://staging.wixa.dev" : "https://wixa.dev";
+  const html = `<div dir="${ar ? "rtl" : "ltr"}" style="font-family:'Noto Sans Arabic',Tahoma,Arial,sans-serif;background:#F5F5F7;padding:24px">
+    <div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E9E4F2">
+      <div style="background:#5B21B6;color:#fff;padding:18px 22px;font-size:18px;font-weight:bold">${esc(title)}</div>
+      <div style="padding:22px;color:#140F1F;font-size:15px;line-height:1.9">
+        ${lines.map((l) => `<p style="margin:0 0 12px;white-space:pre-wrap">${esc(l)}</p>`).join("")}
+        ${button ? `<p style="margin:18px 0 0"><a href="${esc(button.href)}" style="display:inline-block;background:#5B21B6;color:#fff;padding:12px 22px;border-radius:99px;text-decoration:none;font-weight:bold">${esc(button.label)}</a></p>` : ""}
+      </div>
+      <div style="padding:0 22px 20px"><a href="${site}" style="color:#5B21B6;text-decoration:none">${site.replace("https://", "")}</a></div></div></div>`;
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, "content-type": "application/json" },
+    body: JSON.stringify({ from: `${cfg.alerts.from_name} <noreply@wixa.dev>`, to: [to], ...(EMAIL_RE.test(contact) ? { reply_to: contact } : {}),
+      subject, html, text: [...lines, button ? `${button.label}: ${button.href}` : ""].filter(Boolean).join("\n\n") }),
+  });
+  if (!res.ok) console.error("customer mail failed", res.status, await res.text());
+  return res.ok;
+}

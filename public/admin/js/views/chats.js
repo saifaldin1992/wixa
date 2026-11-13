@@ -20,6 +20,9 @@ const when = (t) => {
 const waNum = (p) => { let d = String(p || "").replace(/\D/g, ""); if (d.startsWith("00")) d = d.slice(2); else if (d.startsWith("0")) d = "964" + d.slice(1); return d; };
 const BACK = '<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>';
 
+// «الوارد» opens one conversation directly
+export const showChat = (id) => { current = id; branch = "list"; filter = "all"; };
+
 export async function viewChats(view) {
   unsub?.(); unsub = null;
   const { data: chats, error } = await sb.from("chats").select("*").order("last_at", { ascending: false }).limit(300);

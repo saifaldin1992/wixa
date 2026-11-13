@@ -31,6 +31,12 @@ export async function viewOrders(view) {
   const list = rows.filter((o) => (filter === "open" ? !["done", "cancelled"].includes(o.status) : filter === "all" || o.status === filter))
     .filter((o) => !q || `${o.number} ${o.name} ${o.phone} ${o.email} ${o.item}`.toLowerCase().includes(q));
   const when = (d) => new Date(d).toLocaleString("ar", { dateStyle: "medium", timeStyle: "short" });
+  // updates the customer sees in the client portal (/portal), per order
+  const ups = {};
+  if (list.length) {
+    const { data: u } = await sb.from("order_updates").select("*").in("order_id", list.slice(0, 200).map((o) => o.id)).order("created_at", { ascending: false });
+    (u || []).forEach((x) => (ups[x.order_id] ||= []).push(x));
+  }
   const wa = (p) => String(p || "").replace(/\D/g, "").replace(/^0(?=7)/, "964").replace(/^00/, "");
 
   view.innerHTML = `<div class="card ord-top">
@@ -58,6 +64,14 @@ export async function viewOrders(view) {
             <label class="f"><span>الحالة</span><select data-st="${o.id}">${Object.entries(ORDER_STATUS).map(([k, [l]]) => `<option value="${k}" ${k === o.status ? "selected" : ""}>${l}</option>`).join("")}</select></label>
             <label class="f" style="flex:1"><span>ملاحظة الفريق (لا يراها الزبون)</span><textarea data-note="${o.id}" rows="2" maxlength="2000">${esc(o.team_note || "")}</textarea></label>
           </div>
+          <div class="ord-ups" data-ups="${o.id}">
+            <h4>تحديثات يراها الزبون <span class="muted" style="font-weight:400;font-size:12px">في بوابة العملاء</span></h4>
+            ${(ups[o.id] || []).map((x) => `<div class="ord-up"><span class="muted">${when(x.created_at)}</span><p>${esc(x.body)}</p>${x.link ? `<a href="${esc(x.link)}" target="_blank" rel="noopener" dir="ltr">${esc(x.link.replace(/^https?:[/][/]/, "").slice(0, 60))}</a>` : ""}</div>`).join("") || '<p class="muted" style="font-size:13px;margin:0 0 8px">لا تحديثات بعد. اكتب ما تريد أن يراه الزبون عن تقدّم مشروعه.</p>'}
+            <div class="ord-upnew"><textarea rows="2" maxlength="2000" placeholder="مثال: أنهينا تصميم الواجهات، وننتقل للبرمجة هذا الأسبوع." data-uptext></textarea>
+              <input type="url" dir="ltr" maxlength="500" placeholder="رابط اختياري (ملف، معاينة، تصميم…)" data-uplink>
+              <div class="ord-upact"><label class="chk"><input type="checkbox" data-upmail ${o.email ? "checked" : "disabled"}><span>${o.email ? "أرسل بريداً للزبون" : "لا يوجد بريد للزبون"}</span></label>
+              <button type="button" class="b b--sm b--primary" data-upadd="${o.id}">${I.plus}أضف التحديث</button></div></div>
+          </div>
           <div class="msg__actions">
             <a class="b b--sm" href="tel:${esc(o.phone)}">${I.phone || ""}اتصال</a>
             ${wa(o.phone) ? `<a class="b b--sm" target="_blank" rel="noopener" href="https://wa.me/${wa(o.phone)}?text=${encodeURIComponent(`مرحباً ${o.name}، بخصوص طلبك رقم ${o.number} من ويكسا`)}">واتساب</a>` : ""}
@@ -74,7 +88,28 @@ export async function viewOrders(view) {
     const { error: e } = await sb.from("orders").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
     e ? toast(`تعذّر الحفظ: ${e.message}`, "err") : toast(msg);
   };
-  $$("[data-st]", view).forEach((el) => (el.onchange = async () => { await save(el.dataset.st, { status: el.value }, "حُدّثت الحالة ✓"); const o = rows.find((r) => String(r.id) === el.dataset.st); if (o) o.status = el.value; refreshOrderCount(); }));
+  $$("[data-upadd]", view).forEach((b) => (b.onclick = async () => {
+    const box = b.closest("[data-ups]"), id = +b.dataset.upadd;
+    const body = $("[data-uptext]", box).value.trim(), link = $("[data-uplink]", box).value.trim();
+    if (!body) return toast("اكتب نص التحديث", "err");
+    if (link && !/^https?:[/][/]/.test(link)) return toast("الرابط يجب أن يبدأ بـ https://", "err");
+    b.disabled = true;
+    const { error: e } = await sb.from("order_updates").insert({ order_id: id, body, link });
+    if (e) { b.disabled = false; return toast(`تعذّر الحفظ: ${e.message}`, "err"); }
+    let msg = "أُضيف التحديث ✓ يراه الزبون في بوابة العملاء";
+    if ($("[data-upmail]", box).checked) { const r = await adminApi("order-notify", "POST", { id, kind: "update", update: body }).catch(() => null); if (r?.mailed) msg += " ووصله بريد"; }
+    toast(msg); route();
+  }));
+  // marking an order done asks the customer for a review: by email when they left one, and a link to pass on by hand
+  const afterDone = async (id) => {
+    const r = await adminApi("order-notify", "POST", { id, kind: "done" }).catch(() => null);
+    if (!r?.review) return;
+    openModal("طلب رأي الزبون", `<p style="margin-top:0">${r.mailed ? "أرسلنا للزبون بريداً يطلب رأيه في المشروع ✓" : r.email ? "تعذّر إرسال البريد الآن." : "لم يترك الزبون بريداً."} يمكنك أيضاً إرسال هذا الرابط له في المحادثة أو بأي طريقة:</p>
+      <div style="display:flex;gap:8px"><input readonly dir="ltr" value="${esc(r.review)}" id="rvLink" style="flex:1"><button type="button" class="b" id="rvCopy">${I.copy}نسخ</button></div>
+      <p class="muted" style="font-size:12px">الرابط صالح 60 يوماً ولمرة واحدة. الرأي يصلك مخفياً في «آراء العملاء» حتى توافق عليه.</p>`, null, true);
+    $("#rvCopy").onclick = async () => { try { await navigator.clipboard.writeText(r.review); toast("نُسخ الرابط ✓"); } catch { $("#rvLink").select(); document.execCommand("copy"); toast("نُسخ الرابط ✓"); } };
+  };
+  $$("[data-st]", view).forEach((el) => (el.onchange = async () => { await save(el.dataset.st, { status: el.value }, "حُدّثت الحالة ✓"); if (el.value === "done") afterDone(+el.dataset.st); const o = rows.find((r) => String(r.id) === el.dataset.st); if (o) o.status = el.value; refreshOrderCount(); }));
   $$("[data-note]", view).forEach((el) => (el.onchange = () => save(el.dataset.note, { team_note: el.value.trim() }, "حُفظت الملاحظة ✓")));
   $$("[data-quote]", view).forEach((b) => (b.onclick = () => {
     const o = rows.find((r) => String(r.id) === b.dataset.quote);
