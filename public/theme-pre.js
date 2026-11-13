@@ -21,7 +21,7 @@
     if (mb) mb.addEventListener("click", function () { menu(mb.getAttribute("aria-expanded") !== "true"); });
     if (sc) sc.addEventListener("click", function () { menu(false); });
     if (m) m.addEventListener("click", function (e) { if (e.target.closest("a")) menu(false); });
-    var b = document.getElementById("tbtn");
+    var b = document.querySelector("[data-theme-toggle]");
     if (b) b.addEventListener("click", function () {
       var n = r.getAttribute("data-theme") === "dark" ? "light" : "dark";
       r.setAttribute("data-theme", n);

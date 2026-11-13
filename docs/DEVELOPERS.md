@@ -552,3 +552,29 @@ Dashboard → التكاملات → «الإضافات» / «Webhooks» / «ا�
   **missing** are added back; rows already there are never changed or deleted. Each table is restored on its own
   (an error in one is reported, the others still come back); the chat triggers' changes are undone so a restored chat
   looks as it did; the id counters continue after the restored rows. Migration: `20261120000000_backup_restore.sql`.
+
+## بنية الموقع — Site structure (Nov 2026, phase 1 of the structure study)
+One list of the site's pages, the sections each page is made of, and where every menu link goes:
+`public/js/site-structure.js` (shared by the server, the site's script and, from phase 3, the dashboard).
+- **Pages built from sections** (`SECTION_PAGES`: home, about, careers, faq, contact, order, track) all come from
+  `public/index.html`, where every section is wrapped once in `<!--s:key--> … <!--/s-->`.
+- **A page is an ordered list of sections** (`DEFAULT_LAYOUTS`, or `settings.layout[page]` = `[{k, on}]` when saved).
+  `layoutFor()` merges a saved list with the defaults: unknown, repeated and not-allowed sections are dropped; a switched-off
+  section keeps its place; a section the saved list doesn't know yet (added to the code later) goes after its default neighbour.
+  So adding or removing sections in the code never breaks a saved order.
+- **The server arranges the page** (`src/lib/arrange.js → arrangeSections`): the page's sections first, in order, marked
+  `data-pages="<page>"`; every other section after them with `data-pages=""` (hidden by the stylesheet, but still in the
+  page because the site's script fills all of them).
+- **One header and one footer for every page**: `src/routes/pages.js → siteShell()` builds them for the home page and its
+  sister pages (it replaces the empty `<header>`/`<footer>` in index.html) and for every server-built page (services,
+  projects, articles, policies, status, pages added from the dashboard). There is no second copy anywhere.
+- **Menu links point at a page or a section by key** (`NAV_TARGETS` → `navLink()`): a section link goes to the first page
+  where that section is on (home first) and hides when the section is off or empty; a page link hides with its page's main
+  section. The server and the site's script use the same function, so they never disagree.
+- **Adding a section**: add its HTML to index.html wrapped in `<!--s:key-->…<!--/s-->` with `data-section="key"`, add it to
+  `SECTIONS` (with the pages it may appear on) and, if it should show by default, to `DEFAULT_LAYOUTS`.
+  **Adding a page built from sections**: add it to `SECTION_PAGES` and `DEFAULT_LAYOUTS`, a route in src/index.js
+  (`handleHome(…, key)`), and its line in the `html[data-page=…]` rule in styles.css.
+- `tests/site-structure.mjs` checks all of this (merge rules, arranging, links; and on the running site: every page opens,
+  has one main heading, shows only its own sections, has the same header and footer as the home page, and every visible
+  menu link opens a real page).

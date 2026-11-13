@@ -15,7 +15,9 @@ import { STATUS_DEFAULTS, TEAM_DEFAULTS, sitePages } from "../../public/js/site-
 import { UI_DEFAULTS } from "../../public/js/ui-strings.js";
 import { SOCIAL } from "../../public/js/social-icons.js";
 import { SECURITY_HEADERS, WIXA, esc, fmtDate, notFound, pickLang, safeHref, versionAssets, versioned } from "../lib/core.js";
-import { cspWithTags, getConfig, getPosts, getSiteData, hasBypass, maintenancePage } from "../services/data.js";
+import { cspWithTags, getConfig, getPosts, getSiteData, hasBypass, maintenancePage, memo as siteMemo } from "../services/data.js";
+import { navLink, sectionShown } from "../../public/js/site-structure.js";
+import { arrangeSections } from "../lib/arrange.js";
 
 // Cloudflare Web Analytics: privacy-friendly, cookie-less visit counting that never touches our database.
 export const beacon = (env) => env.CF_BEACON_TOKEN
@@ -86,11 +88,17 @@ export async function handleHome(request, env, ctx, pageName = "home") {
   if (!(parsed.partners || []).length) hide.add("partners");
   if (!(parsed.testimonials || []).length) hide.add("testimonials");
   const vars = WIXA.themeVars(full, full.font?.family);
-  const navAt = Object.fromEntries(WIXA.navPlan(st).map((x, i) => [x.k, { at: x.at, i }]));
   const themeCss = `<style id="wixa-theme">:root{${Object.entries(vars).map(([k, v]) => `${k}:${String(v).replace(/[<>{};]/g, "")}`).join(";")}}</style>`;
   const fam = WIXA.FONTS[full.font?.family] ? full.font.family : WIXA.BRAND_FONT;
   const fontHref = WIXA.HOSTED[fam] ? (WIXA.HOSTED[fam] === "/fonts/noto-sans-arabic.css" ? "" : WIXA.HOSTED[fam])
     : `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fam).replace(/%20/g, "+")}:wght@${WIXA.FONTS[fam]}&display=swap`;
+  // one header and footer for every page (siteShell), and the sections in the order of this page's layout
+  const empty = new Set([...hide].filter((k) => k === "partners" || k === "testimonials"));
+  const shell = siteShell(st, lang, pagePath, { empty });
+  let html = await page.text();
+  html = html.replace(/<header class="header" id="header">[\s\S]*?<\/header>/, () => shell.header)
+    .replace(/<footer class="footer">[\s\S]*?<\/footer>/, () => shell.footer);
+  html = arrangeSections(html, st, pageName);
   const res = versionAssets(new HTMLRewriter())
     .on("head", { element: (el) => el.append(`${headTags}<script id="wixa-data" type="application/json">${safe}</script>`, { html: true }) })
     .on("html", { element: (el) => { el.setAttribute("lang", lang); el.setAttribute("dir", lang === "ar" ? "rtl" : "ltr"); el.setAttribute("data-page", pageName); el.setAttribute("data-look", full.look === "soft" ? "soft" : "flat"); } })
@@ -121,14 +129,7 @@ export async function handleHome(request, env, ctx, pageName = "home") {
     .on("[data-c]", { element: (el) => { const k = el.getAttribute("data-c"); if (el.getAttribute("id") !== "heroTitle" && k in C) el.setInnerContent(String(C[k] ?? "")); } })
     .on("[data-t]", { element: (el) => { const k = el.getAttribute("data-t"); if (k !== "brand" && typeof ui[k] === "string") el.setInnerContent(ui[k]); } })
     .on("[data-section], [data-sec]", { element: (el) => { if (hide.has(el.getAttribute("data-section") || el.getAttribute("data-sec"))) el.setAttribute("hidden", ""); } })
-    .on("[data-nav]", { element: (el) => {
-      const p = navAt[el.getAttribute("data-nav")]; if (!p) return;
-      el.setAttribute("style", `order:${p.i}`);
-      // the footer copy decides by "footer", the top bar and phone menu by "menu"
-      if (el.getAttribute("data-where") === "footer" ? !["both", "footer"].includes(p.at) : !["both", "menu"].includes(p.at)) el.setAttribute("hidden", ""); else if (!hide.has(el.getAttribute("data-sec") || "")) el.removeAttribute("hidden");
-    } })
     .on("#langBtn", { element: (el) => el.setInnerContent(lang === "ar" ? "EN" : "ع") })
-    .on(".footer__nav", { element: (el) => { const more = footerLegal(st, lang, "/"); if (more) el.append(more, { html: true }); } })
     .on(".hero", { element: (el) => el.setAttribute("class", `${el.getAttribute("class") || ""} in in-hero`) })
     .on("body", { element: (el) => el.removeAttribute("class") })
     .on("body", { element: (el) => {
@@ -136,7 +137,7 @@ export async function handleHome(request, env, ctx, pageName = "home") {
       if (Object.keys(tags).length) el.append(`<script id="wixa-tags" type="application/json">${JSON.stringify(tags)}</script><script type="module" src="${versioned("/build/tags.js")}"></script>`, { html: true });
       if (cfg.maintenance.on && owner && !preview) el.append('<div style="position:fixed;inset:auto 12px 12px auto;z-index:99999;background:#B45309;color:#fff;padding:8px 14px;border-radius:10px;font:600 13px system-ui,Tahoma,sans-serif">وضع الصيانة مفعّل — الزوار يرون صفحة «نعود قريباً»</div>', { html: true });
     } })
-    .transform(page);
+    .transform(new Response(html, { status: page.status, headers: page.headers }));
   const headers = new Headers(res.headers);
   headers.set("cache-control", "no-cache");
   headers.set("vary", "Accept-Language, Cookie");
@@ -161,8 +162,6 @@ export function detailsHtml(raw) {
   }).join("");
 }
 
-// The site's header (logo, menu, theme, language, "start your project") and footer for the server-built pages,
-// with the same classes as the home page so they share one stylesheet and one look.
 // Company pages at the end of the footer links: pages added from the dashboard, our team, services status
 export function footerLegal(st, lang, path = "") {
   const q = lang === "ar" ? "" : "?lang=en";
@@ -181,42 +180,76 @@ const sectionsHtml = (list, email) => {
     .map((x) => `${x.h ? `<h2>${esc(x.h)}</h2>` : ""}${x.p ? `<p>${esc(x.p).split("{email}").join(mail).replace(/\n/g, "<br>")}</p>` : ""}`).join("");
 };
 
-export function siteShell(st, lang, path) {
+
+// The site's header (logo, menu, theme, language, «ابدأ مشروعك») and footer — ONE source for every page: the home page
+// and its sister pages (they replace the copy in public/index.html with this) and the server-built pages (services,
+// projects, articles, policies, status…). So the top bar and the footer can never differ from one page to another.
+// Every menu link is written, each with its place (data-nav) and its text key (data-t), and hidden where it does not
+// belong; where a link goes and whether it shows comes from the site structure (public/js/site-structure.js → navLink),
+// so a link follows its section when the section moves to another page and disappears when the section is off.
+// empty: sections with nothing to show (no partners yet) — their links are hidden too.
+export function siteShell(st, lang, path, { empty } = {}) {
   const ar = lang === "ar", q = ar ? "" : "?lang=en", other = ar ? "en" : "ar";
   const ui = { ...UI_DEFAULTS[lang] };
   for (const [k, v] of Object.entries(st.ui?.[lang] || {})) if (typeof v === "string" && v.trim() && k in ui) ui[k] = v;
-  const HREF = { home: "/", services: "/#services", industries: "/#industries", projects: "/#projects", pricing: "/#pricing", calc: "/#calculator", about: "/about", partners: "/#partners", careers: "/careers", contact: "/contact", faq: "/faq", blog: "/blog", privacy: "/privacy" };
-  const LABEL = (k) => ui[k === "privacy" ? "privacy" : `nav_${k}`] || k;
-  const href = (k) => { const h = HREF[k] || "/"; const [p, hash] = h.split("#"); return `${p}${q}${hash ? `#${hash}` : ""}`; };
-  const SEC = { services: "services", industries: "industries", projects: "projects", pricing: "pricing", calc: "calculator", about: "about", partners: "partners", careers: "careers", faq: "faq" };
-  const off = (x) => SEC[x.k] && (st.sections || {})[SEC[x.k]] === false;
-  const plan = WIXA.navPlan(st).filter((x) => !off(x));
-  const link = (x, where) => `<a href="${href(x.k)}"${path === HREF[x.k] ? ' aria-current="page"' : ""}>${esc(LABEL(x.k))}</a>`;
-  const top = plan.filter((x) => x.at === "both" || x.at === "menu"), foot = plan.filter((x) => x.at === "both" || x.at === "footer");
-  const mark = '<span class="brand__mark"><svg viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg></span>';
-  const word = `<span class="brand__name"><svg class="wm" viewBox="0 0 716.6 150" aria-hidden="true"><use href="/wordmark.svg#wm"/></svg><span class="sr-only">${ar ? "ويكسا" : "WIXA"}</span></span>`;
+  const gone = empty || emptyNow();
+  const tkey = (k) => (k === "privacy" ? "privacy" : `nav_${k}`);
+  const withLang = (h) => { const [p, hash] = h.split("#"); return `${p}${q}${hash ? `#${hash}` : ""}`; };
+  const plan = WIXA.navPlan(st);
+  const link = (x, i, footer) => {
+    const t = navLink(st, x.k, gone);
+    const place = x.at === "both" || x.at === (footer ? "footer" : "menu");
+    return `<a href="${withLang(t.href)}"${footer ? ' data-where="footer"' : ""} data-nav="${x.k}" data-t="${tkey(x.k)}" style="order:${i}"${t.href === path ? ' aria-current="page"' : ""}${place && t.shown ? "" : " hidden"}>${esc(ui[tkey(x.k)] || x.k)}</a>`;
+  };
+  const menu = plan.map((x, i) => link(x, i, false)).join("");
+  const foot = plan.map((x, i) => link(x, i, true)).join("");
+  const start = esc(ui.nav_start);
+  const brandName = ar ? "ويكسا" : "WIXA";
+  const mark = '<svg viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg>';
+  const word = `<svg class="wm" viewBox="0 0 716.6 150" aria-hidden="true"><use href="/wordmark.svg#wm"/></svg><span class="sr-only">${brandName}</span>`;
   const c = WIXA.merge(WIXA.DEFAULTS, st).contact || {};
   const host = { instagram: "www.instagram.com", x: "x.com", linkedin: "www.linkedin.com", facebook: "www.facebook.com" };
   const social = (k) => { let v = String(c[k] || "").trim(); if (!v) return ""; if (!/^https?:\/\/[^/]+\.[a-z]{2,}/i.test(v)) v = `https://${host[k]}/${v.replace(/^https?:\/\//i, "").replace(/^@/, "").replace(/^(www\.)?(instagram|facebook|linkedin|x|twitter)(\.com)?\/?/i, "").replace(/^\/+/, "")}`; return safeHref(v); };
   const socials = ["instagram", "x", "linkedin", "facebook"].map((k) => [k, social(k)]).filter(([, u]) => u).map(([k, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener" aria-label="${k}">${SOCIAL[k]}</a>`).join("")
     + (c.email ? `<a href="mailto:${esc(c.email)}" aria-label="email"><svg viewBox="0 0 24 24"><path d="M3 5h18v14H3z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 6l9 7 9-7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></a>` : "");
-  const header = `<header class="header" id="header"><div class="header__bar">
-    <a href="/${q}" class="brand" aria-label="WIXA">${mark}${word}</a>
-    <nav class="header__nav" aria-label="main">${top.map((x) => link(x)).join("")}<a href="/order${q}" class="nav-cta" data-start>${esc(ui.nav_start)}</a></nav>
-    <div class="header__end">
-      <button class="theme-btn" id="tbtn" data-theme-toggle type="button" aria-label="${ar ? "الوضع الليلي / النهاري" : "Dark / light mode"}"><svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/></svg><svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
-      <a class="pill-btn lang-btn" href="${path}?lang=${other}" hreflang="${other}">${ar ? "EN" : "ع"}</a>
-      <button class="menu-btn" id="menuBtn" type="button" aria-label="menu" aria-expanded="false"><span></span><span></span></button>
-    </div></div>
-    <div class="header__menu" id="menu"><a href="/order${q}" class="menu-cta" data-start>${esc(ui.nav_start)}</a>${top.map((x) => link(x)).join("")}</div></header>`;
+  const contactOff = !sectionShown(st, "contact", gone) ? " hidden" : "";
+  const header = `<header class="header" id="header">
+    <div class="header__bar">
+      <a href="/${q}" class="brand" aria-label="WIXA">
+        <span class="brand__mark" id="brandMark">${mark}</span>
+        <span class="brand__name" data-t="brand">${word}</span>
+      </a>
+      <nav class="header__nav" aria-label="main">${menu}<a href="/order${q}" class="nav-cta" data-t="nav_start" data-sec="contact"${contactOff}>${start}</a></nav>
+      <div class="header__end">
+        <button class="theme-btn" id="themeBtn" data-theme-toggle type="button" aria-label="${ar ? "الوضع الليلي / النهاري" : "Dark / light mode"}"><svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/></svg><svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+        <a class="pill-btn lang-btn" id="langBtn" href="${path}?lang=${other}" hreflang="${other}">${ar ? "EN" : "ع"}</a>
+        <a href="/order${q}" class="head-start" data-start data-t="nav_start">${start}</a>
+        <button class="menu-btn" id="menuBtn" type="button" aria-label="menu" aria-expanded="false"><span></span><span></span></button>
+      </div>
+    </div>
+    <div class="header__menu" id="menu"><a href="/order${q}" class="menu-cta" data-start data-t="nav_start">${start}</a>${menu}</div>
+  </header>`;
   const footer = `<footer class="footer">
     <svg class="footer__wave footer__wave--brand" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="fwv" x1="0" x2="1"><stop offset="0" style="stop-color:var(--fg)"/><stop offset=".5" style="stop-color:var(--accent)"/><stop offset="1" style="stop-color:var(--fg)"/></linearGradient></defs><path pathLength="1" stroke="url(#fwv)" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
     <svg class="footer__wave" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
-    <nav class="footer__nav">${foot.map((x, i) => link(x).replace("<a ", `<a style="order:${i}" `)).join("")}${footerLegal(st, lang, path)}</nav>
-    <div class="footer__tools"><a href="/track${q}" class="track-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg><span>${esc(ui.track)}</span></a><div class="footer__social">${socials}</div></div>
-    <div class="footer__brand"><a href="/${q}" class="brand">${mark}${word}</a></div>
-    <p class="footer__credit">${esc(st.content?.[lang]?.footer_text || (ar ? "طُوّر بواسطة فريق ويكسا" : "Developed by the WIXA team"))} · © ${new Date().getFullYear()}</p></footer>`;
+    <nav class="footer__nav">${foot}${footerLegal(st, lang, path)}</nav>
+    <div class="footer__tools">
+      <a href="/track${q}" class="track-btn" data-track><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg><span data-t="track">${esc(ui.track)}</span></a>
+      <div class="footer__social" id="social">${socials}</div>
+    </div>
+    <div class="footer__brand"><a href="${path === "/" ? "#top" : `/${q}`}" class="brand"><span class="brand__mark">${mark}</span><span class="brand__name" data-t="brand">${word}</span></a></div>
+    <p class="footer__credit"><span data-c="footer_text">${esc(st.content?.[lang]?.footer_text || (ar ? "طُوّر بواسطة فريق ويكسا" : "Developed by the WIXA team"))}</span> · © <span id="year">${new Date().getFullYear()}</span></p>
+  </footer>`;
   return { header, footer, ui };
+}
+// Sections with nothing to show right now (for pages built without the site data at hand): read from the shared copy.
+function emptyNow() {
+  const e = new Set();
+  const t = siteMemo.text;
+  // no copy yet means the site is running without its content (database unreachable): the home page then has no
+  // partners either, so both agree
+  if (!t || /"partners":\[\]/.test(t)) e.add("partners");
+  return e;
 }
 
 // Loading screen of the stand-alone pages, the same as the home page's and the dashboard's. It is painted first
@@ -298,7 +331,6 @@ html[data-theme="dark"] .page{--p:var(--fg)}
 .page .status__row b{color:var(--t)}.page .status__row small{grid-column:2/-1;color:var(--m);font-size:.85rem}.page .status__st{font-weight:700;color:var(--m)}
 .page .status__dot{width:12px;height:12px;border-radius:50%;background:#0E7C47;box-shadow:0 0 0 4px color-mix(in srgb,#0E7C47 18%,transparent)}.page .status__dot--warn{background:#B45309;box-shadow:0 0 0 4px color-mix(in srgb,#B45309 18%,transparent)}.page .status__dot--down{background:#B91C1C;box-shadow:0 0 0 4px color-mix(in srgb,#B91C1C 18%,transparent)}.page .status__dot--off{background:#9CA3AF;box-shadow:none}
 .footer .footer__wave path{stroke-dashoffset:0} /* no scroll script on these pages: the waves are drawn from the start (this wins over site.css, which loads later) */
-.header .lang-btn{display:inline-grid;place-items:center;text-decoration:none;color:var(--text);line-height:1}
 </style></head><body>
 ${bootHtml(lang)}
 ${hosted ? `<link rel="stylesheet" href="${hosted}">` : `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g, "+")}:wght@${WIXA.FONTS[font]}&display=swap">`}

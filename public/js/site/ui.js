@@ -65,7 +65,7 @@ export function setupUI() {
     const u = new URL(location.href); u.searchParams.set("lang", next); u.hash = "";
     location.replace(u.toString());
   };
-  $("#langBtn").addEventListener("click", switchLang);
+  $("#langBtn").addEventListener("click", (e) => { e.preventDefault(); switchLang(); });
   // back at the same place after a language switch
   try {
     const f = parseFloat(sessionStorage.getItem("wixa-scroll-y"));

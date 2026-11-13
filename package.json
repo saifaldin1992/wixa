@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "test": "node tests/structure.mjs && node tests/stats-cache.mjs && node tests/monitor.mjs && node tests/no-white-page.mjs && node tests/smoke.mjs && node tests/admin-phone.mjs && node tests/admin-netfail.mjs && node tests/admin-layout.mjs && node tests/admin-buttons.mjs && node tests/admin-scroll.mjs && node tests/site-layout.mjs"
+    "test": "node tests/structure.mjs && node tests/stats-cache.mjs && node tests/monitor.mjs && node tests/site-structure.mjs && node tests/no-white-page.mjs && node tests/smoke.mjs && node tests/admin-phone.mjs && node tests/admin-netfail.mjs && node tests/admin-layout.mjs && node tests/admin-buttons.mjs && node tests/admin-scroll.mjs && node tests/site-layout.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.24.2",

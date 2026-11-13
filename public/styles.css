@@ -1960,3 +1960,6 @@ html[data-look="soft"] :is(.wa, .chatw__btn, .totop) {
   box-shadow: inset 0 2px 3px rgba(255,255,255,.45), inset 0 -4px 8px rgba(0,0,0,.18), 0 16px 30px -12px rgba(20,15,31,.45);
 }
 html[data-look="soft"] .wa { box-shadow: inset 0 2px 3px rgba(255,255,255,.45), inset 0 -4px 8px rgba(0,0,0,.18), 0 16px 30px -12px rgba(37,211,102,.7); }
+
+/* language switch: a link (EN / ع) in the shared header of every page */
+.header .lang-btn { display: inline-grid; place-items: center; text-decoration: none; color: var(--text); line-height: 1; }

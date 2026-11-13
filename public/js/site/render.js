@@ -1,4 +1,5 @@
 /* Builds every section from the content */
+import { navLink } from "../site-structure.js";
 import { $, $$, esc, safeUrl, reducedOS, UI, ICONS, SOCIAL, STORY_ART, C, L, state, lang, anim, setAnim } from "./core.js";
 import { buildHeroLogo } from "./hero.js";
 import { applyDefaultMode } from "./theme.js";
@@ -61,12 +62,14 @@ export function render() {
     $$(`[data-sec="${k}"]`).forEach((el) => (el.hidden = !on));
   }
   if (!state.partners.length) { $$('[data-section="partners"], [data-sec="partners"]').forEach((el) => (el.hidden = true)); }
-  // site links: where each one shows (dashboard → content → menus) and in which order
+  // site links: where each one shows (dashboard → content → menus), in which order, and whether its page or section
+  // is on — the same rule the server used to build the page (public/js/site-structure.js → navLink)
+  const empty = new Set(state.partners.length ? [] : ["partners"]);
   window.WIXA.navPlan(s).forEach(({ k, at }, i) => $$(`[data-nav="${k}"]`).forEach((a) => {
     a.style.order = i;
     const inFooter = !!a.closest(".footer__nav");
     const allowed = at === "both" || (at === "menu" && !inFooter) || (at === "footer" && inFooter);
-    if (!allowed) a.hidden = true; else if (!a.dataset.sec) a.hidden = false; // links tied to a section follow that section
+    a.hidden = !(allowed && navLink(s, k, empty).shown);
   }));
   if (!(state.testimonials || []).length) $$('[data-section="testimonials"]').forEach((el) => (el.hidden = true));
   if (!(s.stats || []).length) $$('[data-section="stats"]').forEach((el) => (el.hidden = true));
