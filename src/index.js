@@ -155,6 +155,7 @@ export default {
             headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=300" },
           });
         }
+        case "HEAD /health": // uptime monitors and the CI wait (wait-on) ask with HEAD
         case "GET /health": {
           // the database check is remembered for 30 s, so a flood of /health calls never reaches Supabase
           if (Date.now() - health.at > 30_000) {
@@ -165,7 +166,8 @@ export default {
             } catch (err) { supabase = `error: ${err.message}`; }
             health = { at: Date.now(), supabase };
           }
-          return json({ worker: "ok", env: env.SITE_ENV || "production", supabase: health.supabase }, 200, { "cache-control": "no-store" });
+          const res = json({ worker: "ok", env: env.SITE_ENV || "production", supabase: health.supabase }, 200, { "cache-control": "no-store" });
+          return request.method === "HEAD" ? new Response(null, { status: 200, headers: res.headers }) : res;
         }
       }
       const hook = url.pathname.match(/^\/api\/pay\/wayl\/([a-f0-9]{32})$/);

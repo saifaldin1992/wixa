@@ -19,7 +19,7 @@ jobs:
       # Local run: no database, no captcha — the site falls back to its built-in content.
       - run: printf 'SUPABASE_URL="http://127.0.0.1:9"\nTURNSTILE_SITE_KEY=""\n' > .dev.vars
       - run: npx wrangler dev --port 8787 > wrangler.log 2>&1 &
-      - run: npx wait-on -t 60000 http://localhost:8787/health
+      - run: npx wait-on -t 60000 http-get://localhost:8787/health
       - run: npm test
       - if: failure()
         run: cat wrangler.log
