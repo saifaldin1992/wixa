@@ -23,6 +23,9 @@ export function setupTracking() {
     if (e.target.closest("#openForm, #mbarContact")) track("form_open");
     if (e.target.closest("[data-job]")) track("job_open");
     if (e.target.closest(".faq__q")) track("faq_open");
+    if (e.target.closest("[data-start]")) track("start_click");
+    const more = e.target.closest("a[data-more]");
+    if (more) track(`more_${more.dataset.more}`);
   });
   addEventListener("wixa:lead", () => track("form_sent"));
 }

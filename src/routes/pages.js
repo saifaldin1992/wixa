@@ -294,7 +294,7 @@ const bootHtml = (lang) => { const ar = lang === "ar"; return `<div class="boot"
 
 // One page layout shared by service and project pages, articles, the privacy policy and the review form:
 // the site's own stylesheet, header, menu and footer, with the page's content in the middle.
-export function simplePage(request, st, { lang, title, description, path, image, body, jsonld, status = 200, orderQ = "", ending = true }) {
+export function simplePage(request, st, { lang, title, description, path, image, body, jsonld, status = 200, orderQ = "", ending = true, crumbs = null, startLabel = "" }) {
   const ar = lang === "ar";
   const origin = new URL(request.url).origin;
   const t = st.theme || {};
@@ -304,6 +304,13 @@ export function simplePage(request, st, { lang, title, description, path, image,
   const c = st.contact || {};
   const wa = String(c.whatsapp || "").replace(/\D/g, "");
   const shell = siteShell(st, lang, path), ui = shell.ui;
+  // breadcrumbs on deeper pages: الرئيسية › <section page> › <this page>. crumbs = [[ui key or label, path], …] without home and this page
+  const trail = crumbs ? [[ui.nav_home || (ar ? "الرئيسية" : "Home"), "/"], ...crumbs] : null;
+  const crumbHtml = trail ? `<nav class="crumbs" aria-label="${ar ? "مسار الصفحة" : "Breadcrumb"}"><ol>${trail.map(([l, h]) => `<li><a href="${h}?lang=${lang}">${esc(ui[l] || l)}</a></li>`).join("")}<li aria-current="page">${esc(title)}</li></ol></nav>` : "";
+  if (trail) {
+    const crumbLd = { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [...trail, [title, path]].map(([l, h], i) => ({ "@type": "ListItem", position: i + 1, name: ui[l] || l, item: `${origin}${h}?lang=${lang}` })) };
+    jsonld = jsonld ? [jsonld, crumbLd] : crumbLd;
+  }
   const html = `<!doctype html><html lang="${lang}" dir="${ar ? "rtl" : "ltr"}" data-mode="${st.mode === "light" || st.mode === "dark" ? st.mode : ""}" data-look="${st.look === "soft" ? "soft" : "flat"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)} — ${esc(brand)}</title><meta name="description" content="${esc(description)}">
 <link rel="canonical" href="${origin}${path}?lang=${lang}"><link rel="alternate" hreflang="ar" href="${origin}${path}?lang=ar"><link rel="alternate" hreflang="en" href="${origin}${path}?lang=en">
@@ -355,6 +362,12 @@ html[data-theme="dark"] .page{--p:var(--fg)}
 .page .status{display:grid;gap:10px;margin:24px 0}.page .status__row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:14px 18px;border-radius:var(--radius,22px);border:1px solid var(--l);background:var(--s)}
 .page .status__row b{color:var(--t)}.page .status__row small{grid-column:2/-1;color:var(--m);font-size:.85rem}.page .status__st{font-weight:700;color:var(--m)}
 .page .status__dot{width:12px;height:12px;border-radius:50%;background:#0E7C47;box-shadow:0 0 0 4px color-mix(in srgb,#0E7C47 18%,transparent)}.page .status__dot--warn{background:#B45309;box-shadow:0 0 0 4px color-mix(in srgb,#B45309 18%,transparent)}.page .status__dot--down{background:#B91C1C;box-shadow:0 0 0 4px color-mix(in srgb,#B91C1C 18%,transparent)}.page .status__dot--off{background:#9CA3AF;box-shadow:none}
+.page .crumbs{margin:0 0 18px;font-size:.84rem}.page .crumbs ol{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 0;list-style:none;margin:0;padding:0}
+.page .crumbs li{color:var(--m);line-height:1.6}.page .crumbs li+li::before{content:"›";margin-inline:8px;color:var(--m);opacity:.6}
+html[dir="rtl"] .page .crumbs li+li::before{content:"‹"}.page .crumbs a{color:var(--m)!important;text-decoration:none!important}.page .crumbs a:hover{color:var(--p)!important}
+.page .crumbs [aria-current]{color:var(--t);font-weight:600;max-width:24ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.page .pn{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}.page .pn a{display:grid;gap:2px;padding:14px 18px;border-radius:var(--radius,22px);border:1px solid var(--l);background:var(--s);color:var(--t)!important;text-decoration:none!important}
+.page .pn a span{font-size:.8rem;color:var(--m)}.page .pn a b{font-size:.98rem;line-height:1.5}.page .pn .pn__next{text-align:end;grid-column:2}
 .footer .footer__wave path{stroke-dashoffset:0} /* no scroll script on these pages: the waves are drawn from the start (this wins over site.css, which loads later) */
 </style></head><body>
 ${bootHtml(lang)}
@@ -362,8 +375,8 @@ ${hosted ? `<link rel="stylesheet" href="${hosted}">` : `<link rel="stylesheet" 
 <link rel="stylesheet" href="${versioned("/build/site.css")}">
 ${shell.header}
 <div class="scrim" id="scrim"></div>
-<main class="page">${body}
-${ending ? `<div class="actions"><a class="btn btn--primary" data-start href="/order?lang=${lang}${orderQ}">${ui.nav_start}</a><a class="btn btn--ghost" href="/contact?lang=${lang}">${ui.nav_contact}</a></div>` : ""}</main>
+<main class="page">${crumbHtml}${body}
+${ending ? `<div class="actions"><a class="btn btn--primary" data-start href="/order?lang=${lang}${orderQ}">${esc(startLabel || ui.nav_start)}</a><a class="btn btn--ghost" href="/contact?lang=${lang}">${ui.nav_contact}</a></div>` : ""}</main>
 ${shell.footer}
 </body></html>`;
   return new Response(request.method === "HEAD" ? null : html, { status, headers: { ...SECURITY_HEADERS, "speculation-rules": '"/speculation-rules.json"', "content-type": "text/html; charset=utf-8", "cache-control": "no-cache", "content-language": lang, vary: "Accept-Language, Cookie" } });
@@ -384,7 +397,14 @@ export async function handleProjectPage(request, env, ctx, slug) {
   const mob = safeHref(p.mobile_image_url);
   const stats = Array.isArray(p.stats) ? p.stats.filter((x) => String(x.value || "").trim()) : [];
   const link = safeHref(p.link);
-  const others = (d.projects || []).filter((x) => x !== p).slice(0, 3);
+  const all = d.projects || [], at = all.indexOf(p);
+  const cat = (x) => String(x.category_ar || x.category_en || "").trim();
+  const others = [...all.filter((x) => x !== p && cat(p) && cat(x) === cat(p)), ...all.filter((x) => x !== p && !(cat(p) && cat(x) === cat(p)))].slice(0, 3);
+  // previous / next go round the list; with two projects there is only «next»
+  const n = all.length, next = n > 1 ? all[(at + 1) % n] : null, prev = n > 2 ? all[(at - 1 + n) % n] : null;
+  const pT = (o, f) => o[`${f}_${lang}`] || o[`${f}_ar`] || o[`${f}_en`] || "";
+  // previous / next only when the «similar» cards do not already list every other project
+  const pn = n - 1 > others.length ? `<nav class="pn" aria-label="${lang === "ar" ? "مشاريع أخرى" : "More projects"}">${prev ? `<a href="/projects/${encodeURIComponent(prev.slug)}?lang=${lang}"><span>${lang === "ar" ? "→ المشروع السابق" : "← Previous project"}</span><b>${esc(pT(prev, "title"))}</b></a>` : ""}${next ? `<a class="pn__next" href="/projects/${encodeURIComponent(next.slug)}?lang=${lang}"><span>${lang === "ar" ? "المشروع التالي ←" : "Next project →"}</span><b>${esc(pT(next, "title"))}</b></a>` : ""}</nav>` : "";
   const origin = new URL(request.url).origin;
   const body = `${T("category") ? `<span class="cat">${esc(T("category"))}</span>` : ""}<h1>${esc(T("title"))}</h1>
     ${T("summary") ? `<p class="lead">${esc(T("summary"))}</p>` : ""}
@@ -396,11 +416,11 @@ export async function handleProjectPage(request, env, ctx, slug) {
     })()}
     ${detailsHtml(T("details"))}
     ${link ? `<p><a href="${esc(link)}" target="_blank" rel="noopener">${esc(link.replace(/^https?:\/\//, "").replace(/\/$/, ""))} ↗</a></p>` : ""}
-    ${others.length ? `<section class="more"><h2>${lang === "ar" ? "مشاريع أخرى" : "More projects"}</h2><div class="more__grid">${others.map((o) => {
+    ${others.length ? `<section class="more"><h2>${lang === "ar" ? "مشاريع مشابهة" : "Similar projects"}</h2><div class="more__grid">${others.map((o) => {
       const t = (f) => o[`${f}_${lang}`] || o[`${f}_ar`] || o[`${f}_en`] || "";
       return `<a href="/projects/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(t("title"))}</b><span>${esc(t("category") || t("summary").slice(0, 70))}</span></a>`;
-    }).join("")}</div></section>` : ""}`;
-  return simplePage(request, st, { orderQ: `&project=${encodeURIComponent(slug)}`,
+    }).join("")}</div></section>` : ""}${pn}`;
+  return simplePage(request, st, { orderQ: `&project=${encodeURIComponent(slug)}`, crumbs: [["nav_projects", "/projects"]], startLabel: lang === "ar" ? "اطلب مشروعاً مشابهاً" : "Start a similar project",
     lang, title: T("title"), description: (T("summary") || T("details")).slice(0, 160), path: `/projects/${encodeURIComponent(p.slug)}`,
     image: imgs[0] || mob || "", body,
     jsonld: { "@context": "https://schema.org", "@type": "CreativeWork", name: T("title"), description: T("summary"), url: `${origin}/projects/${encodeURIComponent(p.slug)}`, ...(imgs[0] ? { image: imgs[0] } : {}), creator: { "@type": "Organization", name: "WIXA", url: origin } },
@@ -513,14 +533,14 @@ export async function handleServicePage(request, env, ctx, slug) {
   const ask = ar ? `مرحباً ويكسا، أريد الاستفسار عن: ${T(sv, "title")}` : `Hello WIXA, I'd like to ask about: ${T(sv, "title")}`;
   const projects = (d.projects || []).slice(0, 3);
   const others = (d.services || []).filter((x) => x !== sv);
-  const body = `<span class="cat">${ar ? "خدماتنا" : "Our services"}</span><h1>${esc(T(sv, "title"))}</h1>
+  const body = `<h1>${esc(T(sv, "title"))}</h1>
     ${T(sv, "summary") ? `<p class="lead">${esc(T(sv, "summary"))}</p>` : ""}
     ${detailsHtml(T(sv, "details"))}
     ${wa ? `<p><a class="btn btn--wa" href="https://wa.me/${wa}?text=${encodeURIComponent(ask)}" target="_blank" rel="noopener">${ar ? "اسأل عن هذه الخدمة عبر واتساب" : "Ask about this service on WhatsApp"}</a></p>` : ""}
     ${projects.length ? `<section class="more"><h2>${ar ? "من أعمالنا" : "From our work"}</h2><div class="more__grid">${projects.map((o) => `<a href="/projects/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(T(o, "category") || T(o, "summary").slice(0, 70))}</span></a>`).join("")}</div></section>` : ""}
     ${others.length ? `<section class="more"><h2>${ar ? "خدمات أخرى" : "Other services"}</h2><div class="more__grid">${others.map((o) => `<a href="/services/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(T(o, "summary").slice(0, 80))}</span></a>`).join("")}</div></section>` : ""}`;
   const origin = new URL(request.url).origin;
-  return simplePage(request, st, { orderQ: `&svc=${encodeURIComponent(slug)}`,
+  return simplePage(request, st, { orderQ: `&svc=${encodeURIComponent(slug)}`, crumbs: [["nav_services", "/services"]], startLabel: ar ? "اطلب هذه الخدمة" : "Request this service",
     lang, title: T(sv, "title"), description: (T(sv, "summary") || T(sv, "details")).slice(0, 160), path: `/services/${encodeURIComponent(sv.slug)}`, body,
     jsonld: { "@context": "https://schema.org", "@type": "Service", name: T(sv, "title"), description: T(sv, "summary"), areaServed: "IQ", provider: { "@type": "Organization", name: "WIXA", url: origin } },
   });
@@ -568,7 +588,7 @@ export async function handleBlog(request, env, ctx, slug) {
     ${look === "classic" ? coverHtml : ""}
     <article>${articleHtml(T(p, "body"))}</article></div>
     ${others.length ? `<section class="more"><h2>${ar ? "مقالات أخرى" : "More articles"}</h2><div class="more__grid">${others.map((o) => `<a href="/blog/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(T(o, "excerpt").slice(0, 80))}</span></a>`).join("")}</div></section>` : ""}`;
-  return simplePage(request, st, {
+  return simplePage(request, st, { crumbs: [["nav_blog", "/blog"]],
     lang, title: T(p, "title"), description: (T(p, "excerpt") || T(p, "body")).slice(0, 160), path: `/blog/${encodeURIComponent(p.slug)}`, image: cover, body,
     jsonld: { "@context": "https://schema.org", "@type": "Article", headline: T(p, "title"), description: T(p, "excerpt"), datePublished: p.published_at || p.created_at, dateModified: p.updated_at, ...(cover ? { image: cover } : {}), author: { "@type": "Organization", name: "WIXA" }, publisher: { "@type": "Organization", name: "WIXA", url: origin }, mainEntityOfPage: `${origin}/blog/${encodeURIComponent(p.slug)}` },
   });

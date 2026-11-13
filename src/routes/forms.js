@@ -248,7 +248,7 @@ export async function handleReview(request, env, ctx, url) {
 // ---------------------------------------------------------------- visitor actions (calculator, WhatsApp, forms…)
 // Counted per day in the private store. Each visit sends one small batch; counts are merged in memory and saved
 // at most every 30 s per instance, so busy days stay far below the store's write limits.
-export const EVENTS = ["calc_used", "calc_quote", "calc_wa", "calc_pdf", "wa_click", "form_open", "form_sent", "booking_open", "booking_sent", "job_open", "faq_open"];
+export const EVENTS = ["calc_used", "calc_quote", "calc_wa", "calc_pdf", "wa_click", "form_open", "form_sent", "booking_open", "booking_sent", "job_open", "faq_open", "start_click", "more_services", "more_projects", "more_calc"];
 export let evBuf = { day: "", counts: {}, at: 0 };
 // The counts go to the database as one atomic "add n" per event (public.events_add), so two server instances
 // flushing at the same moment never overwrite each other. Only if the database can't be reached are they kept in KV

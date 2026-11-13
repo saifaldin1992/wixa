@@ -80,6 +80,7 @@ async function funnelCard(view, s) {
     ["أرسلوا التقدير عبر واتساب", t.calc_wa], ["ضغطوا واتساب", t.wa_click], ["فتحوا نموذج التواصل", t.form_open],
     ["أرسلوا رسالة", t.form_sent], ["فتحوا حجز موعد", t.booking_open], ["حجزوا موعداً", t.booking_sent],
     ["فتحوا التقديم على وظيفة", t.job_open], ["قرأوا سؤالاً شائعاً", t.faq_open],
+    ["ضغطوا «ابدأ مشروعك»", t.start_click], ["فتحوا «كل الخدمات» من الرئيسية", t.more_services], ["فتحوا «كل أعمالنا» من الرئيسية", t.more_projects], ["فتحوا الحاسبة من الرئيسية", t.more_calc],
   ].filter(([, v]) => v != null);
   const max = Math.max(1, ...rows.map(([, v]) => Number(v) || 0));
   view.insertAdjacentHTML("beforeend", `<div class="card" id="funnel"><div class="card__head"><div><h3>ماذا فعل الزوار (آخر ${days} يوماً)</h3><p>يُحسب كل فعل مرة واحدة لكل زيارة، دون أي بيانات شخصية. بدأ العدّ مع هذا التحديث.</p></div></div>

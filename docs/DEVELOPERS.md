@@ -579,6 +579,12 @@ One list of the site's pages, the sections each page is made of, and where every
   has one main heading, shows only its own sections, has the same header and footer as the home page, and every visible
   menu link opens a real page).
 
+## Inner pages: breadcrumbs, endings, one contact button, more counts (Nov 2026)
+- `simplePage(..., { crumbs, startLabel })`: `crumbs` is a list of `[ui key or label, path]` after «الرئيسية»; the page title is the last step. It also adds a `BreadcrumbList` for search engines. Used by service, project and article pages.
+- Service page ending: «اطلب هذه الخدمة» (the order form opens with the service chosen). Project page: «مشاريع مشابهة» (same category first), «اطلب مشروعاً مشابهاً», and previous / next only when the similar cards do not already list every other project.
+- One floating contact button: when live chat is on (`html.has-chat`) the WhatsApp bubble is hidden; WhatsApp is offered inside the chat's first screen.
+- New counted actions (`EVENTS` in `src/routes/forms.js`, shown in «نظرة عامة → ماذا فعل الزوار»): `start_click` (any «ابدأ مشروعك»), `more_services`, `more_projects`, `more_calc` (the home page's «see all» links).
+
 ## «ترتيب الأقسام» in the dashboard (Nov 2026, phase 3 of the structure study)
 - Dashboard → صفحات الموقع → **ترتيب الأقسام** (`public/admin/js/views/layout.js`): pick a page (home, about, careers,
   FAQ, contact), move its sections with the arrows, switch any off, add a section allowed on that page, remove an added

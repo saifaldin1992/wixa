@@ -1174,6 +1174,8 @@ html[dir="rtl"] .chatw__send button svg { transform: scaleX(-1); }
   html.chat-open, html.chat-open body { overflow: hidden; }
   html.chat-open .mbar, html.chat-open .wa, html.chat-open .totop { visibility: hidden; }
 }
+/* one floating contact button: when live chat is on, WhatsApp is offered inside the chat window, not as a second bubble */
+html.has-chat .wa { display: none !important; }
 /* desktop: the back-to-top button sits above the chat button */
 html.has-chat .totop { bottom: 88px; }
 @media (max-width: 760px) { html.has-chat .totop { bottom: calc(76px + env(safe-area-inset-bottom)); } }
