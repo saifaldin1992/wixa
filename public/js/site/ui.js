@@ -46,6 +46,16 @@ export function setupUI() {
     document.documentElement.classList.toggle("fab-clear", !!r && innerWidth <= 760 && r.height > 0 && r.top < innerHeight && r.bottom > innerHeight - 90);
   };
   if (ctas) { addEventListener("scroll", clearFabs, { passive: true }); addEventListener("resize", clearFabs); setTimeout(clearFabs, 100); }
+  // phones: while the page is being scrolled down the round button steps aside so it never sits on the text being
+  // read; it comes back as soon as the visitor scrolls up or stops for a moment
+  let lastY = scrollY, idle = 0;
+  addEventListener("scroll", () => {
+    const y = scrollY, root = document.documentElement;
+    if (innerWidth <= 760 && y > lastY + 4 && y > 120) root.classList.add("fab-away");
+    else if (y < lastY - 4) root.classList.remove("fab-away");
+    lastY = y;
+    clearTimeout(idle); idle = setTimeout(() => root.classList.remove("fab-away"), 900);
+  }, { passive: true });
   $("#mbarContact")?.addEventListener("click", (e) => { e.preventDefault(); openContact(); });
 
   // FAQ: one tap opens or closes an answer

@@ -222,8 +222,19 @@ export function render() {
   observe();
   if (window.ScrollTrigger) ScrollTrigger.refresh();
   requestAnimationFrame(carousels);
+  outline();
   repaintOrder(); // a language switch on the order page
   repaintTrack();
+}
+
+// On an inner page made of one home section (/services, /about…) that section's title is the page's main heading
+// (h1), so the card titles under it are the next level down for screen readers and search engines (h3 → level 2,
+// h4 → level 3), the same outline the home page has with its h2 section titles.
+function outline() {
+  const page = document.documentElement.dataset.page;
+  const sec = page && page !== "home" && document.querySelector(`section#${page}`);
+  if (!sec || !sec.querySelector("h1")) return;
+  sec.querySelectorAll("h3, h4").forEach((h) => h.setAttribute("aria-level", String(+h.tagName[1] - 1)));
 }
 
 export function mockUI() {

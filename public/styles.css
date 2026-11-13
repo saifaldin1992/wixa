@@ -2030,3 +2030,34 @@ html[data-page="home"] .sec-more { display: flex; }
 .portal__ups small { color: var(--muted); font-size: .8rem; }
 .portal__ups p { margin: 4px 0; white-space: pre-wrap; }
 .portal__ord .btn--chat { justify-self: start; min-height: 44px; border: 1px solid var(--line); cursor: pointer; font: inherit; font-weight: 600; }
+
+/* ===== /services and /projects on phones and tablets: the whole list, one card under another (the home page keeps the swipe rows) ===== */
+@media (max-width: 1080px) {
+  html[data-page="services"] .services__grid:not([hidden]), html[data-page="services"] .industries__grid,
+  html[data-page="projects"] .projects__list { display: grid; overflow: visible; scroll-snap-type: none; padding: 6px var(--gutter) 10px; gap: 14px; }
+  html[data-page="services"] .services__grid > *, html[data-page="services"] .industries__grid > *,
+  html[data-page="projects"] .projects__list > * { flex: none; min-width: 0; }
+  html[data-page="services"] .services__grid:not([hidden]), html[data-page="services"] .industries__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html[data-page="projects"] .projects__list { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  html[data-page="services"] .services__grid:not([hidden]), html[data-page="services"] .industries__grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* story on computers: the three cards side by side in one row (one above the other on phones and tablets) */
+@media (min-width: 1000px) {
+  .story__list { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
+  .story-item, .story-item.in { align-content: start; }
+  .story-item .story-item__art, .story-item:nth-child(even) .story-item__art { width: min(100%, 200px); height: 150px; }
+  .story-item h3 { font-size: clamp(1.3rem, 1.8vw, 1.7rem); }
+  .story-item p { font-size: 1rem; }
+}
+
+/* phones: the round chat button steps aside while the page scrolls down (back on scroll up or a short pause) */
+html.fab-away .wa, html.fab-away .chatw__btn { transform: translateY(140%); opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { html.fab-away .wa, html.fab-away .chatw__btn { transform: none; } }
+
+/* one content width and one set of corners: the numbers band lines up with the other sections (1176px on a wide
+   screen, like every grid), and partner logo tiles use the small card corner (14px) */
+.stats__inner { max-width: calc(var(--max) - 2 * var(--gutter)); }
+.partner, .partners__grid:not(.is-marquee) .partner, .partners__track .partner { border-radius: var(--radius-sm, 14px); }

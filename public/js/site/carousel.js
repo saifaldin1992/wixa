@@ -1,6 +1,8 @@
 /* Phones and tablets: packages and projects become swipeable rows with dots under them (desktop keeps the grid). */
 const MQ = matchMedia("(max-width: 1080px)");
 const LISTS = ["#pricingGrid", "#projectsList", "#servicesGrid", "#industriesGrid"];
+// on their own pages (/services, /projects) the lists are shown whole, one card under another — no swiping
+const FLAT = { services: ["#servicesGrid", "#industriesGrid"], projects: ["#projectsList"] };
 
 export function carousels() {
   for (const sel of LISTS) {
@@ -8,7 +10,8 @@ export function carousels() {
     if (!list) continue;
     let dots = list.nextElementSibling?.classList.contains("cdots") ? list.nextElementSibling : null;
     const items = [...list.children].filter((el) => el.offsetParent !== null || !MQ.matches);
-    if (!MQ.matches || items.length < 2) { dots?.remove(); continue; }
+    const flat = (FLAT[document.documentElement.dataset.page] || []).includes(sel);
+    if (!MQ.matches || items.length < 2 || flat) { dots?.remove(); continue; }
     if (!dots) { dots = document.createElement("div"); dots.className = "cdots"; list.after(dots); }
     dots.innerHTML = items.map((_, i) => `<button type="button" aria-label="${i + 1} / ${items.length}"></button>`).join("");
     const btns = [...dots.children];

@@ -43,6 +43,37 @@ export function faqLd(st, lang) {
 
 // GET / — static HTML with the content embedded (no flash of default text, one request per visit).
 // /about, /pricing and /careers are the homepage's HTML showing only their own sections (html[data-page])
+// «الصفحة غير موجودة» (404) inside the site's own header and footer, in the brand colour and font, with links to the
+// main pages. pageNotFound() when the site settings are already loaded; handleNotFound() loads them first.
+export function pageNotFound(request, st) {
+  const lang = pickLang(request, st.default_lang), ar = lang === "ar", q = `?lang=${lang}`;
+  const links = ar
+    ? [["/order", "ابدأ مشروعك"], ["/services", "خدماتنا"], ["/projects", "نماذج من عملنا"], ["/pricing", "الباقات والأسعار"], ["/faq", "الأسئلة الشائعة"], ["/contact", "تواصل معنا"]]
+    : [["/order", "Start your project"], ["/services", "Services"], ["/projects", "Our work"], ["/pricing", "Packages & pricing"], ["/faq", "FAQ"], ["/contact", "Contact us"]];
+  const body = `<div class="nf"><svg class="nf__logo" viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m" fill="currentColor"/></svg>
+    <div class="nf__code" aria-hidden="true">404</div>
+    <h1>${ar ? "الصفحة غير موجودة" : "Page not found"}</h1>
+    <p>${ar ? "ربما تغيّر الرابط أو حُذفت الصفحة. يمكنك العودة إلى الرئيسية أو الانتقال مباشرة إلى ما تبحث عنه." : "The link may have changed or the page was removed. Go back to the homepage or straight to what you are looking for."}</p>
+    <p class="actions" style="margin-top:0"><a class="btn btn--primary" href="/${q}">${ar ? "العودة إلى الرئيسية" : "Back to the homepage"}</a></p>
+    <nav class="nf__links" aria-label="${ar ? "أقسام الموقع" : "Site sections"}">${links.map(([h, l]) => `<a href="${h}${q}">${l}</a>`).join("")}</nav></div>`;
+  return simplePage(request, st, { lang, title: ar ? "الصفحة غير موجودة" : "Page not found", description: "", path: new URL(request.url).pathname, body, status: 404, ending: false, noindex: true });
+}
+export async function handleNotFound(request, env, ctx) {
+  try {
+    let st = {};
+    try { st = JSON.parse(await getSiteData(env, ctx)).settings || {}; } catch {}
+    return pageNotFound(request, st);
+  } catch { return notFound(request, env); } // the plain page (public/404.html) if anything goes wrong
+}
+
+// a short preview of a longer text: cut at the last whole word and end with «…» (never in the middle of a word)
+function snip(text, max) {
+  const t = String(text || "").trim();
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max), sp = cut.lastIndexOf(" ");
+  return `${(sp > max * 0.6 ? cut.slice(0, sp) : cut).replace(/[\s،,.؛:–—-]+$/, "")}…`;
+}
+
 export const PAGE_TITLES = { services: { ar: "خدماتنا", en: "Our services" }, projects: { ar: "نماذج من عملنا", en: "Our work" }, pricing: { ar: "الباقات والأسعار", en: "Packages & pricing" }, about: { ar: "من نحن", en: "About us" }, careers: { ar: "الوظائف", en: "Careers" }, contact: { ar: "تواصل معنا", en: "Contact us" }, order: { ar: "اطلب مشروعك", en: "Order your project" }, track: { ar: "تتبع طلبك", en: "Track your order" }, faq: { ar: "الأسئلة الشائعة", en: "Frequently asked questions" } };
 export async function handleHome(request, env, ctx, pageName = "home") {
   const [page, raw, cfg] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx), getConfig(env)]);
@@ -331,6 +362,11 @@ html[data-theme="dark"] .page{--p:var(--fg)}
 .page h2{font-size:1.25rem;margin:30px 0 8px}
 .page>.lead,.page .lead{font-size:1.0625rem;color:var(--m);text-align:center;max-width:620px;margin-inline:auto}
 .page .cat{display:table;margin:0 auto 6px;font-size:.8rem;font-weight:700;padding:3px 12px;border-radius:99px;background:color-mix(in srgb,var(--p) 12%,transparent);color:var(--p)}
+.page .nf{text-align:center;padding-top:clamp(8px,4vw,32px)}.page .nf__logo{display:block;margin:0 auto;width:96px;height:auto;color:var(--p)}
+.page .nf__code{font-size:clamp(4rem,16vw,6.5rem);font-weight:800;line-height:1;margin:8px 0 0;color:var(--p);letter-spacing:.02em}
+.page .nf p{max-width:520px;margin:0 auto 22px}.page .nf__links{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:22px}
+.page .nf__links a{padding:9px 16px;border-radius:99px;border:1px solid var(--l);background:var(--s);color:var(--t);text-decoration:none;font-size:.92rem;min-height:44px;display:inline-flex;align-items:center}
+.page .nf__links a:hover{border-color:var(--p)}
 .page p,.page li{color:var(--m);line-height:1.9}.page ul{padding-inline-start:20px}
 .page .empty{text-align:center;padding:var(--panel-pad,24px);border-radius:var(--radius,22px);border:1px dashed var(--l-2,var(--line-2));background:var(--s);margin-top:24px}
 .page .gallery{display:grid;gap:12px;margin:24px 0}.page .gallery img{width:100%;border-radius:var(--radius,22px);border:1px solid var(--l);display:block}.page .gallery .mob{max-width:300px;justify-self:center}
@@ -345,7 +381,7 @@ html[data-theme="dark"] .page{--p:var(--fg)}
 .page .post img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:var(--radius-sm,14px)}.page .post b{display:block;font-size:1.1rem}.page .post span{font-size:.8rem;color:var(--m)}.page .post p{margin:6px 0 0;font-size:.92rem}
 @media(max-width:560px){.page .post{grid-template-columns:1fr}}
 .page article h2{margin-top:30px}.page article p,.page article li{font-size:1.05rem}
-.page a:not(.btn):not(.post):not(.more__grid a){color:var(--p);text-decoration:underline;text-underline-offset:3px}
+.page a:not(.btn):not(.post):not(.more__grid a):not(.nf__links a){color:var(--p);text-decoration:underline;text-underline-offset:3px}
 .page .rv{display:grid;gap:14px;margin-top:20px}.page .rv label{display:grid;gap:6px;font-weight:700;color:var(--t)}.page .rv input,.page .rv textarea{font:inherit;min-height:48px;padding:12px 14px;border-radius:var(--radius-sm,14px);border:1px solid var(--line-2);background:var(--s);color:var(--t);width:100%;box-sizing:border-box}
 .page .rv fieldset{border:0;padding:0;margin:0}.page .rv legend{font-weight:700;margin-bottom:6px;color:var(--t)}.page .stars{display:flex;flex-wrap:wrap;gap:6px}
 .page .star input{position:absolute;opacity:0}.page .star span{display:inline-block;padding:6px 12px;border-radius:99px;border:1px solid var(--l);background:var(--s);color:#D9A441;cursor:pointer}
@@ -393,7 +429,7 @@ export async function handleProjectPage(request, env, ctx, slug) {
   if (cfg.maintenance.on && !hasBypass(request, cfg)) return maintenancePage(request, cfg, st);
   const lang = pickLang(request, st.default_lang);
   const p = (d.projects || []).find((x) => x.slug === slug || String(x.id) === slug);
-  if (!p) return env.ASSETS.fetch(new Request(new URL("/404", request.url), request)).then((r) => new Response(r.body, { status: 404, headers: r.headers }));
+  if (!p) return pageNotFound(request, st);
   const T = (f) => p[`${f}_${lang}`] || p[`${f}_ar`] || p[`${f}_en`] || "";
   const imgs = [p.image_url, ...(Array.isArray(p.gallery) ? p.gallery : [])].map(safeHref).filter(Boolean);
   const mob = safeHref(p.mobile_image_url);
@@ -420,7 +456,7 @@ export async function handleProjectPage(request, env, ctx, slug) {
     ${link ? `<p><a href="${esc(link)}" target="_blank" rel="noopener">${esc(link.replace(/^https?:\/\//, "").replace(/\/$/, ""))} ↗</a></p>` : ""}
     ${others.length ? `<section class="more"><h2>${lang === "ar" ? "مشاريع مشابهة" : "Similar projects"}</h2><div class="more__grid">${others.map((o) => {
       const t = (f) => o[`${f}_${lang}`] || o[`${f}_ar`] || o[`${f}_en`] || "";
-      return `<a href="/projects/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(t("title"))}</b><span>${esc(t("category") || t("summary").slice(0, 70))}</span></a>`;
+      return `<a href="/projects/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(t("title"))}</b><span>${esc(t("category") || snip(t("summary"), 70))}</span></a>`;
     }).join("")}</div></section>` : ""}${pn}`;
   return simplePage(request, st, { orderQ: `&project=${encodeURIComponent(slug)}`, crumbs: [["nav_projects", "/projects"]], startLabel: lang === "ar" ? "اطلب مشروعاً مشابهاً" : "Start a similar project",
     lang, title: T("title"), description: (T("summary") || T("details")).slice(0, 160), path: `/projects/${encodeURIComponent(p.slug)}`,
@@ -474,7 +510,7 @@ export async function handleTeam(request, env, ctx) {
   let st = {};
   try { st = JSON.parse(raw).settings || {}; } catch {}
   const t = { ...TEAM_DEFAULTS, ...(st.team || {}) };
-  if (!t.on) return notFound(request, env);
+  if (!t.on) return pageNotFound(request, st);
   if (cfg.maintenance.on && !hasBypass(request, cfg)) return maintenancePage(request, cfg, st);
   const lang = pickLang(request, st.default_lang), ar = lang === "ar";
   const L = (o, f) => o[`${f}_${lang}`] || o[`${f}_ar`] || o[`${f}_en`] || "";
@@ -495,7 +531,7 @@ export async function handleStatus(request, env, ctx) {
   const [raw, cfg] = await Promise.all([getSiteData(env, ctx), getConfig(env)]);
   let st = {};
   try { st = JSON.parse(raw).settings || {}; } catch {}
-  if (!{ ...STATUS_DEFAULTS, ...(st.status_page || {}) }.on) return notFound(request, env);
+  if (!{ ...STATUS_DEFAULTS, ...(st.status_page || {}) }.on) return pageNotFound(request, st);
   const lang = pickLang(request, st.default_lang), ar = lang === "ar";
   if (Date.now() - statusMemo.at > 60_000) {
     let db = false;
@@ -529,7 +565,7 @@ export async function handleServicePage(request, env, ctx, slug) {
   if (cfg.maintenance.on && !hasBypass(request, cfg)) return maintenancePage(request, cfg, st);
   const lang = pickLang(request, st.default_lang), ar = lang === "ar";
   const sv = (d.services || []).find((x) => x.slug === slug || String(x.id) === slug);
-  if (!sv) return notFound(request, env);
+  if (!sv) return pageNotFound(request, st);
   const T = (o, f) => o[`${f}_${lang}`] || o[`${f}_ar`] || o[`${f}_en`] || "";
   const wa = String(st.contact?.whatsapp || "").replace(/\D/g, "");
   const ask = ar ? `مرحباً ويكسا، أريد الاستفسار عن: ${T(sv, "title")}` : `Hello WIXA, I'd like to ask about: ${T(sv, "title")}`;
@@ -540,8 +576,8 @@ export async function handleServicePage(request, env, ctx, slug) {
     ${detailsHtml(T(sv, "details"))}
     ${st.chat?.on ? `<p class="actions" style="margin-top:20px"><button type="button" class="btn btn--primary btn--chat" data-open-chat data-topic="svc" data-service="${esc(T(sv, "title"))}"><svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.6 7.1L4 20.5l1.4-4.8A8 8 0 1121 12z"/></svg>${ar ? "اسأل عن هذه الخدمة في المحادثة المباشرة" : "Ask about this service in live chat"}</button></p>`
       : wa ? `<p><a class="btn btn--wa" href="https://wa.me/${wa}?text=${encodeURIComponent(ask)}" target="_blank" rel="noopener">${ar ? "اسأل عن هذه الخدمة عبر واتساب" : "Ask about this service on WhatsApp"}</a></p>` : ""}
-    ${projects.length ? `<section class="more"><h2>${ar ? "من أعمالنا" : "From our work"}</h2><div class="more__grid">${projects.map((o) => `<a href="/projects/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(T(o, "category") || T(o, "summary").slice(0, 70))}</span></a>`).join("")}</div></section>` : ""}
-    ${others.length ? `<section class="more"><h2>${ar ? "خدمات أخرى" : "Other services"}</h2><div class="more__grid">${others.map((o) => `<a href="/services/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(T(o, "summary").slice(0, 80))}</span></a>`).join("")}</div></section>` : ""}`;
+    ${projects.length ? `<section class="more"><h2>${ar ? "من أعمالنا" : "From our work"}</h2><div class="more__grid">${projects.map((o) => `<a href="/projects/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(T(o, "category") || snip(T(o, "summary"), 70))}</span></a>`).join("")}</div></section>` : ""}
+    ${others.length ? `<section class="more"><h2>${ar ? "خدمات أخرى" : "Other services"}</h2><div class="more__grid">${others.map((o) => `<a href="/services/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(snip(T(o, "summary"), 90))}</span></a>`).join("")}</div></section>` : ""}`;
   const origin = new URL(request.url).origin;
   return simplePage(request, st, { orderQ: `&svc=${encodeURIComponent(slug)}`, crumbs: [["nav_services", "/services"]], startLabel: ar ? "اطلب هذه الخدمة" : "Request this service",
     lang, title: T(sv, "title"), description: (T(sv, "summary") || T(sv, "details")).slice(0, 160), path: `/services/${encodeURIComponent(sv.slug)}`, body,
@@ -580,7 +616,7 @@ export async function handleBlog(request, env, ctx, slug) {
     return simplePage(request, st, { lang, title: ar ? "المقالات" : "Articles", description: ar ? "مقالات ويكسا عن تطوير المواقع والتطبيقات والأنظمة." : "WIXA articles on building websites, apps and systems.", path: "/blog", body });
   }
   const p = posts.find((x) => x.slug === slug);
-  if (!p) return notFound(request, env);
+  if (!p) return pageNotFound(request, st);
   const cover = safeHref(p.cover_url);
   const others = posts.filter((x) => x !== p).slice(0, 3);
   // the article's look: chosen for this article, or for all articles (dashboard → المقالات), else classic
@@ -590,7 +626,7 @@ export async function handleBlog(request, env, ctx, slug) {
     ${T(p, "excerpt") ? `<p class="lead">${esc(T(p, "excerpt"))}</p>` : ""}
     ${look === "classic" ? coverHtml : ""}
     <article>${articleHtml(T(p, "body"))}</article></div>
-    ${others.length ? `<section class="more"><h2>${ar ? "مقالات أخرى" : "More articles"}</h2><div class="more__grid">${others.map((o) => `<a href="/blog/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(T(o, "excerpt").slice(0, 80))}</span></a>`).join("")}</div></section>` : ""}`;
+    ${others.length ? `<section class="more"><h2>${ar ? "مقالات أخرى" : "More articles"}</h2><div class="more__grid">${others.map((o) => `<a href="/blog/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(snip(T(o, "excerpt"), 90))}</span></a>`).join("")}</div></section>` : ""}`;
   return simplePage(request, st, { crumbs: [["nav_blog", "/blog"]],
     lang, title: T(p, "title"), description: (T(p, "excerpt") || T(p, "body")).slice(0, 160), path: `/blog/${encodeURIComponent(p.slug)}`, image: cover, body,
     jsonld: { "@context": "https://schema.org", "@type": "Article", headline: T(p, "title"), description: T(p, "excerpt"), datePublished: p.published_at || p.created_at, dateModified: p.updated_at, ...(cover ? { image: cover } : {}), author: { "@type": "Organization", name: "WIXA" }, publisher: { "@type": "Organization", name: "WIXA", url: origin }, mainEntityOfPage: `${origin}/blog/${encodeURIComponent(p.slug)}` },

@@ -21,7 +21,7 @@ import { handleAdminDiagnose } from "./routes/diagnose.js";
 import { handleAdminErrors, handleClientError, recordError } from "./routes/errors.js";
 import { handleAdminOrderNotify, handlePortalData, handlePortalLogin, handlePortalPage } from "./routes/portal.js";
 import { handleContact, handleEvent, handleOrder, handleOrderFind, handleReview, handleSlots, handleTrack, handleUnsubscribe } from "./routes/forms.js";
-import { handleBlog, handleCustomPage, handleHome, handlePrivacy, handleProjectPage, handleServicePage, handleStatus, handleTeam } from "./routes/pages.js";
+import { handleBlog, handleCustomPage, handleHome, handleNotFound, handlePrivacy, handleProjectPage, handleServicePage, handleStatus, handleTeam } from "./routes/pages.js";
 import { getConfig, getPosts, getSiteData } from "./services/data.js";
 
 let health = { at: 0, supabase: "unknown" };
@@ -205,6 +205,9 @@ export default {
     }
 
     const asset = await env.ASSETS.fetch(request);
-    return asset.status === 404 ? notFound(request, env) : asset;
+    if (asset.status !== 404) return asset;
+    // a missing page gets the site's 404 page (header, footer, links); a missing file (image, script…) the plain one
+    const isPage = request.method === "GET" && !/\.[a-z0-9]{1,5}$/i.test(url.pathname) && (request.headers.get("accept") || "").includes("text/html");
+    return isPage ? handleNotFound(request, env, ctx) : notFound(request, env);
   },
 };

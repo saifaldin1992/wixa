@@ -637,3 +637,17 @@ When the live chat is on (`settings.chat.on`), it is the way to talk to us every
 - **Endings**: the contact block ends the home, hubs, about and FAQ pages (the FAQ page with its own words:
   `faq_cta_title` / `faq_cta_sub`); careers ends with its own «send your CV», the contact page with nothing extra; the
   policies and status pages have no «ابدأ مشروعك» buttons (`simplePage(…, { ending: false })`).
+
+## Front-end and identity review (Nov 2026)
+- **/services and /projects** show their whole list, one card under another, on phones and tablets (`html[data-page]` rules at the end of `styles.css`; `FLAT` in `public/js/site/carousel.js` keeps the dots off). The home page keeps the swipe rows.
+- **Brand font weight:** the Arabic files of Noto Sans Arabic keep only the letters used in Arabic and Kurdish text (U+0600–06FF, joiners, the few presentation forms in use). That is about 23 KB per weight instead of 50 KB. To add letters, run `pyftsubset` again on the full files with a wider `--unicodes`, and update the matching `unicode-range` in `public/fonts/noto-sans-arabic.css`.
+- **Story cards:** on computers (1000px and wider) the three cards sit side by side in one row.
+- **Round chat button (phones):** it steps aside while the page scrolls down (`html.fab-away`, `ui.js`) and comes back on scroll up or after a short pause.
+- **Heading outline:** on an inner page made of one home section, the card titles under the page's h1 get `aria-level` one lower (`outline()` in `render.js`).
+- **Consistency:**
+  - The numbers band has the same content width as the other sections, and partner tiles use the small corner (14px).
+  - Previews in «خدمات أخرى / من أعمالنا / مقالات أخرى» are cut at a whole word with «…» (`snip()` in `pages.js`).
+  - The filled live-chat button keeps its white text.
+- **404:**
+  - Missing pages render through `pageNotFound()` / `handleNotFound()` (`pages.js`), with the site header and footer, the brand colour and links to the main pages.
+  - Missing files (images, scripts) still get the plain `public/404.html`.
