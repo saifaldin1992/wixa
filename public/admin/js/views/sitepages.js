@@ -4,7 +4,7 @@
    - team: the /team page (people, roles, photos); status: the /status page.
    Everything is kept in the site settings and goes live with «حفظ ونشر». */
 import { $, $$, I, closeModal, confirmBox, esc, openModal, savedJSON, sb, setSaved, settings, toast } from "../core.js";
-import { changed } from "../settings.js";
+import { changed, quietly } from "../settings.js";
 import { imageField } from "../fields.js";
 import { PAGE_DEFAULTS, STATUS_DEFAULTS, TEAM_DEFAULTS, pathProblem } from "../../../js/site-pages.js";
 
@@ -17,9 +17,9 @@ const ensure = (key, def) => {
   return settings[key];
 };
 const pages = () => ensure("pages", PAGE_DEFAULTS);
-const team = () => { const t = ensure("team", TEAM_DEFAULTS); for (const [k, v] of Object.entries(TEAM_DEFAULTS)) if (t[k] === undefined) t[k] = structuredClone(v); return t; };
+const team = () => { const t = ensure("team", TEAM_DEFAULTS); quietly(() => { for (const [k, v] of Object.entries(TEAM_DEFAULTS)) if (t[k] === undefined) t[k] = structuredClone(v); }); return t; };
 const statusOpts = () => ensure("status_page", STATUS_DEFAULTS);
-const aliases = () => (Array.isArray(settings.aliases) ? settings.aliases : (settings.aliases = []));
+const aliases = () => { if (!Array.isArray(settings.aliases)) quietly(() => { settings.aliases = []; }); return settings.aliases; };
 const origin = location.origin;
 const PROBLEM = { format: "الرابط يبدأ بـ / ثم أحرف إنجليزية صغيرة وأرقام و- فقط (مثل /terms)", reserved: "هذا الرابط مستخدم لصفحة أساسية في الموقع", taken: "صفحة أخرى تستخدم هذا الرابط" };
 const problemOf = (path, self) => pathProblem(path) || (pages().some((p) => p !== self && p.path === path) || aliases().some((a) => a.from === path) ? "taken" : "");

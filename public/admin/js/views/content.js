@@ -9,7 +9,7 @@ import { imageField } from "../fields.js";
 import { renderCustom, renderLinks, renderStatus, renderTeam } from "./sitepages.js";
 import { renderLayout } from "./layout.js";
 import { FOOTER_GROUPS, groupOf } from "../../../js/site-structure.js";
-import { bindPreview, changed, getPath, previewLang, previewPane, pushPreview, setPath, setPreviewLang, settingsActions } from "../settings.js";
+import { bindPreview, changed, quietly, getPath, previewLang, previewPane, pushPreview, setPath, setPreviewLang, settingsActions } from "../settings.js";
 
 // ---------------- view: content ----------------
 export let contentTab = "texts", contentLang = "ar";
@@ -156,8 +156,7 @@ export function renderContentTab() {
     };
     draw(); return;
   } else if (contentTab === "ui") {
-    settings.ui ??= { ar: {}, en: {} };
-    settings.ui[L] ??= {};
+    quietly(() => { settings.ui ??= { ar: {}, en: {} }; settings.ui[L] ??= {}; });
     const cur = settings.ui[L];
     body.innerHTML = langSeg() + `<p class="muted" style="margin-top:0">نصوص الأزرار والقائمة ورسائل النماذج. اترك الحقل فارغاً لاستخدام النص الأصلي (الظاهر باهتاً داخله).</p>
       <div class="stack">${UI_GROUPS.map(([title, keys]) => `<div class="sec-title">${title}</div><div class="grid2">${keys.map((k) => `<label class="f"><span>${esc(UI_DEFAULTS.ar[k] || k)}</span><input data-ui="${k}" value="${esc(cur[k] || "")}" placeholder="${esc(UI_DEFAULTS[L][k] || "")}" dir="${dir}"></label>`).join("")}</div>`).join("")}</div>
@@ -167,7 +166,7 @@ export function renderContentTab() {
     $("#uiReset").onclick = () => { settings.ui[L] = {}; changed(); renderContentTab(); };
     return;
   } else if (contentTab === "booking") {
-    settings.booking ??= { on: false, days: [0, 1, 2, 3, 4], from: "10:00", to: "16:00", slot: 30, days_ahead: 14 };
+    quietly(() => { settings.booking ??= { on: false, days: [0, 1, 2, 3, 4], from: "10:00", to: "16:00", slot: 30, days_ahead: 14 }; });
     const b = settings.booking;
     const names = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
     body.innerHTML = `<p class="muted" style="margin-top:0">زر «احجز موعداً» في قسم التواصل: يختار الزائر يوماً ووقتاً من أوقاتك المتاحة (بتوقيت بغداد)، ويصلك الحجز في الرسائل وبالبريد. الوقت المحجوز لا يظهر لغيره.</p>
@@ -206,8 +205,8 @@ export function renderContentTab() {
     draw(); return;
   } else if (contentTab === "careers") {
     const draw = () => {
-      settings.careers ??= { jobs: [] };
-      const jobs = settings.careers.jobs || (settings.careers.jobs = []);
+      quietly(() => { settings.careers ??= { jobs: [] }; settings.careers.jobs ||= []; });
+      const jobs = settings.careers.jobs;
       body.innerHTML = `<p class="muted" style="margin-top:0">الشواغر التي تظهر في صفحة «الوظائف». الطلبات تصلك في صفحة الرسائل ← طلبات التوظيف.</p>
         <div class="card" style="padding:14px 16px;margin-bottom:14px;background:var(--brand-50);border-color:transparent"><b style="display:block;margin-bottom:8px">عندما لا توجد وظيفة معروضة</b>
           <div class="grid2">${input("content.ar.careers_empty", "النص الذي يظهر (عربي)", true)}${input("content.en.careers_empty", "Text shown (English)", true, 'dir="ltr"')}</div>
@@ -304,7 +303,8 @@ export function renderContentTab() {
       <p class="muted" style="margin:0;font-size:13px">إن تركتها فارغة تظهر الخدمات المعروضة في الموقع تلقائياً. خيار «استشارة عامة» يبقى أولاً دائماً.</p>
       <div id="csList"></div></div>`;
     bindPathInputs(body);
-    const list = settings.contact_services || (settings.contact_services = []);
+    quietly(() => { settings.contact_services ||= []; });
+    const list = settings.contact_services;
     const drawCs = () => {
       $("#csList").innerHTML = `<div class="stack">${list.map((x, i) => `<div class="grid2 cs-row"><input class="cs" data-i="${i}" data-k="ar" value="${esc(x.ar)}" placeholder="الخيار بالعربي"><div style="display:flex;gap:6px"><input class="cs" data-i="${i}" data-k="en" value="${esc(x.en)}" placeholder="English" dir="ltr" style="flex:1"><button class="b b--icon b--ghost b--danger" data-csdel="${i}">${I.trash}</button></div></div>`).join("")}</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"><button class="b b--sm" id="csAdd">${I.plus}إضافة خيار</button>${list.length ? "" : `<button class="b b--sm b--ghost" id="csCopy">نسخ الخدمات الحالية لأعدّلها</button>`}</div>`;

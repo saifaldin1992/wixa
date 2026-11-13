@@ -1,7 +1,7 @@
 /* Articles (blog): write, publish and edit. Shown at /blog and /blog/<link>. */
 import { $, $$, I, closeModal, confirmBox, esc, openModal, publishNow, sb, settings, toast } from "../core.js";
 import { imageField } from "../fields.js";
-import { saveSettings } from "../settings.js";
+import { quietly, saveSettings } from "../settings.js";
 
 // How an article page looks (settings.blog.theme for all, settings.blog.per[id] for one article; same keys in routes/pages.js)
 export const POST_THEMES = [
@@ -9,7 +9,7 @@ export const POST_THEMES = [
   ["magazine", "مجلة", "غلاف كبير أعلى الصفحة وعنوان عريض — للمقالات المصوّرة"],
   ["minimal", "بسيط", "بلا صورة غلاف، عمود ضيق مريح للقراءة الطويلة"],
 ];
-const blog = () => (settings.blog && typeof settings.blog === "object" ? settings.blog : (settings.blog = {}));
+const blog = () => { if (!settings.blog || typeof settings.blog !== "object") quietly(() => { settings.blog = {}; }); return settings.blog; };
 
 const slugify = (t) => String(t || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 

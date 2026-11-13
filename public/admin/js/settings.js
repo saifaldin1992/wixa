@@ -14,6 +14,14 @@ export async function loadSettings() {
   return { error };
 }
 export const isDirty = () => settings && JSON.stringify(settings) !== savedJSON;
+// Filling in a missing default while drawing a page (an empty list, the text fields of a language…) is not an edit:
+// if nothing was changed before, the filled-in settings become the new «saved» point, so leaving the page does not
+// ask about unsaved changes that the owner never made.
+export function quietly(fill) {
+  const clean = !isDirty();
+  fill();
+  if (clean) setSaved(JSON.stringify(settings));
+}
 export async function saveSettings() {
   if (!loaded) { toast("لم تُحمَّل إعدادات الموقع بعد — حدّث الصفحة ثم احفظ، حتى لا تُستبدل إعداداتك بالقيم الافتراضية.", "err"); return false; }
   const btn = $("#saveBtn"); if (btn) btn.disabled = true;
