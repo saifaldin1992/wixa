@@ -13,7 +13,7 @@ const common = { bundle: true, minify: true, charset: "utf8", target: ["es2020",
 
 await Promise.all([
   // site + dashboard scripts: one ES module each
-  build({ ...common, entryPoints: { site: "public/js/main.js", admin: "public/admin/admin.js", tags: "public/js/tags.js" }, outdir: out, format: "esm" }),
+  build({ ...common, entryPoints: { site: "public/js/main.js", admin: "public/admin/admin.js", tags: "public/js/tags.js", chat: "public/js/chat-page.js" }, outdir: out, format: "esm" }),
   // shared helpers stay a classic script (loaded before the modules, also used by the inline theme logic)
   build({ ...common, bundle: false, entryPoints: { shared: "public/shared.js" }, outdir: out }),
   // stylesheets

@@ -187,7 +187,7 @@ export function setupChat() {
     }
     if (!conv) {
       const ready = pick.topic && (pick.topic !== "svc" || pick.service || !services().length);
-      if (!ready) { foot.innerHTML = wa ? `<a class="chatw__wa" href="${wa}" target="_blank" rel="noopener">${t("wa")}</a>` : ""; foot.hidden = !wa; return; }
+      if (!ready) { foot.innerHTML = ""; foot.hidden = true; return; } // the live chat is the way to talk to us: no WhatsApp link here
       foot.hidden = false;
       const saved = (() => { try { return JSON.parse(localStorage.getItem("wixa-chat-me") || "{}"); } catch { return {}; } })();
       foot.innerHTML = `<form class="chatw__start" novalidate>
@@ -352,6 +352,14 @@ export function setupChat() {
   new MutationObserver(() => { head(); const l = $("#formChat span"); if (l) l.textContent = lang === "ar" ? "محادثة فورية" : "Live chat"; if (isOpen) { paint(); footer(); } })
     .observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
 
+  // any button marked data-open-chat (service pages, the calculator, the contact form…) opens this chat,
+  // with a topic (data-topic) and a service or item (data-service) already chosen
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-open-chat]");
+    if (!b) return;
+    e.preventDefault();
+    openChat(b.dataset.topic || "", b.dataset.service || "");
+  });
   // the contact section gets an "instant chat" button next to "contact us"
   const cta = $("#openForm");
   if (cta && !$("#formChat")) {

@@ -222,7 +222,7 @@ export function siteShell(st, lang, path, { empty } = {}) {
   }).join("");
   const legal = groupHtml(FOOTER_GROUPS.find((g) => g.k === "legal"));
   const reach = [
-    c.whatsapp ? `<a href="https://wa.me/${esc(String(c.whatsapp).replace(/\D/g, ""))}" target="_blank" rel="noopener" dir="ltr">${esc(c.phone || `+${String(c.whatsapp).replace(/\D/g, "")}`)}</a>` : c.phone ? `<a href="tel:${esc(String(c.phone).replace(/[^\d+]/g, ""))}" dir="ltr">${esc(c.phone)}</a>` : "",
+    c.whatsapp && !st.chat?.on ? `<a href="https://wa.me/${esc(String(c.whatsapp).replace(/\D/g, ""))}" target="_blank" rel="noopener" dir="ltr">${esc(c.phone || `+${String(c.whatsapp).replace(/\D/g, "")}`)}</a>` : c.phone || c.whatsapp ? `<a href="tel:${esc(String(c.phone).replace(/[^\d+]/g, ""))}" dir="ltr">${esc(c.phone)}</a>` : "",
     c.email ? `<a href="mailto:${esc(c.email)}" dir="ltr">${esc(c.email)}</a>` : "",
     c[`address_${lang}`] || c.address_ar ? `<span>${esc(c[`address_${lang}`] || c.address_ar)}</span>` : "",
   ].filter(Boolean);
@@ -378,6 +378,7 @@ ${shell.header}
 <main class="page">${crumbHtml}${body}
 ${ending ? `<div class="actions"><a class="btn btn--primary" data-start href="/order?lang=${lang}${orderQ}">${esc(startLabel || ui.nav_start)}</a><a class="btn btn--ghost" href="/contact?lang=${lang}">${ui.nav_contact}</a></div>` : ""}</main>
 ${shell.footer}
+${st.chat?.on ? `<script src="${versioned("/build/shared.js")}" defer></script><script type="module" src="${versioned("/build/chat.js")}"></script>` : ""}
 </body></html>`;
   return new Response(request.method === "HEAD" ? null : html, { status, headers: { ...SECURITY_HEADERS, "speculation-rules": '"/speculation-rules.json"', "content-type": "text/html; charset=utf-8", "cache-control": "no-cache", "content-language": lang, vary: "Accept-Language, Cookie" } });
 }
@@ -536,7 +537,8 @@ export async function handleServicePage(request, env, ctx, slug) {
   const body = `<h1>${esc(T(sv, "title"))}</h1>
     ${T(sv, "summary") ? `<p class="lead">${esc(T(sv, "summary"))}</p>` : ""}
     ${detailsHtml(T(sv, "details"))}
-    ${wa ? `<p><a class="btn btn--wa" href="https://wa.me/${wa}?text=${encodeURIComponent(ask)}" target="_blank" rel="noopener">${ar ? "اسأل عن هذه الخدمة عبر واتساب" : "Ask about this service on WhatsApp"}</a></p>` : ""}
+    ${st.chat?.on ? `<p class="actions" style="margin-top:20px"><button type="button" class="btn btn--primary btn--chat" data-open-chat data-topic="svc" data-service="${esc(T(sv, "title"))}"><svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.6 7.1L4 20.5l1.4-4.8A8 8 0 1121 12z"/></svg>${ar ? "اسأل عن هذه الخدمة في المحادثة المباشرة" : "Ask about this service in live chat"}</button></p>`
+      : wa ? `<p><a class="btn btn--wa" href="https://wa.me/${wa}?text=${encodeURIComponent(ask)}" target="_blank" rel="noopener">${ar ? "اسأل عن هذه الخدمة عبر واتساب" : "Ask about this service on WhatsApp"}</a></p>` : ""}
     ${projects.length ? `<section class="more"><h2>${ar ? "من أعمالنا" : "From our work"}</h2><div class="more__grid">${projects.map((o) => `<a href="/projects/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(T(o, "category") || T(o, "summary").slice(0, 70))}</span></a>`).join("")}</div></section>` : ""}
     ${others.length ? `<section class="more"><h2>${ar ? "خدمات أخرى" : "Other services"}</h2><div class="more__grid">${others.map((o) => `<a href="/services/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(T(o, "summary").slice(0, 80))}</span></a>`).join("")}</div></section>` : ""}`;
   const origin = new URL(request.url).origin;

@@ -187,6 +187,18 @@ export function render() {
   $("#wa").hidden = !wa;
   if (wa) $("#wa").href = `https://wa.me/${wa}`;
   for (const id of ["#mbarWa", "#formWa", "#calcWa"]) { const el = $(id); if (el) { el.hidden = !wa; if (wa && id !== "#calcWa") el.href = `https://wa.me/${wa}`; } }
+  // with the live chat on, the chat is the way to talk to us: the WhatsApp buttons open the chat instead
+  if (s.chat?.on) {
+    const CHAT = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.6 7.1L4 20.5l1.4-4.8A8 8 0 1121 12z"/></svg>';
+    for (const [id, topic, label] of [["#formWa", "other", lang === "ar" ? "أو تحدث معنا مباشرة" : "Or talk to us now"], ["#calcWa", "quote", lang === "ar" ? "ناقش التقدير في المحادثة" : "Discuss the estimate in chat"]]) {
+      const el = $(id); if (!el) continue;
+      el.hidden = false; el.removeAttribute("href"); el.removeAttribute("target"); el.setAttribute("role", "button"); el.tabIndex = 0;
+      el.classList.remove("btn--wa"); el.classList.add("btn--ghost", "btn--chat");
+      el.dataset.openChat = ""; el.dataset.topic = topic;
+      el.innerHTML = `${CHAT}<span>${label}</span>`;
+    }
+    const mb = $("#mbarWa"); if (mb) mb.hidden = true;
+  }
   document.documentElement.classList.toggle("has-wa", !!wa);
   $("#social").innerHTML = ["instagram", "x", "linkedin", "facebook"].map((k) => [k, socialUrl(k, ct[k])]).filter(([, u]) => u)
     .map(([k, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener" aria-label="${k}">${SOCIAL[k]}</a>`).join("")

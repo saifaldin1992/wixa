@@ -579,6 +579,13 @@ One list of the site's pages, the sections each page is made of, and where every
   has one main heading, shows only its own sections, has the same header and footer as the home page, and every visible
   menu link opens a real page).
 
+## The live chat instead of WhatsApp (Nov 2026)
+When the live chat is on (`settings.chat.on`), it is the way to talk to us everywhere: no WhatsApp bubble, card or button is shown.
+- Any element with `data-open-chat` opens the chat (`chat.js`), with `data-topic` («svc», «quote», «other», «track»…) and `data-service` pre-filled.
+- Pages the server builds alone (service, project, article, policies) load `/build/chat.js` (`public/js/chat-page.js`, ~33KB) only when the chat is on.
+- Service page: «اسأل عن هذه الخدمة في المحادثة المباشرة»; calculator: «ناقش التقدير في المحادثة» (topic quote + the chosen type); contact form: «أو تحدث معنا مباشرة»; contact page: no WhatsApp card; footer: the number calls (tel:) instead of opening WhatsApp.
+- With the chat off, every WhatsApp link comes back as before.
+
 ## «مكتبة الوسائط» — the media library (Nov 2026)
 - `public/admin/js/views/media.js`: lists every image in the Supabase Storage bucket `media` (each editor uploads to its own folder; the library uploads to `library/`), several uploads at once with the same compression as the image fields, copy link, delete.
 - «مستخدمة / غير مستخدمة»: a file is «used» when its path appears in a saved row of `site_settings`, `projects`, `services`, `partners`, `testimonials` or `posts`. Deleting a used image asks first and names where it is used.

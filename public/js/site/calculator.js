@@ -61,6 +61,11 @@ export function setupCalc() {
   $("#calcFeats").addEventListener("click", (e) => { const b = e.target.closest(".cfeat"); if (!b) return; const i = +b.dataset.i; calc.feats.has(i) ? calc.feats.delete(i) : calc.feats.add(i); b.setAttribute("aria-pressed", calc.feats.has(i)); updateCalc(); });
   $("#calcSpeed").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; calc.rush = b.dataset.rush === "1"; $$("#calcSpeed button").forEach((x) => x.classList.toggle("on", x === b)); updateCalc(); });
   $("#calcWa").addEventListener("click", (e) => {
+    if (state.settings.chat?.on) { // the chat opens on «طلب عرض سعر» with the chosen project type (chat.js reads data-service)
+      const t = (state.settings.calculator?.types || [])[calc.type];
+      e.currentTarget.dataset.service = t ? (t[`label_${lang}`] || t.label_ar || "") : "";
+      return;
+    }
     const msg = estimateText(), wa = (state.settings.contact?.whatsapp || "").replace(/\D/g, "");
     if (!msg || !wa) { e.preventDefault(); return; }
     e.currentTarget.href = `https://wa.me/${wa}?text=${encodeURIComponent(msg)}`;
