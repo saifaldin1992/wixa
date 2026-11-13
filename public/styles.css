@@ -1196,7 +1196,8 @@ html.has-chat .totop { bottom: 88px; }
 .chatw__change { border: 0; background: none; color: var(--primary); font: inherit; font-size: .8rem; text-decoration: underline; cursor: pointer; padding: 4px; }
 .chatw__two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .chatw__foot[hidden] { display: none; }
-.btn--chat { cursor: pointer; font: inherit; color: inherit; }
+.btn--chat { cursor: pointer; font: inherit; }
+.btn--chat:not(.btn--primary) { color: inherit; } /* a filled chat button keeps its white text */
 .btn--chat svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 /* consent to offers (contact form + chat): unticked by default */

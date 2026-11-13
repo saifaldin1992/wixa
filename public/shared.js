@@ -421,10 +421,10 @@
     const style = document.createElement("style");
     style.textContent = `
       .staging-bar{position:fixed;top:0;left:0;right:0;z-index:1000;height:34px;display:flex;align-items:center;justify-content:center;gap:10px;
-        background:#D92D20;color:#fff;font:600 13px/1 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;letter-spacing:.01em;
-        box-shadow:0 2px 10px rgba(217,45,32,.35);direction:rtl;padding:0 12px;white-space:nowrap;overflow:hidden}
-      .staging-bar b{background:#fff;color:#D92D20;border-radius:6px;padding:3px 8px;font-size:12px}
-      .staging-bar a{color:#fff;text-decoration:underline;text-underline-offset:3px;opacity:.9}
+        background:#B42318;color:#fff;font:600 13px/1 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;letter-spacing:.01em;
+        box-shadow:0 2px 10px rgba(180,35,24,.35);direction:rtl;padding:0 12px;white-space:nowrap;overflow:hidden}
+      .staging-bar b{background:#fff;color:#B42318;border-radius:6px;padding:3px 8px;font-size:12px}
+      .staging-bar a{color:#fff;text-decoration:underline;text-underline-offset:3px}
       .staging-bar span{overflow:hidden;text-overflow:ellipsis}
       html.is-staging body{padding-top:34px}
       html.is-staging .header{top:46px}
