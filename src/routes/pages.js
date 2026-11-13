@@ -63,7 +63,7 @@ export async function handleHome(request, env, ctx, pageName = "home") {
   const abs = (u) => (/^https?:\/\//.test(u) ? u : `${origin}${u.startsWith("/") ? "" : "/"}${u}`);
   const attr = (sel, name, val) => [sel, { element: (el) => { if (val) el.setAttribute(name, val); } }];
   const siteTitle = seo[`title_${lang}`] || (lang === "en" ? SEO_DEFAULTS.en.title : ""), siteDesc = seo[`description_${lang}`] || (lang === "en" ? SEO_DEFAULTS.en.description : ""), img = seo.og_image ? abs(seo.og_image) : "";
-  const pc = { ...(WIXA.DEFAULTS.content?.[lang] || {}), ...Object.fromEntries(Object.entries(st.content?.[lang] || {}).filter(([, v]) => v)) }, brandName = (lang === "en" ? st.brand?.name_en : st.brand?.name_ar) || "WIXA";
+  const pc = { ...(WIXA.DEFAULTS.content?.[lang] || {}), ...Object.fromEntries(Object.entries(st.content?.[lang] || {}).filter(([, v]) => v)) }, brandName = (lang === "en" ? st.brand?.name_en : st.brand?.name_ar) || (lang === "en" ? "WIXA" : "ويكسا");
   const pageDesc = { services: pc.services_sub, projects: pc.projects_sub, pricing: pc.pricing_sub, about: pc.about_text, careers: pc.careers_sub, contact: pc.cta_sub, faq: pc.faq_sub, order: pc.pricing_sub, track: pc.pricing_sub }[pageName];
   const title = pageName === "home" ? siteTitle : `${PAGE_TITLES[pageName][lang]} — ${brandName}`;
   const desc = pageName === "home" ? siteDesc : String(pageDesc || siteDesc || "").replace(/\s+/g, " ").slice(0, 160);
