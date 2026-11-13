@@ -975,8 +975,8 @@ html[data-theme="dark"] .side__theme .i-sun, html:not([data-theme="dark"]) .side
 }
 
 /* 5. large title that shrinks into the bar when the page scrolls (phones keep the bar on top too) */
-.top__title { transition: font-size .3s var(--spring); }
-.top__sub { transition: opacity .2s, max-height .3s; max-height: 3em; overflow: hidden; }
+.top__title { transition: none; }   /* sizes change at once: an animated height would push the page while scrolling */
+.top__sub { max-height: 3em; overflow: hidden; }
 .top--compact .top__title { font-size: 17px; }
 .top--compact .top__sub { opacity: 0; max-height: 0; }
 .top--compact { padding-block: 10px; }
@@ -993,3 +993,8 @@ html[data-theme="dark"] .side__theme .i-sun, html:not([data-theme="dark"]) .side
 @media (prefers-reduced-transparency: reduce) { .top { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; } }
 html[data-theme="dark"] .auth { background: radial-gradient(70% 45% at 50% 0%, #241A3D, transparent 70%), var(--bg); }
 html[data-theme="dark"] .auth__brand { color: #C4B5FD; }
+
+/* The browser's own "keep the content in place" scroll correction (scroll anchoring) snapped the page back to the top
+   every time the large title shrank — the title grew again, shrank again, and the page shook on phones.
+   The bar keeps the page height unchanged by itself now (shell.js), so the correction is not needed. */
+html { overflow-anchor: none; }

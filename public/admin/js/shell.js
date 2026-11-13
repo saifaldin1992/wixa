@@ -106,10 +106,35 @@ export function setupShell() {
   const paintTheme = () => { $("#themeLabel").textContent = `المظهر: ${T[window.wixaTheme?.get() || "auto"]}`; };
   paintTheme();
   $("#themeBtn").onclick = () => { window.wixaTheme?.set(NEXT[window.wixaTheme.get()] || "auto"); paintTheme(); };
-  // large title: shrinks into the bar as soon as the page scrolls (like iOS)
+  // large title: shrinks into the bar when the page scrolls (like iOS).
+  // The bar gets shorter when it shrinks (description and tabs hide). If the page moved up by that much, the
+  // browser would pull the scroll back to keep the content in place, the bar would grow again, and so on —
+  // the page shook. So the space the bar gives up is kept as an empty margin under it (nothing below moves),
+  // and it shrinks only past 40px and grows back only near the very top (no flip-flopping at one point).
   const top = $(".top");
-  const onScroll = () => top.classList.toggle("top--compact", scrollY > 24);
+  let compact = false;
+  const onScroll = () => {
+    const want = compact ? scrollY > 4 : scrollY > 40;
+    if (want === compact) return;
+    compact = want;
+    if (want) {
+      // measure where the content starts, shrink the bar, then fill the gap exactly (margins can merge, so check)
+      // (the space is held first: if the page got shorter even for a moment, the browser would cut the scroll back)
+      const next = top.nextElementSibling, y0 = next?.getBoundingClientRect().top ?? 0;
+      const before = top.offsetHeight, m = parseFloat(getComputedStyle(top).marginBottom) || 0;
+      top.style.marginBottom = `${m + before}px`;
+      top.classList.add("top--compact");
+      top.style.marginBottom = `${m + Math.max(0, before - top.offsetHeight)}px`;
+      const fix = y0 - (next?.getBoundingClientRect().top ?? y0);
+      if (Math.abs(fix) > 0.5) top.style.marginBottom = `${parseFloat(top.style.marginBottom) + fix}px`;
+    } else {
+      top.classList.remove("top--compact");
+      top.style.marginBottom = "";
+    }
+  };
   addEventListener("scroll", onScroll, { passive: true }); onScroll();
+  // a new page starts with the full bar (its tabs and title may differ)
+  window.wixaTopReset = () => { compact = false; top.classList.remove("top--compact"); top.style.marginBottom = ""; requestAnimationFrame(onScroll); };
   // phones: dialogs are bottom sheets — drag the handle or the title down to close
   const box = $(".modal__box");
   let y0 = null, dy = 0;
@@ -141,7 +166,7 @@ export async function route() {
   // the page changes with a short cross-fade (View Transitions), only for the switch itself — never while loading
   const swap = () => {
     $("#viewTitle").textContent = v.title; $("#viewSub").textContent = v.sub;
-    endSections(); $("#topActions").innerHTML = ""; setSubnav("");
+    endSections(); $("#topActions").innerHTML = ""; setSubnav(""); window.wixaTopReset?.();
     view.innerHTML = '<div class="skeleton" style="height:120px"></div>';
   };
   if (document.startViewTransition && !matchMedia("(prefers-reduced-motion: reduce)").matches) { try { await document.startViewTransition(swap).updateCallbackDone; } catch { swap(); } }

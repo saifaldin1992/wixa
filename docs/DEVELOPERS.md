@@ -526,3 +526,12 @@ Dashboard → التكاملات → «الإضافات» / «Webhooks» / «ا�
 - Highlight colour: icon tiles and the last word of the main headline use `--hl`
   (the accent; on light backgrounds its darker tone `--accent-ink`, for readability). WhatsApp keeps its green.
 - Footer links: three equal columns, each column centred, names on one line.
+
+## Dashboard top bar: no shaking while scrolling (Nov 2026)
+- On phones the large title shrinks when the page scrolls, and the description and tabs hide, so the bar gets ~150px shorter.
+  This used to make the page shake: the page got shorter, the browser pulled the scroll back (scroll anchoring / clamping),
+  the bar grew again, and so on, many times a second.
+- Now (`public/admin/js/shell.js`): the height the bar gives up is kept as a margin under it, so nothing below moves;
+  the space is held before the bar shrinks (no moment where the page is shorter); it shrinks past 40px and grows back only under 4px.
+  `public/admin/admin.css` turns scroll anchoring off (`overflow-anchor: none`) and the title size no longer animates.
+- `tests/admin-scroll.mjs` scrolls each long page slowly on a phone: the bar may change once each way, and the content may not jump.
