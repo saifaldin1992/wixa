@@ -14,9 +14,9 @@ export function arrangeSections(html, settings, page) {
   const first = blocks[0].index, last = blocks[blocks.length - 1];
   const end = last.index + last[0].length;
   const byKey = new Map(blocks.map((m) => [m[1], m[2]]));
-  const mark = (body, value) => body.replace(/^(\s*<section\b[^>]*?)\sdata-pages="[^"]*"/, "$1").replace(/^(\s*<section\b)/, `$1 data-pages="${value}"`);
+  const mark = (body, value, k) => body.replace(/^(\s*<section\b[^>]*?)\sdata-pages="[^"]*"/, "$1").replace(/^(\s*<section\b)/, `$1 data-pages="${value}" data-s="${k}"`);
   const shown = layoutFor(settings, page).filter((x) => x.on && byKey.has(x.k)).map((x) => x.k);
   const rest = [...byKey.keys()].filter((k) => !shown.includes(k));
-  const out = [...shown.map((k) => `<!--s:${k}-->${mark(byKey.get(k), page)}<!--/s-->`), ...rest.map((k) => `<!--s:${k}-->${mark(byKey.get(k), "")}<!--/s-->`)];
+  const out = [...shown.map((k) => `<!--s:${k}-->${mark(byKey.get(k), page, k)}<!--/s-->`), ...rest.map((k) => `<!--s:${k}-->${mark(byKey.get(k), "", k)}<!--/s-->`)];
   return html.slice(0, first) + out.join("\n    ") + html.slice(end);
 }

@@ -7,6 +7,7 @@ import { UI_DEFAULTS } from "../../../js/ui-strings.js";
 const UI_GROUPS = [["القائمة والتذييل", ["nav_home", "nav_projects", "nav_services", "nav_calc", "nav_partners", "nav_careers", "nav_contact", "nav_blog", "privacy"]], ["نموذج التواصل", ["f_name", "f_email", "f_phone", "f_service", "f_any", "f_message", "f_send", "or_wa", "sending", "invalid", "bad_phone", "err", "done_title", "done_text", "done_again"]], ["الحاسبة والخدمات والمشاريع", ["calc_est", "calc_pdf", "calc_wa", "more", "page", "no_projects"]], ["حجز المواعيد", ["bk_btn", "bk_title", "bk_day", "bk_time", "bk_pick_day", "bk_none", "bk_pick_time", "bk_taken", "bk_notes", "bk_send", "bk_ok"]], ["التقديم على وظيفة", ["j_title", "j_job", "j_general", "j_cv", "j_about", "j_send", "j_ok"]]];
 import { imageField } from "../fields.js";
 import { renderCustom, renderLinks, renderStatus, renderTeam } from "./sitepages.js";
+import { renderLayout } from "./layout.js";
 import { bindPreview, changed, getPath, previewLang, previewPane, pushPreview, setPath, setPreviewLang, settingsActions } from "../settings.js";
 
 // ---------------- view: content ----------------
@@ -29,14 +30,15 @@ export const TEXT_FIELDS = [
 
 export async function viewContent(view) {
   settingsActions();
-  const tabs = [["texts", "النصوص"], ["about", "من نحن"], ["industries", "حلول حسب المجال"], ["pricing", "الباقات والأسعار"], ["guarantees", "الضمانات"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"], ["privacy", "سياسة الخصوصية"], ["booking", "المواعيد"], ["links", "كل الروابط"], ["custom", "صفحات مضافة"], ["team", "فريقنا"], ["status", "حالة الخدمات"], ["ui", "نصوص الأزرار والقوائم"], ["nav", "القوائم"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
-  const BR = [["links", "كل الروابط", ["links"]], ["home", "الصفحة الرئيسية", ["texts", "industries", "pricing", "guarantees", "story", "process", "stats", "calc", "sections"]], ["pages", "الصفحات المستقلة", ["about", "faq", "careers", "privacy", "booking", "custom", "team", "status"]],
+  const tabs = [["layout", "ترتيب الأقسام"], ["texts", "النصوص"], ["about", "من نحن"], ["industries", "حلول حسب المجال"], ["pricing", "الباقات والأسعار"], ["guarantees", "الضمانات"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"], ["privacy", "سياسة الخصوصية"], ["booking", "المواعيد"], ["links", "كل الروابط"], ["custom", "صفحات مضافة"], ["team", "فريقنا"], ["status", "حالة الخدمات"], ["ui", "نصوص الأزرار والقوائم"], ["nav", "القوائم"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
+  const BR = [["layout", "ترتيب الأقسام", ["layout"]], ["links", "كل الروابط", ["links"]], ["home", "الصفحة الرئيسية", ["texts", "industries", "pricing", "guarantees", "story", "process", "stats", "calc", "sections"]], ["pages", "الصفحات المستقلة", ["about", "faq", "careers", "privacy", "booking", "custom", "team", "status"]],
     ["menus", "القوائم والأزرار", ["nav", "ui"]], ["company", "بيانات الشركة", ["brand", "contact"]]];
   const label = Object.fromEntries(tabs);
   const drawTabs = () => {
     const br = BR.find(([, , ks]) => ks.includes(contentTab)) || BR[0];
     setSubnav(`<div class="seg" id="ctBranch">${BR.map(([k, l, ks]) => `<button data-b="${k}" class="${br[0] === k ? "on" : ""}">${l}</button>`).join("")}</div>`
-      + `<div class="seg" id="ctTabs">${br[2].filter((k) => label[k]).map((k) => `<button data-k="${k}" class="${k === contentTab ? "on" : ""}">${k === "texts" ? "الواجهة الأولى والعناوين" : label[k]}</button>`).join("")}</div>`);
+      // a branch with one page needs no second row (its name is already in the first)
+      + (br[2].filter((k) => label[k]).length > 1 ? `<div class="seg" id="ctTabs">${br[2].filter((k) => label[k]).map((k) => `<button data-k="${k}" class="${k === contentTab ? "on" : ""}">${k === "texts" ? "الواجهة الأولى والعناوين" : label[k]}</button>`).join("")}</div>` : ""));
     $$("#ctBranch button").forEach((b) => (b.onclick = () => { contentTab = BR.find(([k]) => k === b.dataset.b)[2][0]; drawTabs(); renderContentTab(); }));
     $$("#ctTabs button").forEach((b) => (b.onclick = () => { contentTab = b.dataset.k; drawTabs(); renderContentTab(); }));
   };
@@ -71,6 +73,9 @@ export function renderContentTab() {
     const v = esc(getPath(settings, path) ?? "");
     return `<label class="f"><span>${label}</span>${area ? `<textarea data-path="${path}" rows="3" ${attrs}>${v}</textarea>` : `<input data-path="${path}" value="${v}" ${attrs}>`}</label>`;
   };
+  if (contentTab === "layout") return void renderLayout(body);
+  // the other tabs edit the home page's texts: the preview goes back to it after arranging another page
+  const fr = $("#pvFrame"); if (fr && !/^\/\?preview/.test(fr.getAttribute("src") || "")) fr.setAttribute("src", "/?preview=1");
   if (contentTab === "links") return void renderLinks(body);
   if (contentTab === "custom") return renderCustom(body);
   if (contentTab === "team") return renderTeam(body);
@@ -270,7 +275,7 @@ export function renderContentTab() {
     draw();
   } else if (contentTab === "sections") {
     const names = { about: "من نحن", industries: "حلول حسب مجالك", guarantees: "الضمانات", pricing: "الباقات والأسعار", story: "القصة (المميزات)", projects: "الإنجازات (المشاريع)", services: "الخدمات", process: "كيف نعمل", stats: "الأرقام", testimonials: "آراء العملاء", calculator: "حاسبة التكلفة", partners: "الشركاء", careers: "الوظائف (انضم إلى فريقنا)", faq: "الأسئلة الشائعة", contact: "التواصل" };
-    body.innerHTML = `<p class="muted" style="margin-top:0">أخفِ أي قسم لا تحتاجه. (قسما الشركاء وآراء العملاء يختفيان تلقائياً إذا كانا فارغين.)</p><div class="stack">${Object.entries(names).map(([k, l]) => `<label class="switch"><input type="checkbox" data-path="sections.${k}" ${settings.sections[k] ? "checked" : ""}><i></i>${l}</label>`).join("")}</div>
+    body.innerHTML = `<p class="muted" style="margin-top:0">إخفاء القسم هنا يخفيه من <b>كل الصفحات</b>. لإظهاره في صفحة دون أخرى، أو لتغيير ترتيب الأقسام، استعمل «ترتيب الأقسام». (قسما الشركاء وآراء العملاء يختفيان تلقائياً إذا كانا فارغين.)</p><div class="stack">${Object.entries(names).map(([k, l]) => `<label class="switch"><input type="checkbox" data-path="sections.${k}" ${settings.sections[k] ? "checked" : ""}><i></i>${l}</label>`).join("")}</div>
       <label class="f" style="margin-top:18px;max-width:360px"><span>لغة الموقع عند أول زيارة</span><select data-path="default_lang">
         <option value="auto" ${(settings.default_lang || "auto") === "auto" ? "selected" : ""}>حسب لغة جهاز الزائر (عربي ← عربي، غيره ← إنجليزي)</option>
         <option value="ar" ${settings.default_lang === "ar" ? "selected" : ""}>العربية دائماً</option>

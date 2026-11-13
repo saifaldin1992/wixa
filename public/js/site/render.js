@@ -1,5 +1,5 @@
 /* Builds every section from the content */
-import { navLink } from "../site-structure.js";
+import { navLink, layoutFor } from "../site-structure.js";
 import { $, $$, esc, safeUrl, reducedOS, UI, ICONS, SOCIAL, STORY_ART, C, L, state, lang, anim, setAnim } from "./core.js";
 import { buildHeroLogo } from "./hero.js";
 import { applyDefaultMode } from "./theme.js";
@@ -56,6 +56,7 @@ export function render() {
     else { m.classList.remove("has-logo"); m.innerHTML = '<svg viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg>'; }
   });
 
+  arrangeSections(s);
   // sections visibility
   for (const [k, on] of Object.entries(s.sections)) {
     $$(`[data-section="${k}"]`).forEach((el) => (el.hidden = !on));
@@ -216,4 +217,19 @@ export function mockUI() {
   return `<div class="mock"><div class="mock__row"><div class="mock__card"></div><div class="mock__card"></div><div class="mock__card"></div></div>
     <div class="mock__chart"><svg viewBox="0 0 200 60" preserveAspectRatio="none"><path d="M0 50 C30 40 40 20 70 28 S120 50 140 22 180 10 200 14"/></svg></div>
     <div class="mock__line"></div><div class="mock__line"></div><div class="mock__line"></div></div>`;
+}
+
+// A page's sections in the order of its layout (public/js/site-structure.js), like the server does. On a normal visit
+// the page already is in that order and nothing moves; in the dashboard's live preview it follows unsaved changes.
+function arrangeSections(s) {
+  const page = document.documentElement.dataset.page || "home";
+  const els = [...document.querySelectorAll("main > section[data-s]")];
+  if (!els.length) return;
+  const byKey = new Map(els.map((e) => [e.dataset.s, e]));
+  const shown = layoutFor(s, page).filter((x) => x.on && byKey.has(x.k)).map((x) => x.k);
+  const now = els.filter((e) => e.dataset.pages === page).map((e) => e.dataset.s);
+  if (now.join(" ") === shown.join(" ")) return;
+  const after = els[els.length - 1].nextSibling, parent = els[0].parentNode;
+  for (const k of shown) { const e = byKey.get(k); e.dataset.pages = page; parent.insertBefore(e, after); }
+  for (const e of els) if (!shown.includes(e.dataset.s)) { e.dataset.pages = ""; parent.insertBefore(e, after); }
 }

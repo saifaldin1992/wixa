@@ -998,3 +998,19 @@ html[data-theme="dark"] .auth__brand { color: #C4B5FD; }
    every time the large title shrank — the title grew again, shrank again, and the page shook on phones.
    The bar keeps the page height unchanged by itself now (shell.js), so the correction is not needed. */
 html { overflow-anchor: none; }
+
+/* «ترتيب الأقسام»: one row per section — move, name, on/off, edit */
+.ly { display: grid; gap: 8px; }
+.ly__row { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--card); }
+.ly__row.is-off { background: var(--bg); }
+.ly__row.is-off .ly__name b { color: var(--muted); }
+.ly__move { display: flex; flex-direction: column; gap: 2px; }
+.ly__move .b--icon { width: 30px; height: 26px; }
+.ly__move .b--icon svg { width: 16px; }
+.ly__name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; font-size: 14px; }
+.ly__end { display: flex; align-items: center; gap: 6px; }
+.ly__foot { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+@media (max-width: 640px) {
+  .ly__row { grid-template-columns: auto 1fr auto; }
+  .ly__end { grid-column: 2 / -1; justify-content: flex-end; }
+}

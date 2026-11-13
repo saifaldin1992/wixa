@@ -578,3 +578,14 @@ One list of the site's pages, the sections each page is made of, and where every
 - `tests/site-structure.mjs` checks all of this (merge rules, arranging, links; and on the running site: every page opens,
   has one main heading, shows only its own sections, has the same header and footer as the home page, and every visible
   menu link opens a real page).
+
+## «ترتيب الأقسام» in the dashboard (Nov 2026, phase 3 of the structure study)
+- Dashboard → صفحات الموقع → **ترتيب الأقسام** (`public/admin/js/views/layout.js`): pick a page (home, about, careers,
+  FAQ, contact), move its sections with the arrows, switch any off, add a section allowed on that page, remove an added
+  one (default sections are switched off rather than removed), go back to the default order, or open a section's own editor.
+- It writes `settings.layout[page]` (`[{k, on}]`), saved with «حفظ ونشر» like every other setting. Rows warn when a
+  section is hidden on every page (إظهار الأقسام) or empty (it shows once it has content).
+- The live preview opens the chosen page and follows every unsaved change: the site's script arranges the sections the
+  same way the server does (`render.js → arrangeSections`, using `data-s` written by `src/lib/arrange.js`); on a normal
+  visit the page already is in that order, so nothing moves.
+- `tests/admin-layout-order.mjs` checks the screen on a phone and a computer.
