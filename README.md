@@ -67,3 +67,4 @@ Staging shows a red "نسخة تجريبية" bar and is excluded from search en
 3. To publish: merge `staging` into `main` (code), apply the same new migrations to the
    production project, and optionally copy content (site_settings, projects, services,
    partners) from staging to production.
+
