@@ -128,6 +128,7 @@ export function renderCustom(body) {
         <label class="f" style="max-width:240px"><span>تاريخ آخر تحديث</span><input type="date" data-k="updated" dir="ltr" value="${esc(pg.updated || "")}"></label>
         <label class="switch"><input type="checkbox" data-k="published" ${pg.published ? "checked" : ""}><i></i>منشورة (يراها الزوار)</label>
         <label class="switch"><input type="checkbox" data-k="footer" ${pg.footer ? "checked" : ""}><i></i>رابطها في أسفل الموقع</label>
+        <label class="f" style="max-width:240px"><span>مجموعتها في أسفل الموقع</span><select data-k="group">${[["legal", "قانوني"], ["company", "الشركة"], ["support", "الدعم"], ["services", "الخدمات"]].map(([v, l]) => `<option value="${v}" ${(pg.group || "legal") === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>
       </div>
       <div class="seg" id="pgLang" style="margin:18px 0 12px"><button type="button" data-v="ar" class="${L === "ar" ? "on" : ""}">النص العربي</button><button type="button" data-v="en" class="${L === "en" ? "on" : ""}">English text</button></div>
       <p class="muted" style="margin-top:0;font-size:13px">كل فقرة لها عنوان ونص. اكتب <code>{email}</code> ليظهر بريد التواصل كرابط.${L === "en" ? " إذا تُرك النص الإنجليزي فارغاً يظهر العربي." : ""}</p>

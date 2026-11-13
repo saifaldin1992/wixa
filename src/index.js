@@ -100,12 +100,10 @@ export default {
         case "POST /api/admin/order": return await handleAdminOrder(request, env, ctx);
         case "POST /api/admin/restore": return await handleAdminRestore(request, env);
         case "POST /api/admin/review-link": return await handleAdminReviewLink(request, env);
+        // the hub pages: all services, all our work, packages + the cost calculator (built from sections, like /about)
+        case "GET /services":
+        case "GET /projects":
         case "GET /pricing":
-        case "HEAD /pricing": {
-          // the packages page is now a section of the home page
-          const q = url.searchParams.get("lang") === "en" ? "?lang=en" : "";
-          return new Response(null, { status: 301, headers: { location: `/${q}#pricing`, "cache-control": "public, max-age=3600" } });
-        }
         case "GET /about":
         case "GET /careers":
         case "GET /order":
@@ -144,7 +142,7 @@ export default {
           try { const d = JSON.parse(await getSiteData(env, ctx)); projects = d.projects || []; services = d.services || []; st = d.settings || {}; } catch {}
           const posts = await getPosts(env);
           const extra = [...sitePages(st).filter((p) => p.published).map((p) => p.path), ...(st.team?.on ? ["/team"] : []), ...({ ...STATUS_DEFAULTS, ...(st.status_page || {}) }.on ? ["/status"] : [])];
-          const urls = ["/", "/about", "/careers", "/contact", "/faq", "/privacy", "/blog", ...extra, ...services.map((x) => `/services/${encodeURIComponent(x.slug)}`), ...projects.map((x) => `/projects/${encodeURIComponent(x.slug)}`), ...posts.map((x) => `/blog/${encodeURIComponent(x.slug)}`)].map((p) => `<url><loc>https://wixa.dev${p}</loc><lastmod>${today}</lastmod></url>`).join("");
+          const urls = ["/", "/services", "/projects", "/pricing", "/about", "/careers", "/contact", "/faq", "/privacy", "/blog", ...extra, ...services.map((x) => `/services/${encodeURIComponent(x.slug)}`), ...projects.map((x) => `/projects/${encodeURIComponent(x.slug)}`), ...posts.map((x) => `/blog/${encodeURIComponent(x.slug)}`)].map((p) => `<url><loc>https://wixa.dev${p}</loc><lastmod>${today}</lastmod></url>`).join("");
           return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>\n`, {
             headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" },
           });

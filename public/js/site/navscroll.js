@@ -14,7 +14,7 @@ function glide(id) {
 
 // Pages of their own: start fetching as soon as a finger touches the link or the mouse rests on it,
 // so the page is (almost) ready when the tap ends. Chrome does this from /speculation-rules.json already.
-const OWN = /^\/(careers|contact|blog|about|faq|privacy|track|services\/|projects\/)/;
+const OWN = /^\/(careers|contact|blog|about|faq|privacy|track|services|projects|pricing)(\/|$)/;
 function warm(e) {
   const a = e.target.closest?.("a[href]");
   if (!a || HTMLScriptElement.supports?.("speculationrules")) return;

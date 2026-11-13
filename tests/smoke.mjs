@@ -93,11 +93,13 @@ try {
       check((await p.getAttribute("html", "data-theme")) !== before, "dark-mode toggle works");
       await p.click("#langBtn"); await p.waitForTimeout(800);
       check((await p.getAttribute("html", "lang")) === "en", "language toggle works");
-      // the homepage is short: the calculator, about us and careers live on their own pages
-      check(await p.evaluate(() => document.querySelector("#calculator").offsetHeight > 0 && !document.querySelector(".pricing__more") && !document.querySelector("#about").offsetHeight), "homepage shows the whole pricing section (packages + calculator); about us stays on its own page");
-      // packages and the cost calculator are sections of the home page; the old /pricing link lands there
+      // the home page is a summary: packages with a link to the calculator, which lives on the pricing page
+      check(await p.evaluate(() => !document.querySelector("#calculator").offsetHeight && document.querySelector("#pricing").offsetHeight > 0 && !document.querySelector("#about").offsetHeight
+        && /\/pricing(\?lang=en)?#calculator$/.test(new URL(document.querySelector('#pricing a[data-more="calc"]').href).pathname + new URL(document.querySelector('#pricing a[data-more="calc"]').href).search + new URL(document.querySelector('#pricing a[data-more="calc"]').href).hash)),
+        "home page shows the packages and links to the calculator on the pricing page; about us stays on its own page");
+      // /pricing is a page of its own: the packages and the cost calculator
       await p.goto(BASE + "/pricing", { waitUntil: "load" }); await p.waitForTimeout(1200);
-      check(await p.evaluate(() => document.documentElement.dataset.page === "home" && location.hash === "#pricing" && document.querySelector("#calculator").offsetHeight > 0), "old /pricing link opens the packages section on the home page");
+      check(await p.evaluate(() => document.documentElement.dataset.page === "pricing" && document.querySelector("#pricing").offsetHeight > 0 && document.querySelector("#calculator").offsetHeight > 0), "/pricing shows the packages and the cost calculator");
       const price0 = await p.textContent("#calcPrice");
       await p.click("#calcTypes .ctype:last-child"); await p.click("#calcFeats .cfeat"); await p.waitForTimeout(900);
       check((await p.textContent("#calcPrice")) !== price0, "calculator updates the estimate");

@@ -66,6 +66,8 @@ export function setupUI() {
     location.replace(u.toString());
   };
   $("#langBtn").addEventListener("click", (e) => { e.preventDefault(); switchLang(); });
+  // phones: the footer's link groups start folded (a tap on a title opens it); computers show them open
+  if (matchMedia("(max-width: 760px)").matches) $$(".fgroup[open]").forEach((d) => { d.open = false; });
   // back at the same place after a language switch
   try {
     const f = parseFloat(sessionStorage.getItem("wixa-scroll-y"));

@@ -19,6 +19,9 @@ export const SECTION_PAGES = {
   careers: { path: "/careers", name_ar: "الوظائف", name_en: "Careers", main: "careers" },
   faq: { path: "/faq", name_ar: "الأسئلة الشائعة", name_en: "FAQ", main: "faq" },
   contact: { path: "/contact", name_ar: "تواصل معنا", name_en: "Contact us", main: "contact" },
+  services: { path: "/services", name_ar: "الخدمات", name_en: "Services", main: "services" },
+  projects: { path: "/projects", name_ar: "أعمالنا", name_en: "Our work", main: "projects" },
+  pricing: { path: "/pricing", name_ar: "الأسعار", name_en: "Pricing", main: "pricing" },
   order: { path: "/order", name_ar: "اطلب مشروعك", name_en: "Order your project" },
   track: { path: "/track", name_ar: "تتبع طلبك", name_en: "Track your order" },
 };
@@ -33,7 +36,7 @@ export const OWN_PAGES = {
 
 // Every section, and the pages it may appear on. Keys are the HTML's data-section (and <!--s:key--> markers).
 // parts: smaller blocks inside a section, switched on and off on their own (settings.sections) but never moved alone.
-const OPEN = ["home", "about", "careers", "faq", "contact"]; // the general pages: any general section may go on any of them
+const OPEN = ["home", "about", "careers", "faq", "contact", "services", "projects", "pricing"]; // the general pages: any general section may go on any of them
 export const SECTIONS = {
   hero: { name_ar: "البداية (العنوان الرئيسي)", pages: ["home"] },
   about: { name_ar: "نبذة عن الشركة", pages: OPEN },
@@ -54,13 +57,19 @@ export const SECTIONS = {
   contact: { name_ar: "الخاتمة: جاهزون لإنجاز مشروعك", pages: OPEN },
 };
 
-// What each page shows when nothing is saved — exactly the site as it was before layouts existed.
+// What each page shows when nothing is saved. The home page is a summary of the hub pages (services, our work,
+// pricing): each of those sections ends there with a link to its page; the cost calculator lives on the pricing page.
+// Each page ends in its own way: the contact block where a visitor may want it, nothing extra on the contact page
+// (it is the contact page) or on careers (its own «send your CV» ends it).
 export const DEFAULT_LAYOUTS = {
-  home: ["hero", "story", "partners", "services", "projects", "process", "stats", "pricing", "calculator", "testimonials", "contact"],
+  home: ["hero", "story", "partners", "services", "projects", "process", "stats", "testimonials", "pricing", "contact"],
+  services: ["services", "contact"],
+  projects: ["projects", "contact"],
+  pricing: ["pricing", "calculator", "contact"],
   about: ["about", "story", "partners", "process", "stats", "testimonials", "contact"],
-  careers: ["careers", "contact"],
+  careers: ["careers"],
   faq: ["faq", "contact"],
-  contact: ["ways", "contact"],
+  contact: ["ways"],
   order: ["order"],
   track: ["track"],
 };
@@ -97,11 +106,11 @@ export const sectionShown = (settings, k, empty) => !(settings && settings.secti
 export const NAV_TARGETS = {
   home: { page: "home" }, about: { page: "about" }, careers: { page: "careers" }, contact: { page: "contact" }, faq: { page: "faq" },
   blog: { page: "blog" }, privacy: { page: "privacy" },
-  services: { section: "services" }, industries: { section: "services", part: "industries" }, projects: { section: "projects" },
-  pricing: { section: "pricing" }, calc: { section: "calculator" }, partners: { section: "partners" },
+  services: { page: "services" }, industries: { page: "services", hash: "industries", part: "industries" }, projects: { page: "projects" },
+  pricing: { page: "pricing" }, calc: { section: "calculator" }, partners: { section: "partners" },
 };
 const ANCHOR = { services: "services", industries: "industries", projects: "projects", pricing: "pricing", calculator: "calculator", partners: "partners" };
-const PAGE_ORDER = ["home", "about", "careers", "faq", "contact"];
+const PAGE_ORDER = ["home", "services", "projects", "pricing", "about", "careers", "faq", "contact"];
 
 // Where a menu link goes and whether it shows: { href (without ?lang), shown }.
 export function navLink(settings, k, empty) {
@@ -110,7 +119,8 @@ export function navLink(settings, k, empty) {
   if (t.page) {
     const p = SECTION_PAGES[t.page] || OWN_PAGES[t.page];
     const main = SECTION_PAGES[t.page] && SECTION_PAGES[t.page].main;
-    return { href: p ? p.path : "/", shown: !!p && (!main || sectionShown(settings, main, empty)) };
+    const on = !!p && (!main || sectionShown(settings, main, empty)) && (!t.part || sectionShown(settings, t.part, empty));
+    return { href: p ? `${p.path}${t.hash ? `#${t.hash}` : ""}` : "/", shown: on };
   }
   const anchor = ANCHOR[t.part || t.section] || t.section;
   if (!sectionShown(settings, t.section, empty) || (t.part && !sectionShown(settings, t.part, empty))) return { href: `/#${anchor}`, shown: false };
@@ -119,3 +129,18 @@ export function navLink(settings, k, empty) {
   }
   return { href: `/#${anchor}`, shown: false };
 }
+
+// The footer's link groups, in order. A menu link goes to the group given here unless the owner chose another one
+// (dashboard → القوائم; kept as `g` on the link in settings.nav). Pages added from the dashboard go to «قانوني» unless
+// they say otherwise (page.group); the team page goes to «الشركة» and the status page to «الدعم».
+// «قانوني» is shown as one small line under the other groups.
+export const FOOTER_GROUPS = [
+  { k: "services", name_ar: "الخدمات", name_en: "Services" },
+  { k: "company", name_ar: "الشركة", name_en: "Company" },
+  { k: "support", name_ar: "الدعم", name_en: "Support" },
+  { k: "legal", name_ar: "قانوني", name_en: "Legal" },
+];
+export const LINK_GROUP = { services: "services", industries: "services", projects: "services", pricing: "services", calc: "services",
+  about: "company", careers: "company", blog: "company", partners: "company", home: "company",
+  contact: "support", faq: "support", privacy: "legal" };
+export const groupOf = (x) => (FOOTER_GROUPS.some((g) => g.k === x.g) ? x.g : LINK_GROUP[x.k] || "company");

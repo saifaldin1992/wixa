@@ -42,7 +42,9 @@ check([...out.matchAll(/<!--s:([a-z]+)-->/g)].length === markers.length, "no sec
 check(out.slice(0, out.indexOf("<!--s:")) === html.slice(0, html.indexOf("<!--s:")), "everything before the sections is untouched");
 
 // ---------- C. menu links
-check(navLink({}, "services").href === "/#services" && navLink({}, "services").shown, "a section link goes to the home page");
+check(navLink({}, "services").href === "/services" && navLink({}, "services").shown, "a hub link goes to its page (/services)");
+check(navLink({}, "industries").href === "/services#industries", "«حلول حسب مجالك» opens the services page on its «by field» tab");
+check(navLink({}, "calc").href === "/pricing#calculator" && navLink({}, "calc").shown, "the calculator link follows the calculator to the pricing page");
 check(!navLink({ sections: { services: false } }, "services").shown, "a link to a switched-off section is hidden");
 check(!navLink({ sections: { industries: false } }, "industries").shown, "a link to a switched-off part (industries) is hidden");
 const moved = { layout: { home: DEFAULT_LAYOUTS.home.map((k) => ({ k, on: k !== "partners" })) } };
@@ -64,13 +66,13 @@ if (BASE) {
     await p.waitForTimeout(300);
     const info = await p.evaluate(() => {
       const vis = (e) => e.offsetParent !== null || getComputedStyle(e).position === "fixed";
-      const norm = (el) => [...el.querySelectorAll("a")].filter((a) => !a.hidden).map((a) => `${a.textContent.trim()}→${new URL(a.href).pathname}${new URL(a.href).hash}`).sort().join("|");
+      const norm = (el) => [...(el.length !== undefined ? el : [el])].flatMap((x) => [...x.querySelectorAll("a")]).filter((a) => !a.hidden && !a.closest("[hidden]")).map((a) => `${a.textContent.trim()}→${new URL(a.href).pathname}${new URL(a.href).hash}`).sort().join("|");
       return {
         h1: [...document.querySelectorAll("h1")].filter(vis).length,
         page: document.documentElement.dataset.page || "",
         shown: [...document.querySelectorAll("main [data-pages]")].filter(vis).map((s) => s.dataset.pages),
         header: norm(document.querySelector(".header__menu")) + "#" + document.querySelectorAll(".header .theme-btn, .header #langBtn, .header .menu-btn").length,
-        footer: norm(document.querySelector(".footer__nav")) + "#" + document.querySelectorAll(".footer .track-btn, .footer__brand, .footer__credit").length,
+        footer: norm(document.querySelectorAll(".footer__nav")) + "#" + document.querySelectorAll(".footer .track-btn, .footer__brand, .footer__credit, .fgroup").length,
         hrefs: [...document.querySelectorAll(".header a[data-nav]:not([hidden]), .footer__nav a:not([hidden])")].map((a) => new URL(a.href).pathname),
       };
     });

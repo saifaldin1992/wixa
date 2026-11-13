@@ -589,3 +589,20 @@ One list of the site's pages, the sections each page is made of, and where every
   same way the server does (`render.js → arrangeSections`, using `data-s` written by `src/lib/arrange.js`); on a normal
   visit the page already is in that order, so nothing moves.
 - `tests/admin-layout-order.mjs` checks the screen on a phone and a computer.
+
+## The new site structure (Nov 2026, phase 2 of the structure study)
+- **Hub pages** built from sections like /about: `/services` (services + «by field» tab), `/projects` (all our work),
+  `/pricing` (packages + the cost calculator; used to redirect to the home page). Their section title is the page's H1.
+- **The home page is a summary**: the services, our work and packages sections end with a link to their page
+  (`.sec-more`, shown on the home page only; `a[data-more]` gets its address from `navLink`, so it follows the page or
+  section). The calculator left the home page (default layout); the hero's second button follows it to /pricing.
+- **Top bar**: six links (services, our work, pricing, about, articles, contact) + «ابدأ مشروعك». The old default menus,
+  if saved unchanged, are replaced by the new ones (`shared.js → NAV_V1`); menus the owner changed are kept.
+  On phones «ابدأ مشروعك» stays the first item of the ☰ menu (no room in the bar next to menu/theme/language).
+- **Footer**: titled groups (`FOOTER_GROUPS`: الخدمات · الشركة · الدعم, and «قانوني» as one small line), each link in
+  the group of `LINK_GROUP` unless the owner chose another one (dashboard → القوائم → `g` on the link); pages added from
+  the dashboard choose their group (`page.group`, «قانوني» by default); team → الشركة, status → الدعم. A contact line
+  (WhatsApp/phone, email, address) from بيانات الشركة. On phones the groups fold (a tap on the title opens one).
+- **Endings**: the contact block ends the home, hubs, about and FAQ pages (the FAQ page with its own words:
+  `faq_cta_title` / `faq_cta_sub`); careers ends with its own «send your CV», the contact page with nothing extra; the
+  policies and status pages have no «ابدأ مشروعك» buttons (`simplePage(…, { ending: false })`).

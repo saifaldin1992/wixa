@@ -8,6 +8,7 @@ const UI_GROUPS = [["القائمة والتذييل", ["nav_home", "nav_project
 import { imageField } from "../fields.js";
 import { renderCustom, renderLinks, renderStatus, renderTeam } from "./sitepages.js";
 import { renderLayout } from "./layout.js";
+import { FOOTER_GROUPS, groupOf } from "../../../js/site-structure.js";
 import { bindPreview, changed, getPath, previewLang, previewPane, pushPreview, setPath, setPreviewLang, settingsActions } from "../settings.js";
 
 // ---------------- view: content ----------------
@@ -25,6 +26,7 @@ export const TEXT_FIELDS = [
   ["قسم الوظائف", [["careers_title", "العنوان"], ["careers_sub", "الوصف", true], ["careers_empty", "النص عند عدم وجود شواغر", true], ["careers_apply", "زر التقديم"], ["careers_general", "زر إرسال السيرة الذاتية"]]],
   ["قسم الأسئلة الشائعة", [["faq_title", "العنوان"], ["faq_sub", "الوصف", true]]],
   ["قسم التواصل", [["cta_title", "العنوان"], ["cta_sub", "الوصف", true], ["cta_button", "نص الزر"]]],
+  ["خاتمة صفحة الأسئلة الشائعة", [["faq_cta_title", "العنوان"], ["faq_cta_sub", "الوصف", true]]],
   ["التذييل", [["footer_text", "النص"]]],
 ];
 
@@ -253,7 +255,7 @@ export function renderContentTab() {
     draw(); return;
   } else if (contentTab === "nav") {
     // where each site link shows, and in which order
-    const NAMES = { home: "الرئيسية", services: "خدماتنا", industries: "حلول حسب مجالك", projects: "نماذج من عملنا", pricing: "الباقات", calc: "احسب تكلفة مشروعك",
+    const NAMES = { home: "الرئيسية", services: "الخدمات (صفحة)", industries: "حلول حسب مجالك", projects: "أعمالنا (صفحة)", pricing: "الأسعار (صفحة)", calc: "احسب تكلفة مشروعك",
       about: "من نحن", partners: "شركاؤنا", careers: "الوظائف", contact: "تواصل معنا", faq: "الأسئلة الشائعة", blog: "المقالات", privacy: "سياسة الخصوصية" };
     const AT = [["both", "القائمة والأسفل"], ["menu", "القائمة فقط"], ["footer", "الأسفل فقط"], ["hidden", "مخفي"]];
     const draw = () => {
@@ -264,10 +266,12 @@ export function renderContentTab() {
         <div class="navrows">${items.map((x, i) => `<div class="navrow" data-i="${i}">
           <div class="navrow__move"><button type="button" class="b b--sm" data-up="${i}" ${i ? "" : "disabled"} aria-label="أعلى">↑</button><button type="button" class="b b--sm" data-down="${i}" ${i < items.length - 1 ? "" : "disabled"} aria-label="أسفل">↓</button></div>
           <b>${NAMES[x.k] || x.k}</b>
-          <select data-at="${i}">${AT.map(([v, l]) => `<option value="${v}" ${v === x.at ? "selected" : ""}>${l}</option>`).join("")}</select></div>`).join("")}</div>
+          <select data-at="${i}">${AT.map(([v, l]) => `<option value="${v}" ${v === x.at ? "selected" : ""}>${l}</option>`).join("")}</select>
+          <select data-g="${i}" title="مجموعته في أسفل الصفحة" ${x.at === "both" || x.at === "footer" ? "" : "disabled"}>${FOOTER_GROUPS.map((g) => `<option value="${g.k}" ${g.k === groupOf(x) ? "selected" : ""}>أسفل: ${g.name_ar}</option>`).join("")}</select></div>`).join("")}</div>
         <button type="button" class="b" id="navReset" style="margin-top:12px">↺ الترتيب المقترح</button>`;
       const set = (list) => { settings.nav = { items: list }; changed(); draw(); };
       body.querySelectorAll("[data-at]").forEach((el) => (el.onchange = () => { const l = window.WIXA.navPlan(settings); l[+el.dataset.at].at = el.value; set(l); }));
+      body.querySelectorAll("[data-g]").forEach((el) => (el.onchange = () => { const l = window.WIXA.navPlan(settings); l[+el.dataset.g].g = el.value; set(l); }));
       body.querySelectorAll("[data-up]").forEach((el) => (el.onclick = () => { const l = window.WIXA.navPlan(settings), i = +el.dataset.up; [l[i - 1], l[i]] = [l[i], l[i - 1]]; set(l); }));
       body.querySelectorAll("[data-down]").forEach((el) => (el.onclick = () => { const l = window.WIXA.navPlan(settings), i = +el.dataset.down; [l[i + 1], l[i]] = [l[i], l[i + 1]]; set(l); }));
       $("#navReset").onclick = () => set(structuredClone(window.WIXA.DEFAULTS.nav.items));

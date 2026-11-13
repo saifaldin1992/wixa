@@ -16,7 +16,7 @@ import { UI_DEFAULTS } from "../../public/js/ui-strings.js";
 import { SOCIAL } from "../../public/js/social-icons.js";
 import { SECURITY_HEADERS, WIXA, esc, fmtDate, notFound, pickLang, safeHref, versionAssets, versioned } from "../lib/core.js";
 import { cspWithTags, getConfig, getPosts, getSiteData, hasBypass, maintenancePage, memo as siteMemo } from "../services/data.js";
-import { navLink, sectionShown } from "../../public/js/site-structure.js";
+import { FOOTER_GROUPS, groupOf, navLink, sectionShown } from "../../public/js/site-structure.js";
 import { arrangeSections } from "../lib/arrange.js";
 
 // Cloudflare Web Analytics: privacy-friendly, cookie-less visit counting that never touches our database.
@@ -43,7 +43,7 @@ export function faqLd(st, lang) {
 
 // GET / — static HTML with the content embedded (no flash of default text, one request per visit).
 // /about, /pricing and /careers are the homepage's HTML showing only their own sections (html[data-page])
-export const PAGE_TITLES = { about: { ar: "من نحن", en: "About us" }, careers: { ar: "الوظائف", en: "Careers" }, contact: { ar: "تواصل معنا", en: "Contact us" }, order: { ar: "اطلب مشروعك", en: "Order your project" }, track: { ar: "تتبع طلبك", en: "Track your order" }, faq: { ar: "الأسئلة الشائعة", en: "Frequently asked questions" } };
+export const PAGE_TITLES = { services: { ar: "خدماتنا", en: "Our services" }, projects: { ar: "أعمالنا", en: "Our work" }, pricing: { ar: "الباقات والأسعار", en: "Packages & pricing" }, about: { ar: "من نحن", en: "About us" }, careers: { ar: "الوظائف", en: "Careers" }, contact: { ar: "تواصل معنا", en: "Contact us" }, order: { ar: "اطلب مشروعك", en: "Order your project" }, track: { ar: "تتبع طلبك", en: "Track your order" }, faq: { ar: "الأسئلة الشائعة", en: "Frequently asked questions" } };
 export async function handleHome(request, env, ctx, pageName = "home") {
   const [page, raw, cfg] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx), getConfig(env)]);
   const data = cfg.spam.turnstile ? raw : raw.replace(/"turnstile":"[^"]*"/, '"turnstile":""');
@@ -64,7 +64,7 @@ export async function handleHome(request, env, ctx, pageName = "home") {
   const attr = (sel, name, val) => [sel, { element: (el) => { if (val) el.setAttribute(name, val); } }];
   const siteTitle = seo[`title_${lang}`] || (lang === "en" ? SEO_DEFAULTS.en.title : ""), siteDesc = seo[`description_${lang}`] || (lang === "en" ? SEO_DEFAULTS.en.description : ""), img = seo.og_image ? abs(seo.og_image) : "";
   const pc = st.content?.[lang] || {}, brandName = (lang === "en" ? st.brand?.name_en : st.brand?.name_ar) || "WIXA";
-  const pageDesc = { about: pc.about_text, careers: pc.careers_sub, contact: pc.cta_sub, faq: pc.faq_sub, order: pc.pricing_sub, track: pc.pricing_sub }[pageName];
+  const pageDesc = { services: pc.services_sub, projects: pc.projects_sub, pricing: pc.pricing_sub, about: pc.about_text, careers: pc.careers_sub, contact: pc.cta_sub, faq: pc.faq_sub, order: pc.pricing_sub, track: pc.pricing_sub }[pageName];
   const title = pageName === "home" ? siteTitle : `${PAGE_TITLES[pageName][lang]} — ${brandName}`;
   const desc = pageName === "home" ? siteDesc : String(pageDesc || siteDesc || "").replace(/\s+/g, " ").slice(0, 160);
   const pagePath = pageName === "home" ? "/" : `/${pageName}`;
@@ -99,13 +99,17 @@ export async function handleHome(request, env, ctx, pageName = "home") {
   html = html.replace(/<header class="header" id="header">[\s\S]*?<\/header>/, () => shell.header)
     .replace(/<footer class="footer">[\s\S]*?<\/footer>/, () => shell.footer);
   html = arrangeSections(html, st, pageName);
+  // the FAQ page ends with its own invitation («لم تجد إجابتك؟») instead of the general one
+  if (pageName === "faq") html = html.replace('data-c="cta_title"', 'data-c="faq_cta_title"').replace('data-c="cta_sub"', 'data-c="faq_cta_sub"');
+  const q = lang === "ar" ? "" : "?lang=en";
+  const moreHref = (k) => { const h = navLink(st, k, empty).href; const [p0, hash] = h.split("#"); return `${p0}${q}${hash ? `#${hash}` : ""}`; };
   const res = versionAssets(new HTMLRewriter())
     .on("head", { element: (el) => el.append(`${headTags}<script id="wixa-data" type="application/json">${safe}</script>`, { html: true }) })
     .on("html", { element: (el) => { el.setAttribute("lang", lang); el.setAttribute("dir", lang === "ar" ? "rtl" : "ltr"); el.setAttribute("data-page", pageName); el.setAttribute("data-look", full.look === "soft" ? "soft" : "flat"); } })
     // one main heading per page: «تواصل معنا» is the main heading only on /contact; elsewhere it is a section heading
     .on("h1.head__title", { element: (el) => { if (pageName !== "contact") el.tagName = "h2"; } })
     // the inner pages that are a section of the home page: that section's title becomes the page's main heading
-    .on(`section#${pageName} h2.head__title`, { element: (el) => { if (["about", "pricing", "careers", "faq"].includes(pageName)) el.tagName = "h1"; } })
+    .on(`section#${pageName} h2.head__title`, { element: (el) => { if (["about", "pricing", "careers", "faq", "services", "projects"].includes(pageName)) el.tagName = "h1"; } })
     // inner pages hide the home headline; keep it out of their outline so each page has a single main heading
     .on("h1.hero__title", { element: (el) => { if (pageName !== "home") el.tagName = "div"; } })
     .on(...attr('link[rel="canonical"]', "href", `${origin}${pagePath}`))
@@ -131,6 +135,7 @@ export async function handleHome(request, env, ctx, pageName = "home") {
     .on("[data-section], [data-sec]", { element: (el) => { if (hide.has(el.getAttribute("data-section") || el.getAttribute("data-sec"))) el.setAttribute("hidden", ""); } })
     .on("#langBtn", { element: (el) => el.setInnerContent(lang === "ar" ? "EN" : "ع") })
     .on(".hero", { element: (el) => el.setAttribute("class", `${el.getAttribute("class") || ""} in in-hero`) })
+    .on("a[data-more]", { element: (el) => el.setAttribute("href", moreHref(el.getAttribute("data-more"))) })
     .on("body", { element: (el) => el.removeAttribute("class") })
     .on("body", { element: (el) => {
       if (!preview) el.append(beacon(env), { html: true });
@@ -162,16 +167,16 @@ export function detailsHtml(raw) {
   }).join("");
 }
 
-// Company pages at the end of the footer links: pages added from the dashboard, our team, services status
-export function footerLegal(st, lang, path = "") {
-  const q = lang === "ar" ? "" : "?lang=en";
+// Company pages in the footer: pages added from the dashboard (group «قانوني» unless the page says otherwise), our team
+// («الشركة»), services status («الدعم») — each { g, html }.
+export function footerExtra(st, lang, path = "") {
   const team = { ...TEAM_DEFAULTS, ...(st.team || {}) }, status = { ...STATUS_DEFAULTS, ...(st.status_page || {}) };
-  const links = [
-    ...sitePages(st).filter((p) => p.published && p.footer).map((p) => [p.path, p[`title_${lang}`] || p.title_ar || p.title_en]),
-    ...(team.on && team.footer ? [["/team", team[`title_${lang}`] || TEAM_DEFAULTS[`title_${lang}`]]] : []),
-    ...(status.on && status.footer ? [["/status", lang === "ar" ? "حالة الخدمات" : "Service status"]] : []),
-  ].filter(([, t]) => t);
-  return links.map(([h, t], i) => `<a href="${h}${q}" style="order:${100 + i}"${path === h ? ' aria-current="page"' : ""}>${esc(t)}</a>`).join("");
+  const q = lang === "ar" ? "" : "?lang=en";
+  const a = (href, label, i) => `<a href="${href}${q}"${path === href ? ' aria-current="page"' : ""} style="order:${100 + i}">${esc(label)}</a>`;
+  const out = sitePages(st).filter((p) => p.published && p.footer).map((p, i) => ({ g: ["services", "company", "support", "legal"].includes(p.group) ? p.group : "legal", html: a(p.path, p[`title_${lang}`] || p.title_ar || p.title_en, i) }));
+  if (team.on && team.footer) out.push({ g: "company", html: a("/team", team[`title_${lang}`] || TEAM_DEFAULTS[`title_${lang}`], 50) });
+  if (status.on && status.footer) out.push({ g: "support", html: a("/status", lang === "ar" ? "حالة الخدمات" : "Service status", 60) });
+  return out;
 }
 // A page's text: [{h, p}] → headings and paragraphs; "{email}" becomes the contact email link
 const sectionsHtml = (list, email) => {
@@ -193,6 +198,7 @@ export function siteShell(st, lang, path, { empty } = {}) {
   const ui = { ...UI_DEFAULTS[lang] };
   for (const [k, v] of Object.entries(st.ui?.[lang] || {})) if (typeof v === "string" && v.trim() && k in ui) ui[k] = v;
   const gone = empty || emptyNow();
+  const c = WIXA.merge(WIXA.DEFAULTS, st).contact || {};
   const tkey = (k) => (k === "privacy" ? "privacy" : `nav_${k}`);
   const withLang = (h) => { const [p, hash] = h.split("#"); return `${p}${q}${hash ? `#${hash}` : ""}`; };
   const plan = WIXA.navPlan(st);
@@ -202,12 +208,31 @@ export function siteShell(st, lang, path, { empty } = {}) {
     return `<a href="${withLang(t.href)}"${footer ? ' data-where="footer"' : ""} data-nav="${x.k}" data-t="${tkey(x.k)}" style="order:${i}"${t.href === path ? ' aria-current="page"' : ""}${place && t.shown ? "" : " hidden"}>${esc(ui[tkey(x.k)] || x.k)}</a>`;
   };
   const menu = plan.map((x, i) => link(x, i, false)).join("");
-  const foot = plan.map((x, i) => link(x, i, true)).join("");
+  // footer: the links in their groups (site-structure.js → FOOTER_GROUPS), each group titled; «قانوني» is one small line
+  const extra = footerExtra(st, lang, path);
+  const groupHtml = (g) => {
+    const links = plan.map((x, i) => [x, i]).filter(([x]) => groupOf(x) === g.k).map(([x, i]) => link(x, i, true)).join("")
+      + extra.filter((e) => e.g === g.k).map((e) => e.html).join("");
+    const shown = /<a (?![^>]*\shidden)/.test(links);
+    return { links, shown };
+  };
+  const main = FOOTER_GROUPS.filter((g) => g.k !== "legal").map((g) => {
+    const { links, shown } = groupHtml(g);
+    return `<details class="fgroup" open${shown ? "" : " hidden"}><summary class="fgroup__title">${esc(g[`name_${lang}`] || g.name_ar)}</summary><nav class="footer__nav">${links}</nav></details>`;
+  }).join("");
+  const legal = groupHtml(FOOTER_GROUPS.find((g) => g.k === "legal"));
+  const reach = [
+    c.whatsapp ? `<a href="https://wa.me/${esc(String(c.whatsapp).replace(/\D/g, ""))}" target="_blank" rel="noopener" dir="ltr">${esc(c.phone || `+${String(c.whatsapp).replace(/\D/g, "")}`)}</a>` : c.phone ? `<a href="tel:${esc(String(c.phone).replace(/[^\d+]/g, ""))}" dir="ltr">${esc(c.phone)}</a>` : "",
+    c.email ? `<a href="mailto:${esc(c.email)}" dir="ltr">${esc(c.email)}</a>` : "",
+    c[`address_${lang}`] || c.address_ar ? `<span>${esc(c[`address_${lang}`] || c.address_ar)}</span>` : "",
+  ].filter(Boolean);
+  const groups = `<div class="footer__groups">${main}</div>
+    ${reach.length ? `<p class="footer__reach"><span class="footer__reach-t" data-t="f_reach">${esc(ui.f_reach || "")}</span>${reach.join('<span class="footer__dot" aria-hidden="true">·</span>')}</p>` : ""}
+    <nav class="footer__nav footer__legal"${legal.shown ? "" : " hidden"}>${legal.links}</nav>`;
   const start = esc(ui.nav_start);
   const brandName = ar ? "ويكسا" : "WIXA";
   const mark = '<svg viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg>';
   const word = `<svg class="wm" viewBox="0 0 716.6 150" aria-hidden="true"><use href="/wordmark.svg#wm"/></svg><span class="sr-only">${brandName}</span>`;
-  const c = WIXA.merge(WIXA.DEFAULTS, st).contact || {};
   const host = { instagram: "www.instagram.com", x: "x.com", linkedin: "www.linkedin.com", facebook: "www.facebook.com" };
   const social = (k) => { let v = String(c[k] || "").trim(); if (!v) return ""; if (!/^https?:\/\/[^/]+\.[a-z]{2,}/i.test(v)) v = `https://${host[k]}/${v.replace(/^https?:\/\//i, "").replace(/^@/, "").replace(/^(www\.)?(instagram|facebook|linkedin|x|twitter)(\.com)?\/?/i, "").replace(/^\/+/, "")}`; return safeHref(v); };
   const socials = ["instagram", "x", "linkedin", "facebook"].map((k) => [k, social(k)]).filter(([, u]) => u).map(([k, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener" aria-label="${k}">${SOCIAL[k]}</a>`).join("")
@@ -232,7 +257,7 @@ export function siteShell(st, lang, path, { empty } = {}) {
   const footer = `<footer class="footer">
     <svg class="footer__wave footer__wave--brand" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="fwv" x1="0" x2="1"><stop offset="0" style="stop-color:var(--fg)"/><stop offset=".5" style="stop-color:var(--accent)"/><stop offset="1" style="stop-color:var(--fg)"/></linearGradient></defs><path pathLength="1" stroke="url(#fwv)" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
     <svg class="footer__wave" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
-    <nav class="footer__nav">${foot}${footerLegal(st, lang, path)}</nav>
+${groups}
     <div class="footer__tools">
       <a href="/track${q}" class="track-btn" data-track><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg><span data-t="track">${esc(ui.track)}</span></a>
       <div class="footer__social" id="social">${socials}</div>
@@ -269,7 +294,7 @@ const bootHtml = (lang) => { const ar = lang === "ar"; return `<div class="boot"
 
 // One page layout shared by service and project pages, articles, the privacy policy and the review form:
 // the site's own stylesheet, header, menu and footer, with the page's content in the middle.
-export function simplePage(request, st, { lang, title, description, path, image, body, jsonld, status = 200, orderQ = "" }) {
+export function simplePage(request, st, { lang, title, description, path, image, body, jsonld, status = 200, orderQ = "", ending = true }) {
   const ar = lang === "ar";
   const origin = new URL(request.url).origin;
   const t = st.theme || {};
@@ -338,7 +363,7 @@ ${hosted ? `<link rel="stylesheet" href="${hosted}">` : `<link rel="stylesheet" 
 ${shell.header}
 <div class="scrim" id="scrim"></div>
 <main class="page">${body}
-<div class="actions"><a class="btn btn--primary" data-start href="/order?lang=${lang}${orderQ}">${ui.nav_start}</a><a class="btn btn--ghost" href="/contact?lang=${lang}">${ui.nav_contact}</a></div></main>
+${ending ? `<div class="actions"><a class="btn btn--primary" data-start href="/order?lang=${lang}${orderQ}">${ui.nav_start}</a><a class="btn btn--ghost" href="/contact?lang=${lang}">${ui.nav_contact}</a></div>` : ""}</main>
 ${shell.footer}
 </body></html>`;
   return new Response(request.method === "HEAD" ? null : html, { status, headers: { ...SECURITY_HEADERS, "speculation-rules": '"/speculation-rules.json"', "content-type": "text/html; charset=utf-8", "cache-control": "no-cache", "content-language": lang, vary: "Accept-Language, Cookie" } });
@@ -402,7 +427,7 @@ export async function handlePrivacy(request, env, ctx) {
     ? "نستخدم أيضاً أدوات قياس وإعلانات من جهات أخرى (مثل Google أو Meta أو Microsoft أو TikTok) لفهم أداء الموقع وحملاتنا، وقد تستخدم هذه الأدوات ملفات تعريف الارتباط وفق سياساتها."
     : "We also use third-party analytics and advertising tools (such as Google, Meta, Microsoft or TikTok) to understand how the site and our campaigns perform; these tools may use cookies under their own policies."]);
   const body = `<h1>${ar ? "سياسة الخصوصية" : "Privacy policy"}</h1><p class="lead">${ar ? "آخر تحديث:" : "Last updated:"} ${esc(updated)}</p>${S.map(([h, p]) => `${h ? `<h2>${h}</h2>` : ""}<p>${p}</p>`).join("")}`;
-  return simplePage(request, st, { lang, title: ar ? "سياسة الخصوصية" : "Privacy policy", description: ar ? "كيف تجمع ويكسا بياناتك وتستخدمها وتحميها." : "How WIXA collects, uses and protects your data.", path: "/privacy", body });
+  return simplePage(request, st, { lang, title: ar ? "سياسة الخصوصية" : "Privacy policy", description: ar ? "كيف تجمع ويكسا بياناتك وتستخدمها وتحميها." : "How WIXA collects, uses and protects your data.", path: "/privacy", body , ending: false });
 }
 
 // ---------------------------------------------------------------- pages added from the dashboard
@@ -418,7 +443,7 @@ export async function handleCustomPage(request, env, ctx, path) {
   const title = pg[`title_${lang}`] || pg.title_ar || pg.title_en || "";
   const list = Array.isArray(pg[lang]) && pg[lang].some((x) => x?.h || x?.p) ? pg[lang] : pg[ar ? "en" : "ar"];
   const body = `<h1>${esc(title)}</h1>${pg.updated ? `<p class="lead">${ar ? "آخر تحديث:" : "Last updated:"} ${esc(pg.updated)}</p>` : ""}${sectionsHtml(list, st.contact?.email || "info@wixa.dev")}`;
-  return simplePage(request, st, { lang, title, description: String(pg[`desc_${lang}`] || pg.desc_ar || title).slice(0, 160), path, body });
+  return simplePage(request, st, { lang, title, description: String(pg[`desc_${lang}`] || pg.desc_ar || title).slice(0, 160), path, body, ending: false });
 }
 
 // GET /team — our team (names, roles, photos from the dashboard). 404 until it is switched on.
@@ -469,7 +494,7 @@ export async function handleStatus(request, env, ctx) {
     <p class="lead">${allOk ? (ar ? "كل الخدمات تعمل بشكل طبيعي." : "All services are working normally.") : (ar ? "بعض الخدمات متأثرة الآن، ونعمل على إصلاحها." : "Some services are affected right now; we are on it.")}</p>
     <div class="status">${rows.map(([n, s, note]) => `<div class="status__row"><span class="status__dot status__dot--${s}" aria-hidden="true"></span><b>${n}</b><span class="status__st">${word[s]}</span>${note ? `<small>${esc(note)}</small>` : ""}</div>`).join("")}</div>
     <p class="lead" style="font-size:.875rem">${ar ? "آخر فحص:" : "Last checked:"} ${esc(when)}</p>`;
-  return simplePage(request, st, { lang, title: ar ? "حالة الخدمات" : "Service status", description: ar ? "هل خدمات ويكسا تعمل الآن." : "Whether WIXA's services are working right now.", path: "/status", body });
+  return simplePage(request, st, { lang, title: ar ? "حالة الخدمات" : "Service status", description: ar ? "هل خدمات ويكسا تعمل الآن." : "Whether WIXA's services are working right now.", path: "/status", body , ending: false });
 }
 
 // ---------------------------------------------------------------- service pages

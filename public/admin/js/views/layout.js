@@ -6,7 +6,7 @@ import { changed } from "../settings.js";
 import { DEFAULT_LAYOUTS, SECTIONS, SECTION_PAGES, layoutFor } from "../../../js/site-structure.js";
 
 // pages whose sections can be arranged (the order and tracking pages are a single form each)
-const PAGES = ["home", "about", "careers", "faq", "contact"];
+const PAGES = ["home", "services", "projects", "pricing", "about", "careers", "faq", "contact"];
 // where each section is edited: a tab of «صفحات الموقع» or a page of the dashboard
 const EDIT = {
   hero: ["tab", "texts"], about: ["tab", "about"], story: ["tab", "story"], partners: ["view", "partners"], services: ["view", "services"],

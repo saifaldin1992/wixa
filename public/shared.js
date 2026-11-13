@@ -65,11 +65,12 @@
     promo: { on: false, text_ar: "", text_en: "", link: "", until: "" },
     exit_offer: { on: true },
     // where each site link shows: "both" (menu + footer) · "menu" · "footer" · "hidden"; the list order is the order shown
+    // (2026-11 redesign: six links in the top bar, the rest in the footer's groups — see public/js/site-structure.js)
     nav: { items: [
-      { k: "home", at: "footer" }, { k: "services", at: "both" }, { k: "industries", at: "both" }, { k: "projects", at: "both" }, { k: "pricing", at: "both" },
-      { k: "careers", at: "both" }, { k: "contact", at: "both" }, { k: "blog", at: "both" },
-      { k: "about", at: "footer" }, { k: "partners", at: "footer" }, { k: "faq", at: "footer" },
-      { k: "privacy", at: "footer" }, { k: "calc", at: "hidden" },
+      { k: "services", at: "both" }, { k: "projects", at: "both" }, { k: "pricing", at: "both" }, { k: "about", at: "both" },
+      { k: "blog", at: "both" }, { k: "contact", at: "both" },
+      { k: "industries", at: "footer" }, { k: "calc", at: "footer" }, { k: "careers", at: "footer" }, { k: "faq", at: "footer" },
+      { k: "privacy", at: "footer" }, { k: "partners", at: "hidden" }, { k: "home", at: "hidden" },
     ] },
     // gifts and a discount promised with every project request ("start your project"); edited in the dashboard (offers)
     request_offer: {
@@ -124,6 +125,8 @@
         partners_title: "شركاؤنا",
         partners_sub: "شركات ومشاريع عملنا معها.",
         cta_title: "جاهزون لإنجاز مشروعك القادم",
+        faq_cta_title: "لم تجد إجابتك؟",
+        faq_cta_sub: "اسألنا مباشرة، ونجيبك خلال ساعات العمل.",
         cta_sub: "أخبرنا عن التحدي الذي تواجهه، وسنعود إليك بخطة عمل واضحة.",
         cta_button: "تواصل معنا",
         footer_text: "طُوّر بواسطة فريق ويكسا",
@@ -213,6 +216,8 @@
         partners_title: "Our partners",
         partners_sub: "Companies and projects we've worked with.",
         cta_title: "Ready to build your next project",
+        faq_cta_title: "Didn't find your answer?",
+        faq_cta_sub: "Ask us directly and we'll answer within working hours.",
         cta_sub: "Tell us about the challenge you face and we'll come back with a clear plan.",
         cta_button: "Contact us",
         footer_text: "Developed by the WIXA team",
@@ -313,10 +318,15 @@
   }
 
   // the saved link list, with any link added to the site later appended in its default place
+  // the menus as they were before the 2026-11 redesign: a saved list identical to it was never changed by the owner,
+  // so it takes the new menus; a list the owner did change is kept as it is
+  const NAV_V1 = "home:footer services:both industries:both projects:both pricing:both careers:both contact:both blog:both about:footer partners:footer faq:footer privacy:footer calc:hidden";
   function navPlan(settings) {
-    const def = DEFAULTS.nav.items, saved = (settings && settings.nav && Array.isArray(settings.nav.items)) ? settings.nav.items : [];
+    const def = DEFAULTS.nav.items;
+    let saved = (settings && settings.nav && Array.isArray(settings.nav.items)) ? settings.nav.items : [];
+    if (saved.map((x) => `${x && x.k}:${x && x.at}`).join(" ") === NAV_V1) saved = [];
     const known = new Set(def.map((x) => x.k)), seen = new Set(), out = [];
-    for (const x of saved) if (x && known.has(x.k) && !seen.has(x.k) && ["both", "menu", "footer", "hidden"].includes(x.at)) { seen.add(x.k); out.push({ k: x.k, at: x.at }); }
+    for (const x of saved) if (x && known.has(x.k) && !seen.has(x.k) && ["both", "menu", "footer", "hidden"].includes(x.at)) { seen.add(x.k); out.push(x.g ? { k: x.k, at: x.at, g: String(x.g) } : { k: x.k, at: x.at }); }
     for (const x of def) if (!seen.has(x.k)) out.push({ ...x });
     return out;
   }
