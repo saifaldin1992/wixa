@@ -18,9 +18,9 @@ export function sectionTabs(view, key, groups) {
   const subEl = document.getElementById("subNav");
   const paint = () => {
     const g = groups.find((x) => x.items.some(([k]) => k === cur)) || groups[0];
-    const own = [...subEl.children].filter((n) => !n.hasAttribute("data-secgrp") && !n.hasAttribute("data-secitem")); // the page's own rows (filters, period…) stay, under ours
+    const own = [...subEl.children].filter((n) => !n.hasAttribute("data-secgrp") && !n.hasAttribute("data-secitem") && !n.hasAttribute("data-hub")); // the page's own rows (filters, period…) stay, under ours
     setSubnav((groups.length > 1 ? `<div class="seg" data-secgrp>${groups.map((x) => `<button type="button" data-g="${x.k}" class="${x === g ? "on" : ""}">${esc(x.label)}</button>`).join("")}</div>` : "")
-      + (g.items.length > 1 || groups.length === 1 ? `<div class="seg" data-secitem>${g.items.map(([k, l]) => `<button type="button" data-s="${k}" class="${k === cur ? "on" : ""}">${esc(l)}</button>`).join("")}</div>` : ""));
+      + (all.length > 1 && (g.items.length > 1 || groups.length === 1) ? `<div class="seg" data-secitem>${g.items.map(([k, l]) => `<button type="button" data-s="${k}" class="${k === cur ? "on" : ""}">${esc(l)}</button>`).join("")}</div>` : ""));
     own.forEach((n) => subEl.appendChild(n)); subEl.hidden = false;
     view.querySelectorAll("[data-sec]").forEach((el) => el.classList.toggle("sec-off", !el.dataset.sec.split(" ").includes(cur)));
     const sub = document.getElementById("subNav");
@@ -72,8 +72,13 @@ export async function composeView(view, parts) {
 }
 // The sub-menu under the page title. Re-drawing it keeps each row where it was scrolled, and the chosen item always
 // stays in view (a long row no longer jumps back to its first item after a choice near its end).
+// A group of pages shown as one item in the sidebar (الإعدادات، التقارير…): its pages are a first row of tabs above
+// whatever sub-menu the page itself draws. The router sets it before drawing a page of the group (shell.js → HUBS).
+let hubRow = "";
+export const setHubRow = (html) => { hubRow = html || ""; };
 export function setSubnav(html = "") {
   const n = document.getElementById("subNav"); if (!n) return;
+  html = hubRow + html;
   const key = (s, i) => s.id || `${s.className}#${i}`;
   const was = Object.fromEntries([...n.querySelectorAll(".seg")].map((s, i) => [key(s, i), s.scrollLeft]));
   n.innerHTML = html; n.hidden = !html;

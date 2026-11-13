@@ -579,6 +579,14 @@ One list of the site's pages, the sections each page is made of, and where every
   has one main heading, shows only its own sections, has the same header and footer as the home page, and every visible
   menu link opens a real page).
 
+## Dashboard groups (Nov 2026)
+The sidebar has one item per group, as Shopify, HubSpot and Wix gather theirs; the group's pages are a first row of tabs (`HUBS` in `public/admin/js/shell.js`, drawn above the page's own sub-menu by `setHubRow` in `core.js`):
+- «الإعدادات» (#settings): الحساب، الفريق، الإشعارات والبريد، التكاملات، الحماية، النسخ الاحتياطي، الفحص والتشخيص، سجل التعديلات، دليل المطوّر.
+- «التقارير» (#reports): المبيعات، الزيارات والسلوك (#visits — the overview page showing its visits and behaviour sections; «الرئيسية» keeps today).
+- «المظهر» (#look): الألوان والخطوط، دليل الهوية. «آراء العملاء والشركاء» (#reputation).
+- «الرسائل» is part of «الوارد» (#messages opens it).
+Each page keeps its address (#notify, #team…), so links, notifications and saved tabs still work; a group's address opens its first page the person may see (roles unchanged).
+
 ## Customer care batch (Nov 2026): notifications, reviews, reminders, client portal, inbox
 - **Notifications on the team's phones:** `pushTeam(env, kind, label)` (`src/routes/chat.js`) for chat, order, message, booking, job and the booking reminder. A push has no text; the dashboard's service worker (`public/admin/sw.js`) asks `GET /api/push/last?endpoint=…` (answers only a subscribed device) and shows the right title and opens the right page. «الإشعارات والبريد → التطبيق والإشعارات» (`views/device.js`) installs the dashboard as an app and turns the notifications on.
 - **Review after delivery:** marking an order «مكتمل» calls `POST /api/admin/order-notify {kind:"done"}` (`src/routes/portal.js`): one review link per order (KV `review-order:<id>`), emailed when the customer left an address, and shown to copy. On `/review`, 4–5 stars invite the customer to Google too when «رابط تقييمك على Google» (`settings.contact.google_review`) is set.

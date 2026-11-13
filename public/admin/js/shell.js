@@ -1,5 +1,5 @@
 /* Sidebar, top bar and the hash router */
-import { $, $$, setSubnav, sectionize, composeView, endSections, DEFAULTS, ROLE_AR, closeModal, confirmBox, esc, merge, role, savedJSON, setSettings } from "./core.js";
+import { $, $$, setHubRow, setSubnav, sectionize, composeView, endSections, DEFAULTS, ROLE_AR, closeModal, confirmBox, esc, merge, role, savedJSON, setSettings } from "./core.js";
 import { viewTeam } from "./views/team.js";
 import { viewChats } from "./views/chats.js";
 import { viewCustomers } from "./views/customers.js";
@@ -26,8 +26,9 @@ import { viewAudit } from "./views/audit.js";
 // ---------------- shell / router ----------------
 export const VIEWS = {
   overview: { title: "الرئيسية", sub: "ملخص اليوم وزوار الموقع ونشاطه", render: viewOverview },
+  visits: { title: "الزيارات والسلوك", sub: "زوار الموقع، من أين جاؤوا، ماذا فعلوا، وسرعة الموقع", render: viewOverview },
   appearance: { title: "المظهر", sub: "الألوان ونوع الخط وحجمه والحركة — مع معاينة مباشرة", render: viewAppearance },
-  brand: { title: "UI / UX", sub: "الهوية البصرية ومكوّنات الواجهة والمعايير — خاص بك ولا يظهر في الموقع", render: viewBrand },
+  brand: { title: "دليل الهوية", sub: "الهوية البصرية ومكوّنات الواجهة والمعايير — خاص بك ولا يظهر في الموقع", render: viewBrand },
   content: { title: "صفحات الموقع", sub: "نصوص الموقع بالعربي والإنجليزي، الأرقام، الأقسام وبيانات التواصل", render: viewContent },
   projects: { title: "المشاريع", sub: "أضف مشاريعك واعرضها في قسم الإنجازات", render: () => viewList("projects") },
   services: { title: "الخدمات", sub: "الخدمات التي تظهر في الموقع", render: () => viewList("services") },
@@ -54,11 +55,24 @@ export const VIEWS = {
   account: { title: "الحساب", sub: "بيانات الدخول والأمان", render: (v) => composeView(v, [[viewAccount, ["الحساب", "تغيير بريد", "التحقق بخطوتين", "تغيير كلمة"]]]) },
 };
 
+// Groups of pages shown as ONE item in the sidebar, the way Shopify, HubSpot and Wix gather them: the group's pages
+// become a first row of tabs. The pages keep their own addresses (#notify, #team…), so old links and notifications
+// still land in the right tab; the group's own address (#settings…) opens its first page this person may see.
+export const HUBS = {
+  settings: { title: "الإعدادات", items: [["account", "الحساب"], ["team", "الفريق"], ["notify", "الإشعارات والبريد"], ["integrations", "التكاملات"], ["protect", "الحماية"], ["backup", "النسخ الاحتياطي"], ["diagnose", "الفحص والتشخيص"], ["audit", "سجل التعديلات"], ["devguide", "دليل المطوّر"]] },
+  reports: { title: "التقارير", items: [["sales", "المبيعات"], ["visits", "الزيارات والسلوك"]] },
+  look: { title: "المظهر", items: [["appearance", "الألوان والخطوط"], ["brand", "دليل الهوية"]] },
+  reputation: { title: "آراء العملاء والشركاء", items: [["testimonials", "آراء العملاء"], ["partners", "الشركاء"]] },
+};
+export const hubOf = (name) => Object.keys(HUBS).find((h) => HUBS[h].items.some(([k]) => k === name)) || null;
+
 // Every long page as sub-menus (the shared rule): branch row, then its sections; one section shows at a time.
 // [match, section]: "#id" a card id, ".class" a card class, otherwise the start of the card's title.
 const ONE = (items) => [{ k: "main", label: "", items }];
 const SECTIONS = {
-  overview: { groups: ONE([["today", "ملخص اليوم"], ["visits", "الزيارات"], ["behave", "سلوك الزوار والسرعة"]]), fallback: "today",
+  overview: { groups: ONE([["today", "ملخص اليوم"]]), fallback: "today",
+    rules: [[".kpis", "today"], ["اليوم في خدمة الزبائن", "today"], ["الزيارات اليومية", "visits"], ["الأجهزة", "visits"], ["أكثر الصفحات", "visits"], ["مصادر الزيارات", "visits"], ["ماذا فعل", "behave"], ["سرعة الموقع", "behave"]] },
+  visits: { groups: ONE([["visits", "الزيارات"], ["behave", "سلوك الزوار والسرعة"]]), fallback: "visits",
     rules: [[".kpis", "today"], ["اليوم في خدمة الزبائن", "today"], ["الزيارات اليومية", "visits"], ["الأجهزة", "visits"], ["أكثر الصفحات", "visits"], ["مصادر الزيارات", "visits"], ["ماذا فعل", "behave"], ["سرعة الموقع", "behave"]] },
   sales: { groups: ONE([["sum", "الملخص"], ["stages", "مراحل البيع"], ["src", "المصادر"], ["top", "الأكثر طلباً"], ["ch", "طرق التواصل"], ["lost", "أسباب الخسارة"], ["rate", "التقييمات"]]), fallback: "sum",
     rules: [[".cust__kpi", "sum"], ["مراحل البيع", "stages"], ["من أين", "src"], ["أكثر ما يطلبه", "top"], ["طرق التواصل", "ch"], ["لماذا نخسر", "lost"], ["آخر التقييمات", "rate"]] },
@@ -85,7 +99,7 @@ const ROLE_VIEWS = {
   editor: ["overview", "content", "projects", "services", "partners", "testimonials", "posts", "media", "appearance", "brand", "seo", "devguide", "account"],
   support: ["overview", "inbox", "orders", "messages", "chats", "customers", "account"], // «messages» opens «الوارد»
 };
-export const canSee = (name) => !ROLE_VIEWS[role] || ROLE_VIEWS[role].includes(name);
+export const canSee = (name) => HUBS[name] ? HUBS[name].items.some(([k]) => canSee(k)) : !ROLE_VIEWS[role] || ROLE_VIEWS[role].includes(name);
 function applyRoleNav() {
   $$("#sideNav a").forEach((a) => (a.hidden = !canSee(a.dataset.view)));
   // a group title disappears when none of its pages is available
@@ -150,6 +164,8 @@ export function setupShell() {
     if (dy > 90) closeModal();
   });
   addEventListener("beforeunload", (e) => { if (isDirty()) { e.preventDefault(); e.returnValue = ""; } });
+  // a group's tabs (الإعدادات، التقارير…) are links to its pages
+  $("#subNav").addEventListener("click", (e) => { const t = e.target.closest("[data-hub-to]"); if (t && location.hash !== `#${t.dataset.hubTo}`) location.hash = `#${t.dataset.hubTo}`; });
   $("#modal").addEventListener("click", (e) => { if (e.target.id === "modal" || e.target.closest("[data-close]")) closeModal(); });
   addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#modal").hidden) closeModal(); });
 }
@@ -158,6 +174,7 @@ export async function route() {
   let name = location.hash.slice(1) || "overview";
   if (name === "status") { name = "diagnose"; history.replaceState(null, "", "#diagnose"); } // the old Connections page lives inside diagnostics now
   applyRoleNav();
+  if (HUBS[name]) { const first = HUBS[name].items.find(([k]) => canSee(k)); name = first ? first[0] : "overview"; history.replaceState(null, "", `#${name}`); }
   if (!canSee(name)) { name = "overview"; history.replaceState(null, "", "#overview"); }
   const v = VIEWS[name] || VIEWS.overview;
   if (current && ["appearance", "content", "seo"].includes(current) && !["appearance", "content", "seo"].includes(name) && isDirty()) {
@@ -165,11 +182,13 @@ export async function route() {
     setSettings(merge(DEFAULTS, JSON.parse(savedJSON)));
   }
   current = VIEWS[name] ? name : "overview";
-  $$("#sideNav a").forEach((a) => a.classList.toggle("on", a.dataset.view === current));
+  const hub = hubOf(current);
+  $$("#sideNav a").forEach((a) => a.classList.toggle("on", a.dataset.view === current || (!!hub && a.dataset.view === hub)));
   const view = $("#view");
   // the page changes with a short cross-fade (View Transitions), only for the switch itself — never while loading
   const swap = () => {
-    $("#viewTitle").textContent = v.title; $("#viewSub").textContent = v.sub;
+    $("#viewTitle").textContent = hub ? HUBS[hub].title : v.title; $("#viewSub").textContent = v.sub;
+    setHubRow(hub ? `<div class="seg seg--hub" data-hub>${HUBS[hub].items.filter(([k]) => canSee(k)).map(([k, l]) => `<button type="button" data-hub-to="${k}" class="${k === current ? "on" : ""}">${esc(l)}</button>`).join("")}</div>` : "");
     endSections(); $("#topActions").innerHTML = ""; setSubnav(""); window.wixaTopReset?.();
     view.innerHTML = '<div class="skeleton" style="height:120px"></div>';
   };

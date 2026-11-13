@@ -1076,3 +1076,7 @@ html { overflow-anchor: none; }
 .inbox__msg { display: grid; gap: 4px; }
 .inbox__msg > .inbox__kind { margin-inline-start: 4px; }
 .inbox__msg .msg { margin: 0; }
+
+/* a group's pages as the first row of tabs (الإعدادات، التقارير، المظهر، آراء العملاء والشركاء) */
+.seg--hub { margin-bottom: 6px; }
+.seg--hub button { white-space: nowrap; }
