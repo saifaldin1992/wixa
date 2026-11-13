@@ -1,5 +1,5 @@
 /* Sidebar, top bar and the hash router */
-import { $, $$, setHubRow, setSubnav, sectionize, composeView, endSections, DEFAULTS, ROLE_AR, closeModal, confirmBox, esc, merge, role, savedJSON, setSettings } from "./core.js";
+import { $, $$, setSubnav, sectionize, composeView, endSections, DEFAULTS, ROLE_AR, closeModal, confirmBox, esc, merge, role, savedJSON, setSettings } from "./core.js";
 import { viewTeam } from "./views/team.js";
 import { viewChats } from "./views/chats.js";
 import { viewCustomers } from "./views/customers.js";
@@ -17,6 +17,7 @@ import { viewOverview } from "./views/overview.js";
 import { viewPosts } from "./views/posts.js";
 import { viewMedia } from "./views/media.js";
 import { viewDevice } from "./views/device.js";
+import { viewPrefs } from "./views/prefs.js";
 import { setInboxFilter, viewInbox } from "./views/inbox.js";
 import { viewSeo } from "./views/seo.js";
 import { viewDiagnose } from "./views/diagnose.js";
@@ -27,7 +28,7 @@ import { viewAudit } from "./views/audit.js";
 export const VIEWS = {
   overview: { title: "الرئيسية", sub: "ملخص اليوم وزوار الموقع ونشاطه", render: viewOverview },
   visits: { title: "الزيارات والسلوك", sub: "زوار الموقع، من أين جاؤوا، ماذا فعلوا، وسرعة الموقع", render: viewOverview },
-  appearance: { title: "المظهر", sub: "الألوان ونوع الخط وحجمه والحركة — مع معاينة مباشرة", render: viewAppearance },
+  appearance: { title: "الألوان والخطوط", sub: "الألوان ونوع الخط وحجمه والحركة — مع معاينة مباشرة", render: viewAppearance },
   brand: { title: "دليل الهوية", sub: "الهوية البصرية ومكوّنات الواجهة والمعايير — خاص بك ولا يظهر في الموقع", render: viewBrand },
   content: { title: "صفحات الموقع", sub: "نصوص الموقع بالعربي والإنجليزي، الأرقام، الأقسام وبيانات التواصل", render: viewContent },
   projects: { title: "المشاريع", sub: "أضف مشاريعك واعرضها في قسم الإنجازات", render: () => viewList("projects") },
@@ -47,17 +48,17 @@ export const VIEWS = {
   inbox: { title: "الوارد", sub: "كل ما وصلك من الموقع: المحادثات، الطلبات، الرسائل، المواعيد، التوظيف — ما ينتظر ردك أولاً، والرسائل تُعالَج هنا مباشرة", render: viewInbox },
   orders: { title: "الطلبات", sub: "كل طلبات المشاريع من الموقع في مكان واحد: ماذا اختار الزبون، ومن أين، وهداياه وخصمه", render: viewOrders },
   messages: { title: "الوارد", sub: "كل ما وصلك من الموقع في مكان واحد", render: (v) => { setInboxFilter("message"); history.replaceState(null, "", "#inbox"); return viewInbox(v); } },
-  sales: { title: "لوحة المبيعات", sub: "من تواصل، ومن اشترى، ومن أين جاؤوا، وكيف نخدمهم", render: viewSales },
+  sales: { title: "المبيعات", sub: "من تواصل، ومن اشترى، ومن أين جاؤوا، وكيف نخدمهم", render: viewSales },
   campaigns: { title: "العروض والحملات", sub: "هدايا وخصم طلب المشروع، شريط العروض، عرض الحاسبة، والحملات البريدية", render: viewCampaigns },
   customers: { title: "الزبائن", sub: "كل من تواصل معك من الموقع — للمتابعة والعروض", render: viewCustomers },
   chats: { title: "المحادثات", sub: "دردشة مباشرة مع زوار الموقع", render: viewChats },
   team: { title: "الفريق والصلاحيات", sub: "من يدخل إلى لوحة التحكم وماذا يستطيع — بالدعوة فقط", render: viewTeam },
-  account: { title: "الحساب", sub: "بيانات الدخول والأمان", render: (v) => composeView(v, [[viewAccount, ["الحساب", "تغيير بريد", "التحقق بخطوتين", "تغيير كلمة"]]]) },
+  account: { title: "الحساب", sub: "بيانات الدخول والأمان وواجهة اللوحة", render: (v) => composeView(v, [[viewAccount, ["الحساب", "تغيير بريد", "التحقق بخطوتين", "تغيير كلمة"]], [viewPrefs, ["#cPrefs"]]]) },
 };
 
-// Groups of pages shown as ONE item in the sidebar, the way Shopify, HubSpot and Wix gather them: the group's pages
-// become a first row of tabs. The pages keep their own addresses (#notify, #team…), so old links and notifications
-// still land in the right tab; the group's own address (#settings…) opens its first page this person may see.
+// The sidebar's main items (level 1) and their pages (level 2) live in index.html (#sideNav); inside a page, its
+// sections are the strips at the top (levels 3 and 4, SECTIONS below). These older group addresses (#settings,
+// #reports, #look, #reputation) open the group's first page this person may see.
 export const HUBS = {
   settings: { title: "الإعدادات", items: [["account", "الحساب"], ["team", "الفريق"], ["notify", "الإشعارات والبريد"], ["integrations", "التكاملات"], ["protect", "الحماية"], ["backup", "النسخ الاحتياطي"], ["diagnose", "الفحص والتشخيص"], ["audit", "سجل التعديلات"], ["devguide", "دليل المطوّر"]] },
   reports: { title: "التقارير", items: [["sales", "المبيعات"], ["visits", "الزيارات والسلوك"]] },
@@ -83,7 +84,7 @@ const SECTIONS = {
   appearance: { groups: ONE([["presets", "قوالب الألوان"], ["colors", "الألوان"], ["type", "الخط والحجم والوضع"], ["reset", "إعادة الضبط"]]),
     rules: [["قوالب ألوان", "presets"], ["الألوان", "colors"], ["نوع الخط", "type"], ["حجم الخط", "type"], ["إعادة الضبط", "reset"]] },
   team: { groups: ONE([["invite", "دعوة شخص"], ["members", "الأعضاء"], ["pending", "الدعوات"]]), rules: [["دعوة شخص", "invite"], ["أعضاء الفريق", "members"], ["دعوات بانتظار", "pending"]] },
-  account: { groups: ONE([["me", "البيانات"], ["email", "تغيير البريد"], ["pass", "كلمة المرور"], ["mfa", "التحقق بخطوتين"]]), rules: [["الحساب", "me"], ["تغيير بريد", "email"], ["تغيير كلمة", "pass"], ["التحقق بخطوتين", "mfa"]] },
+  account: { groups: ONE([["me", "البيانات"], ["email", "تغيير البريد"], ["pass", "كلمة المرور"], ["mfa", "التحقق بخطوتين"], ["prefs", "واجهة اللوحة"]]), rules: [["#cPrefs", "prefs"], ["الحساب", "me"], ["تغيير بريد", "email"], ["تغيير كلمة", "pass"], ["التحقق بخطوتين", "mfa"]] },
   notify: { groups: ONE([["device", "التطبيق والإشعارات"], ["alerts", "تنبيهات الرسائل"], ["reply", "الرد التلقائي"], ["tpl", "الردود الجاهزة"]]), rules: [["#cDevice", "device"], ["#cAlerts", "alerts"], ["بريد تنبيهات", "alerts"], ["#cReply", "reply"], ["#cTpl", "tpl"]] },
   integrations: { groups: ONE([["addons", "الإضافات"], ["hooks", "Webhooks"], ["keys", "المفاتيح"], ["tags", "أدوات القياس والإعلانات"], ["reports", "التقارير والمراقبة"]]), rules: [["#cAddons", "addons"], ["#cHooks", "hooks"], ["#cKeys", "keys"], ["#cTags", "tags"], ["#cReports", "reports"]] },
   protect: { groups: ONE([["spam", "الرسائل المزعجة"], ["maint", "وضع الصيانة"]]), rules: [["#cSpam", "spam"], ["#cMaint", "maint"]] },
@@ -99,15 +100,34 @@ const ROLE_VIEWS = {
   editor: ["overview", "content", "projects", "services", "partners", "testimonials", "posts", "media", "appearance", "brand", "seo", "devguide", "account"],
   support: ["overview", "inbox", "orders", "messages", "chats", "customers", "account"], // «messages» opens «الوارد»
 };
+// The sidebar: main items (level 1) open and close; the one holding the page being shown always opens.
+// SIDE_MODE «fold» (default): only that one stays open unless the owner opens others; «open»: all always open.
+export const sideMode = () => { try { return localStorage.getItem("wixa-side-mode") === "open" ? "open" : "fold"; } catch { return "fold"; } };
+export function setSideMode(m) { try { localStorage.setItem("wixa-side-mode", m === "open" ? "open" : "fold"); } catch { /* private mode */ } paintSideGroups(); }
+function paintSideGroups() {
+  const all = sideMode() === "open";
+  $$("#sideNav .side__sec").forEach((sec) => {
+    const btn = sec.querySelector(".side__group");
+    const open = all || sec.classList.contains("is-open");
+    sec.classList.toggle("closed", !open);
+    btn?.setAttribute("aria-expanded", String(open));
+    if (btn) btn.disabled = all;
+  });
+}
+function openSideGroupOf(name) {
+  const a = $(`#sideNav a[data-view="${name}"]`), sec = a?.closest(".side__sec");
+  if (sideMode() === "fold" && sec && !sec.classList.contains("is-open")) $$("#sideNav .side__sec").forEach((x) => x.classList.toggle("is-open", x === sec));
+  paintSideGroups();
+}
+export function setupSideGroups() {
+  $$("#sideNav .side__group").forEach((btn) => (btn.onclick = () => { if (sideMode() === "open") return; const sec = btn.closest(".side__sec"); sec.classList.toggle("is-open"); paintSideGroups(); }));
+  paintSideGroups();
+}
 export const canSee = (name) => HUBS[name] ? HUBS[name].items.some(([k]) => canSee(k)) : !ROLE_VIEWS[role] || ROLE_VIEWS[role].includes(name);
 function applyRoleNav() {
   $$("#sideNav a").forEach((a) => (a.hidden = !canSee(a.dataset.view)));
-  // a group title disappears when none of its pages is available
-  $$("#sideNav .side__group").forEach((g) => {
-    let n = g.nextElementSibling, any = false;
-    while (n && !n.classList.contains("side__group")) { if (n.tagName === "A" && !n.hidden) any = true; n = n.nextElementSibling; }
-    g.hidden = !any;
-  });
+  // a main item disappears when none of its pages is available to this person
+  $$("#sideNav .side__sec").forEach((sec) => { sec.hidden = ![...sec.querySelectorAll("a")].some((a) => !a.hidden); });
   const tag = $(".side .logo small"); if (tag) tag.textContent = role === "owner" ? "لوحة التحكم" : ROLE_AR[role];
 }
 
@@ -164,8 +184,7 @@ export function setupShell() {
     if (dy > 90) closeModal();
   });
   addEventListener("beforeunload", (e) => { if (isDirty()) { e.preventDefault(); e.returnValue = ""; } });
-  // a group's tabs (الإعدادات، التقارير…) are links to its pages
-  $("#subNav").addEventListener("click", (e) => { const t = e.target.closest("[data-hub-to]"); if (t && location.hash !== `#${t.dataset.hubTo}`) location.hash = `#${t.dataset.hubTo}`; });
+  setupSideGroups(); // the sidebar's main items open and close
   $("#modal").addEventListener("click", (e) => { if (e.target.id === "modal" || e.target.closest("[data-close]")) closeModal(); });
   addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#modal").hidden) closeModal(); });
 }
@@ -182,13 +201,12 @@ export async function route() {
     setSettings(merge(DEFAULTS, JSON.parse(savedJSON)));
   }
   current = VIEWS[name] ? name : "overview";
-  const hub = hubOf(current);
-  $$("#sideNav a").forEach((a) => a.classList.toggle("on", a.dataset.view === current || (!!hub && a.dataset.view === hub)));
+  $$("#sideNav a").forEach((a) => a.classList.toggle("on", a.dataset.view === current));
+  openSideGroupOf(current);
   const view = $("#view");
   // the page changes with a short cross-fade (View Transitions), only for the switch itself — never while loading
   const swap = () => {
-    $("#viewTitle").textContent = hub ? HUBS[hub].title : v.title; $("#viewSub").textContent = v.sub;
-    setHubRow(hub ? `<div class="seg seg--hub" data-hub>${HUBS[hub].items.filter(([k]) => canSee(k)).map(([k, l]) => `<button type="button" data-hub-to="${k}" class="${k === current ? "on" : ""}">${esc(l)}</button>`).join("")}</div>` : "");
+    $("#viewTitle").textContent = v.title; $("#viewSub").textContent = v.sub;
     endSections(); $("#topActions").innerHTML = ""; setSubnav(""); window.wixaTopReset?.();
     view.innerHTML = '<div class="skeleton" style="height:120px"></div>';
   };

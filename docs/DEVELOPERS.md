@@ -579,13 +579,10 @@ One list of the site's pages, the sections each page is made of, and where every
   has one main heading, shows only its own sections, has the same header and footer as the home page, and every visible
   menu link opens a real page).
 
-## Dashboard groups (Nov 2026)
-The sidebar has one item per group, as Shopify, HubSpot and Wix gather theirs; the group's pages are a first row of tabs (`HUBS` in `public/admin/js/shell.js`, drawn above the page's own sub-menu by `setHubRow` in `core.js`):
-- «الإعدادات» (#settings): الحساب، الفريق، الإشعارات والبريد، التكاملات، الحماية، النسخ الاحتياطي، الفحص والتشخيص، سجل التعديلات، دليل المطوّر.
-- «التقارير» (#reports): المبيعات، الزيارات والسلوك (#visits — the overview page showing its visits and behaviour sections; «الرئيسية» keeps today).
-- «المظهر» (#look): الألوان والخطوط، دليل الهوية. «آراء العملاء والشركاء» (#reputation).
-- «الرسائل» is part of «الوارد» (#messages opens it).
-Each page keeps its address (#notify, #team…), so links, notifications and saved tabs still work; a group's address opens its first page the person may see (roles unchanged).
+## Dashboard menus (Nov 2026): four levels
+- **Levels 1 and 2 — the sidebar** (`#sideNav` in `public/admin/index.html`): «الرئيسية», then five main items (خدمة الزبائن، المبيعات والتسويق، محتوى الموقع، المظهر، الإعدادات), each with its pages under it. A main item folds (`.side__sec`); the one holding the page being shown opens by itself; a folded one shows a red dot when a page inside has a counter. «الحساب ← واجهة اللوحة» (`views/prefs.js`) switches this device between «قابلة للطي» (default) and «مفتوحة دائماً» (`localStorage wixa-side-mode`, `sideMode()` in `shell.js`).
+- **Levels 3 and 4 — strips at the top of the page**, as before (`SECTIONS` in `shell.js`, `sectionTabs` in `core.js`): a page's sections; where a page has branches (صفحات الموقع، دليل الهوية) the branches are the first strip and their sections the second. Filters (status, period) stay a strip under them.
+- «الرسائل» is part of «الوارد». Older addresses still work: #messages → «الوارد»; #settings, #reports, #look, #reputation → the first page of that group (`HUBS` in `shell.js`).
 
 ## Customer care batch (Nov 2026): notifications, reviews, reminders, client portal, inbox
 - **Notifications on the team's phones:** `pushTeam(env, kind, label)` (`src/routes/chat.js`) for chat, order, message, booking, job and the booking reminder. A push has no text; the dashboard's service worker (`public/admin/sw.js`) asks `GET /api/push/last?endpoint=…` (answers only a subscribed device) and shows the right title and opens the right page. «الإشعارات والبريد → التطبيق والإشعارات» (`views/device.js`) installs the dashboard as an app and turns the notifications on.

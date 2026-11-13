@@ -1077,6 +1077,28 @@ html { overflow-anchor: none; }
 .inbox__msg > .inbox__kind { margin-inline-start: 4px; }
 .inbox__msg .msg { margin: 0; }
 
-/* a group's pages as the first row of tabs (الإعدادات، التقارير، المظهر، آراء العملاء والشركاء) */
-.seg--hub { margin-bottom: 6px; }
-.seg--hub button { white-space: nowrap; }
+
+/* the sidebar: main items (level 1) open and close over their pages (level 2) */
+.side__sec { display: grid; }
+.side__sec .side__group { display: flex; align-items: center; gap: 8px; width: calc(100% - 12px); margin: 10px 6px 2px; padding: 9px 6px; border: 0; border-radius: 9px; background: none; font: inherit; font-size: 13.5px; font-weight: 700; color: var(--text); cursor: pointer; text-align: start; }
+.side__sec .side__chev { margin-inline-start: auto; }
+/* a folded main item still shows that something inside waits (new messages, chats…) */
+.side__sec.closed:has(.count:not([hidden])) > .side__group::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #E11D48; order: 1; }
+.side__sec.closed:has(.count:not([hidden])) .side__chev { order: 2; }
+.side__sec .side__group:hover:not(:disabled) { background: var(--bg); color: var(--text); }
+.side__sec .side__group:disabled { cursor: default; }
+.side__chev { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform .2s; }
+.side__sec.closed .side__chev { transform: rotate(90deg); }
+html[dir="rtl"] .side__sec.closed .side__chev { transform: rotate(-90deg); }
+.side__sec .side__group:disabled .side__chev { display: none; }
+.side__items { display: grid; }
+.side__sec.closed .side__items { display: none; }
+.side__sec:has(a.on) > .side__group { color: var(--brand); }
+
+/* «واجهة اللوحة» choices */
+.prefs__opts { display: grid; gap: 10px; }
+.prefs__opt { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; cursor: pointer; }
+.prefs__opt:has(input:checked) { border-color: var(--brand); background: var(--brand-50); }
+.prefs__opt input { margin-top: 4px; accent-color: var(--brand); }
+.prefs__opt span { display: grid; gap: 2px; }
+.prefs__opt small { color: var(--muted); }
