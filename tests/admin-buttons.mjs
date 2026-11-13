@@ -54,7 +54,7 @@ async function open(view) {
   await p.waitForTimeout(1300);
   return { ctx, p, errs };
 }
-const listButtons = (p) => p.$$eval("#view button, #topActions button, #subNav button", (bs) => bs
+const listButtons = (p) => p.$$eval("#view button, #topActions button, #subNav button:not([data-hub-to])", (bs) => bs
   .filter((x) => !x.disabled && x.offsetParent !== null)
   .map((x, i) => ({ i, text: (x.textContent || x.title || x.getAttribute("aria-label") || "").trim().replace(/\s+/g, " ").slice(0, 40),
     // already-selected tab / option: clicking it again rightly changes nothing
@@ -71,7 +71,7 @@ for (const view of VIEWS) {
   for (const btn of buttons) {
     if (SKIP.test(btn.text) || btn.current || btn.validates) continue;
     const { ctx, p, errs } = await open(view);
-    const handle = (await p.$$("#view button, #topActions button, #subNav button")).filter(Boolean);
+    const handle = (await p.$$("#view button, #topActions button, #subNav button:not([data-hub-to])")).filter(Boolean);
     const visible = [];
     for (const h of handle) if (await h.evaluate((x) => !x.disabled && x.offsetParent !== null)) visible.push(h);
     const el = visible[btn.i];
