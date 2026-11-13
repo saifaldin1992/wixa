@@ -543,3 +543,12 @@ Dashboard → التكاملات → «الإضافات» / «Webhooks» / «ا�
   The funnel (`/api/admin/funnel`) adds `public.events_total` and the KV days. Migration: `20261119000000_event_counts.sql`.
 - `20261119010000_split_admin_policies.sql`: the five content tables keep one read rule each (the public one, which already
   lets the team read everything); the team rule covers only add / change / delete.
+
+## Backup and restore: customers' records too (Nov 2026)
+- `export_backup` (the daily email and the dashboard's backup) also holds live chats with their messages and the customer
+  notes (sales stage, follow-ups, opt-outs), besides settings, content, orders and messages.
+- The dashboard's «استرجاع» makes the content exactly like the backup (as before) and then calls `POST /api/admin/restore`
+  (owner only) → `public.restore_records`: orders, messages, chats (with their messages) and customer notes that are
+  **missing** are added back; rows already there are never changed or deleted. Each table is restored on its own
+  (an error in one is reported, the others still come back); the chat triggers' changes are undone so a restored chat
+  looks as it did; the id counters continue after the restored rows. Migration: `20261120000000_backup_restore.sql`.

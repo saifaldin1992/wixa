@@ -431,3 +431,23 @@ export async function handleAdminCampaign(request, env) {
   await audit(env, s, { area: "campaigns", action: b.test ? "send_test" : "send", target: subject, summary: `${sent} أُرسلت${failed ? ` · ${failed} فشلت` : ""}` });
   return json({ ok: failed === 0, sent, failed, test: !!b.test });
 }
+
+// POST /api/admin/restore — the owner's restore from a backup file: puts back the orders, messages, live chats and
+// customer notes that are missing (rows already there are never changed or deleted). The content (projects, texts…)
+// is restored by the dashboard itself; these tables can only be written by the server.
+export async function handleAdminRestore(request, env) {
+  const s = await adminSession(request, env, ["owner"]);
+  if (s.error) return s.error;
+  const text = await request.text();
+  if (text.length > 20_000_000) return json({ error: "too_large" }, 413);
+  let b;
+  try { b = JSON.parse(text); } catch { return json({ error: "invalid_json" }, 400); }
+  const list = (k) => (Array.isArray(b?.[k]) ? b[k] : []);
+  const p = { orders: list("orders"), contact_messages: list("contact_messages"), chats: list("chats"), chat_messages: list("chat_messages"), customer_notes: list("customer_notes") };
+  const r = await rpcToken(env, "restore_records", { p });
+  if (!r.ok) { console.error("restore", r.status, await r.text()); return json({ error: r.status === 404 ? "migration_missing" : "storage" }, 502); }
+  const res = await r.json();
+  const AR = { orders: "طلبات", contact_messages: "رسائل", chats: "محادثات", customer_notes: "ملاحظات عملاء" };
+  await audit(env, s, { area: "backup", action: "restore", summary: `استرجاع من نسخة احتياطية — أُضيف: ${Object.entries(AR).map(([k, l]) => `${res[k] ?? 0} ${l}`).join("، ")}` });
+  return json({ ok: true, ...res });
+}

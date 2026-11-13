@@ -92,7 +92,7 @@ export async function runBackup(env, force = false) {
     body: JSON.stringify({
       from: `${cfg.alerts.from_name} <notify@wixa.dev>`, to: [to],
       subject: `${force ? "[يدوي] " : ""}نسخة احتياطية ${label} — ${site} — ${date}`,
-      html: mailBox("نسخة احتياطية من موقع ويكسا", `<p>مرفق ملف فيه كل محتوى الموقع (${(bytes.length / 1024).toFixed(0)} KB): الإعدادات والنصوص والمشاريع والخدمات والشركاء والآراء والمقالات والرسائل.</p><p>احتفظ به في مكان آمن؛ يمكن استرجاع الموقع منه عند الحاجة.</p>`),
+      html: mailBox("نسخة احتياطية من موقع ويكسا", `<p>مرفق ملف فيه كل محتوى الموقع (${(bytes.length / 1024).toFixed(0)} KB): الإعدادات والنصوص والمشاريع والخدمات والشركاء والآراء والمقالات، والطلبات والرسائل والمحادثات وملاحظات العملاء.</p><p>احتفظ به في مكان آمن؛ يمكن استرجاع الموقع منه عند الحاجة.</p>`),
       attachments: [{ filename: `wixa-backup-${site}-${date}.json`, content: btoa(bin) }],
     }),
   });
