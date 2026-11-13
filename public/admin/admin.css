@@ -1068,3 +1068,6 @@ html { overflow-anchor: none; }
 .k-book { background: color-mix(in srgb, #10B981 16%, transparent); color: #047857; }
 .k-job { background: color-mix(in srgb, #F59E0B 18%, transparent); color: #B45309; }
 :root[data-theme="dark"] .k-chat, :root[data-theme="dark"] .k-msg, :root[data-theme="dark"] .k-book, :root[data-theme="dark"] .k-job { filter: brightness(1.6); }
+
+/* a page being split into its sub-tabs stays hidden until it is ready (shell.js → route) */
+#view.is-building { visibility: hidden; pointer-events: none; max-height: 0; overflow: hidden; }

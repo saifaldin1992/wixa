@@ -176,6 +176,12 @@ export async function route() {
   };
   if (document.startViewTransition && !matchMedia("(prefers-reduced-motion: reduce)").matches) { try { await document.startViewTransition(swap).updateCallbackDone; } catch { swap(); } }
   else { swap(); view.style.animation = "none"; view.offsetHeight; view.style.animation = ""; }
-  try { await v.render(view); const S = SECTIONS[current]; if (S && view.querySelector(".card")) sectionize(view, current, S.groups, S.rules, S.fallback); }
+  // a page split into sub-tabs is drawn whole first, then split: keep it hidden behind a placeholder until it is
+  // split, so it appears once, already in its tabs (no flash of every section, then the tabs)
+  const S = SECTIONS[current];
+  let hold = null;
+  if (S) { hold = document.createElement("div"); hold.className = "skeleton view-hold"; hold.style.height = "120px"; view.before(hold); view.classList.add("is-building"); }
+  try { await v.render(view); if (S && view.querySelector(".card")) sectionize(view, current, S.groups, S.rules, S.fallback); }
   catch (e) { console.error(e); view.innerHTML = `<div class="empty">حدث خطأ: ${esc(e.message)}</div>`; }
+  finally { hold?.remove(); view.classList.remove("is-building"); }
 }
