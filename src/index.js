@@ -39,6 +39,25 @@ export default {
       ctx.waitUntil(runBookingReminders(env).catch((e) => console.error("booking reminders", e)));
     }
   },
+  // Every response goes through withNonce: HTML pages get a fresh nonce in their script policy, which Cloudflare's
+  // bot protection (Bot Fight Mode → JavaScript detections) copies onto the small script it adds to each page, so that
+  // script runs without opening the policy to inline scripts. The site's own scripts are files and need no nonce.
+  async fetch(request, env, ctx) {
+    return withNonce(await route(request, env, ctx));
+  },
+};
+
+function withNonce(res) {
+  const csp = res.headers.get("content-security-policy");
+  if (!csp || !(res.headers.get("content-type") || "").includes("text/html") || !/script-src /.test(csp)) return res;
+  const nonce = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))));
+  const out = new Response(res.body, res);
+  out.headers.set("content-security-policy", csp.replace(/script-src /, `script-src 'nonce-${nonce}' `));
+  return out;
+}
+
+const route = (request, env, ctx) => app.fetch(request, env, ctx);
+const app = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     // one address for search engines: www.wixa.dev → wixa.dev (permanent)
