@@ -11,6 +11,9 @@ export const LINK = (() => {
   const h = new URLSearchParams(location.hash.slice(1)), q = new URLSearchParams(location.search);
   return { recovery: h.get("type") === "recovery" || q.get("type") === "recovery", emailChange: h.get("type") === "email_change",
     invite: (h.get("invite") || q.get("invite") || "").toUpperCase(),
+    // links of the form /admin/?type=recovery&token_hash=… (our email templates): the one-time code is used only
+    // when the person presses «متابعة», so an email app that opens the link twice (or scans it) can't spend it first
+    tokenHash: q.get("token_hash") || "", otpType: q.get("token_hash") ? q.get("type") || "" : "",
     message: h.get("message"), error: h.get("error_description") || q.get("error_description") };
 })();
 
@@ -57,6 +60,33 @@ async function captchaToken() {
   return undefined;
 }
 const resetCaptcha = () => { try { if (tsId !== null) window.turnstile?.reset(tsId); } catch { /* gone */ } };
+
+export function showLinkStep() {
+  const T = { recovery: ["تعيين كلمة مرور جديدة", "اضغط «متابعة» لاختيار كلمة مرور جديدة لحسابك."], email: ["تأكيد بريدك", "اضغط «متابعة» لتأكيد بريدك الإلكتروني وتفعيل حسابك."],
+    signup: ["تأكيد بريدك", "اضغط «متابعة» لتأكيد بريدك الإلكتروني وتفعيل حسابك."], email_change: ["تأكيد البريد الجديد", "اضغط «متابعة» لتأكيد تغيير البريد الإلكتروني."] }[LINK.otpType]
+    || ["متابعة", "اضغط «متابعة» لإكمال الخطوة."];
+  setUser(null);
+  $("#app").hidden = true; $("#auth").hidden = false;
+  $("#authOr").hidden = $("#authInvite").hidden = true;
+  $("#authTitle").textContent = T[0]; $("#authHint").textContent = T[1];
+  $("#authFields").innerHTML = ""; $("#authSubmit").textContent = "متابعة"; authMsg("");
+  const sw = $("#authSwitch"); sw.textContent = "رجوع لتسجيل الدخول";
+  const done = () => { LINK.tokenHash = ""; history.replaceState(null, "", location.pathname); };
+  sw.onclick = () => { done(); showAuth("login"); };
+  $("#authForm").onsubmit = async (e) => {
+    e.preventDefault();
+    $("#authSubmit").disabled = true; authMsg("لحظة…");
+    const type = LINK.otpType === "signup" ? "email" : LINK.otpType;
+    const { data, error } = await sb.auth.verifyOtp({ token_hash: LINK.tokenHash, type });
+    $("#authSubmit").disabled = false;
+    done();
+    if (error) return authMsg(/expired|invalid|not found/i.test(error.message) ? "انتهت صلاحية الرابط أو استُعمل من قبل. اطلب رابطاً جديداً." : error.message, "err");
+    if (type === "recovery") { LINK.recovery = true; return showAuth("reset"); }
+    if (type === "email_change") toast("تم تأكيد البريد ✓ — إن طُلب، أكّد أيضاً الرابط في البريد الآخر.");
+    if (data.session) return afterSignIn(data.session.user);
+    showAuth("login");
+  };
+}
 
 export async function showAuth(mode = "login") {
   setUser(null);

@@ -6,7 +6,7 @@
   addEventListener("unhandledrejection", (e) => report(`Unhandled: ${e.reason?.message || e.reason}`, "", 0));
 }
 /* WIXA admin dashboard — entry. Each part lives in its own module under /admin/js/. */
-import { LINK, afterSignIn, authMsg, showAuth } from "./js/auth.js";
+import { LINK, afterSignIn, authMsg, showAuth, showLinkStep } from "./js/auth.js";
 import { sb, setSb, toast } from "./js/core.js";
 import { setupPasswordEyes } from "./js/pw-eye.js";
 
@@ -35,6 +35,7 @@ setupPasswordEyes(); // an eye button in every password box
     if (evt === "PASSWORD_RECOVERY") { LINK.recovery = true; showAuth("reset"); }
     else if (evt === "SIGNED_OUT") showAuth();
   });
+  if (LINK.tokenHash && LINK.otpType) return showLinkStep(); // a link from our emails: checked when «متابعة» is pressed
   const { data } = await sb.auth.getSession();
   if (LINK.message || LINK.emailChange || LINK.error) history.replaceState(null, "", location.pathname);
   if (LINK.recovery && data.session) return showAuth("reset");
