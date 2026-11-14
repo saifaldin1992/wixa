@@ -64,6 +64,8 @@ binding = "CF_VERSION"
 # request logs with timings (Workers → Observability), to measure speed on the real site
 [observability]
 enabled = true
+# logs keep the address but not what follows «?» (order numbers, one-time codes of email links)
+redact_query_string = true
 
 [vars]
 SITE_ENV = "production"
@@ -107,6 +109,7 @@ binding = "CF_VERSION"
 
 [env.staging.observability]
 enabled = true
+redact_query_string = true
 
 [env.staging.vars]
 SITE_ENV = "staging"
