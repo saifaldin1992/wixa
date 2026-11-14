@@ -686,3 +686,14 @@ When the live chat is on (`settings.chat.on`), it is the way to talk to us every
 - **Code notes:**
   - A section's title and description sit at the top of its own tab (`HEADS`, `TEXT_TABS` in `content.js`).
   - Old tab names (`story`, `guarantees`, `sections`, `privacy`, `booking`, `status`) open their new place (`OLD_TABS`).
+
+## Supabase hardening (Nov 2026, free plan)
+- **Postgres:** 17.11.0.019 on both projects (updated 14 Nov; about 6 minutes of downtime each).
+- **Database access:** SSL is enforced on direct database connections. Legacy JWT API keys (anon, service_role) are **disabled**; the site and the dashboard use only the publishable key (`SUPABASE_PUBLISHABLE_KEY`).
+- **Minimum password length:** 8 on both projects.
+- **Dashboard sign-in check (Cloudflare Turnstile):**
+  - Widget «WIXA dashboard sign-in» (site key in `public/admin/js/auth.js`).
+  - Supabase verifies it (Authentication → Attack protection) on sign-in, the password-reset email and sign-up/invitations.
+  - The widget is mostly invisible. If it can't load, the form still sends, so a failed script never locks anyone out by itself.
+- **Secure password change:** Supabase asks for re-authentication when the last sign-in isn't recent. «الحساب ← تغيير كلمة المرور» then sends a code by email (`reauthenticate()`) and resends the change with `nonce`.
+- **Rollout order for the last two:** code first, then the Supabase settings. Staging is done; live is turned on after the code is published.
