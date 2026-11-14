@@ -1,12 +1,12 @@
 /* المحتوى ← «كل الروابط» and the stand-alone pages added from the dashboard:
    - links: every address of the site in one list (count, open, copy, extra addresses that lead to a page);
    - custom: pages written here (terms, payments…) — add, edit (title, address, text), hide, delete;
-   - team: the /team page (people, roles, photos); status: the /status page.
+   - team: the /team page (people, roles, photos).
    Everything is kept in the site settings and goes live with «حفظ ونشر». */
 import { $, $$, I, closeModal, confirmBox, esc, openModal, savedJSON, sb, setSaved, settings, toast } from "../core.js";
 import { changed, quietly } from "../settings.js";
 import { imageField } from "../fields.js";
-import { PAGE_DEFAULTS, STATUS_DEFAULTS, TEAM_DEFAULTS, pathProblem } from "../../../js/site-pages.js";
+import { PAGE_DEFAULTS, TEAM_DEFAULTS, pathProblem } from "../../../js/site-pages.js";
 
 // the first edit starts from the default list (saved only with «حفظ ونشر»)
 const ensure = (key, def) => {
@@ -18,7 +18,6 @@ const ensure = (key, def) => {
 };
 const pages = () => ensure("pages", PAGE_DEFAULTS);
 const team = () => { const t = ensure("team", TEAM_DEFAULTS); quietly(() => { for (const [k, v] of Object.entries(TEAM_DEFAULTS)) if (t[k] === undefined) t[k] = structuredClone(v); }); return t; };
-const statusOpts = () => ensure("status_page", STATUS_DEFAULTS);
 const aliases = () => { if (!Array.isArray(settings.aliases)) quietly(() => { settings.aliases = []; }); return settings.aliases; };
 const origin = location.origin;
 const PROBLEM = { format: "الرابط يبدأ بـ / ثم أحرف إنجليزية صغيرة وأرقام و- فقط (مثل /terms)", reserved: "هذا الرابط مستخدم لصفحة أساسية في الموقع", taken: "صفحة أخرى تستخدم هذا الرابط" };
@@ -26,7 +25,7 @@ const problemOf = (path, self) => pathProblem(path) || (pages().some((p) => p !=
 
 // ---------------------------------------------------------------- all addresses
 const BUILT_IN = [
-  ["/", "الرئيسية"], ["/about", "من نحن"], ["/order", "اطلب مشروعك"], ["/track", "تتبع الطلب"], ["/contact", "تواصل معنا"],
+  ["/", "الرئيسية"], ["/about", "من نحن"], ["/order", "اطلب مشروعك"], ["/portal", "بوابة العملاء وتتبع الطلب"], ["/contact", "تواصل معنا"],
   ["/faq", "الأسئلة الشائعة"], ["/careers", "الوظائف"], ["/blog", "المقالات"], ["/privacy", "سياسة الخصوصية"],
 ];
 export async function renderLinks(body) {
@@ -34,11 +33,10 @@ export async function renderLinks(body) {
   let site = {}, posts = [];
   try { site = await (await fetch("/api/site", { cache: "no-store" })).json(); } catch {}
   try { posts = (await sb.from("posts").select("slug, title_ar, title_en, published").order("created_at", { ascending: false })).data || []; } catch {}
-  const t = team(), st = statusOpts();
+  const t = team();
   const groups = [
     ["الصفحات الأساسية", [...BUILT_IN.map(([p, n]) => ({ path: p, name: n, on: true, fixed: true })),
-      { path: "/team", name: "فريقنا", on: !!t.on, fixed: true, note: t.on ? "" : "غير مفعّلة", edit: "team" },
-      { path: "/status", name: "حالة الخدمات", on: !!st.on, fixed: true, note: st.on ? "" : "غير مفعّلة", edit: "status" }]],
+      { path: "/team", name: "فريقنا", on: !!t.on, fixed: true, note: t.on ? "" : "غير مفعّلة", edit: "team" }]],
     ["الصفحات المضافة", pages().map((p) => ({ path: p.path, name: p.title_ar || p.title_en || "بدون عنوان", on: !!p.published && !pathProblem(p.path), note: p.published ? "" : "مخفية", edit: "custom", id: p.id }))],
     ["صفحات الخدمات", (site.services || []).map((s) => ({ path: `/services/${encodeURIComponent(s.slug)}`, name: s.title_ar || s.title_en, on: true }))],
     ["صفحات المشاريع", (site.projects || []).map((s) => ({ path: `/projects/${encodeURIComponent(s.slug)}`, name: s.title_ar || s.title_en, on: true }))],
@@ -198,13 +196,4 @@ export function renderTeam(body) {
     $("#tmAdd").onclick = () => { t.members.push({ name_ar: "", name_en: "", role_ar: "", role_en: "", bio_ar: "", bio_en: "", photo: "" }); changed(); draw(); };
   };
   draw();
-}
-
-// ---------------------------------------------------------------- services status (/status)
-export function renderStatus(body) {
-  const s = statusOpts();
-  body.innerHTML = `<p class="muted" style="margin-top:0">صفحة <a href="/status" target="_blank" rel="noopener" dir="ltr">/status</a> تُطمئن الزبون: هل الموقع واستقبال الطلبات وتتبع الطلب والدردشة تعمل الآن. تُفحص تلقائياً كل دقيقة، ولا تحتاج أي إدخال.</p>
-    <div class="stack"><label class="switch"><input type="checkbox" data-s="on" ${s.on ? "checked" : ""}><i></i>الصفحة منشورة</label>
-      <label class="switch"><input type="checkbox" data-s="footer" ${s.footer ? "checked" : ""}><i></i>رابطها في أسفل الموقع</label></div>`;
-  $$("[data-s]", body).forEach((el) => (el.onchange = () => { s[el.dataset.s] = el.checked; changed(); }));
 }

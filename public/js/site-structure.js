@@ -23,14 +23,12 @@ export const SECTION_PAGES = {
   projects: { path: "/projects", name_ar: "أعمالنا", name_en: "Our work", main: "projects" },
   pricing: { path: "/pricing", name_ar: "الأسعار", name_en: "Pricing", main: "pricing" },
   order: { path: "/order", name_ar: "اطلب مشروعك", name_en: "Order your project" },
-  track: { path: "/track", name_ar: "تتبع طلبك", name_en: "Track your order" },
 };
 // Pages built by the server from their own content (articles, policies, status…). Pages added from the dashboard
 // (settings.pages) join these at run time (sitePages in site-pages.js).
 export const OWN_PAGES = {
   blog: { path: "/blog", name_ar: "المقالات", name_en: "Articles" },
   privacy: { path: "/privacy", name_ar: "سياسة الخصوصية", name_en: "Privacy policy" },
-  status: { path: "/status", name_ar: "حالة الخدمات", name_en: "Service status" },
   team: { path: "/team", name_ar: "فريقنا", name_en: "Our team" },
 };
 
@@ -40,11 +38,11 @@ const OPEN = ["home", "about", "careers", "faq", "contact", "services", "project
 export const SECTIONS = {
   hero: { name_ar: "البداية (العنوان الرئيسي)", pages: ["home"] },
   about: { name_ar: "نبذة عن الشركة", pages: OPEN },
-  story: { name_ar: "القصة (المميزات)", pages: OPEN },
+  story: { name_ar: "لماذا ويكسا (المميزات والضمانات)", pages: OPEN, parts: ["guarantees"] },
   partners: { name_ar: "شركاؤنا", pages: OPEN },
   services: { name_ar: "خدماتنا", pages: OPEN, parts: ["industries"] },
   projects: { name_ar: "نماذج من عملنا", pages: OPEN },
-  process: { name_ar: "كيف نعمل + لماذا تطمئن معنا", pages: OPEN, parts: ["guarantees"] },
+  process: { name_ar: "كيف نعمل", pages: OPEN },
   stats: { name_ar: "أرقام نفخر بها", pages: OPEN },
   pricing: { name_ar: "الباقات والأسعار", pages: OPEN },
   calculator: { name_ar: "حاسبة التكلفة", pages: OPEN },
@@ -53,7 +51,6 @@ export const SECTIONS = {
   faq: { name_ar: "الأسئلة الشائعة", pages: OPEN },
   ways: { name_ar: "طرق التواصل", pages: OPEN },
   order: { name_ar: "نموذج الطلب", pages: ["order"] },
-  track: { name_ar: "تتبع الطلب", pages: ["track"] },
   contact: { name_ar: "الخاتمة: جاهزون لإنجاز مشروعك", pages: OPEN },
 };
 
@@ -71,7 +68,6 @@ export const DEFAULT_LAYOUTS = {
   faq: ["faq", "contact"],
   contact: ["ways"],
   order: ["order"],
-  track: ["track"],
 };
 
 // A page's sections in order, each { k, on } — the saved list merged with the defaults (see the rules above).
@@ -106,8 +102,9 @@ export const sectionShown = (settings, k, empty) => !(settings && settings.secti
 export const NAV_TARGETS = {
   home: { page: "home" }, about: { page: "about" }, careers: { page: "careers" }, contact: { page: "contact" }, faq: { page: "faq" },
   blog: { page: "blog" }, privacy: { page: "privacy" },
-  services: { page: "services" }, industries: { page: "services", hash: "industries", part: "industries" }, projects: { page: "projects" },
-  pricing: { page: "pricing" }, calc: { section: "calculator" }, partners: { section: "partners" },
+  // «حلول حسب مجالك» and «احسب تكلفة مشروعك» are parts of the services and pricing pages, not menu links of their own
+  services: { page: "services" }, projects: { page: "projects" },
+  pricing: { page: "pricing" }, partners: { section: "partners" },
 };
 const ANCHOR = { services: "services", industries: "industries", projects: "projects", pricing: "pricing", calculator: "calculator", partners: "partners" };
 const PAGE_ORDER = ["home", "services", "projects", "pricing", "about", "careers", "faq", "contact"];
@@ -140,7 +137,7 @@ export const FOOTER_GROUPS = [
   { k: "support", name_ar: "الدعم", name_en: "Support" },
   { k: "legal", name_ar: "قانوني", name_en: "Legal" },
 ];
-export const LINK_GROUP = { services: "services", industries: "services", projects: "services", pricing: "services", calc: "services",
+export const LINK_GROUP = { services: "services", projects: "services", pricing: "services",
   about: "company", careers: "company", blog: "company", partners: "company", home: "company",
   contact: "support", faq: "support", privacy: "legal" };
 export const groupOf = (x) => (FOOTER_GROUPS.some((g) => g.k === x.g) ? x.g : LINK_GROUP[x.k] || "company");

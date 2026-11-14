@@ -35,6 +35,16 @@ export function renderSales() {
       <ul>${String(x.features || "").split("\n").map((f) => f.trim()).filter(Boolean).map((f) => `<li>${esc(f)}</li>`).join("")}</ul>
       <button type="button" class="btn ${x.featured ? "btn--primary" : "btn--ghost"} pkg__cta" data-pkg="${i}">${ui.pkg_cta}</button></article>`).join("");
   show("#pricing", pk.length);
+  // «لماذا ويكسا» ends with the facts a client asks about first: the lowest package price, a free written quote,
+  // when we answer, and the cost calculator as the next step (no packages → no price line)
+  const nums = pk.map((x) => Number(String(x.price || "").replace(/[^\d.]/g, ""))).filter((n) => n > 0);
+  const facts = [
+    nums.length && `${ui.why_from} <b dir="ltr">${Math.min(...nums).toLocaleString("en-US")}$</b>`,
+    ui.why_reply,
+    `<a href="/pricing${lang === "en" ? "?lang=en" : ""}#calculator" data-more="calc">${ui.why_calc} ${lang === "ar" ? "←" : "→"}</a>`,
+  ].filter(Boolean);
+  const fl = $("#whyFacts");
+  if (fl) { fl.innerHTML = facts.map((f) => `<li><span aria-hidden="true">✦</span>${f}</li>`).join(""); fl.setAttribute("aria-label", lang === "ar" ? "معلومات سريعة" : "Quick facts"); }
   // services: "by service" / "by your field"
   const tab = (name) => {
     $$("#svcTabs [data-tab]").forEach((b) => { b.classList.toggle("on", b.dataset.tab === name); b.setAttribute("aria-selected", b.dataset.tab === name); });

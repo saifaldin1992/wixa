@@ -14,7 +14,6 @@ import { setupChat } from "./site/chat.js";
 import { visitSource } from "./site/source.js";
 import { setupPromo, setupExitOffer } from "./site/promo.js";
 import { setupOrder } from "./site/order.js";
-import { setupTrack } from "./site/track.js";
 import { setupNavScroll } from "./site/navscroll.js";
 visitSource(); // remember where this visit came from (first visit wins)
 // one HTML, four pages: the homepage, /about, /pricing and /careers each show their own sections
@@ -52,7 +51,6 @@ if (PREVIEW) addEventListener("message", (e) => {
   setupUI();
   setupContact();
   setupOrder();
-  setupTrack();
   setupNavScroll();
   fitHeroTop();
   setupTheme();

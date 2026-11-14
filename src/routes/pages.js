@@ -11,7 +11,7 @@
 //  • Visits are counted by Cloudflare Web Analytics, not by this Worker.
 
 import { PRIVACY_DEFAULTS } from "../../public/js/privacy-defaults.js";
-import { STATUS_DEFAULTS, TEAM_DEFAULTS, sitePages } from "../../public/js/site-pages.js";
+import { TEAM_DEFAULTS, sitePages } from "../../public/js/site-pages.js";
 import { UI_DEFAULTS } from "../../public/js/ui-strings.js";
 import { SOCIAL } from "../../public/js/social-icons.js";
 import { SECURITY_HEADERS, WIXA, esc, fmtDate, notFound, pickLang, safeHref, versionAssets, versioned } from "../lib/core.js";
@@ -200,16 +200,14 @@ export function detailsHtml(raw) {
   }).join("");
 }
 
-// Company pages in the footer: pages added from the dashboard (group «قانوني» unless the page says otherwise), our team
-// («الشركة»), services status («الدعم») — each { g, html }.
+// Company pages in the footer: pages added from the dashboard (group «قانوني» unless the page says otherwise) and our
+// team («الشركة») — each { g, html }.
 export function footerExtra(st, lang, path = "") {
-  const team = { ...TEAM_DEFAULTS, ...(st.team || {}) }, status = { ...STATUS_DEFAULTS, ...(st.status_page || {}) };
+  const team = { ...TEAM_DEFAULTS, ...(st.team || {}) };
   const q = lang === "ar" ? "" : "?lang=en";
   const a = (href, label, i) => `<a href="${href}${q}"${path === href ? ' aria-current="page"' : ""} style="order:${100 + i}">${esc(label)}</a>`;
   const out = sitePages(st).filter((p) => p.published && p.footer).map((p, i) => ({ g: ["services", "company", "support", "legal"].includes(p.group) ? p.group : "legal", html: a(p.path, p[`title_${lang}`] || p.title_ar || p.title_en, i) }));
   if (team.on && team.footer) out.push({ g: "company", html: a("/team", team[`title_${lang}`] || TEAM_DEFAULTS[`title_${lang}`], 50) });
-  if (status.on && status.footer) out.push({ g: "support", html: a("/status", lang === "ar" ? "حالة الخدمات" : "Service status", 60) });
-  out.push({ g: "support", html: a("/portal", lang === "ar" ? "بوابة العملاء" : "Client portal", 55) });
   return out;
 }
 // A page's text: [{h, p}] → headings and paragraphs; "{email}" becomes the contact email link
@@ -294,7 +292,7 @@ export function siteShell(st, lang, path, { empty } = {}) {
     <svg class="footer__wave" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
 ${groups}
     <div class="footer__tools">
-      <a href="/track${q}" class="track-btn" data-track><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg><span data-t="track">${esc(ui.track)}</span></a>
+      <a href="/portal${q}" class="track-btn" data-track><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg><span data-t="track">${esc(ui.track)}</span></a>
       <div class="footer__social" id="social">${socials}</div>
     </div>
     <div class="footer__brand"><a href="${path === "/" ? "#top" : `/${q}`}" class="brand"><span class="brand__mark">${mark}</span><span class="brand__name" data-t="brand">${word}</span></a></div>
@@ -399,9 +397,6 @@ html[data-theme="dark"] .page{--p:var(--fg)}
 .page .team{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-top:24px}.page .team__m{padding:var(--card-pad,18px);border-radius:var(--radius,22px);border:1px solid var(--l);background:var(--s);text-align:center}
 .page .team__m img,.page .team__av{width:96px;height:96px;border-radius:50%;object-fit:cover;margin:0 auto 10px;display:grid;place-items:center;background:color-mix(in srgb,var(--p) 12%,transparent);color:var(--p);font-size:2rem;font-weight:800}
 .page .team__m b{display:block;color:var(--t);font-size:1.0625rem}.page .team__m span{display:block;color:var(--p);font-size:.875rem;font-weight:700}.page .team__m p{margin:8px 0 0;font-size:.92rem;line-height:1.7}
-.page .status{display:grid;gap:10px;margin:24px 0}.page .status__row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:14px 18px;border-radius:var(--radius,22px);border:1px solid var(--l);background:var(--s)}
-.page .status__row b{color:var(--t)}.page .status__row small{grid-column:2/-1;color:var(--m);font-size:.85rem}.page .status__st{font-weight:700;color:var(--m)}
-.page .status__dot{width:12px;height:12px;border-radius:50%;background:#0E7C47;box-shadow:0 0 0 4px color-mix(in srgb,#0E7C47 18%,transparent)}.page .status__dot--warn{background:#B45309;box-shadow:0 0 0 4px color-mix(in srgb,#B45309 18%,transparent)}.page .status__dot--down{background:#B91C1C;box-shadow:0 0 0 4px color-mix(in srgb,#B91C1C 18%,transparent)}.page .status__dot--off{background:#9CA3AF;box-shadow:none}
 .page .crumbs{margin:0 0 18px;font-size:.84rem}.page .crumbs ol{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 0;list-style:none;margin:0;padding:0}
 .page .crumbs li{color:var(--m);line-height:1.6}.page .crumbs li+li::before{content:"›";margin-inline:8px;color:var(--m);opacity:.6}
 html[dir="rtl"] .page .crumbs li+li::before{content:"‹"}.page .crumbs a{color:var(--m)!important;text-decoration:none!important}.page .crumbs a:hover{color:var(--p)!important}
@@ -525,37 +520,6 @@ export async function handleTeam(request, env, ctx) {
       <b>${esc(L(m, "name"))}</b>${L(m, "role") ? `<span>${esc(L(m, "role"))}</span>` : ""}${L(m, "bio") ? `<p>${esc(L(m, "bio"))}</p>` : ""}</div>`; }).join("")}</div>`
       : `<div class="empty">${ar ? "نضيف تعريف الفريق قريباً." : "Our team will be introduced here soon."}</div>`}`;
   return simplePage(request, st, { lang, title: L(t, "title"), description: L(t, "sub") || L(t, "title"), path: "/team", body });
-}
-
-// GET /status — services status for clients: is the site, ordering, order tracking and the live chat working.
-// The database check is remembered for 60 s, so the page can never flood the database.
-let statusMemo = { at: 0, db: false };
-export async function handleStatus(request, env, ctx) {
-  const [raw, cfg] = await Promise.all([getSiteData(env, ctx), getConfig(env)]);
-  let st = {};
-  try { st = JSON.parse(raw).settings || {}; } catch {}
-  if (!{ ...STATUS_DEFAULTS, ...(st.status_page || {}) }.on) return pageNotFound(request, st);
-  const lang = pickLang(request, st.default_lang), ar = lang === "ar";
-  if (Date.now() - statusMemo.at > 60_000) {
-    let db = false;
-    try { db = (await fetch(`${env.SUPABASE_URL}/auth/v1/health`, { headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY }, signal: AbortSignal.timeout(5000) })).ok; } catch {}
-    statusMemo = { at: Date.now(), db };
-  }
-  const db = statusMemo.db, chatOn = !!st.chat?.on;
-  const rows = [
-    [ar ? "الموقع" : "Website", cfg.maintenance.on ? "warn" : "ok", cfg.maintenance.on ? (ar ? "صيانة مجدولة" : "Scheduled maintenance") : ""],
-    [ar ? "استقبال الطلبات والرسائل" : "Orders and messages", db ? "ok" : "down", ""],
-    [ar ? "تتبع الطلب" : "Order tracking", db ? "ok" : "down", ""],
-    [ar ? "الدردشة المباشرة" : "Live chat", !chatOn ? "off" : db ? "ok" : "down", !chatOn ? (ar ? "غير مفعّلة حالياً — راسلنا عبر واتساب" : "Not active right now — message us on WhatsApp") : ""],
-  ];
-  const word = { ok: ar ? "يعمل" : "Working", warn: ar ? "تنبيه" : "Notice", down: ar ? "متوقف مؤقتاً" : "Temporarily down", off: ar ? "متوقفة" : "Off" };
-  const allOk = rows.every(([, s]) => s === "ok" || s === "off");
-  const when = new Date(statusMemo.at).toLocaleString(ar ? "ar-IQ-u-nu-latn" : "en-GB", { timeZone: "Asia/Baghdad", dateStyle: "medium", timeStyle: "short" });
-  const body = `<h1>${ar ? "حالة الخدمات" : "Service status"}</h1>
-    <p class="lead">${allOk ? (ar ? "كل الخدمات تعمل بشكل طبيعي." : "All services are working normally.") : (ar ? "بعض الخدمات متأثرة الآن، ونعمل على إصلاحها." : "Some services are affected right now; we are on it.")}</p>
-    <div class="status">${rows.map(([n, s, note]) => `<div class="status__row"><span class="status__dot status__dot--${s}" aria-hidden="true"></span><b>${n}</b><span class="status__st">${word[s]}</span>${note ? `<small>${esc(note)}</small>` : ""}</div>`).join("")}</div>
-    <p class="lead" style="font-size:.875rem">${ar ? "آخر فحص:" : "Last checked:"} ${esc(when)}</p>`;
-  return simplePage(request, st, { lang, title: ar ? "حالة الخدمات" : "Service status", description: ar ? "هل خدمات ويكسا تعمل الآن." : "Whether WIXA's services are working right now.", path: "/status", body , ending: false });
 }
 
 // ---------------------------------------------------------------- service pages

@@ -476,8 +476,7 @@ Dashboard → صفحات الموقع:
   `{id, path, title_*, desc_*, published, footer, updated, ar:[{h,p}], en:[{h,p}]}`), until saved the defaults
   **/terms** and **/payment** (general wording — finish when the company details are final). `{email}` → contact link.
   An address must match `PATH_RE` (one segment, a–z 0–9 -) and not be in `RESERVED_PATHS`.
-- **«فريقنا»** → `settings.team` (`/team`, 404 until switched on) and **«حالة الخدمات»** → `settings.status_page`
-  (`/status`: site, ordering, tracking, chat; database checked at most once a minute).
+- **«فريقنا»** → `settings.team` (`/team`, 404 until switched on). The services status page (/status) was removed in Nov 2026.
 
 Routing: `wrangler.toml` `not_found_handling = "none"`, so an address that is not a file reaches the Worker
 (`src/index.js` end: custom page → extra address → the site's 404 page via `notFound()`). Published pages are added to

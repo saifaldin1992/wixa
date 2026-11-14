@@ -9,7 +9,6 @@ import { renderWays } from "./ways.js";
 import { renderCalc } from "./calculator.js";
 import { carousels } from "./carousel.js";
 import { repaintOrder } from "./order.js";
-import { repaintTrack } from "./track.js";
 const { applyTheme } = window.WIXA;
 
 // ---------- render ----------
@@ -224,7 +223,6 @@ export function render() {
   requestAnimationFrame(carousels);
   outline();
   repaintOrder(); // a language switch on the order page
-  repaintTrack();
 }
 
 // On an inner page made of one home section (/services, /about…) that section's title is the page's main heading

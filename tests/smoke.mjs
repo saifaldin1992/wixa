@@ -41,10 +41,13 @@ try {
   check(priv.status === 200 && (await priv.text()).includes("سياسة الخصوصية"), "privacy page responds", String(priv.status));
   check((await fetch(`${BASE}/projects/no-such-project`)).status === 404, "unknown project pages return 404");
   check((await (await fetch(`${BASE}/sitemap.xml`)).text()).includes("/privacy"), "sitemap lists the privacy page");
-  for (const [p, t] of [["/terms", "الشروط والأحكام"], ["/payment", "الدفع والاسترجاع"], ["/status", "حالة الخدمات"]]) {
+  for (const [p, t] of [["/terms", "الشروط والأحكام"], ["/payment", "الدفع والاسترجاع"]]) {
     const r = await fetch(`${BASE}${p}?lang=ar`);
     check(r.status === 200 && (await r.text()).includes(t), `${p} page responds`, String(r.status));
   }
+  check((await fetch(`${BASE}/status`)).status === 404, "the removed services status page is gone");
+  const tr = await fetch(`${BASE}/track?n=WX-1`, { redirect: "manual" });
+  check(tr.status === 301 && (tr.headers.get("location") || "").endsWith("/portal?n=WX-1"), "order tracking moved to the client portal (number kept)", `${tr.status} ${tr.headers.get("location")}`);
   const miss = await fetch(`${BASE}/no-such-page`);
   check(miss.status === 404 && (await miss.text()).includes("<title>"), "an unknown address shows the site's 404 page", String(miss.status));
   check((await fetch(`${BASE}/api/admin/order`, { method: "POST", body: "{}" })).status === 401, "manual orders require sign-in");

@@ -73,7 +73,6 @@ export const pathProblem = (p) => (!PATH_RE.test(p || "") ? "format" : RESERVED_
 export const sitePages = (st) => (Array.isArray(st?.pages) ? st.pages : PAGE_DEFAULTS)
   .filter((p) => p && typeof p === "object" && !pathProblem(p.path));
 
-// The team page and the services status page (fixed addresses /team and /status): their options
+// The team page (fixed address /team): its options
 export const TEAM_DEFAULTS = { on: false, footer: true, title_ar: "فريقنا", title_en: "Our team",
   sub_ar: "الأشخاص الذين يصممون ويطوّرون مشاريعكم.", sub_en: "The people who design and build your projects.", members: [] };
-export const STATUS_DEFAULTS = { on: true, footer: true };

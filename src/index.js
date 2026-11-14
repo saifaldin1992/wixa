@@ -14,14 +14,14 @@
 
 import { runBackup, runBookingReminders, runMonitor, runReminders, runWeeklyReport } from "./jobs/scheduled.js";
 import { SECURITY_HEADERS, SITE_TTL, json, notFound, serveBuild } from "./lib/core.js";
-import { PATH_RE, STATUS_DEFAULTS, sitePages } from "../public/js/site-pages.js";
+import { PATH_RE, sitePages } from "../public/js/site-pages.js";
 import { handleAdminBooking, handleAdminCampaign, handleAdminOrder, handleAdminRestore, handlePayWebhook, handleAdminDevGuide, handleAdminFunnel, handleAdminIntegrations, handleAdminMsgMeta, handleAdminNotify, handleAdminPage, handleAdminRefresh, handleAdminReviewLink, handleAdminStats, handleAdminStatus, handleAdminTeam, handleAdminTest, handleInviteClaim } from "./routes/admin.js";
 import { handleAdminPush, handleChat, handleChatRate, handlePushLast } from "./routes/chat.js";
 import { handleAdminDiagnose } from "./routes/diagnose.js";
 import { handleAdminErrors, handleClientError, recordError } from "./routes/errors.js";
 import { handleAdminOrderNotify, handlePortalData, handlePortalLogin, handlePortalPage } from "./routes/portal.js";
 import { handleContact, handleEvent, handleOrder, handleOrderFind, handleReview, handleSlots, handleTrack, handleUnsubscribe } from "./routes/forms.js";
-import { handleBlog, handleCustomPage, handleHome, handleNotFound, handlePrivacy, handleProjectPage, handleServicePage, handleStatus, handleTeam } from "./routes/pages.js";
+import { handleBlog, handleCustomPage, handleHome, handleNotFound, handlePrivacy, handleProjectPage, handleServicePage, handleTeam } from "./routes/pages.js";
 import { getConfig, getPosts, getSiteData } from "./services/data.js";
 
 let health = { at: 0, supabase: "unknown" };
@@ -117,19 +117,19 @@ export default {
         case "GET /about":
         case "GET /careers":
         case "GET /order":
-        case "GET /track":
         case "GET /contact":
         case "GET /faq":
           return await handleHome(request, env, ctx, url.pathname.slice(1));
+        // order tracking now lives in «بوابة العملاء»: old links (emails, saved pages) land there with their number
+        case "GET /track":
+        case "HEAD /track":
+          return Response.redirect(`${url.origin}/portal${url.search}`, 301);
         case "GET /privacy":
         case "HEAD /privacy":
           return await handlePrivacy(request, env, ctx);
         case "GET /team":
         case "HEAD /team":
           return await handleTeam(request, env, ctx);
-        case "GET /status":
-        case "HEAD /status":
-          return await handleStatus(request, env, ctx);
         case "GET /api/admin/msgmeta":
         case "PUT /api/admin/msgmeta":
           return await handleAdminMsgMeta(request, env);
@@ -151,7 +151,7 @@ export default {
           let projects = [], services = [], st = {};
           try { const d = JSON.parse(await getSiteData(env, ctx)); projects = d.projects || []; services = d.services || []; st = d.settings || {}; } catch {}
           const posts = await getPosts(env);
-          const extra = [...sitePages(st).filter((p) => p.published).map((p) => p.path), ...(st.team?.on ? ["/team"] : []), ...({ ...STATUS_DEFAULTS, ...(st.status_page || {}) }.on ? ["/status"] : [])];
+          const extra = [...sitePages(st).filter((p) => p.published).map((p) => p.path), ...(st.team?.on ? ["/team"] : [])];
           const urls = ["/", "/services", "/projects", "/pricing", "/about", "/careers", "/contact", "/faq", "/order", "/privacy", "/terms", "/payment", ...(posts.length ? ["/blog"] : []), ...extra, ...services.map((x) => `/services/${encodeURIComponent(x.slug)}`), ...projects.map((x) => `/projects/${encodeURIComponent(x.slug)}`), ...posts.map((x) => `/blog/${encodeURIComponent(x.slug)}`)].filter((p, i, all) => all.indexOf(p) === i)
             // both language versions of every page, each naming the other (and the bare address as x-default)
             .flatMap((p) => ["ar", "en"].map((l) => `<url><loc>https://wixa.dev${p}?lang=${l}</loc><lastmod>${today}</lastmod>${["ar", "en"].map((h) => `<xhtml:link rel="alternate" hreflang="${h}" href="https://wixa.dev${p}?lang=${h}"/>`).join("")}<xhtml:link rel="alternate" hreflang="x-default" href="https://wixa.dev${p}"/></url>`)).join("");

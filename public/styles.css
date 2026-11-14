@@ -2064,5 +2064,50 @@ html.fab-away .wa, html.fab-away .chatw__btn { transform: translateY(140%); opac
 
 /* «تخطَّ إلى المحتوى»: hidden until reached with the keyboard, then shown above everything at the top */
 .skip { position: fixed; top: 8px; inset-inline-start: 8px; z-index: 2000; padding: 10px 16px; border-radius: 12px; background: var(--primary); color: var(--primary-ink, #fff); font-weight: 700; text-decoration: none; transform: translateY(-160%); transition: transform .2s; }
+.skip:not(:focus) { opacity: 0; pointer-events: none; } /* never peeks out, even when the page is pulled past its top */
 .skip:focus { transform: none; outline: 3px solid var(--accent); outline-offset: 2px; }
 #content:focus { outline: none; }
+
+/* ===== «لماذا ويكسا»: one panel — what you get (three cards), what we commit to (guarantees), quick facts ===== */
+.why__panel { position: relative; overflow: hidden; padding: clamp(26px, 5vw, 56px) clamp(14px, 4vw, 48px) clamp(24px, 4vw, 44px);
+  border-radius: var(--radius-lg, 34px); border: 1px solid color-mix(in srgb, var(--primary) 16%, var(--line));
+  background: radial-gradient(120% 70% at 50% 0%, color-mix(in srgb, var(--primary) 9%, transparent), transparent 70%), var(--surface); }
+.why__panel::after { content: ""; position: absolute; inset: auto -10% -40% auto; width: 420px; height: 420px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 14%, transparent), transparent 65%); }
+.why__head { margin-bottom: clamp(18px, 3vw, 30px); }
+.why__kicker { display: inline-block; margin-bottom: 10px; padding: 5px 14px; border-radius: 99px; font-size: .82rem; font-weight: 700;
+  color: var(--primary); background: color-mix(in srgb, var(--primary) 10%, var(--surface)); }
+html[data-theme="dark"] .why__kicker { color: var(--fg); }
+.why .story__list { position: relative; z-index: 1; max-width: none; }
+.why .story-item, .why .story-item.in { background: color-mix(in srgb, var(--bg) 55%, var(--surface)); }
+.why__trust { position: relative; z-index: 1; margin-top: clamp(26px, 4vw, 40px); }
+.why__h { display: flex; align-items: center; gap: 14px; margin: 0 0 16px; font-size: clamp(1.1rem, 2vw, 1.35rem); text-align: center; }
+.why__h::before, .why__h::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.why .guarantees__grid { padding: 0; max-width: none; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.why .guar { padding: 16px; text-align: start; display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; align-items: start; background: var(--surface); }
+.why .guar__ok { width: 32px; height: 32px; font-size: .95rem; margin: 0; grid-row: span 2; }
+.why .guar h3 { font-size: 1rem; margin: 4px 0 0; } .why .guar p { font-size: .9rem; line-height: 1.75; }
+.why__facts { position: relative; z-index: 1; list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: clamp(22px, 3vw, 30px) 0 0; padding: 0; }
+.why__facts:empty { display: none; }
+.why__facts li { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 99px; font-size: .92rem; font-weight: 600;
+  background: var(--surface); border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--line)); color: var(--text); }
+.why__facts li span { color: var(--accent); font-size: .8rem; }
+.why__facts b { color: var(--primary); }
+html[data-theme="dark"] .why__facts b { color: var(--fg); }
+@media (max-width: 1000px) { .why .guarantees__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .why .guarantees__grid { grid-template-columns: minmax(0, 1fr); } }
+.why__head > .wave { display: none; } /* the panel's own frame replaces the wave over its title */
+.why__facts a { color: inherit; text-decoration: none; } .why__facts li:has(a) { border-color: var(--primary); }
+/* phones: the same content, shorter — each card a small picture beside its text, the commitments one list */
+@media (max-width: 760px) {
+  .why .story__list { gap: 10px; }
+  .why .story-item, .why .story-item.in { grid-template-columns: 76px minmax(0, 1fr); justify-items: start; text-align: start; gap: 4px 14px; padding: 14px 16px; }
+  .why .story-item .story-item__art, .why .story-item:nth-child(even) .story-item__art { width: 76px; height: 64px; grid-row: span 3; align-self: center; }
+  .why .story-item .story-item__text { text-align: start; }
+  .why .story-item h3 { font-size: 1.08rem; margin: 0 0 4px; } .why .story-item p { font-size: .9rem; margin: 0; max-width: none; text-wrap: pretty; }
+  .why .story-item__num { font-size: .78rem; }
+  .why .guarantees__grid { gap: 0; border: 1px solid var(--line); border-radius: 22px; background: var(--surface); overflow: hidden; }
+  .why .guar { border: 0; border-radius: 0; background: none; padding: 14px 16px; box-shadow: none; }
+  .why .guar + .guar { border-top: 1px solid var(--line); }
+  .why__facts { gap: 8px; } .why__facts li { padding: 8px 13px; font-size: .86rem; }
+}

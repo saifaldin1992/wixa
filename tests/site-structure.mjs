@@ -59,7 +59,7 @@ if (BASE) {
   const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 390, height: 844 } });
-  const PAGES = [...Object.values(SECTION_PAGES).map((x) => x.path), "/blog", "/privacy", "/status", "/terms", "/payment"];
+  const PAGES = [...Object.values(SECTION_PAGES).map((x) => x.path), "/blog", "/privacy", "/terms", "/payment"];
   const shells = new Map(), links = new Set();
   for (const path of PAGES) {
     const r = await p.goto(BASE + path, { waitUntil: "load" });

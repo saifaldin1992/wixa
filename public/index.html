@@ -106,9 +106,21 @@
 
 
     <!-- Story -->
-    <!--s:story--><section data-pages="home about" class="story" id="story" data-section="story">
-      <h2 class="sr-only" data-t="why_wixa">لماذا ويكسا</h2>
-      <div class="story__list" id="storyList"></div>
+    <!-- «لماذا ويكسا»: what the client gets (three cards), what we promise (guarantees) and the facts to know before starting -->
+    <!--s:story--><section data-pages="home about" class="story why" id="story" data-section="story">
+      <div class="why__panel">
+        <div class="head head--center why__head">
+          <span class="why__kicker" data-t="why_kicker">قبل أن تبدأ</span>
+          <h2 class="head__title reveal-up" data-c="why_title">لماذا ويكسا</h2>
+          <p class="head__sub reveal-up" data-c="why_sub">ما ستحصل عليه، وما نلتزم به معك — بوضوح ومن البداية.</p>
+        </div>
+        <div class="story__list" id="storyList"></div>
+        <div class="why__trust" data-section="guarantees" id="guarantees">
+          <h3 class="why__h" data-c="guarantees_title">لماذا تطمئن معنا</h3>
+          <div class="guarantees__grid" id="guaranteesGrid"></div>
+        </div>
+        <ul class="why__facts" id="whyFacts" aria-label="معلومات سريعة"></ul>
+      </div>
     </section><!--/s-->
     <!-- Partners -->
     <!--s:partners--><section data-pages="home about" class="partners" id="partners" data-section="partners">
@@ -161,10 +173,6 @@
       <div class="process__track" id="processTrack">
         <div class="process__line" aria-hidden="true"><span></span></div>
         <ol class="process__steps" id="processSteps"></ol>
-      </div>
-      <div class="guar-strip" data-section="guarantees" id="guarantees">
-        <h3 class="guar-strip__title" data-c="guarantees_title"></h3>
-        <div class="guarantees__grid" id="guaranteesGrid"></div>
       </div>
     </section><!--/s-->
 
@@ -260,7 +268,6 @@
 
     <!-- Order page (/order): one page for every order, like a shop's checkout -->
     <!--s:order--><section data-pages="order" class="order" id="orderPage"><div class="order__wrap" id="orderApp"></div></section><!--/s-->
-    <!--s:track--><section data-pages="track" class="track" id="trackPage"><div class="track__wrap" id="trackApp"></div></section><!--/s-->
 
     <!-- Contact page: every way to reach us -->
     <!--s:ways--><section class="ways" id="ways" data-pages="contact">

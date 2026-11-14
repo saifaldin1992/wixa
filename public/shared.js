@@ -69,7 +69,7 @@
     nav: { items: [
       { k: "home", at: "menu" }, { k: "services", at: "both" }, { k: "projects", at: "both" }, { k: "pricing", at: "both" }, { k: "about", at: "both" },
       { k: "blog", at: "both" }, { k: "contact", at: "both" },
-      { k: "industries", at: "footer" }, { k: "calc", at: "footer" }, { k: "careers", at: "footer" }, { k: "faq", at: "footer" },
+      { k: "careers", at: "footer" }, { k: "faq", at: "footer" },
       { k: "privacy", at: "footer" }, { k: "partners", at: "hidden" },
     ] },
     // gifts and a discount promised with every project request ("start your project"); edited in the dashboard (offers)
@@ -146,7 +146,9 @@
           { icon: "cloud", title: "مواقع الشركات", text: "موقع يعرّف بشركتك وخدماتك ويجلب العملاء، بلغتين ولوحة تحكم تدير بها المحتوى بنفسك.", price: "يبدأ من 1,500$" },
           { icon: "ai", title: "مجالات أخرى", text: "مطاعم، تعليم، عقارات، خدمات حكومية وغيرها — أخبرنا عن مجالك ونقترح عليك الحل المناسب.", price: "حسب الطلب" },
         ],
-        guarantees_title: "لماذا تطمئن معنا",
+        why_title: "لماذا ويكسا",
+        why_sub: "ما ستحصل عليه، وما نلتزم به معك — بوضوح ومن البداية.",
+        guarantees_title: "ما نلتزم به معك",
         guarantees_sub: "شروط واضحة من البداية، بلا مفاجآت.",
         guarantees: [
           { title: "دفعتان فقط", text: "75% عند البدء، و25% بعد التسليم وتأكدك أن العمل كما اتفقنا." },
@@ -237,7 +239,9 @@
           { icon: "cloud", title: "Company websites", text: "A bilingual website that presents your company and brings in customers, with a dashboard to manage it yourself.", price: "From $1,500" },
           { icon: "ai", title: "Other fields", text: "Restaurants, education, real estate, public services and more — tell us about your field and we'll suggest the right solution.", price: "On request" },
         ],
-        guarantees_title: "Why you can rely on us",
+        why_title: "Why WIXA",
+        why_sub: "What you get, and what we commit to — clearly, from the start.",
+        guarantees_title: "What we commit to",
         guarantees_sub: "Clear terms from the start, no surprises.",
         guarantees: [
           { title: "Just two payments", text: "75% at the start, 25% after delivery once you confirm the work is as agreed." },

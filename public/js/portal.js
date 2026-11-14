@@ -28,10 +28,12 @@ const post = async (path, body) => { const r = await fetch(path, { method: "POST
 
 function signIn(root, err = "") {
   const lo = lastOrder();
+  const fromLink = new URLSearchParams(location.search).get("n") || ""; // the confirmation's link carries the number
+  const num = fromLink || lo?.number || "";
   root.innerHTML = `<form class="portal__in" novalidate>
       <h2>${T.in}</h2><p class="muted">${T.inSub}</p>
-      <label>${T.number}<input name="number" autocomplete="off" dir="ltr" placeholder="WX-261108-XXXX" value="${esc(lo?.number || "")}" required></label>
-      <label>${T.phone}<input name="phone" type="tel" inputmode="tel" autocomplete="tel" dir="ltr" value="${esc(lo?.phone || "")}" required></label>
+      <label>${T.number}<input name="number" autocomplete="off" dir="ltr" placeholder="WX-261108-XXXX" value="${esc(num)}" required></label>
+      <label>${T.phone}<input name="phone" type="tel" inputmode="tel" autocomplete="tel" dir="ltr" value="${esc(lo && lo.number === num ? lo.phone || "" : "")}" required></label>
       <p class="portal__err" ${err ? "" : "hidden"}>${esc(err)}</p>
       <button class="btn btn--primary" type="submit">${T.go}</button>
       <p class="muted portal__hint">${T.hint}</p></form>`;
