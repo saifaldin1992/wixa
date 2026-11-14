@@ -63,7 +63,9 @@ export const DEFAULT_LAYOUTS = {
   services: ["services", "contact"],
   projects: ["projects", "contact"],
   pricing: ["pricing", "calculator", "contact"],
-  about: ["about", "story", "partners", "process", "stats", "testimonials", "contact"],
+  // the company page: who we are, its values, partners and figures — «لماذا ويكسا» and «كيف نعمل» stay on the home page
+  // (they repeated the values almost word for word); the owner can still add them back (ترتيب الأقسام)
+  about: ["about", "partners", "stats", "testimonials", "contact"],
   careers: ["careers"],
   faq: ["faq", "contact"],
   contact: ["ways"],
@@ -117,7 +119,8 @@ export function navLink(settings, k, empty) {
   if (t.page) {
     const p = SECTION_PAGES[t.page] || OWN_PAGES[t.page];
     const main = SECTION_PAGES[t.page] && SECTION_PAGES[t.page].main;
-    const on = !!p && (!main || sectionShown(settings, main, empty)) && (!t.part || sectionShown(settings, t.part, empty));
+    // a page with nothing on it yet (no articles) keeps its link out of the menus
+    const on = !!p && !(empty && empty.has(k)) && (!main || sectionShown(settings, main, empty)) && (!t.part || sectionShown(settings, t.part, empty));
     return { href: p ? `${p.path}${t.hash ? `#${t.hash}` : ""}` : "/", shown: on };
   }
   const anchor = ANCHOR[t.part || t.section] || t.section;

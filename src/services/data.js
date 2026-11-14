@@ -209,7 +209,14 @@ export function withSlugs(projects) {
 
 // ---------------------------------------------------------------- articles (blog)
 // Published articles, read at most once a minute per location.
+// how many articles were last seen here (null = not read yet): the menus hide «المقالات» while there are none
+export const postsSeen = { n: null };
 export async function getPosts(env) {
+  const list = await readPosts(env);
+  postsSeen.n = Array.isArray(list) ? list.length : postsSeen.n;
+  return list;
+}
+async function readPosts(env) {
   const cache = caches.default;
   const key = new Request(`https://wixa-cache.internal/posts/${env.SITE_ENV || "production"}`);
   const hit = await cache.match(key);

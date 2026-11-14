@@ -2111,3 +2111,37 @@ html[data-theme="dark"] .why__facts b { color: var(--fg); }
   .why .guar + .guar { border-top: 1px solid var(--line); }
   .why__facts { gap: 8px; } .why__facts li { padding: 8px 13px; font-size: .86rem; }
 }
+
+/* ===== design review, Nov 2026 ===== */
+/* calculator: the «ناقش التقدير في المحادثة» button sits on the dark panel — light text on a see-through button
+   (it was white on white: .btn--chat inherits the colour, the panel's .btn is white) */
+.calc__result .btn--chat { background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.3); }
+.calc__result .btn--chat:hover { background: rgba(255,255,255,.16); }
+/* the phone menu: nearly solid, so the page behind it no longer shows through its links */
+.header__menu, html .header__menu { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+/* phones: the chat button becomes a small tab on the screen's edge, so it no longer sits over the text of the cards */
+@media (max-width: 760px) {
+  html[lang] .chatw__btn, html[lang][dir="rtl"] .chatw__btn { left: 0; right: auto; width: 42px; height: 52px; border-radius: 0 26px 26px 0; bottom: calc(18px + env(safe-area-inset-bottom)); box-shadow: 0 10px 24px -10px rgba(var(--accent-rgb), .7); }
+  html[lang] .chatw__btn svg { width: 22px; height: 22px; margin-inline-start: -4px; }
+  html[lang][dir="rtl"] .chatw__btn svg { margin-inline-start: 0; margin-inline-end: -4px; }
+}
+/* our work, phones: the figures stay on one line each, smaller, and the cyan mark follows each line when one wraps */
+@media (max-width: 760px) {
+  .project__stats b { display: inline; font-size: .9rem; line-height: 1.5; overflow-wrap: normal; word-break: keep-all; unicode-bidi: isolate; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+  .project__stats b + span { margin-top: 2px; }
+}
+/* the order page, desktop: six packages in two even rows of three */
+@media (min-width: 900px) { .ord__pkgs { grid-template-columns: repeat(3, 1fr); } }
+/* the wave line: only where a new chapter starts (our services, how we work, the closing call) and above the footer */
+.head > .wave { display: none; }
+:is(#services, #process) > .head > .wave, :is(#services, #process) .head > .wave { display: block; }
+/* the light running round the hero logo: hidden when motion is off, where it would stand still like a broken line */
+@media (prefers-reduced-motion: reduce) { .hero__logo :is(.lg-trace, .lg-trace__edge, .lg-trace__halo, .lg-trace__halo2, .lg-trace__core) { display: none; } }
+.no-anim .hero__logo :is(.lg-trace, .lg-trace__edge, .lg-trace__halo, .lg-trace__halo2, .lg-trace__core) { display: none; }
+/* carousel dots: a larger tap area round each (the dots look the same) */
+.cdots { gap: 10px; }
+.cdots button::before { inset: -18px -8px; }
+/* section titles, large screens: a little smaller, closer to the text beneath them */
+@media (min-width: 1100px) { :root { --fs-h2: 2.375rem; } }
+/* partner logos in dark mode: a soft light tile instead of bright white */
+html[data-theme="dark"] .partner { background: #DEDAE8; }

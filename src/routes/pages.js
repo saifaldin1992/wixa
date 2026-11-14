@@ -15,7 +15,7 @@ import { TEAM_DEFAULTS, sitePages } from "../../public/js/site-pages.js";
 import { UI_DEFAULTS } from "../../public/js/ui-strings.js";
 import { SOCIAL } from "../../public/js/social-icons.js";
 import { SECURITY_HEADERS, WIXA, esc, fmtDate, notFound, pickLang, safeHref, versionAssets, versioned } from "../lib/core.js";
-import { cspWithTags, getConfig, getPosts, getSiteData, hasBypass, maintenancePage, memo as siteMemo } from "../services/data.js";
+import { cspWithTags, getConfig, getPosts, getSiteData, hasBypass, maintenancePage, memo as siteMemo, postsSeen } from "../services/data.js";
 import { FOOTER_GROUPS, groupOf, navLink, sectionShown } from "../../public/js/site-structure.js";
 import { arrangeSections } from "../lib/arrange.js";
 
@@ -76,7 +76,7 @@ function snip(text, max) {
 
 export const PAGE_TITLES = { services: { ar: "خدماتنا", en: "Our services" }, projects: { ar: "نماذج من عملنا", en: "Our work" }, pricing: { ar: "الباقات والأسعار", en: "Packages & pricing" }, about: { ar: "من نحن", en: "About us" }, careers: { ar: "الوظائف", en: "Careers" }, contact: { ar: "تواصل معنا", en: "Contact us" }, order: { ar: "اطلب مشروعك", en: "Order your project" }, track: { ar: "تتبع طلبك", en: "Track your order" }, faq: { ar: "الأسئلة الشائعة", en: "Frequently asked questions" } };
 export async function handleHome(request, env, ctx, pageName = "home") {
-  const [page, raw, cfg] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx), getConfig(env)]);
+  const [page, raw, cfg, posts] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx), getConfig(env), getPosts(env).catch(() => null)]);
   const data = cfg.spam.turnstile ? raw : raw.replace(/"turnstile":"[^"]*"/, '"turnstile":""');
   const owner = hasBypass(request, cfg);
   if (cfg.maintenance.on && !owner) { let st0 = {}; try { st0 = JSON.parse(data)?.settings || {}; } catch {} return maintenancePage(request, cfg, st0); }
@@ -125,6 +125,7 @@ export async function handleHome(request, env, ctx, pageName = "home") {
     : `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fam).replace(/%20/g, "+")}:wght@${WIXA.FONTS[fam]}&display=swap`;
   // one header and footer for every page (siteShell), and the sections in the order of this page's layout
   const empty = new Set([...hide].filter((k) => k === "partners" || k === "testimonials"));
+  if (Array.isArray(posts) && !posts.length) empty.add("blog"); // no articles yet: no «المقالات» link
   const shell = siteShell(st, lang, pagePath, { empty });
   let html = await page.text();
   html = html.replace(/<header class="header" id="header">[\s\S]*?<\/header>/, () => shell.header)
@@ -237,7 +238,7 @@ export function siteShell(st, lang, path, { empty } = {}) {
   const link = (x, i, footer) => {
     const t = navLink(st, x.k, gone);
     const place = x.at === "both" || x.at === (footer ? "footer" : "menu");
-    return `<a href="${withLang(t.href)}"${footer ? ' data-where="footer"' : ""} data-nav="${x.k}" data-t="${tkey(x.k)}" style="order:${i}"${t.href === path ? ' aria-current="page"' : t.href !== "/" && !t.href.includes("#") && path.startsWith(t.href + "/") ? ' aria-current="true"' : ""}${place && t.shown ? "" : " hidden"}>${esc(ui[tkey(x.k)] || x.k)}</a>`;
+    return `<a href="${withLang(t.href)}"${footer ? ' data-where="footer"' : ""}${gone.has(x.k) ? " data-empty" : ""} data-nav="${x.k}" data-t="${tkey(x.k)}" style="order:${i}"${t.href === path ? ' aria-current="page"' : t.href !== "/" && !t.href.includes("#") && path.startsWith(t.href + "/") ? ' aria-current="true"' : ""}${place && t.shown ? "" : " hidden"}>${esc(ui[tkey(x.k)] || x.k)}</a>`;
   };
   const menu = plan.map((x, i) => link(x, i, false)).join("");
   // footer: the links in their groups (site-structure.js → FOOTER_GROUPS), each group titled; «قانوني» is one small line
@@ -292,7 +293,7 @@ export function siteShell(st, lang, path, { empty } = {}) {
     <svg class="footer__wave" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
 ${groups}
     <div class="footer__tools">
-      <a href="/portal${q}" class="track-btn" data-track><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg><span data-t="track">${esc(ui.track)}</span></a>
+      ${path === "/portal" ? "" : `<a href="/portal${q}" class="track-btn" data-track><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg><span data-t="track">${esc(ui.track)}</span></a>`}
       <div class="footer__social" id="social">${socials}</div>
     </div>
     <div class="footer__brand"><a href="${path === "/" ? "#top" : `/${q}`}" class="brand"><span class="brand__mark">${mark}</span><span class="brand__name" data-t="brand">${word}</span></a></div>
@@ -307,6 +308,7 @@ function emptyNow() {
   // no copy yet means the site is running without its content (database unreachable): the home page then has no
   // partners either, so both agree
   if (!t || /"partners":\[\]/.test(t)) e.add("partners");
+  if (postsSeen.n === 0) e.add("blog");
   return e;
 }
 

@@ -700,3 +700,12 @@ When the live chat is on (`settings.chat.on`), it is the way to talk to us every
 - **Email links (live):** password reset, email confirmation and email change link to
   `{{ .SiteURL }}/admin/?type=…&token_hash={{ .TokenHash }}`. The dashboard spends the one-time code only when «متابعة» is pressed (`showLinkStep` in `auth.js`), so an email app that opens a link twice can't spend it first. Staging keeps Supabase's default emails, which can't be edited on the free plan.
 - **Password boxes:** every password box of the dashboard has an eye button to show or hide what was typed (`pw-eye.js`).
+
+## Design review fixes (Nov 2026)
+- Calculator: the «ناقش التقدير في المحادثة» button on the dark panel is light-on-glass (it was white on white).
+- Phone menu is solid (no page showing through); on phones the chat button is a small tab on the screen's left edge.
+- «المقالات» is hidden from the menus while no article is published (`postsSeen` in `src/services/data.js`; server marks the link `data-empty`, the page script keeps it hidden).
+- About page default layout: about, partners, stats, testimonials, contact («لماذا ويكسا» and «كيف نعمل» stay on the home page).
+- Footer «تتبع طلبك» is not shown on /portal itself.
+- Wave line only above «خدماتنا», «كيف نعمل», the closing call and the footer.
+- Hero tracing light hidden when motion is reduced; larger dot tap areas; desktop h2 2.375rem; softer partner tiles in dark mode; order page packages 3 × 2 on desktop; project figures smaller on phones with the cyan mark per line.

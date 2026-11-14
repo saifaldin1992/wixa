@@ -70,7 +70,7 @@ export function render() {
     a.style.order = i;
     const inFooter = !!a.closest(".footer__nav");
     const allowed = at === "both" || (at === "menu" && !inFooter) || (at === "footer" && inFooter);
-    a.hidden = !(allowed && navLink(s, k, empty).shown);
+    a.hidden = !(allowed && navLink(s, k, empty).shown) || a.hasAttribute("data-empty"); // data-empty: the server found nothing on that page yet (no articles)
   }));
   if (!(state.testimonials || []).length) $$('[data-section="testimonials"]').forEach((el) => (el.hidden = true));
   if (!(s.stats || []).length) $$('[data-section="stats"]').forEach((el) => (el.hidden = true));

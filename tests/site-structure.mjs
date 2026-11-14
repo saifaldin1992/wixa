@@ -31,7 +31,7 @@ check(!merged.some((x) => x.k === "order"), "a section not allowed on the page i
 check(merged.find((x) => x.k === "story")?.on === false, "a switched-off section keeps its place, off");
 check(DEFAULT_LAYOUTS.home.every((k) => merged.some((x) => x.k === k)), "every default section is still there (new ones take their default place)");
 const newer = layoutFor({ layout: { about: ["about", "story", "process", "stats", "testimonials", "contact"] } }, "about");
-check(keys(newer) === "about story partners process stats testimonials contact", "a section missing from an older saved list goes back after its default neighbour");
+check(keys(newer) === "about partners story process stats testimonials contact", "a section missing from an older saved list goes back after its default neighbour");
 
 // ---------- B. arranging the HTML
 const html = readFileSync(new URL("../public/index.html", import.meta.url), "utf8");
