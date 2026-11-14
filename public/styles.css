@@ -53,9 +53,9 @@ html[dir="rtl"] h1, html[dir="rtl"] h2, html[dir="rtl"] h3 { letter-spacing: 0; 
 .boot { display: none; }
 html.booting:not(.site-ready) .boot { position: fixed; inset: 0; z-index: 200; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 16px; background: var(--bg); color: var(--text); text-align: center; }
 html.booting:not(.site-ready) body { overflow: hidden; }
-.boot > * { opacity: 0; animation: bootIn .3s ease .4s forwards; }
+.boot > * { animation: bootIn .3s ease .4s backwards; } /* visible even where animations never run */
 .boot__mark { width: 84px; height: auto; color: var(--primary); }
-.boot__mark { animation: bootIn .3s ease .4s forwards, bootPulse 1.4s ease-in-out .7s infinite; }
+.boot__mark { animation: bootIn .3s ease .4s backwards, bootPulse 1.4s ease-in-out .7s infinite; }
 .boot p { margin: 0; font-size: 1rem; }
 .boot__slow, .boot__btns { display: none; }
 .boot-slow .boot__wait { display: none; }
@@ -63,7 +63,7 @@ html.booting:not(.site-ready) body { overflow: hidden; }
 .boot-slow .boot__btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .boot__btns .btn { min-height: 48px; }
 html[lang="ar"] .boot [lang="en"], html:not([lang="ar"]) .boot [lang="ar"] { display: none; }
-@keyframes bootIn { to { opacity: 1; } }
+@keyframes bootIn { from { opacity: 0; } }
 @keyframes bootPulse { 50% { opacity: .45; } }
 
 /* header */

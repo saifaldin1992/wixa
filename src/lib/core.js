@@ -127,6 +127,12 @@ export function newOrderNumber(d = new Date()) {
   return `WX-${String(d.getUTCFullYear()).slice(2)}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}-${rnd}`;
 }
 export const hex = (buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+// review links (/review?c=…): 16 random hex + 8 hex of a signature, so a link just made is accepted at once even where
+// the private store has not received it yet (it can take up to a minute to reach every location)
+export async function reviewSig(env, id) {
+  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(`review:${env.WRITE_TOKEN || ""}`), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  return hex(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(id))).slice(0, 8);
+}
 export const sha256hex = async (s) => hex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)));
 export const cleanText = (v, n) => String(v ?? "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim().slice(0, n);
 export const PHONE_RE = /^\+?[\d\s()-]{6,30}$/;

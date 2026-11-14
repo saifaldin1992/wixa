@@ -318,11 +318,11 @@ function emptyNow() {
 // After 10 s /theme-pre.js adds «boot-slow»: «التحميل يتأخر» + «إعادة المحاولة».
 const BOOT_CSS = `.boot{position:fixed;inset:0;z-index:200;display:grid;place-content:center;justify-items:center;gap:14px;padding:16px;background:#FFFFFF;color:#140F1F;text-align:center;font:500 1rem/1.6 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
 html[data-theme="dark"] .boot{background:#130C1F;color:#F2F0F7}
-.boot>*{opacity:0;animation:bootIn .3s ease .4s forwards}.boot__mark{width:84px;height:auto;color:#5B21B6;animation:bootIn .3s ease .4s forwards,bootPulse 1.4s ease-in-out .7s infinite}
+.boot>*{animation:bootIn .3s ease .4s backwards}.boot__mark{width:84px;height:auto;color:#5B21B6;animation:bootIn .3s ease .4s backwards,bootPulse 1.4s ease-in-out .7s infinite}
 html[data-theme="dark"] .boot__mark{color:#A574F1}.boot p{margin:0}
 .boot__slow,.boot__btns{display:none}.boot-slow .boot__wait{display:none}.boot-slow .boot__slow{display:block}.boot-slow .boot__btns{display:flex}
 .boot__btns button{min-height:48px;padding:0 24px;border:0;border-radius:99px;background:#5B21B6;color:#fff;font:inherit;font-weight:700;cursor:pointer}
-@keyframes bootIn{to{opacity:1}}@keyframes bootPulse{50%{opacity:.45}}`;
+@keyframes bootIn{from{opacity:0}}@keyframes bootPulse{50%{opacity:.45}}`; // the text fades in, but is visible even where animations never run
 const bootHtml = (lang) => { const ar = lang === "ar"; return `<div class="boot" id="boot" role="status"><svg class="boot__mark" viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg>
 <p class="boot__wait">${ar ? "جارٍ التحميل…" : "Loading…"}</p><p class="boot__slow">${ar ? "التحميل يتأخر — الاتصال بطيء أو منقطع." : "This is taking a while — the connection is slow."}</p>
 <div class="boot__btns"><button type="button" id="bootRetry">${ar ? "إعادة المحاولة" : "Try again"}</button></div></div>`; };

@@ -3,7 +3,7 @@
 import DEV_GUIDE from "../../docs/DEVELOPERS.md";
 import { runBackup, runWeeklyReport } from "../jobs/scheduled.js";
 import { adminSession, sessionUser } from "../lib/auth.js";
-import { EMAIL_RE, ROLE_AR, SECURITY_HEADERS, allowed, cleanText, clientIp, dayKey, esc, fmtDate, json, newCode, newOrderNumber, rpc, rpcToken, sb, versionAssets } from "../lib/core.js";
+import { EMAIL_RE, ROLE_AR, SECURITY_HEADERS, allowed, cleanText, clientIp, dayKey, esc, fmtDate, json, newCode, newOrderNumber, reviewSig, rpc, rpcToken, sb, versionAssets } from "../lib/core.js";
 import { evBuf, unsubSig } from "./forms.js";
 import { cfgMemo, cleanConfig, getConfig, getSiteData, publishNow, saveConfig } from "../services/data.js";
 import { mailBox, notifyAddress, notifyOwner, requestOffer, sendAutoReply, sendOwnerMail } from "../services/mail.js";
@@ -284,7 +284,7 @@ export async function handleAdminReviewLink(request, env) {
   if (!env.PRIVATE) return json({ error: "storage_not_configured" }, 503);
   let b = {};
   try { b = await request.json(); } catch {}
-  const code = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+  const id = crypto.randomUUID().replace(/-/g, "").slice(0, 16), code = id + (await reviewSig(env, id));
   await env.PRIVATE.put(`review:${code}`, JSON.stringify({ name: String(b.name || "").slice(0, 120), at: new Date().toISOString() }), { expirationTtl: 60 * 864e2 });
   const origin = new URL(request.url).origin;
   await audit(env, s, { area: "testimonials", action: "review_link", target: String(b.name || "").slice(0, 120), summary: "إنشاء رابط رأي لعميل" });

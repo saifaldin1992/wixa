@@ -1,6 +1,6 @@
 // Public forms and endpoints: project orders, order tracking, contact, booking, review, visit events, unsubscribe.
 
-import { EMAIL_RE, SECURITY_HEADERS, allowed, baghdadNow, clientIp, dayKey, esc, hex, json, newOrderNumber, pickLang, rpc, rpcToken, safeHref, sameText, sb, toHM, toMin, turnstileOk } from "../lib/core.js";
+import { EMAIL_RE, SECURITY_HEADERS, allowed, baghdadNow, clientIp, dayKey, esc, hex, json, newOrderNumber, pickLang, reviewSig, rpc, rpcToken, safeHref, sameText, sb, toHM, toMin, turnstileOk } from "../lib/core.js";
 import { simplePage } from "./pages.js";
 import { pushTeam } from "../services/push.js";
 import { getConfig, getSiteData } from "../services/data.js";
@@ -217,6 +217,16 @@ export async function reserveSlot(env, ctx, date, time) {
   return true;
 }
 
+// A review link: the saved one (with the customer's name), or — for a signed link the store has not received yet in this
+// location — a fresh one without the name; a link already used is refused either way.
+async function reviewLink(env, code) {
+  if (!code || !env.PRIVATE) return null;
+  const saved = await env.PRIVATE.get(`review:${code}`, { type: "json" }).catch(() => null);
+  if (saved) return saved;
+  if (code.length !== 24 || !sameText(code.slice(16), await reviewSig(env, code.slice(0, 16)))) return null;
+  return (await env.PRIVATE.get(`review-used:${code}`)) ? null : { name: "" };
+}
+
 export async function handleReview(request, env, ctx, url) {
   let st = {};
   try { st = JSON.parse(await getSiteData(env, ctx)).settings || {}; } catch {}
@@ -228,7 +238,7 @@ export async function handleReview(request, env, ctx, url) {
     const f = await request.formData().catch(() => null);
     if (!f || f.get("website")) return done(ar ? "وصل رأيك." : "We received your review.");
     const code = String(f.get("c") || "").slice(0, 32);
-    const link = code && env.PRIVATE ? await env.PRIVATE.get(`review:${code}`) : null;
+    const link = await reviewLink(env, code);
     if (!link) return page(`<h1>${ar ? "الرابط غير صالح" : "This link is not valid"}</h1><p class="lead">${ar ? "ربما استُخدم من قبل أو انتهت صلاحيته." : "It may have been used already or expired."}</p>`, 410);
     const name = String(f.get("name") || "").trim().slice(0, 120), quote = String(f.get("quote") || "").trim().slice(0, 1500);
     if (!name || !quote) return page(`<h1>${ar ? "يرجى كتابة اسمك ورأيك" : "Please enter your name and review"}</h1><p><a href="/review?c=${esc(code)}&lang=${lang}">${ar ? "رجوع" : "Back"}</a></p>`, 422);
@@ -236,6 +246,7 @@ export async function handleReview(request, env, ctx, url) {
     const r = await sb(env, "rpc/submit_testimonial", { method: "POST", body: JSON.stringify({ token: env.WRITE_TOKEN || "", p }) });
     if (!r.ok) { console.error("review", r.status, await r.text()); return page(`<h1>${ar ? "تعذّر الإرسال" : "Couldn't send"}</h1><p class="lead">${ar ? "حاول مرة أخرى لاحقاً." : "Please try again later."}</p>`, 502); }
     await env.PRIVATE.delete(`review:${code}`);
+    await env.PRIVATE.put(`review-used:${code}`, "1", { expirationTtl: 61 * 864e2 }); // a signed link cannot be used twice
     ctx.waitUntil(sendOwnerMail(env, `رأي جديد من ${name}`, mailBox("رأي عميل جديد بانتظار موافقتك", `<p><b>${esc(name)}</b>${p.role ? ` — ${esc(p.role)}` : ""}</p><p style="color:#D9A441;font-size:20px">${"★".repeat(p.rating)}</p><div style="padding:14px;background:#F3EEFC;border-radius:12px;white-space:pre-wrap">${esc(quote)}</div><p>الرأي مخفي حتى تنشره من لوحة التحكم ← آراء العملاء.</p>`)).catch(() => {}));
     const g = safeHref(st.contact?.google_review || "");
     if (g && p.rating >= 4) return page(`<h1>${ar ? "شكراً لك" : "Thank you"}</h1><p class="lead">${ar ? "وصل رأيك، ونقدّر وقتك وثقتك بنا." : "We've received your review. We appreciate your time and trust."}</p>
@@ -244,7 +255,7 @@ export async function handleReview(request, env, ctx, url) {
     return done(ar ? "وصل رأيك، ونقدّر وقتك وثقتك بنا." : "We've received your review. We appreciate your time and trust.");
   }
   const code = (url.searchParams.get("c") || "").slice(0, 32);
-  const link = code && env.PRIVATE ? await env.PRIVATE.get(`review:${code}`, { type: "json" }) : null;
+  const link = await reviewLink(env, code);
   if (!link) return page(`<h1>${ar ? "الرابط غير صالح" : "This link is not valid"}</h1><p class="lead">${ar ? "ربما استُخدم من قبل أو انتهت صلاحيته. تواصل معنا لنرسل لك رابطاً جديداً." : "It may have been used already or expired. Contact us for a new one."}</p>`, 410);
   const stars = [5, 4, 3, 2, 1].map((n) => `<label class="star"><input type="radio" name="rating" value="${n}" ${n === 5 ? "checked" : ""}><span>${"★".repeat(n)}</span></label>`).join("");
   return page(`<h1>${ar ? "رأيك يهمنا" : "We'd love your feedback"}</h1><p class="lead">${ar ? "شكراً لثقتك بويكسا. اكتب رأيك في تجربتك معنا، وقد نعرضه في موقعنا بعد موافقتك." : "Thank you for trusting WIXA. Tell us about your experience; we may show it on our site."}</p>
