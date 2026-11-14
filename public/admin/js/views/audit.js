@@ -25,10 +25,17 @@ const changesTable = (ch) => {
     `<tr><td dir="ltr"><code>${esc(k)}</code></td><td>${esc(val(v?.from))}</td><td>${esc(val(v?.to))}</td></tr>`).join("")}</tbody></table></div>`;
 };
 
+// the team's accounts (id → email): older entries were saved without the person's email, so it is found from the account
+let emailOf = {}, idOf = {};
+const loadTeam = () => sb.from("admins").select("user_id,email").then(({ data }) => {
+  emailOf = {}; idOf = {};
+  for (const a of data || []) if (a.email) { emailOf[a.user_id] = a.email; idOf[a.email] = a.user_id; }
+}, () => {});
+
 async function load(from) {
   let q = sb.from("audit_log").select("*").order("at", { ascending: false }).range(from, from + PAGE - 1);
   if (period) q = q.gte("at", new Date(Date.now() - period * 864e5).toISOString());
-  if (person) q = q.eq("actor_email", person);
+  if (person) q = idOf[person] ? q.or(`actor_email.eq."${person.replace(/"/g, "")}",actor.eq.${idOf[person]}`) : q.eq("actor_email", person);
   if (area) q = q.in("area", Object.keys(AREA).filter((k) => AREA[k] === AREA[area]));
   if (query) { const s = query.replace(/[%,()]/g, " "); q = q.or(`target.ilike.%${s}%,summary.ilike.%${s}%`); }
   return q;
@@ -54,9 +61,10 @@ export async function viewAudit(view) {
   $("#aMore").onclick = () => render(false);
 
   // the people who appear in the log (for the filter)
-  sb.from("audit_log").select("actor_email").order("at", { ascending: false }).limit(1000).then(({ data }) => {
+  const team = loadTeam();
+  Promise.all([sb.from("audit_log").select("actor_email").order("at", { ascending: false }).limit(1000), team]).then(([{ data }]) => {
     const sel = $("#aPerson"); if (!sel || !data) return;
-    for (const e of [...new Set(data.map((r) => r.actor_email).filter(Boolean))]) sel.insertAdjacentHTML("beforeend", `<option value="${esc(e)}" dir="ltr">${esc(e)}</option>`);
+    for (const e of [...new Set([...data.map((r) => r.actor_email), ...Object.values(emailOf)].filter(Boolean))]) sel.insertAdjacentHTML("beforeend", `<option value="${esc(e)}" dir="ltr">${esc(e)}</option>`);
     sel.value = person;
   });
 
@@ -78,7 +86,7 @@ export async function viewAudit(view) {
       return `<details class="card audit__row">
         <summary>
           <span class="audit__when">${esc(when(r.at))}</span>
-          <span class="audit__who" dir="ltr">${esc(r.actor_email || (r.source === "server" ? "الخادم" : "—"))}</span>
+          <span class="audit__who" dir="ltr">${esc(r.actor_email || emailOf[r.actor] || (r.source === "server" ? "الخادم" : "—"))}</span>
           ${r.actor_role ? `<span class="pill">${esc(ROLE_AR[r.actor_role] || r.actor_role)}</span>` : ""}
           <b class="audit__what">${esc(ACTION[r.action] || r.action)} · ${esc(AREA[r.area] || r.area)}</b>
           ${r.target ? `<span class="audit__target">${esc(r.target)}</span>` : ""}
@@ -91,5 +99,6 @@ export async function viewAudit(view) {
     shown += data.length;
     $("#aMore").hidden = data.length < PAGE;
   }
+  await team;
   await render(true).catch((e) => toast(`تعذّر تحميل السجل: ${e.message}`, "err"));
 }

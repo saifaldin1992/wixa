@@ -13,7 +13,10 @@ const common = { bundle: true, minify: true, charset: "utf8", target: ["es2020",
 
 await Promise.all([
   // site + dashboard scripts: one ES module each
-  build({ ...common, entryPoints: { site: "public/js/main.js", admin: "public/admin/admin.js", tags: "public/js/tags.js", chat: "public/js/chat-page.js", portal: "public/js/portal.js" }, outdir: out, format: "esm" }),
+  build({ ...common, entryPoints: { site: "public/js/main.js", tags: "public/js/tags.js", chat: "public/js/chat-page.js", portal: "public/js/portal.js" }, outdir: out, format: "esm" }),
+  // the dashboard: pages opened now and then (brand guide, developer guide, diagnostics…) are separate files loaded
+  // when opened; their names carry a content hash, so a browser never mixes an old piece with a new one
+  build({ ...common, entryPoints: { admin: "public/admin/admin.js" }, outdir: out, format: "esm", splitting: true, chunkNames: "adm-[hash]" }),
   // shared helpers stay a classic script (loaded before the modules, also used by the inline theme logic)
   build({ ...common, bundle: false, entryPoints: { shared: "public/shared.js" }, outdir: out }),
   // stylesheets

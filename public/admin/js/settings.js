@@ -73,6 +73,8 @@ export function bindPreview() {
 export function fitPreview() {
   const st = $(".preview__stage"), fr = $("#pvFrame"); if (!st || !fr) return;
   const mob = $("#preview").classList.contains("mobile");
+  // the computer layout on a narrow screen is small once scaled: the pane takes its height instead of a tall empty box
+  if (mob || st.clientWidth >= 700) st.style.height = st.style.minHeight = "";
   // a real screen size (phone 390×844, computer 1280×up to 900), scaled to fit; the page scrolls inside it
   const W = mob ? 390 : 1280, H = st.clientHeight;
   const s = Math.min(1, (st.clientWidth - (mob ? 24 : 0)) / W, mob ? (H - 24) / 844 : 1);
@@ -82,6 +84,7 @@ export function fitPreview() {
   fr.style.transform = `scale(${s})`;
   fr.style.left = `${(st.clientWidth - W * s) / 2}px`;
   fr.style.top = `${Math.max(0, (H - FH * s) / 2)}px`;
+  if (!mob && st.clientWidth < 700 && FH * s < H - 1) { st.style.minHeight = "0"; st.style.height = `${Math.ceil(FH * s)}px`; fr.style.top = "0px"; }
 }
 export function onPreviewMsg(e) { if (e.origin === location.origin && e.data?.type === "wixa-preview-ready") pushPreview(true); }
 export function pushPreview(now) {

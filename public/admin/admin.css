@@ -1130,3 +1130,33 @@ html[data-theme="dark"] .msg.new .msg__who b::after { background: #7C3AED; }
 .pw__eye:hover { color: var(--text); background: var(--line); }
 .pw__eye:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
 .pw__eye svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ===== dashboard review, Nov 2026 ===== */
+/* every text box, list and search box looks the same, also those not wrapped in a .f label (order updates,
+   media search, change-log filters); :where keeps this weaker than any more specific style */
+:where(#view, #topActions, .sheet, .modal) :where(input:not([type=checkbox], [type=radio], [type=color], [type=range], [type=file], [hidden]), select, textarea) {
+  min-height: 42px; padding: 0 12px; border: 1px solid var(--line-2); border-radius: 11px; background: var(--panel); color: var(--text); font: inherit; font-size: 14px;
+}
+:where(#view, .sheet, .modal) :where(textarea) { padding: 10px 12px; line-height: 1.6; }
+:where(#view, .sheet, .modal) :where(input, select, textarea):focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 4px rgba(91,33,182,.12); }
+:where(#view, .sheet, .modal) :where(input, textarea)::placeholder { color: var(--muted); opacity: .8; }
+@media (max-width: 760px) { :where(#view, .sheet, .modal) :where(input:not([type=checkbox], [type=radio], [type=color], [type=range], [type=file]), select) { font-size: 16px; } }
+/* developer guide on a phone: wide tables scroll sideways instead of breaking every word onto its own line */
+@media (max-width: 760px) {
+  .dg-body .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .dg-body table { width: max-content; min-width: 100%; }
+  .dg-body td, .dg-body th { min-width: 120px; max-width: 260px; }
+}
+/* small labels: readable size, and clear in dark mode */
+.inbox__kind { font-size: 12px; padding: 2px 9px; }
+:root[data-theme="dark"] .k-msg { background: color-mix(in srgb, #94A3B8 22%, transparent); color: #CBD5E1; filter: none; }
+:root[data-theme="dark"] .k-chat { background: color-mix(in srgb, #38BDF8 20%, transparent); color: #7DD3FC; filter: none; }
+:root[data-theme="dark"] .k-book { background: color-mix(in srgb, #34D399 20%, transparent); color: #6EE7B7; filter: none; }
+:root[data-theme="dark"] .k-job { background: color-mix(in srgb, #FBBF24 20%, transparent); color: #FCD34D; filter: none; }
+.stage { font-size: 12px; padding: 2px 9px; }
+:root[data-theme="dark"] .stage { color: color-mix(in srgb, var(--c) 55%, #fff); background: color-mix(in srgb, var(--c) 22%, transparent); }
+.tag { font-size: 12.5px; }
+[data-count] { font-size: 12px; font-weight: 600; }
+.cust__tags i, .chat__topic { font-size: 12px; }
+.chat__side small, .cm small, .msg.new .msg__who b::after { font-size: 12px; }
+.side__group { font-size: 12px; }

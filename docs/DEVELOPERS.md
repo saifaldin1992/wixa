@@ -709,3 +709,11 @@ When the live chat is on (`settings.chat.on`), it is the way to talk to us every
 - Footer «تتبع طلبك» is not shown on /portal itself.
 - Wave line only above «خدماتنا», «كيف نعمل», the closing call and the footer.
 - Hero tracing light hidden when motion is reduced; larger dot tap areas; desktop h2 2.375rem; softer partner tiles in dark mode; order page packages 3 × 2 on desktop; project figures smaller on phones with the cyan mark per line.
+
+## Dashboard review (Nov 2026)
+- Change log: the person is never blank. `admins.email` was empty for the owner; migration `20261124000000_audit_actor_email.sql` fills it from the sign-in account and makes the trigger fall back to `auth.users.email`. Older entries (the log cannot be edited) show their person through the team list (`audit.js` → `emailOf`).
+- Every text box, list and search box in the dashboard shares one look (`:where(#view …)` rule at the end of `admin.css`), including those not wrapped in `.f`.
+- Developer guide tables scroll sideways on phones; small labels (inbox kinds, stages, tags, character counters) are 12px and clearer in dark mode.
+- Live preview on a phone: the pane takes the scaled computer page's height (`fitPreview` in `settings.js`).
+- Pages opened now and then (brand guide, developer guide, diagnostics, change log, sales, campaigns) load on demand: `scripts/build.mjs` splits the dashboard (`adm-<hash>.js`, cached for a year by `serveBuild`).
+- SEO sub-tab «Google Search Console» is now «أدوات Google».

@@ -15,7 +15,8 @@ export async function serveBuild(request, env, url) {
   const res = await env.ASSETS.fetch(request);
   if (!res.ok) return res;
   const headers = new Headers(res.headers);
-  const exact = BUILD_MANIFEST[url.pathname] && url.searchParams.get("v") === BUILD_MANIFEST[url.pathname];
+  // a dashboard piece (adm-<content hash>.js) never changes under its name; other files are pinned by ?v=<fingerprint>
+  const exact = /^\/build\/adm-[A-Z0-9]+\.js$/.test(url.pathname) || (BUILD_MANIFEST[url.pathname] && url.searchParams.get("v") === BUILD_MANIFEST[url.pathname]);
   headers.set("cache-control", exact ? "public, max-age=31536000, immutable" : "public, no-cache");
   return new Response(res.body, { status: res.status, headers });
 }

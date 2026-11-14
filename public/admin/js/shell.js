@@ -1,16 +1,21 @@
 /* Sidebar, top bar and the hash router */
 import { $, $$, setSubnav, sectionize, composeView, endSections, DEFAULTS, ROLE_AR, closeModal, confirmBox, esc, merge, role, savedJSON, setSettings } from "./core.js";
 import { viewTeam } from "./views/team.js";
+// pages opened now and then load their code only when opened (the dashboard's first load stays small)
+const lazy = (load, name) => (...a) => load().then((m) => m[name](...a));
+const viewBrand = lazy(() => import("./views/brand.js"), "viewBrand");
+const viewDiagnose = lazy(() => import("./views/diagnose.js"), "viewDiagnose");
+const viewDevGuide = lazy(() => import("./views/devguide.js"), "viewDevGuide");
+const viewAudit = lazy(() => import("./views/audit.js"), "viewAudit");
+const viewSales = lazy(() => import("./views/sales.js"), "viewSales");
+const viewCampaigns = lazy(() => import("./views/campaigns.js"), "viewCampaigns");
 import { viewChats } from "./views/chats.js";
 import { viewCustomers } from "./views/customers.js";
-import { viewSales } from "./views/sales.js";
-import { viewCampaigns } from "./views/campaigns.js";
 import { viewOrders } from "./views/orders.js";
 import { isDirty } from "./settings.js";
 import { viewAccount } from "./views/account.js";
 import { viewAppearance } from "./views/appearance.js";
 import { viewContent } from "./views/content.js";
-import { viewBrand } from "./views/brand.js";
 import { viewIntegrations } from "./views/integrations.js";
 import { viewList } from "./views/lists.js";
 import { viewOverview } from "./views/overview.js";
@@ -20,9 +25,6 @@ import { viewDevice } from "./views/device.js";
 import { viewPrefs } from "./views/prefs.js";
 import { setInboxFilter, viewInbox } from "./views/inbox.js";
 import { viewSeo } from "./views/seo.js";
-import { viewDiagnose } from "./views/diagnose.js";
-import { viewDevGuide } from "./views/devguide.js";
-import { viewAudit } from "./views/audit.js";
 
 // ---------------- shell / router ----------------
 export const VIEWS = {
@@ -79,7 +81,7 @@ const SECTIONS = {
     rules: [[".cust__kpi", "sum"], ["مراحل البيع", "stages"], ["من أين", "src"], ["أكثر ما يطلبه", "top"], ["طرق التواصل", "ch"], ["لماذا نخسر", "lost"], ["آخر التقييمات", "rate"]] },
   campaigns: { groups: ONE([["gifts", "هدايا وخصم الطلب"], ["bar", "شريط العرض"], ["calc", "عرض الحاسبة"], ["mail", "حملة بريدية"]]),
     rules: [["🎁", "gifts"], ["شريط العرض", "bar"], ["عرض «نرسل", "calc"], ["حملة بريدية", "mail"]] },
-  seo: { groups: ONE([["google", "نتائج Google"], ["share", "الأيقونة وصورة المشاركة"], ["gsc", "Google Search Console"], ["check", "فحص سريع"]]),
+  seo: { groups: ONE([["google", "نتائج Google"], ["share", "الأيقونة وصورة المشاركة"], ["gsc", "أدوات Google"], ["check", "فحص سريع"]]),
     rules: [["كيف تظهر", "google"], ["العنوان والوصف", "google"], ["أيقونة الموقع", "share"], ["صورة المشاركة", "share"], ["ربط Google", "gsc"], ["فحص سريع", "check"]] },
   appearance: { groups: ONE([["presets", "قوالب الألوان"], ["colors", "الألوان"], ["type", "الخط والحجم والوضع"], ["reset", "إعادة الضبط"]]),
     rules: [["قوالب ألوان", "presets"], ["الألوان", "colors"], ["نوع الخط", "type"], ["حجم الخط", "type"], ["إعادة الضبط", "reset"]] },
