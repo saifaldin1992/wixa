@@ -65,6 +65,10 @@ const app = {
     const route = `${request.method} ${url.pathname}`;
     if (url.pathname.startsWith("/build/") && (request.method === "GET" || request.method === "HEAD")) return serveBuild(request, env, url);
 
+    // a page (not the API, the dashboard or a file): know whether any article is published, so every page's menus agree
+    // on showing «المقالات» (read from the edge cache, refreshed at most once a minute)
+    if ((request.method === "GET" || request.method === "HEAD") && !/^\/(api|admin)\//.test(url.pathname) && !/\.[a-z0-9]+$/i.test(url.pathname)) await getPosts(env).catch(() => null);
+
     try {
       switch (route) {
         case "GET /":
