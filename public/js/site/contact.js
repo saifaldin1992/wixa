@@ -36,6 +36,7 @@ export function check(form, names) {
     const f = form.elements[n], v = f.value.trim();
     const bad = n === "email" ? !!v && !EMAIL.test(v) : !v || (n === "phone" && !phoneOk(v)); // email is optional, but must be valid when given
     f.closest(".field").classList.toggle("bad", bad);
+    if (bad) f.setAttribute("aria-invalid", "true"); else f.removeAttribute("aria-invalid"); // screen readers hear which field is wrong
     if (bad && !msg) msg = n === "phone" && v ? ui.bad_phone : ui.invalid;
   });
   return msg;

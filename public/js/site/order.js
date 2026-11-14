@@ -17,7 +17,7 @@ const T = {
     formT: "بياناتك", name: "الاسم", phone: "رقم الهاتف أو واتساب", email: "البريد الإلكتروني (اختياري)", note: "ملاحظة (اختياري)", notePh: "أي تفاصيل تساعدنا: فكرتك، موقع حالي، موعد مناسب للاتصال…",
     marketing: "أرغب باستلام العروض والأخبار من ويكسا", send: "أرسل الطلب", sending: "جارٍ الإرسال…",
     trust: ["لا دفع الآن", "نتصل بك خلال يوم عمل", "الدفع 75% عند البدء و25% بعد التسليم"],
-    err: "تعذّر الإرسال، حاول مرة أخرى أو راسلنا على واتساب.", fix: "يرجى كتابة الاسم ورقم هاتف صحيح.",
+    err: "تعذّر الإرسال، حاول مرة أخرى أو راسلنا على واتساب.", errChat: "تعذّر الإرسال، حاول مرة أخرى أو اكتب لنا في المحادثة المباشرة.", fix: "يرجى كتابة الاسم ورقم هاتف صحيح.",
     done: "وصلنا طلبك", doneNo: "رقم طلبك", copy: "نسخ الرقم", copied: "نُسخ ✓", tap: "اضغط لكشف الهدية", free: "مجاناً", saved: "محفوظ لك",
     won: "🎉 مبروك! هداياك محفوظة مع رقم طلبك", next: "سنتصل بك خلال يوم عمل لنتفق على التفاصيل.", mailed: "وأرسلنا نسخة إلى بريدك.", wa: "تابع طلبك على واتساب", home: "العودة إلى الرئيسية",
     disc: (v) => `خصم ${v}`, discText: (d) => `على السعر النهائي${d ? ` — صالح ${d} يوماً` : ""}`,
@@ -29,7 +29,7 @@ const T = {
     formT: "Your details", name: "Name", phone: "Phone or WhatsApp", email: "Email (optional)", note: "Note (optional)", notePh: "Anything that helps: your idea, a current site, a good time to call…",
     marketing: "Send me offers and news from WIXA", send: "Send order", sending: "Sending…",
     trust: ["Nothing to pay now", "We call you within one working day", "Pay 75% at start, 25% after delivery"],
-    err: "Couldn't send. Please try again or message us on WhatsApp.", fix: "Please enter your name and a valid phone number.",
+    err: "Couldn't send. Please try again or message us on WhatsApp.", errChat: "Couldn't send. Please try again or write to us in live chat.", fix: "Please enter your name and a valid phone number.",
     done: "Order received", doneNo: "Your order number", copy: "Copy number", copied: "Copied ✓", tap: "Tap to reveal", free: "Free", saved: "Saved for you",
     won: "🎉 Your gifts are saved with your order number", next: "We'll call you within one working day to agree the details.", mailed: "We've emailed you a copy.", wa: "Follow up on WhatsApp", home: "Back to home",
     disc: (v) => `${v} off`, discText: (d) => `the final price${d ? ` — valid ${d} days` : ""}`,
@@ -117,7 +117,7 @@ function paint() {
       try { localStorage.setItem("wixa-chat-me", JSON.stringify({ ...me, name: f.name.value.trim(), phone: f.phone.value.trim() })); sessionStorage.removeItem(KEY); } catch {}
       rememberOrder(d.number || "", f.phone.value.trim());
       paintDone(root, d.number || "", !!f.email.value.trim(), rw);
-    } catch { $(".ord__err", root).textContent = t("err"); btn.disabled = false; btn.textContent = t("send"); resetTurnstile("#turnstileOrder"); }
+    } catch { $(".ord__err", root).textContent = t(state.settings.chat?.on ? "errChat" : "err"); btn.disabled = false; btn.textContent = t("send"); resetTurnstile("#turnstileOrder"); }
   };
 }
 

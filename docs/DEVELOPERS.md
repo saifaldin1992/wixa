@@ -651,3 +651,20 @@ When the live chat is on (`settings.chat.on`), it is the way to talk to us every
 - **404:**
   - Missing pages render through `pageNotFound()` / `handleNotFound()` (`pages.js`), with the site header and footer, the brand colour and links to the main pages.
   - Missing files (images, scripts) still get the plain `public/404.html`.
+
+## Review of everything left (Nov 2026)
+- **Search engines:**
+  - Every page names its own language version as canonical (`?lang=ar` / `?lang=en`). The bare address is only the x-default.
+  - The sitemap lists both versions of every page, with `xhtml:link` alternates. `/order`, `/terms` and `/payment` are included; `/blog` is listed only once an article is published.
+  - The empty blog page is `noindex`.
+  - Simple pages carry the site's share picture (`og.jpg` or the dashboard one), `og:locale` and x-default.
+- **Files:** `/apple-touch-icon.png` (iPhone home-screen icon) and `/.well-known/security.txt`.
+- **Emails:**
+  - All of them use the same purple palette.
+  - With the live chat on, the request email offers «اسألنا عن طلبك في المحادثة المباشرة» (`/track?chat=track&ref=<number>`) instead of WhatsApp. Any page opened with `?chat=<topic>&ref=<…>` opens the chat (`chat.js`).
+- **Keyboard:**
+  - «تخطَّ إلى المحتوى» is the first stop on every page (`.skip` → `#content`).
+  - The phone menu moves focus to its first link and closes with Escape. This is in `ui.js` and, for the simple pages, in `theme-pre.js`.
+  - Wrong form fields get `aria-invalid`.
+- **Dashboard dark mode:** violet text is `#9B74F8`; filled violet buttons use `#7C3AED` (both pass AA).
+- **Order form:** when the request can't be sent, it points to the live chat (when on) instead of WhatsApp.
