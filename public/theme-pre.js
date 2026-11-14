@@ -18,7 +18,12 @@
   addEventListener("DOMContentLoaded", function () {
     if (matchMedia("(max-width: 760px)").matches) document.querySelectorAll(".fgroup[open]").forEach(function (d) { d.open = false; });
     var m = document.getElementById("menu"), mb = document.getElementById("menuBtn"), sc = document.getElementById("scrim");
-    var menu = function (open) { if (!m || !mb) return; mb.setAttribute("aria-expanded", open); m.classList.toggle("open", open); if (sc) sc.classList.toggle("open", open); r.classList.toggle("menu-open", open); };
+    var menu = function (open) {
+      if (!m || !mb) return; mb.setAttribute("aria-expanded", open); m.classList.toggle("open", open); if (sc) sc.classList.toggle("open", open); r.classList.toggle("menu-open", open);
+      // keyboard users land on the first link of the open menu
+      if (open) setTimeout(function () { var l = m.querySelector("a"); if (l) l.focus({ preventScroll: true }); }, 280);
+    };
+    addEventListener("keydown", function (e) { if (e.key === "Escape" && mb && mb.getAttribute("aria-expanded") === "true") { menu(false); mb.focus(); } });
     if (mb) mb.addEventListener("click", function () { menu(mb.getAttribute("aria-expanded") !== "true"); });
     if (sc) sc.addEventListener("click", function () { menu(false); });
     if (m) m.addEventListener("click", function (e) { if (e.target.closest("a")) menu(false); });

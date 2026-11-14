@@ -360,6 +360,11 @@ export function setupChat() {
     e.preventDefault();
     openChat(b.dataset.topic || "", b.dataset.service || "");
   });
+  // a link with ?chat=<topic>&ref=<order or service> (the request email, for instance) opens the chat straight away
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.has("chat")) setTimeout(() => openChat(q.get("chat").slice(0, 20), (q.get("ref") || "").slice(0, 60)), 400);
+  } catch {}
   // the contact section gets an "instant chat" button next to "contact us"
   const cta = $("#openForm");
   if (cta && !$("#formChat")) {

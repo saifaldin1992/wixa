@@ -20,14 +20,14 @@ export async function notifyOwner(env, row, test = false) {
   const admin = `${staging ? "https://staging.wixa.dev" : "https://wixa.dev"}/admin/#${row.order ? "orders" : "inbox"}`;
   const wa = row.phone ? `https://wa.me/${row.phone.replace(/\D/g, "")}` : "";
   const html = `<div dir="rtl" style="font-family:'Noto Sans Arabic',Tahoma,Arial,sans-serif;background:#F5F5F7;padding:24px">
-    <div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #ECE6E8">
+    <div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E9E4F2">
       <div style="background:#5B21B6;color:#fff;padding:18px 22px;font-size:18px;font-weight:bold">${row.order ? `طلب جديد ${esc(row.order)}` : "رسالة جديدة"} من موقع ويكسا${staging ? " (النسخة التجريبية)" : ""}</div>
-      <div style="padding:22px;color:#1A0E12;font-size:15px;line-height:1.8">
+      <div style="padding:22px;color:#140F1F;font-size:15px;line-height:1.8">
         <p style="margin:0 0 6px"><b>الاسم:</b> ${esc(row.name)}</p>
         ${row.email ? `<p style="margin:0 0 6px"><b>البريد:</b> <a href="mailto:${esc(row.email)}">${esc(row.email)}</a></p>` : ""}
         ${row.phone ? `<p style="margin:0 0 6px"><b>الهاتف:</b> ${esc(row.phone)}</p>` : ""}
         ${row.services?.length ? `<p style="margin:0 0 6px"><b>الخدمة:</b> ${esc(row.services.join("، "))}</p>` : ""}
-        <div style="margin:14px 0;padding:14px;background:#F8EEF1;border-radius:12px;white-space:pre-wrap">${esc(row.message)}</div>
+        <div style="margin:14px 0;padding:14px;background:#F3EEFC;border-radius:12px;white-space:pre-wrap">${esc(row.message)}</div>
         ${row.email ? `<a href="mailto:${esc(row.email)}" style="display:inline-block;background:#5B21B6;color:#fff;padding:10px 18px;border-radius:10px;text-decoration:none;margin-left:6px">رد بالبريد</a>` : ""}
         ${wa ? `<a href="${wa}" style="display:inline-block;background:#25D366;color:#fff;padding:10px 18px;border-radius:10px;text-decoration:none;margin-left:6px">واتساب</a>` : ""}
         <a href="${admin}" style="display:inline-block;color:#5B21B6;padding:10px 4px">فتح لوحة التحكم ←</a>
@@ -52,9 +52,9 @@ export async function sendAutoReply(env, cfg, row, test = false) {
   try { contact = JSON.parse(memo.text || (await loadFromSupabase(env)))?.settings?.contact?.email || ""; } catch {}
   const site = env.SITE_ENV === "staging" ? "https://staging.wixa.dev" : "https://wixa.dev";
   const html = `<div dir="${lang === "ar" ? "rtl" : "ltr"}" style="font-family:'Noto Sans Arabic',Tahoma,Arial,sans-serif;background:#F5F5F7;padding:24px">
-    <div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #ECE6E8">
+    <div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E9E4F2">
       <div style="background:#5B21B6;color:#fff;padding:18px 22px;font-size:18px;font-weight:bold">${lang === "ar" ? "ويكسا" : "WIXA"}</div>
-      <div style="padding:22px;color:#1A0E12;font-size:15px;line-height:1.9;white-space:pre-wrap">${esc(text)}</div>
+      <div style="padding:22px;color:#140F1F;font-size:15px;line-height:1.9;white-space:pre-wrap">${esc(text)}</div>
       <div style="padding:0 22px 20px"><a href="${site}" style="color:#5B21B6;text-decoration:none">${site.replace("https://", "")}</a></div></div></div>`;
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -91,8 +91,8 @@ export async function sendRequestConfirmation(env, cfg, row) {
   if (!env.RESEND_API_KEY || !row.email) return false;
   const ar = row.lang !== "en";
   const name = row.name.replace(/https?:\/\/\S+|www\.\S+/gi, "").replace(/[<>]/g, "").trim().slice(0, 40);
-  let contact = "", wa = "";
-  try { const c = JSON.parse(memo.text || (await loadFromSupabase(env)))?.settings?.contact || {}; contact = c.email || ""; wa = String(c.whatsapp || "").replace(/\D/g, ""); } catch {}
+  let contact = "", wa = "", chat = false;
+  try { const st0 = JSON.parse(memo.text || (await loadFromSupabase(env)))?.settings || {}, c = st0.contact || {}; contact = c.email || ""; wa = String(c.whatsapp || "").replace(/\D/g, ""); chat = !!st0.chat?.on; } catch {}
   const site = env.SITE_ENV === "staging" ? "https://staging.wixa.dev" : "https://wixa.dev";
   const intro = ar ? `أهلاً ${name}،\nوصلنا طلب مشروعك ورقمه ${row.request_no}. سيراجعه فريقنا ونعود إليك خلال يوم عمل بالخطوة التالية أو بأسئلة لتوضيح التفاصيل.`
     : `Hi ${name},\nWe've received your project request, number ${row.request_no}. Our team will review it and get back to you within one working day with the next step or a few questions.`;
@@ -107,7 +107,8 @@ export async function sendRequestConfirmation(env, cfg, row) {
         <div style="white-space:pre-wrap;color:#3A3446;font-size:14px;border-top:1px solid #EEE;padding-top:12px">${esc(row.message)}</div>
         <p style="margin:16px 0 0;color:#625C70;font-size:13px">${esc(keep)}</p>
         <p style="margin:14px 0 0"><a href="${site}/portal${ar ? "" : "?lang=en"}" style="display:inline-block;background:#5B21B6;color:#fff;padding:11px 20px;border-radius:99px;text-decoration:none;font-weight:bold">${ar ? "تابع طلبك في بوابة العملاء" : "Follow your order in the client portal"}</a></p>
-        ${wa ? `<p style="margin:14px 0 0"><a href="https://wa.me/${wa}?text=${encodeURIComponent((ar ? "مرحباً، بخصوص طلبي رقم " : "Hello, about my request ") + row.request_no)}" style="display:inline-block;background:#0E7C47;color:#fff;text-decoration:none;padding:10px 18px;border-radius:99px;font-weight:bold">${ar ? "تابع طلبك على واتساب" : "Follow up on WhatsApp"}</a></p>` : ""}
+        ${chat ? `<p style="margin:14px 0 0"><a href="${site}/track?${ar ? "" : "lang=en&"}chat=track&ref=${encodeURIComponent(row.request_no)}" style="display:inline-block;background:#fff;color:#5B21B6;border:1.5px solid #5B21B6;text-decoration:none;padding:9px 18px;border-radius:99px;font-weight:bold">${ar ? "اسألنا عن طلبك في المحادثة المباشرة" : "Ask about your order in live chat"}</a></p>`
+          : wa ? `<p style="margin:14px 0 0"><a href="https://wa.me/${wa}?text=${encodeURIComponent((ar ? "مرحباً، بخصوص طلبي رقم " : "Hello, about my request ") + row.request_no)}" style="display:inline-block;background:#0E7C47;color:#fff;text-decoration:none;padding:10px 18px;border-radius:99px;font-weight:bold">${ar ? "تابع طلبك على واتساب" : "Follow up on WhatsApp"}</a></p>` : ""}
       </div>
       <div style="padding:0 22px 20px"><a href="${site}" style="color:#5B21B6;text-decoration:none">${site.replace("https://", "")}</a></div></div></div>`;
   const res = await fetch("https://api.resend.com/emails", {
@@ -132,8 +133,8 @@ export async function sendOwnerMail(env, subject, html) {
   if (!r.ok) console.error("owner mail failed", r.status, await r.text());
   return r.ok;
 }
-export const mailBox = (title, inner, color = "#5B21B6") => `<div dir="rtl" style="font-family:'Noto Sans Arabic',Tahoma,Arial,sans-serif;background:#F5F5F7;padding:24px"><div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #ECE6E8">
-  <div style="background:${color};color:#fff;padding:18px 22px;font-size:18px;font-weight:bold">${title}</div><div style="padding:22px;color:#1A0E12;font-size:15px;line-height:1.9">${inner}</div></div></div>`;
+export const mailBox = (title, inner, color = "#5B21B6") => `<div dir="rtl" style="font-family:'Noto Sans Arabic',Tahoma,Arial,sans-serif;background:#F5F5F7;padding:24px"><div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E9E4F2">
+  <div style="background:${color};color:#fff;padding:18px 22px;font-size:18px;font-weight:bold">${title}</div><div style="padding:22px;color:#140F1F;font-size:15px;line-height:1.9">${inner}</div></div></div>`;
 
 // A short email to a customer (review request, order update, booking reminder). Plain layout in their language;
 // replies go to the site's contact address. Needs RESEND_API_KEY; silently skipped without it or without an address.

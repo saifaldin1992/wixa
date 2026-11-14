@@ -9,8 +9,18 @@ export function setupUI() {
     btn.setAttribute("aria-expanded", open); menu.classList.toggle("open", open); scrim.classList.toggle("open", open);
     document.documentElement.classList.toggle("menu-open", open); // the page underneath stays still
     open ? window.__lenis?.stop() : window.__lenis?.start();
+    // keyboard users land on the first link of the open menu, and back on the button when it closes
+    if (open) setTimeout(() => $("a", menu)?.focus({ preventScroll: true }), 280); // after the slide-in, once the links can take focus
   };
   btn.addEventListener("click", () => toggle(btn.getAttribute("aria-expanded") !== "true"));
+  addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && btn.getAttribute("aria-expanded") === "true") { toggle(false); btn.focus(); }
+  });
+  // «تخطَّ إلى المحتوى»: the smooth scroller would swallow the jump, so move the focus to the content by hand
+  $(".skip")?.addEventListener("click", (e) => {
+    const c = document.getElementById("content"); if (!c) return;
+    e.preventDefault(); c.focus({ preventScroll: true }); window.__lenis ? window.__lenis.scrollTo(c, { immediate: true }) : c.scrollIntoView();
+  });
   scrim.addEventListener("click", () => toggle(false));
   $$("a", menu).forEach((a) => a.addEventListener("click", () => toggle(false)));
 

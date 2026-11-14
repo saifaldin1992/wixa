@@ -236,7 +236,7 @@ export async function handleReview(request, env, ctx, url) {
     const r = await sb(env, "rpc/submit_testimonial", { method: "POST", body: JSON.stringify({ token: env.WRITE_TOKEN || "", p }) });
     if (!r.ok) { console.error("review", r.status, await r.text()); return page(`<h1>${ar ? "تعذّر الإرسال" : "Couldn't send"}</h1><p class="lead">${ar ? "حاول مرة أخرى لاحقاً." : "Please try again later."}</p>`, 502); }
     await env.PRIVATE.delete(`review:${code}`);
-    ctx.waitUntil(sendOwnerMail(env, `رأي جديد من ${name}`, mailBox("رأي عميل جديد بانتظار موافقتك", `<p><b>${esc(name)}</b>${p.role ? ` — ${esc(p.role)}` : ""}</p><p style="color:#D9A441;font-size:20px">${"★".repeat(p.rating)}</p><div style="padding:14px;background:#F8EEF1;border-radius:12px;white-space:pre-wrap">${esc(quote)}</div><p>الرأي مخفي حتى تنشره من لوحة التحكم ← آراء العملاء.</p>`)).catch(() => {}));
+    ctx.waitUntil(sendOwnerMail(env, `رأي جديد من ${name}`, mailBox("رأي عميل جديد بانتظار موافقتك", `<p><b>${esc(name)}</b>${p.role ? ` — ${esc(p.role)}` : ""}</p><p style="color:#D9A441;font-size:20px">${"★".repeat(p.rating)}</p><div style="padding:14px;background:#F3EEFC;border-radius:12px;white-space:pre-wrap">${esc(quote)}</div><p>الرأي مخفي حتى تنشره من لوحة التحكم ← آراء العملاء.</p>`)).catch(() => {}));
     const g = safeHref(st.contact?.google_review || "");
     if (g && p.rating >= 4) return page(`<h1>${ar ? "شكراً لك" : "Thank you"}</h1><p class="lead">${ar ? "وصل رأيك، ونقدّر وقتك وثقتك بنا." : "We've received your review. We appreciate your time and trust."}</p>
       <p class="lead">${ar ? "هل تساعدنا بنشر نفس الرأي على Google؟ يأخذ دقيقة ويساعد غيرك على إيجادنا." : "Would you share the same review on Google? It takes a minute and helps others find us."}</p>

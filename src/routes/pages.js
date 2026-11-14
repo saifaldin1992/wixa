@@ -143,8 +143,10 @@ export async function handleHome(request, env, ctx, pageName = "home") {
     .on(`section#${pageName} h2.head__title`, { element: (el) => { if (["about", "pricing", "careers", "faq", "services", "projects"].includes(pageName)) el.tagName = "h1"; } })
     // inner pages hide the home headline; keep it out of their outline so each page has a single main heading
     .on("h1.hero__title", { element: (el) => { if (pageName !== "home") el.tagName = "div"; } })
-    .on(...attr('link[rel="canonical"]', "href", `${origin}${pagePath}`))
-    .on(...attr('meta[property="og:url"]', "content", `${origin}${pagePath}`))
+    // each language version is its own canonical address (the bare address is only the x-default that picks a language),
+    // otherwise search engines fold the English pages into the Arabic ones and never list them
+    .on(...attr('link[rel="canonical"]', "href", `${origin}${pagePath}?lang=${lang}`))
+    .on(...attr('meta[property="og:url"]', "content", `${origin}${pagePath}?lang=${lang}`))
     .on("title", { element: (el) => { if (title) el.setInnerContent(title); } })
     .on(...attr('meta[property="og:locale"]', "content", lang === "en" ? "en_US" : "ar_IQ"))
     .on(...attr('meta[name="description"]', "content", desc))
@@ -270,7 +272,8 @@ export function siteShell(st, lang, path, { empty } = {}) {
   const socials = ["instagram", "x", "linkedin", "facebook"].map((k) => [k, social(k)]).filter(([, u]) => u).map(([k, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener" aria-label="${k}">${SOCIAL[k]}</a>`).join("")
     + (c.email ? `<a href="mailto:${esc(c.email)}" aria-label="email"><svg viewBox="0 0 24 24"><path d="M3 5h18v14H3z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 6l9 7 9-7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></a>` : "");
   const contactOff = !sectionShown(st, "contact", gone) ? " hidden" : "";
-  const header = `<header class="header" id="header">
+  // first stop for keyboard users: jump past the menu straight to the page's content (WCAG 2.4.1)
+  const header = `<a class="skip" href="#content">${ar ? "تخطَّ إلى المحتوى" : "Skip to content"}</a><header class="header" id="header">
     <div class="header__bar">
       <a href="/${q}" class="brand" aria-label="WIXA">
         <span class="brand__mark" id="brandMark">${mark}</span>
@@ -345,9 +348,9 @@ export function simplePage(request, st, { lang, title, description, path, image,
   }
   const html = `<!doctype html><html lang="${lang}" dir="${ar ? "rtl" : "ltr"}" data-mode="${st.mode === "light" || st.mode === "dark" ? st.mode : ""}" data-look="${st.look === "soft" ? "soft" : "flat"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)} — ${esc(brand)}</title><meta name="description" content="${esc(description)}">${noindex ? '<meta name="robots" content="noindex">' : ""}
-<link rel="canonical" href="${origin}${path}?lang=${lang}"><link rel="alternate" hreflang="ar" href="${origin}${path}?lang=ar"><link rel="alternate" hreflang="en" href="${origin}${path}?lang=en">
+<link rel="canonical" href="${origin}${path}?lang=${lang}"><link rel="alternate" hreflang="ar" href="${origin}${path}?lang=ar"><link rel="alternate" hreflang="en" href="${origin}${path}?lang=en"><link rel="alternate" hreflang="x-default" href="${origin}${path}">
 <meta property="og:type" content="website"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${origin}${path}">
-${image ? `<meta property="og:image" content="${esc(image)}"><meta name="twitter:card" content="summary_large_image">` : ""}
+<meta property="og:image" content="${esc(image || (st.seo?.og_image && /^https?:\/\//.test(st.seo.og_image) ? st.seo.og_image : `${origin}/og.jpg`))}"><meta name="twitter:card" content="summary_large_image"><meta property="og:locale" content="${ar ? "ar_IQ" : "en_US"}">
 <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 ${font === WIXA.BRAND_FONT ? '<link rel="preload" href="/fonts/noto-sans-arabic/noto-sans-arabic-arabic-600-normal.woff2" as="font" type="font/woff2" crossorigin>' : hosted ? "" : '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'}
 ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld).replace(/</g, "\\u003c")}</script>` : ""}
@@ -412,7 +415,7 @@ ${hosted ? `<link rel="stylesheet" href="${hosted}">` : `<link rel="stylesheet" 
 <link rel="stylesheet" href="${versioned("/build/site.css")}">
 ${shell.header}
 <div class="scrim" id="scrim"></div>
-<main class="page">${crumbHtml}${body}
+<main class="page" id="content" tabindex="-1">${crumbHtml}${body}
 ${ending ? `<div class="actions"><a class="btn btn--primary" data-start href="/order?lang=${lang}${orderQ}">${esc(startLabel || ui.nav_start)}</a><a class="btn btn--ghost" href="/contact?lang=${lang}">${ui.nav_contact}</a></div>` : ""}</main>
 ${shell.footer}
 ${st.chat?.on || scripts.length ? `<script src="${versioned("/build/shared.js")}" defer></script>` : ""}${scripts.map((u) => `<script type="module" src="${versioned(u)}"></script>`).join("")}${st.chat?.on && !scripts.length ? `<script type="module" src="${versioned("/build/chat.js")}"></script>` : ""}
@@ -613,7 +616,7 @@ export async function handleBlog(request, env, ctx, slug) {
   if (!slug) {
     const body = `<h1>${ar ? "المقالات" : "Articles"}</h1><p class="lead">${ar ? "أفكار ونصائح عن المواقع والتطبيقات والأنظمة الرقمية." : "Ideas and advice on websites, apps and digital systems."}</p>
       ${posts.length ? `<div class="posts">${posts.map((p) => `<a class="post" href="/blog/${encodeURIComponent(p.slug)}?lang=${lang}">${safeHref(p.cover_url) ? `<img src="${esc(safeHref(p.cover_url))}" alt="" loading="lazy">` : ""}<div><b>${esc(T(p, "title"))}</b><span>${esc(fmtDate(p.published_at || p.created_at, lang))}</span><p>${esc(T(p, "excerpt"))}</p></div></a>`).join("")}</div>` : `<p class="empty">${ar ? "ستُنشر المقالات هنا قريباً." : "Articles will appear here soon."}</p>`}`;
-    return simplePage(request, st, { lang, title: ar ? "المقالات" : "Articles", description: ar ? "مقالات ويكسا عن تطوير المواقع والتطبيقات والأنظمة." : "WIXA articles on building websites, apps and systems.", path: "/blog", body });
+    return simplePage(request, st, { noindex: !posts.length, lang, title: ar ? "المقالات" : "Articles", description: ar ? "مقالات ويكسا عن تطوير المواقع والتطبيقات والأنظمة." : "WIXA articles on building websites, apps and systems.", path: "/blog", body });
   }
   const p = posts.find((x) => x.slug === slug);
   if (!p) return pageNotFound(request, st);

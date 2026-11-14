@@ -40,7 +40,7 @@ export function setupNavScroll() {
   document.addEventListener("mouseover", (e) => { clearTimeout(warm.t); warm.t = setTimeout(() => warm(e), 80); });
   document.addEventListener("click", (e) => {
     const a = e.target.closest("a[href]");
-    if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    if (!a || a.classList.contains("skip") || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey) return; // «تخطَّ إلى المحتوى» keeps the browser's own jump (it moves the focus)
     const u = new URL(a.href, location.href);
     if (u.origin !== location.origin || u.pathname !== location.pathname || !u.hash) return;
     const id = u.hash.slice(1);

@@ -152,8 +152,10 @@ export default {
           try { const d = JSON.parse(await getSiteData(env, ctx)); projects = d.projects || []; services = d.services || []; st = d.settings || {}; } catch {}
           const posts = await getPosts(env);
           const extra = [...sitePages(st).filter((p) => p.published).map((p) => p.path), ...(st.team?.on ? ["/team"] : []), ...({ ...STATUS_DEFAULTS, ...(st.status_page || {}) }.on ? ["/status"] : [])];
-          const urls = ["/", "/services", "/projects", "/pricing", "/about", "/careers", "/contact", "/faq", "/privacy", "/blog", ...extra, ...services.map((x) => `/services/${encodeURIComponent(x.slug)}`), ...projects.map((x) => `/projects/${encodeURIComponent(x.slug)}`), ...posts.map((x) => `/blog/${encodeURIComponent(x.slug)}`)].map((p) => `<url><loc>https://wixa.dev${p}</loc><lastmod>${today}</lastmod></url>`).join("");
-          return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>\n`, {
+          const urls = ["/", "/services", "/projects", "/pricing", "/about", "/careers", "/contact", "/faq", "/order", "/privacy", "/terms", "/payment", ...(posts.length ? ["/blog"] : []), ...extra, ...services.map((x) => `/services/${encodeURIComponent(x.slug)}`), ...projects.map((x) => `/projects/${encodeURIComponent(x.slug)}`), ...posts.map((x) => `/blog/${encodeURIComponent(x.slug)}`)].filter((p, i, all) => all.indexOf(p) === i)
+            // both language versions of every page, each naming the other (and the bare address as x-default)
+            .flatMap((p) => ["ar", "en"].map((l) => `<url><loc>https://wixa.dev${p}?lang=${l}</loc><lastmod>${today}</lastmod>${["ar", "en"].map((h) => `<xhtml:link rel="alternate" hreflang="${h}" href="https://wixa.dev${p}?lang=${h}"/>`).join("")}<xhtml:link rel="alternate" hreflang="x-default" href="https://wixa.dev${p}"/></url>`)).join("");
+          return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">${urls}</urlset>\n`, {
             headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" },
           });
         }

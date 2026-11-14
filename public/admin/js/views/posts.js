@@ -41,7 +41,7 @@ export async function viewPosts(view) {
       <div class="item__thumb" style="${p.cover_url ? `background-image:url('${esc(p.cover_url)}')` : ""}">${p.cover_url ? "" : I.edit}</div>
       <div class="item__main"><b>${esc(p.title_ar || p.title_en || "بدون عنوان")}</b><span>${p.published ? `منشور · ${when(p.published_at)}` : "مسودة"} · <span dir="ltr">/blog/${esc(p.slug)}</span></span></div>
       <div class="item__actions">
-        ${p.published ? `<a class="b b--sm b--ghost" href="/blog/${encodeURIComponent(p.slug)}" target="_blank" rel="noopener">${I.eye}</a>` : ""}
+        ${p.published ? `<a class="b b--sm b--ghost" href="/blog/${encodeURIComponent(p.slug)}" target="_blank" rel="noopener" aria-label="عرض المقال في الموقع" title="عرض المقال في الموقع">${I.eye}</a>` : ""}
         <button class="b b--sm" data-pub="${p.id}">${p.published ? "إخفاء" : "نشر"}</button>
         <button class="b b--icon b--ghost" data-edit="${p.id}" title="تعديل">${I.edit}</button>
         <button class="b b--icon b--ghost b--danger" data-del="${p.id}" title="حذف">${I.trash}</button></div></div>`).join("")}</div>`;

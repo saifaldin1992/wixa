@@ -2061,3 +2061,8 @@ html.fab-away .wa, html.fab-away .chatw__btn { transform: translateY(140%); opac
    screen, like every grid), and partner logo tiles use the small card corner (14px) */
 .stats__inner { max-width: calc(var(--max) - 2 * var(--gutter)); }
 .partner, .partners__grid:not(.is-marquee) .partner, .partners__track .partner { border-radius: var(--radius-sm, 14px); }
+
+/* «تخطَّ إلى المحتوى»: hidden until reached with the keyboard, then shown above everything at the top */
+.skip { position: fixed; top: 8px; inset-inline-start: 8px; z-index: 2000; padding: 10px 16px; border-radius: 12px; background: var(--primary); color: var(--primary-ink, #fff); font-weight: 700; text-decoration: none; transform: translateY(-160%); transition: transform .2s; }
+.skip:focus { transform: none; outline: 3px solid var(--accent); outline-offset: 2px; }
+#content:focus { outline: none; }
