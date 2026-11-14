@@ -1121,3 +1121,12 @@ html[data-theme="dark"] .msg.new .msg__who b::after { background: #7C3AED; }
 /* sign-in: the «not a robot» check sits under the fields, centred; usually invisible */
 .auth__captcha { display: flex; justify-content: center; min-height: 0; }
 .auth__captcha:empty { display: none; }
+
+/* password boxes: an eye button at the right end shows or hides what was typed (the text inside is left-to-right) */
+.pw { position: relative; display: block; }
+.pw > input { width: 100%; padding-right: 46px !important; box-sizing: border-box; }
+.pw__eye { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; display: grid; place-items: center;
+  border: 0; border-radius: 10px; background: none; color: var(--muted); cursor: pointer; padding: 0; }
+.pw__eye:hover { color: var(--text); background: var(--line); }
+.pw__eye:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+.pw__eye svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }

@@ -8,7 +8,9 @@
 /* WIXA admin dashboard — entry. Each part lives in its own module under /admin/js/. */
 import { LINK, afterSignIn, authMsg, showAuth } from "./js/auth.js";
 import { sb, setSb, toast } from "./js/core.js";
+import { setupPasswordEyes } from "./js/pw-eye.js";
 
+setupPasswordEyes(); // an eye button in every password box
 (async function boot() {
   try {
     // config is built into the page by the server; the request is only a fallback
