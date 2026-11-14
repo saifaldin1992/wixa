@@ -88,9 +88,10 @@ export function renderCustom(body) {
   drawEditor();
 
   function drawList() {
+    const own = list.filter((p) => !PAGE_DEFAULTS.some((d) => d.id === p.id)); // terms and payment are under «الصفحات القانونية»
     body.innerHTML = `<div class="toolbar"><p class="muted" style="margin:0">صفحات نصية مستقلة لها رابطها الخاص، مثل الشروط والأحكام وسياسة الدفع. تظهر في سطر أسفل الموقع إذا اخترت ذلك.</p>
         <button type="button" class="add-fab" id="pgAdd" aria-label="إضافة صفحة" title="إضافة صفحة">${I.plus}</button></div>
-      ${list.length ? `<div class="lnks">${list.map((p) => { const bad = pathProblem(p.path); return `<div class="lnk ${p.published && !bad ? "" : "lnk--off"}">
+      ${own.length ? `<div class="lnks">${own.map((p) => { const bad = pathProblem(p.path); return `<div class="lnk ${p.published && !bad ? "" : "lnk--off"}">
         <div class="lnk__main"><b>${esc(p.title_ar || p.title_en || "بدون عنوان")}</b><span dir="ltr" class="muted">${esc(p.path || "—")}</span>
           <span class="pill ${p.published ? "ok" : "off"}">${p.published ? "منشورة" : "مخفية"}</span>${p.footer ? '<span class="pill">في أسفل الموقع</span>' : ""}${bad ? `<span class="pill warn">${PROBLEM[bad]}</span>` : ""}</div>
         <div class="lnk__btns">${p.published && !bad ? `<a class="b b--sm b--ghost" href="${esc(p.path)}" target="_blank" rel="noopener" title="فتح">${I.eye}</a>` : ""}
@@ -115,7 +116,7 @@ export function renderCustom(body) {
     const items = Array.isArray(pg[L]) ? pg[L] : (pg[L] = []);
     const bad = problemOf(pg.path, pg);
     let was = pg.path; // extra addresses follow the page when its address changes
-    body.innerHTML = `<button type="button" class="b b--sm b--ghost" id="pgBack">→ كل الصفحات المضافة</button>
+    body.innerHTML = `<button type="button" class="b b--sm b--ghost" id="pgBack">→ ${PAGE_DEFAULTS.some((d) => d.id === pg.id) ? "الصفحات القانونية" : "كل الصفحات المضافة"}</button>
       <div class="stack" style="margin-top:12px">
         <div class="grid2"><label class="f"><span>العنوان (عربي)</span><input data-k="title_ar" value="${esc(pg.title_ar || "")}" maxlength="80"></label>
           <label class="f"><span>Title (English)</span><input data-k="title_en" dir="ltr" value="${esc(pg.title_en || "")}" maxlength="80"></label></div>
@@ -137,7 +138,8 @@ export function renderCustom(body) {
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><button type="button" class="b b--sm" id="pgAddSec">${I.plus}إضافة فقرة</button>
         ${L === "en" && !items.length && (pg.ar || []).length ? '<button type="button" class="b b--sm b--ghost" id="pgCopyAr">ابدأ بنسخة من فقرات العربي</button>' : ""}
         ${PAGE_DEFAULTS.some((d) => d.id === pg.id) ? `<button type="button" class="b b--sm b--ghost" id="pgReset">${I.reset}استعادة النص الافتراضي</button>` : ""}</div>`;
-    $("#pgBack").onclick = () => { editing = null; renderCustom(body); };
+    const legal = PAGE_DEFAULTS.some((d) => d.id === pg.id);
+    $("#pgBack").onclick = () => { editing = null; if (legal) document.dispatchEvent(new CustomEvent("wixa:content-tab", { detail: "legal" })); else renderCustom(body); };
     $$("[data-k]", body).forEach((el) => el.addEventListener(el.type === "checkbox" ? "change" : "input", () => {
       const k = el.dataset.k;
       pg[k] = el.type === "checkbox" ? el.checked : k === "path" ? el.value.trim().toLowerCase() : el.value;

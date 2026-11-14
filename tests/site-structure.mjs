@@ -10,6 +10,10 @@
 import { readFileSync } from "node:fs";
 const { layoutFor, navLink, DEFAULT_LAYOUTS, SECTION_PAGES, SECTIONS } = await import("../public/js/site-structure.js");
 const { arrangeSections } = await import("../src/lib/arrange.js");
+// the shared settings helpers (navPlan…) run in a small sandbox, as in the browser
+const sandbox = { window: {} };
+(await import("node:vm")).runInNewContext(readFileSync(new URL("../public/shared.js", import.meta.url), "utf8"), sandbox);
+const window0 = sandbox.window.WIXA;
 let bad = 0;
 const check = (ok, label) => { if (!ok) bad++; console.log(`${ok ? "✓" : "✗"} ${label}`); };
 const keys = (l) => l.map((x) => x.k + (x.on ? "" : "·")).join(" ");
@@ -43,8 +47,9 @@ check(out.slice(0, out.indexOf("<!--s:")) === html.slice(0, html.indexOf("<!--s:
 
 // ---------- C. menu links
 check(navLink({}, "services").href === "/services" && navLink({}, "services").shown, "a hub link goes to its page (/services)");
-check(navLink({}, "industries").href === "/services#industries", "«حلول حسب مجالك» opens the services page on its «by field» tab");
-check(navLink({}, "calc").href === "/pricing#calculator" && navLink({}, "calc").shown, "the calculator link follows the calculator to the pricing page");
+check(navLink({}, "industries").href === "/services#industries", "the «by field» button opens the services page on its tab");
+check(navLink({}, "calc").href === "/pricing#calculator" && navLink({}, "calc").shown, "the calculator button follows the calculator to the pricing page");
+check(!window0.navPlan({}).some((x) => x.k === "industries" || x.k === "calc"), "«حلول حسب مجالك» and «احسب تكلفة مشروعك» are not menu links");
 check(!navLink({ sections: { services: false } }, "services").shown, "a link to a switched-off section is hidden");
 check(!navLink({ sections: { industries: false } }, "industries").shown, "a link to a switched-off part (industries) is hidden");
 const moved = { layout: { home: DEFAULT_LAYOUTS.home.map((k) => ({ k, on: k !== "partners" })) } };

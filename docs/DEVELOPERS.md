@@ -667,3 +667,22 @@ When the live chat is on (`settings.chat.on`), it is the way to talk to us every
   - Wrong form fields get `aria-invalid`.
 - **Dashboard dark mode:** violet text is `#9B74F8`; filled violet buttons use `#7C3AED` (both pass AA).
 - **Order form:** when the request can't be sent, it points to the live chat (when on) instead of WhatsApp.
+
+## Site pages tidied, and «صفحات الموقع» reorganised (Nov 2026)
+- **Site:**
+  - Order tracking now lives in «بوابة العملاء»: `/track` redirects to `/portal` (301) and keeps `?n=`, `?lang=`, `?chat=` and `?ref=`.
+  - The footer's «تتبع طلبك» button opens the portal.
+  - `/status` is removed: no route, no footer link, no settings.
+  - «حلول حسب مجالك» and «احسب تكلفة مشروعك» are no longer menu links: they are not in `DEFAULTS.nav`, and older saved menus drop them. They stay in `NAV_TARGETS` for the in-page buttons (`data-more`).
+  - «لماذا ويكسا» is one section (`story`, with `guarantees` as its part): its title, the three cards, «ما نلتزم به معك», and quick facts. The quick facts are the lowest package price, the reply time and a calculator link; they are built in `sales.js`, so nothing there is typed by hand.
+- **Dashboard «صفحات الموقع»:** the tabs are grouped by the site page they show on, with one place per setting:
+  - **الرئيسية:** الواجهة الأولى · لماذا ويكسا · كيف نعمل · الأرقام · الشركاء والآراء · الخاتمة والتذييل
+  - **الخدمات والأسعار:** الخدمات والأعمال · حلول حسب المجال · الباقات · حاسبة التكلفة
+  - **من نحن والمزيد:** من نحن · الأسئلة الشائعة · الوظائف
+  - **الصفحات:** كل الصفحات والروابط · الصفحات القانونية (privacy, terms, payment) · صفحات مضافة · فريقنا
+  - **ترتيب الأقسام:** includes «إخفاء من كل الصفحات» per section; the separate «إظهار الأقسام» tab is gone.
+  - **القوائم والأزرار:** each link's name sits in «القوائم».
+  - **بيانات الشركة:** الاسم والشعار · التواصل والمواعيد · لغة الموقع
+- **Code notes:**
+  - A section's title and description sit at the top of its own tab (`HEADS`, `TEXT_TABS` in `content.js`).
+  - Old tab names (`story`, `guarantees`, `sections`, `privacy`, `booking`, `status`) open their new place (`OLD_TABS`).

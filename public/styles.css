@@ -2106,7 +2106,7 @@ html[data-theme="dark"] .why__facts b { color: var(--fg); }
   .why .story-item .story-item__text { text-align: start; }
   .why .story-item h3 { font-size: 1.08rem; margin: 0 0 4px; } .why .story-item p { font-size: .9rem; margin: 0; max-width: none; text-wrap: pretty; }
   .why .story-item__num { font-size: .78rem; }
-  .why .guarantees__grid { gap: 0; border: 1px solid var(--line); border-radius: 22px; background: var(--surface); overflow: hidden; }
+  .why .guarantees__grid { gap: 0; border: 1px solid var(--line); border-radius: var(--radius, 28px); background: var(--surface); overflow: hidden; }
   .why .guar { border: 0; border-radius: 0; background: none; padding: 14px 16px; box-shadow: none; }
   .why .guar + .guar { border-top: 1px solid var(--line); }
   .why__facts { gap: 8px; } .why__facts li { padding: 8px 13px; font-size: .86rem; }

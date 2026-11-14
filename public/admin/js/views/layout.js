@@ -9,9 +9,9 @@ import { DEFAULT_LAYOUTS, SECTIONS, SECTION_PAGES, layoutFor } from "../../../js
 const PAGES = ["home", "services", "projects", "pricing", "about", "careers", "faq", "contact"];
 // where each section is edited: a tab of «صفحات الموقع» or a page of the dashboard
 const EDIT = {
-  hero: ["tab", "texts"], about: ["tab", "about"], story: ["tab", "story"], partners: ["view", "partners"], services: ["view", "services"],
+  hero: ["tab", "texts"], about: ["tab", "about"], story: ["tab", "why"], partners: ["view", "partners"], services: ["view", "services"],
   projects: ["view", "projects"], process: ["tab", "process"], stats: ["tab", "stats"], pricing: ["tab", "pricing"], calculator: ["tab", "calc"],
-  testimonials: ["view", "testimonials"], careers: ["tab", "careers"], faq: ["tab", "faq"], ways: ["tab", "contact"], contact: ["tab", "texts"],
+  testimonials: ["view", "testimonials"], careers: ["tab", "careers"], faq: ["tab", "faq"], ways: ["tab", "contact"], contact: ["tab", "cta"],
 };
 export let layoutPage = "home";
 let counts = null; // rows in the partners and testimonials tables (a section with nothing in it does not show)
@@ -47,7 +47,7 @@ export async function renderLayout(body) {
     <div class="ly" id="lyList">${list.map((x, i) => {
       const s = SECTIONS[x.k], globalOff = settings.sections?.[x.k] === false, empty = isEmpty(x.k);
       const note = globalOff ? `<span class="tag off">مخفي في كل الصفحات</span><button type="button" class="b b--sm b--ghost" data-show="${x.k}">إظهار</button>`
-        : empty && x.on ? '<span class="tag off">فارغ — يظهر عند إضافة محتوى</span>' : "";
+        : (empty && x.on ? '<span class="tag off">فارغ — يظهر عند إضافة محتوى</span>' : "") + (x.k === "hero" ? "" : `<button type="button" class="b b--sm b--ghost ly__hideall" data-hideall="${x.k}" title="يخفي هذا القسم من كل صفحات الموقع">إخفاء من كل الصفحات</button>`);
       return `<div class="ly__row${x.on ? "" : " is-off"}" data-k="${x.k}">
         <div class="ly__move"><button type="button" class="b b--icon b--ghost" data-up="${i}" ${i === 0 ? "disabled" : ""} aria-label="لأعلى">${I.up}</button><button type="button" class="b b--icon b--ghost" data-down="${i}" ${i === list.length - 1 ? "disabled" : ""} aria-label="لأسفل">${I.down}</button></div>
         <div class="ly__name"><b>${esc(s.name_ar)}</b>${note}</div>
@@ -65,6 +65,7 @@ export async function renderLayout(body) {
   $$("[data-on]", body).forEach((c) => (c.onchange = () => { const n = list.slice(); n[+c.dataset.on] = { ...n[+c.dataset.on], on: c.checked }; save(n); }));
   $$("[data-del]", body).forEach((b) => (b.onclick = () => { const n = list.slice(); n.splice(+b.dataset.del, 1); save(n); }));
   $$("[data-show]", body).forEach((b) => (b.onclick = () => { settings.sections = { ...(settings.sections || {}), [b.dataset.show]: true }; changed(); renderLayout(body); }));
+  $$("[data-hideall]", body).forEach((b) => (b.onclick = () => { settings.sections = { ...(settings.sections || {}), [b.dataset.hideall]: false }; changed(); renderLayout(body); }));
   $$("[data-edit]", body).forEach((b) => (b.onclick = () => {
     const [kind, where] = EDIT[b.dataset.edit];
     if (kind === "view") location.hash = `#${where}`;

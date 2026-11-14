@@ -102,9 +102,10 @@ export const sectionShown = (settings, k, empty) => !(settings && settings.secti
 export const NAV_TARGETS = {
   home: { page: "home" }, about: { page: "about" }, careers: { page: "careers" }, contact: { page: "contact" }, faq: { page: "faq" },
   blog: { page: "blog" }, privacy: { page: "privacy" },
-  // «حلول حسب مجالك» and «احسب تكلفة مشروعك» are parts of the services and pricing pages, not menu links of their own
-  services: { page: "services" }, projects: { page: "projects" },
-  pricing: { page: "pricing" }, partners: { section: "partners" },
+  services: { page: "services" }, industries: { page: "services", hash: "industries", part: "industries" }, projects: { page: "projects" },
+  pricing: { page: "pricing" }, calc: { section: "calculator" }, partners: { section: "partners" },
+  // industries and calc are not menu links any more (they are parts of the services and pricing pages, and are not in
+  // the menu list: DEFAULTS.nav in shared.js); they stay here for the in-page buttons that point at them (data-more)
 };
 const ANCHOR = { services: "services", industries: "industries", projects: "projects", pricing: "pricing", calculator: "calculator", partners: "partners" };
 const PAGE_ORDER = ["home", "services", "projects", "pricing", "about", "careers", "faq", "contact"];

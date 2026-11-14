@@ -1108,3 +1108,12 @@ html[dir="rtl"] .side__sec.closed .side__chev { transform: rotate(-90deg); }
 html[data-theme="dark"] { --brand: #9B74F8; }
 html[data-theme="dark"] :is(.b--primary, .chip input:checked + span, .chat__item.on .chat__av, .cm--me p, .subnav .seg button.on small, .add-fab, .seg button.on, .subnav .seg button.on, .bg-subnav span.on) { background: #7C3AED !important; border-color: #7C3AED; }
 html[data-theme="dark"] .msg.new .msg__who b::after { background: #7C3AED; }
+
+/* «القوائم»: each link with its name box, where it shows and its footer group */
+.navrow { grid-template-columns: auto minmax(0, 1fr) minmax(130px, 170px) minmax(120px, 150px); }
+.navrow__name { display: grid; gap: 2px; min-width: 0; }
+.navrow__name small { font-size: 12px; }
+.navrow__name input { min-height: 38px; padding: 0 10px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--panel); color: var(--text); font: inherit; min-width: 0; }
+@media (max-width: 760px) { .navrow { grid-template-columns: auto minmax(0, 1fr); } .navrow select { grid-column: 1 / -1; } }
+.ly__hideall { font-size: 12px; min-height: 30px; padding: 0 8px; margin-inline-start: 6px; }
+.ct-head { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px dashed var(--line-2); }

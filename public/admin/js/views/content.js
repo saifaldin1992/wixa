@@ -4,9 +4,10 @@ import { PRIVACY_DEFAULTS } from "../../../js/privacy-defaults.js";
 import { UI_DEFAULTS } from "../../../js/ui-strings.js";
 
 // interface texts the owner can change (button labels, menu, form messages)
-const UI_GROUPS = [["القائمة والتذييل", ["nav_home", "nav_projects", "nav_services", "nav_partners", "nav_careers", "nav_contact", "nav_blog", "privacy"]], ["نموذج التواصل", ["f_name", "f_email", "f_phone", "f_service", "f_any", "f_message", "f_send", "or_wa", "sending", "invalid", "bad_phone", "err", "done_title", "done_text", "done_again"]], ["الحاسبة والخدمات والمشاريع", ["calc_est", "calc_pdf", "calc_wa", "more", "page", "no_projects"]], ["حجز المواعيد", ["bk_btn", "bk_title", "bk_day", "bk_time", "bk_pick_day", "bk_none", "bk_pick_time", "bk_taken", "bk_notes", "bk_send", "bk_ok"]], ["التقديم على وظيفة", ["j_title", "j_job", "j_general", "j_cv", "j_about", "j_send", "j_ok"]]];
+const UI_GROUPS = [["نموذج التواصل", ["f_name", "f_email", "f_phone", "f_service", "f_any", "f_message", "f_send", "or_wa", "sending", "invalid", "bad_phone", "err", "done_title", "done_text", "done_again"]], ["الحاسبة والخدمات والمشاريع", ["calc_est", "calc_pdf", "calc_wa", "more", "page", "no_projects"]], ["حجز المواعيد", ["bk_btn", "bk_title", "bk_day", "bk_time", "bk_pick_day", "bk_none", "bk_pick_time", "bk_taken", "bk_notes", "bk_send", "bk_ok"]], ["التقديم على وظيفة", ["j_title", "j_job", "j_general", "j_cv", "j_about", "j_send", "j_ok"]]];
 import { imageField } from "../fields.js";
-import { renderCustom, renderLinks, renderTeam } from "./sitepages.js";
+import { openCustomPage, renderCustom, renderLinks, renderTeam } from "./sitepages.js";
+import { PAGE_DEFAULTS } from "../../../js/site-pages.js";
 import { renderLayout } from "./layout.js";
 import { FOOTER_GROUPS, groupOf } from "../../../js/site-structure.js";
 import { bindPreview, changed, quietly, getPath, previewLang, previewPane, pushPreview, setPath, setPreviewLang, settingsActions } from "../settings.js";
@@ -15,38 +16,56 @@ import { bindPreview, changed, quietly, getPath, previewLang, previewPane, pushP
 export let contentTab = "texts", contentLang = "ar";
 export const TEXT_FIELDS = [
   ["القسم الرئيسي (أعلى الصفحة)", [["hero_badge", "الشارة الصغيرة"], ["hero_title", "العنوان الرئيسي"], ["hero_sub", "الوصف", true], ["hero_cta", "زر 1"], ["hero_cta2", "زر 2"]]],
-  ["قسم الإنجازات", [["projects_title", "العنوان"], ["projects_sub", "الوصف", true]]],
-  ["قسم الخدمات", [["services_title", "العنوان"], ["services_sub", "الوصف", true], ["wa_ask", "زر «اسأل عبر واتساب» تحت كل خدمة"]]],
-  ["قسم كيف نعمل", [["process_title", "العنوان"], ["process_sub", "الوصف", true]]],
-  ["قسم الأرقام", [["stats_title", "العنوان"]]],
-  ["قسم آراء العملاء", [["testimonials_title", "العنوان"], ["testimonials_sub", "الوصف", true]]],
-  ["حاسبة التكلفة", [["calc_title", "العنوان"], ["calc_sub", "الوصف", true], ["calc_type", "عنوان نوع المشروع"], ["calc_features", "عنوان الميزات"], ["calc_speed", "عنوان المدة"], ["calc_normal", "مدة عادية"], ["calc_rush", "مدة مستعجلة"], ["calc_result", "عنوان النتيجة"], ["calc_note", "الملاحظة", true], ["calc_cta", "نص الزر"]]],
-  ["تفاصيل المشاريع", [["details", "زر عرض التفاصيل"], ["similar", "زر طلب مشروع مشابه"]]],
-  ["قسم الشركاء", [["partners_title", "العنوان"], ["partners_sub", "الوصف", true]]],
-  ["قسم الوظائف", [["careers_title", "العنوان"], ["careers_sub", "الوصف", true], ["careers_empty", "النص عند عدم وجود شواغر", true], ["careers_apply", "زر التقديم"], ["careers_general", "زر إرسال السيرة الذاتية"]]],
-  ["قسم الأسئلة الشائعة", [["faq_title", "العنوان"], ["faq_sub", "الوصف", true]]],
-  ["قسم التواصل", [["cta_title", "العنوان"], ["cta_sub", "الوصف", true], ["cta_button", "نص الزر"]]],
-  ["خاتمة صفحة الأسئلة الشائعة", [["faq_cta_title", "العنوان"], ["faq_cta_sub", "الوصف", true]]],
-  ["التذييل", [["footer_text", "النص"]]],
 ];
+// each section's own title and description, shown at the top of that section's tab (one place per section)
+const HEADS = {
+  why: [["why_title", "العنوان"], ["why_sub", "الوصف", true]],
+  process: [["process_title", "العنوان"], ["process_sub", "الوصف", true]],
+  stats: [["stats_title", "العنوان"]],
+  faq: [["faq_title", "العنوان"], ["faq_sub", "الوصف", true]],
+  careers: [["careers_title", "العنوان"], ["careers_sub", "الوصف", true], ["careers_apply", "زر التقديم"], ["careers_general", "زر إرسال السيرة الذاتية"]],
+  calc: [["calc_title", "العنوان"], ["calc_sub", "الوصف", true], ["calc_type", "عنوان نوع المشروع"], ["calc_features", "عنوان الميزات"], ["calc_speed", "عنوان المدة"], ["calc_normal", "مدة عادية"], ["calc_rush", "مدة مستعجلة"], ["calc_result", "عنوان النتيجة"], ["calc_note", "الملاحظة", true], ["calc_cta", "زر طلب عرض السعر"]],
+};
+// tabs that are only titles and texts (their lists live elsewhere)
+const TEXT_TABS = {
+  svchead: { note: "عناوين قسمي الخدمات والأعمال. الخدمات والمشاريع نفسها تُضاف من «الخدمات» و«المشاريع» في القائمة الجانبية.", groups: [
+    ["قسم الخدمات", [["services_title", "العنوان"], ["services_sub", "الوصف", true]]],
+    ["قسم نماذج من عملنا", [["projects_title", "العنوان"], ["projects_sub", "الوصف", true], ["details", "زر عرض التفاصيل"], ["similar", "زر طلب مشروع مشابه"]]]] },
+  social: { note: "عناوين قسمي الشركاء وآراء العملاء. الشعارات والآراء نفسها تُضاف من «الشركاء» و«آراء العملاء» في القائمة الجانبية.", groups: [
+    ["قسم الشركاء", [["partners_title", "العنوان"], ["partners_sub", "الوصف", true]]],
+    ["قسم آراء العملاء", [["testimonials_title", "العنوان"], ["testimonials_sub", "الوصف", true]]]] },
+  cta: { note: "القسم الأخير في الصفحات «جاهزون لإنجاز مشروعك»، وخاتمة صفحة الأسئلة الشائعة، ونص أسفل الموقع.", groups: [
+    ["الخاتمة", [["cta_title", "العنوان"], ["cta_sub", "الوصف", true], ["cta_button", "نص الزر"]]],
+    ["خاتمة صفحة الأسئلة الشائعة", [["faq_cta_title", "العنوان"], ["faq_cta_sub", "الوصف", true]]],
+    ["التذييل", [["footer_text", "النص"]]]] },
+};
+// old tab names (saved links, buttons elsewhere in the dashboard) open their new place
+const OLD_TABS = { story: "why", guarantees: "why", sections: "layout", privacy: "legal", booking: "contact", status: "links" };
 
 export async function viewContent(view) {
   settingsActions();
-  const tabs = [["layout", "ترتيب الأقسام"], ["texts", "النصوص"], ["about", "من نحن"], ["industries", "حلول حسب المجال"], ["pricing", "الباقات والأسعار"], ["guarantees", "الضمانات"], ["story", "القصة (المميزات)"], ["process", "خطوات العمل"], ["stats", "الأرقام"], ["calc", "حاسبة التكلفة"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"], ["privacy", "سياسة الخصوصية"], ["booking", "المواعيد"], ["links", "كل الروابط"], ["custom", "صفحات مضافة"], ["team", "فريقنا"], ["ui", "نصوص الأزرار والقوائم"], ["nav", "القوائم"], ["sections", "إظهار الأقسام"], ["brand", "الهوية"], ["contact", "التواصل"]];
-  const BR = [["layout", "ترتيب الأقسام", ["layout"]], ["links", "كل الروابط", ["links"]], ["home", "الصفحة الرئيسية", ["texts", "industries", "pricing", "guarantees", "story", "process", "stats", "calc", "sections"]], ["pages", "الصفحات المستقلة", ["about", "faq", "careers", "privacy", "booking", "custom", "team"]],
-    ["menus", "القوائم والأزرار", ["nav", "ui"]], ["company", "بيانات الشركة", ["brand", "contact"]]];
+  if (OLD_TABS[contentTab]) contentTab = OLD_TABS[contentTab];
+  // every tab sits under the site page it shows on; each setting has one place only
+  const tabs = [["texts", "الواجهة الأولى"], ["why", "لماذا ويكسا"], ["process", "كيف نعمل"], ["stats", "الأرقام"], ["social", "الشركاء والآراء"], ["cta", "الخاتمة والتذييل"],
+    ["svchead", "الخدمات والأعمال"], ["industries", "حلول حسب المجال"], ["pricing", "الباقات"], ["calc", "حاسبة التكلفة"],
+    ["about", "من نحن"], ["faq", "الأسئلة الشائعة"], ["careers", "الوظائف"],
+    ["links", "كل الصفحات والروابط"], ["legal", "الصفحات القانونية"], ["custom", "صفحات مضافة"], ["team", "فريقنا"],
+    ["layout", "ترتيب الأقسام"], ["nav", "القوائم"], ["ui", "نصوص الأزرار"], ["brand", "الاسم والشعار"], ["contact", "التواصل والمواعيد"], ["lang", "لغة الموقع"]];
+  const BR = [["home", "الرئيسية", ["texts", "why", "process", "stats", "social", "cta"]], ["svc", "الخدمات والأسعار", ["svchead", "industries", "pricing", "calc"]],
+    ["more", "من نحن والمزيد", ["about", "faq", "careers"]], ["pages", "الصفحات", ["links", "legal", "custom", "team"]], ["layout", "ترتيب الأقسام", ["layout"]],
+    ["menus", "القوائم والأزرار", ["nav", "ui"]], ["company", "بيانات الشركة", ["brand", "contact", "lang"]]];
   const label = Object.fromEntries(tabs);
   const drawTabs = () => {
     const br = BR.find(([, , ks]) => ks.includes(contentTab)) || BR[0];
     setSubnav(`<div class="seg" id="ctBranch">${BR.map(([k, l, ks]) => `<button data-b="${k}" class="${br[0] === k ? "on" : ""}">${l}</button>`).join("")}</div>`
       // a branch with one page needs no second row (its name is already in the first)
-      + (br[2].filter((k) => label[k]).length > 1 ? `<div class="seg" id="ctTabs">${br[2].filter((k) => label[k]).map((k) => `<button data-k="${k}" class="${k === contentTab ? "on" : ""}">${k === "texts" ? "الواجهة الأولى والعناوين" : label[k]}</button>`).join("")}</div>` : ""));
+      + (br[2].filter((k) => label[k]).length > 1 ? `<div class="seg" id="ctTabs">${br[2].filter((k) => label[k]).map((k) => `<button data-k="${k}" class="${k === contentTab ? "on" : ""}">${label[k]}</button>`).join("")}</div>` : ""));
     $$("#ctBranch button").forEach((b) => (b.onclick = () => { contentTab = BR.find(([k]) => k === b.dataset.b)[2][0]; drawTabs(); renderContentTab(); }));
     $$("#ctTabs button").forEach((b) => (b.onclick = () => { contentTab = b.dataset.k; drawTabs(); renderContentTab(); }));
   };
   drawTabs();
   // «تعديل» in the links list opens that page's editor
-  if (!viewContent.listening) { viewContent.listening = true; document.addEventListener("wixa:content-tab", (e) => { contentTab = e.detail; if ($("#ctBody")) { $("#ctBranch") && viewContent.redraw?.(); renderContentTab(); } }); }
+  if (!viewContent.listening) { viewContent.listening = true; document.addEventListener("wixa:content-tab", (e) => { contentTab = OLD_TABS[e.detail] || e.detail; if ($("#ctBody")) { $("#ctBranch") && viewContent.redraw?.(); renderContentTab(); } }); }
   viewContent.redraw = drawTabs;
   view.innerHTML = `<div class="split"><div><div class="card">
       <div id="ctBody"></div></div></div>${previewPane()}</div>`;
@@ -69,28 +88,72 @@ export function bindPathInputs(root) {
     el.addEventListener(ev, () => { setPath(settings, el.dataset.path, el.type === "checkbox" ? el.checked : el.value); changed(); });
   });
 }
-export function renderContentTab() {
-  const body = $("#ctBody"), L = contentLang, dir = L === "ar" ? "rtl" : "ltr";
+export function renderContentTab() { renderTab(contentTab, $("#ctBody")); }
+// one tab into a box; a merged tab draws its parts into boxes of its own (opts.sub: no second language switch)
+function renderTab(tab, body, opts = {}) {
+  const L = contentLang, dir = L === "ar" ? "rtl" : "ltr";
+  const seg = () => (opts.sub ? "" : langSeg());
   const input = (path, label, area = false, attrs = "") => {
     const v = esc(getPath(settings, path) ?? "");
     return `<label class="f"><span>${label}</span>${area ? `<textarea data-path="${path}" rows="3" ${attrs}>${v}</textarea>` : `<input data-path="${path}" value="${v}" ${attrs}>`}</label>`;
   };
-  if (contentTab === "layout") return void renderLayout(body);
+  // the section's own title and description at the top of its tab
+  const heads = (k) => (HEADS[k] ? `<div class="stack ct-head">${HEADS[k].map(([key, l, a]) => input(`content.${L}.${key}`, l, a, `dir="${dir}"`)).join("")}</div>` : "");
+  if (tab === "layout") return void renderLayout(body);
   // the other tabs edit the home page's texts: the preview goes back to it after arranging another page
   const fr = $("#pvFrame"); if (fr && !/^\/\?preview/.test(fr.getAttribute("src") || "")) fr.setAttribute("src", "/?preview=1");
-  if (contentTab === "links") return void renderLinks(body);
-  if (contentTab === "custom") return renderCustom(body);
-  if (contentTab === "team") return renderTeam(body);
-  if (contentTab === "texts") {
-    body.innerHTML = langSeg() + `<div class="stack">${TEXT_FIELDS.map(([title, fields]) => `<div class="sec-title">${title}</div>${fields.map(([k, l, a]) => input(`content.${L}.${k}`, l, a, `dir="${dir}"`)).join("")}`).join("")}</div>`;
+  if (tab === "links") return void renderLinks(body);
+  if (tab === "custom") return renderCustom(body);
+  if (tab === "team") return renderTeam(body);
+  if (tab === "why") {
+    // «لماذا ويكسا» on the site: its title, the three cards and the commitments, in one tab
+    body.innerHTML = langSeg() + `<p class="muted" style="margin-top:0">قسم واحد بعد أعلى الصفحة: ثلاث بطاقات بما يحصل عليه الزبون، ثم ما تلتزم به معه، ثم معلومات سريعة (أقل سعر من الباقات، ووقت الرد، ورابط الحاسبة) تُكتب تلقائياً.</p>${heads("why")}
+      <div class="sec-title" style="margin-top:18px">البطاقات الثلاث</div><div id="whyStory"></div>
+      <div class="sec-title" style="margin-top:18px">ما نلتزم به معك</div><div id="whyGuar"></div>`;
+    bindLangSeg(); bindPathInputs(body);
+    renderTab("story", $("#whyStory", body), { sub: true });
+    renderTab("guarantees", $("#whyGuar", body), { sub: true });
+    return;
+  }
+  if (TEXT_TABS[tab]) {
+    const t = TEXT_TABS[tab];
+    body.innerHTML = seg() + `<p class="muted" style="margin-top:0">${t.note}</p><div class="stack">${t.groups.map(([title, fields]) => `<div class="sec-title">${title}</div>${fields.map(([k, l, a]) => input(`content.${L}.${k}`, l, a, `dir="${dir}"`)).join("")}`).join("")}</div>
+      ${tab === "social" ? `<label class="f" style="margin-top:18px;max-width:360px"><span>طريقة عرض الشركاء</span><select data-path="partners_style">
+        <option value="grid" ${settings.partners_style !== "marquee" ? "selected" : ""}>ثابتة — ٣ شعارات في السطر</option>
+        <option value="marquee" ${settings.partners_style === "marquee" ? "selected" : ""}>شريط متحرك مثل آراء العملاء</option></select></label>` : ""}`;
+    bindLangSeg(); bindPathInputs(body);
+    return;
+  }
+  if (tab === "legal") {
+    // the three legal pages together: terms and payment (written in the pages editor), then the privacy policy
+    const legal = (settings.pages || PAGE_DEFAULTS).filter((p) => PAGE_DEFAULTS.some((d) => d.id === p.id));
+    body.innerHTML = `<div class="sec-title" style="margin-top:0">الشروط والأحكام · الدفع والاسترجاع</div>
+      <div class="lnks">${legal.map((p) => `<div class="lnk ${p.published ? "" : "lnk--off"}"><div class="lnk__main"><b>${esc(p.title_ar || p.path)}</b><a dir="ltr" href="${esc(p.path)}" target="_blank" rel="noopener">${esc(p.path)}</a>${p.published ? "" : ' <span class="pill off">مخفية</span>'}</div>
+        <div class="lnk__btns"><button type="button" class="b b--sm" data-legal="${esc(p.id)}">${I.edit}تعديل</button></div></div>`).join("")}</div>
+      <div class="sec-title" style="margin-top:22px">سياسة الخصوصية</div><div id="lgPrivacy"></div>`;
+    $$("[data-legal]", body).forEach((b) => (b.onclick = () => { openCustomPage(b.dataset.legal); document.dispatchEvent(new CustomEvent("wixa:content-tab", { detail: "custom" })); }));
+    renderTab("privacy", $("#lgPrivacy", body));
+    return;
+  }
+  if (tab === "lang") {
+    body.innerHTML = `<label class="f" style="max-width:420px"><span>لغة الموقع عند أول زيارة</span><select data-path="default_lang">
+        <option value="auto" ${(settings.default_lang || "auto") === "auto" ? "selected" : ""}>حسب لغة جهاز الزائر (عربي ← عربي، غيره ← إنجليزي)</option>
+        <option value="ar" ${settings.default_lang === "ar" ? "selected" : ""}>العربية دائماً</option>
+        <option value="en" ${settings.default_lang === "en" ? "selected" : ""}>الإنجليزية دائماً</option></select></label>
+      <p class="muted" style="font-size:13px">الزائر يستطيع دائماً التبديل بزر EN / ع أعلى الصفحة.</p>`;
+    bindPathInputs(body);
+    return;
+  }
+  if (tab === "texts") {
+    body.innerHTML = seg() + `<div class="stack">${TEXT_FIELDS.map(([title, fields]) => `<div class="sec-title">${title}</div>${fields.map(([k, l, a]) => input(`content.${L}.${k}`, l, a, `dir="${dir}"`)).join("")}`).join("")}</div>`;
     bindLangSeg();
-  } else if (contentTab === "story") {
+  } else if (tab === "story") {
     const items = settings.content[L].story;
-    body.innerHTML = langSeg() + `<p class="muted" style="margin-top:0">ثلاث بطاقات تظهر تحت القسم الرئيسي مع رسوم متحركة.</p><div class="stack">${items.map((_, i) => `<div class="sec-title">البطاقة ${i + 1}</div>${input(`content.${L}.story.${i}.title`, "العنوان", false, `dir="${dir}"`)}${input(`content.${L}.story.${i}.text`, "النص", true, `dir="${dir}"`)}`).join("")}</div>`;
+    body.innerHTML = seg() + `<div class="stack">${items.map((_, i) => `<div class="sec-title">البطاقة ${i + 1}</div>${input(`content.${L}.story.${i}.title`, "العنوان", false, `dir="${dir}"`)}${input(`content.${L}.story.${i}.text`, "النص", true, `dir="${dir}"`)}`).join("")}</div>`;
     bindLangSeg();
-  } else if (contentTab === "stats") {
+  } else if (tab === "stats") {
     const draw = () => {
-      body.innerHTML = `<p class="muted" style="margin-top:0">الأرقام التي تظهر في القسم الداكن مع عدّاد متحرك.</p>
+      body.innerHTML = seg() + `<p class="muted" style="margin-top:0">الأرقام التي تظهر في القسم الداكن مع عدّاد متحرك.</p>${heads("stats")}
         <div class="stats-rep">${settings.stats.map((s, i) => `<div class="stats-rep__row wide">
           <input class="fi" data-i="${i}" data-k="value" type="number" value="${esc(s.value)}" placeholder="الرقم">
           <input class="fi" data-i="${i}" data-k="suffix" value="${esc(s.suffix)}" placeholder="+ أو %" dir="ltr">
@@ -101,9 +164,10 @@ export function renderContentTab() {
       $$(".fi", body).forEach((el) => { el.classList.add("f"); el.style.cssText = "height:38px;padding:0 10px;border:1px solid var(--line-2);border-radius:10px;width:100%;min-width:0"; el.oninput = () => { settings.stats[el.dataset.i][el.dataset.k] = el.dataset.k === "value" ? Number(el.value) : el.value; changed(); }; });
       $$("[data-del]", body).forEach((b) => (b.onclick = () => { settings.stats.splice(+b.dataset.del, 1); changed(); draw(); }));
       $("#addStat").onclick = () => { settings.stats.push({ value: 0, suffix: "+", label_ar: "", label_en: "" }); changed(); draw(); };
+      bindLangSeg(); bindPathInputs($(".ct-head", body) || body);
     };
     draw(); return;
-  } else if (["about", "industries", "pricing", "guarantees"].includes(contentTab)) {
+  } else if (["about", "industries", "pricing", "guarantees"].includes(tab)) {
     // the sales sections: a few texts and a list of cards, per language
     const SPEC = {
       about: { head: [["about_title", "العنوان"], ["about_text", "النص (افصل الفقرات بسطر فارغ)", 8]], list: "about_points", item: "نقطة", fields: [["title", "العنوان"], ["text", "النص", 2]],
@@ -115,7 +179,7 @@ export function renderContentTab() {
         note: "زر «اطلب هذه الباقة» يفتح نموذج التواصل باسم الباقة. الأسعار تقديرية — عدّلها كما تشاء." },
       guarantees: { head: [["guarantees_title", "العنوان"], ["guarantees_sub", "الوصف", 2]], list: "guarantees", item: "ضمان", fields: [["title", "العنوان"], ["text", "النص", 2]],
         note: "ضماناتك وشروطك التي تطمئن الزبون: الدفعات، الدعم، الملكية…" },
-    }[contentTab];
+    }[tab];
     const draw = () => {
       const c = settings.content[L], items = c[SPEC.list] || (c[SPEC.list] = []);
       const field = (i, [k, label, kind]) => kind === "check"
@@ -123,7 +187,7 @@ export function renderContentTab() {
         : kind === "icon"
           ? `<label class="f"><span>${label}</span><select data-path="content.${L}.${SPEC.list}.${i}.${k}">${Object.keys(window.WIXA.ICONS).map((n) => `<option ${items[i][k] === n ? "selected" : ""}>${n}</option>`).join("")}</select></label>`
           : input(`content.${L}.${SPEC.list}.${i}.${k}`, label, !!kind, `dir="${dir}" ${kind ? `rows="${kind}"` : ""}`);
-      body.innerHTML = langSeg() + `<p class="muted" style="margin-top:0">${SPEC.note}</p><div class="stack">
+      body.innerHTML = seg() + `<p class="muted" style="margin-top:0">${SPEC.note}</p><div class="stack">
         ${SPEC.head.map(([k, label, rows]) => input(`content.${L}.${k}`, label, !!rows, `dir="${dir}" ${rows ? `rows="${rows}"` : ""}`)).join("")}
         ${items.map((_, i) => `<div class="sec-title">${SPEC.item} ${i + 1} <span><button class="b b--sm b--ghost" data-up="${i}" title="للأعلى" ${i ? "" : "disabled"}>↑</button><button class="b b--sm b--ghost b--danger" data-del="${i}">${I.trash}</button></span></div>${SPEC.fields.map((f) => field(i, f)).join("")}`).join("")}
         </div><button class="b b--sm" id="addItem" style="margin-top:12px">${I.plus}إضافة ${SPEC.item}</button>`;
@@ -133,20 +197,20 @@ export function renderContentTab() {
       $("#addItem").onclick = () => { items.push(Object.fromEntries(SPEC.fields.map(([k, , kind]) => [k, kind === "check" ? false : kind === "icon" ? "web" : ""]))); changed(); draw(); };
     };
     draw(); return;
-  } else if (contentTab === "process") {
+  } else if (tab === "process") {
     const draw = () => {
       const items = settings.content[L].process || (settings.content[L].process = []);
-      body.innerHTML = langSeg() + `<p class="muted" style="margin-top:0">خطوات تضيء واحدة تلو الأخرى مع التمرير. يُفضّل 3 إلى 5 خطوات.</p><div class="stack">${items.map((_, i) => `<div class="sec-title">الخطوة ${i + 1} <button class="b b--sm b--ghost b--danger" data-del="${i}">${I.trash}</button></div>${input(`content.${L}.process.${i}.title`, "العنوان", false, `dir="${dir}"`)}${input(`content.${L}.process.${i}.text`, "النص", true, `dir="${dir}"`)}`).join("")}</div>
+      body.innerHTML = seg() + `<p class="muted" style="margin-top:0">خطوات تضيء واحدة تلو الأخرى مع التمرير. يُفضّل 3 إلى 5 خطوات.</p>${heads("process")}<div class="stack">${items.map((_, i) => `<div class="sec-title">الخطوة ${i + 1} <button class="b b--sm b--ghost b--danger" data-del="${i}">${I.trash}</button></div>${input(`content.${L}.process.${i}.title`, "العنوان", false, `dir="${dir}"`)}${input(`content.${L}.process.${i}.text`, "النص", true, `dir="${dir}"`)}`).join("")}</div>
         <button class="b b--sm" id="addStep" style="margin-top:12px">${I.plus}إضافة خطوة</button>`;
       bindLangSeg(); bindPathInputs(body);
       $$("[data-del]", body).forEach((b) => (b.onclick = () => { items.splice(+b.dataset.del, 1); changed(); draw(); }));
       $("#addStep").onclick = () => { items.push({ title: "", text: "" }); changed(); draw(); };
     };
     draw(); return;
-  } else if (contentTab === "faq") {
+  } else if (tab === "faq") {
     const draw = () => {
       const items = settings.content[L].faq || (settings.content[L].faq = []);
-      body.innerHTML = langSeg() + `<p class="muted" style="margin-top:0">أسئلة وأجوبة تظهر قبل قسم التواصل، ويقرؤها Google أيضاً. راجع الإجابات لتطابق طريقة عملكم.</p><div class="stack">${items.map((_, i) => `<div class="sec-title">السؤال ${i + 1} <span><button class="b b--sm b--ghost" data-mv="${i}" data-d="-1" ${i ? "" : "disabled"} title="أعلى">${I.up}</button><button class="b b--sm b--ghost" data-mv="${i}" data-d="1" ${i < items.length - 1 ? "" : "disabled"} title="أسفل">${I.down}</button><button class="b b--sm b--ghost b--danger" data-del="${i}">${I.trash}</button></span></div>${input(`content.${L}.faq.${i}.q`, "السؤال", false, `dir="${dir}"`)}${input(`content.${L}.faq.${i}.a`, "الإجابة", true, `dir="${dir}"`)}`).join("")}</div>
+      body.innerHTML = seg() + `<p class="muted" style="margin-top:0">أسئلة وأجوبة صفحة «الأسئلة الشائعة»، ويقرؤها Google أيضاً. راجع الإجابات لتطابق طريقة عملكم.</p>${heads("faq")}<div class="stack">${items.map((_, i) => `<div class="sec-title">السؤال ${i + 1} <span><button class="b b--sm b--ghost" data-mv="${i}" data-d="-1" ${i ? "" : "disabled"} title="أعلى">${I.up}</button><button class="b b--sm b--ghost" data-mv="${i}" data-d="1" ${i < items.length - 1 ? "" : "disabled"} title="أسفل">${I.down}</button><button class="b b--sm b--ghost b--danger" data-del="${i}">${I.trash}</button></span></div>${input(`content.${L}.faq.${i}.q`, "السؤال", false, `dir="${dir}"`)}${input(`content.${L}.faq.${i}.a`, "الإجابة", true, `dir="${dir}"`)}`).join("")}</div>
         <button class="b b--sm" id="addFaq" style="margin-top:12px">${I.plus}إضافة سؤال</button>`;
       bindLangSeg(); bindPathInputs(body);
       $$("[data-del]", body).forEach((b) => (b.onclick = () => { items.splice(+b.dataset.del, 1); changed(); draw(); }));
@@ -154,17 +218,17 @@ export function renderContentTab() {
       $("#addFaq").onclick = () => { items.push({ q: "", a: "" }); changed(); draw(); };
     };
     draw(); return;
-  } else if (contentTab === "ui") {
+  } else if (tab === "ui") {
     quietly(() => { settings.ui ??= { ar: {}, en: {} }; settings.ui[L] ??= {}; });
     const cur = settings.ui[L];
-    body.innerHTML = langSeg() + `<p class="muted" style="margin-top:0">نصوص الأزرار والقائمة ورسائل النماذج. اترك الحقل فارغاً لاستخدام النص الأصلي (الظاهر باهتاً داخله).</p>
+    body.innerHTML = seg() + `<p class="muted" style="margin-top:0">نصوص الأزرار ورسائل النماذج (أسماء روابط القائمة في «القوائم»). اترك الحقل فارغاً لاستخدام النص الأصلي (الظاهر باهتاً داخله).</p>
       <div class="stack">${UI_GROUPS.map(([title, keys]) => `<div class="sec-title">${title}</div><div class="grid2">${keys.map((k) => `<label class="f"><span>${esc(UI_DEFAULTS.ar[k] || k)}</span><input data-ui="${k}" value="${esc(cur[k] || "")}" placeholder="${esc(UI_DEFAULTS[L][k] || "")}" dir="${dir}"></label>`).join("")}</div>`).join("")}</div>
       <button class="b b--sm b--ghost" id="uiReset" style="margin-top:12px">${I.reset}إرجاع كل النصوص الأصلية (${L === "ar" ? "العربي" : "English"})</button>`;
     bindLangSeg();
     $$("[data-ui]", body).forEach((el) => (el.oninput = () => { const v = el.value; if (v.trim()) cur[el.dataset.ui] = v; else delete cur[el.dataset.ui]; changed(); }));
     $("#uiReset").onclick = () => { settings.ui[L] = {}; changed(); renderContentTab(); };
     return;
-  } else if (contentTab === "booking") {
+  } else if (tab === "booking") {
     quietly(() => { settings.booking ??= { on: false, days: [0, 1, 2, 3, 4], from: "10:00", to: "16:00", slot: 30, days_ahead: 14 }; });
     const b = settings.booking;
     const names = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
@@ -181,7 +245,7 @@ export function renderContentTab() {
     $$("[data-path='booking.slot'], [data-path='booking.days_ahead']", body).forEach((el) => el.addEventListener("change", () => { setPath(settings, el.dataset.path, Number(el.value)); changed(); }));
     $$("[data-day]", body).forEach((el) => (el.onchange = () => { const d = +el.dataset.day; b.days = el.checked ? [...new Set([...(b.days || []), d])].sort() : (b.days || []).filter((x) => x !== d); changed(); }));
     return;
-  } else if (contentTab === "privacy") {
+  } else if (tab === "privacy") {
     const draw = () => {
       // first open: start from the current default wording (saved only when you press «حفظ ونشر»)
       if (!settings.privacy) {
@@ -191,7 +255,7 @@ export function renderContentTab() {
       }
       const pv = settings.privacy;
       const items = pv[L] || (pv[L] = structuredClone(PRIVACY_DEFAULTS[L]));
-      body.innerHTML = langSeg() + `<p class="muted" style="margin-top:0">نص صفحة <a href="/privacy?lang=${L}" target="_blank" rel="noopener" dir="ltr">/privacy</a>. اكتب <code>{email}</code> ليظهر بريد التواصل كرابط. إذا شغّلت أدوات إعلانات من «التكاملات» تُضاف فقرة عنها تلقائياً.</p>
+      body.innerHTML = seg() + `<p class="muted" style="margin-top:0">نص صفحة <a href="/privacy?lang=${L}" target="_blank" rel="noopener" dir="ltr">/privacy</a>. اكتب <code>{email}</code> ليظهر بريد التواصل كرابط. إذا شغّلت أدوات إعلانات من «التكاملات» تُضاف فقرة عنها تلقائياً.</p>
         <label class="f" style="max-width:240px"><span>تاريخ آخر تحديث</span><input type="date" data-path="privacy.updated" value="${esc(pv.updated || "")}" dir="ltr"></label>
         <div class="stack" style="margin-top:12px">${items.map((_, i) => `<div class="sec-title">الفقرة ${i + 1} <span><button class="b b--sm b--ghost" data-mv="${i}" data-d="-1" ${i ? "" : "disabled"} title="أعلى">${I.up}</button><button class="b b--sm b--ghost" data-mv="${i}" data-d="1" ${i < items.length - 1 ? "" : "disabled"} title="أسفل">${I.down}</button><button class="b b--sm b--ghost b--danger" data-del="${i}">${I.trash}</button></span></div>${input(`privacy.${L}.${i}.h`, "العنوان", false, `dir="${dir}"`)}${input(`privacy.${L}.${i}.p`, "النص", true, `dir="${dir}" rows="4"`)}`).join("")}</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><button class="b b--sm" id="addPv">${I.plus}إضافة فقرة</button><button class="b b--sm b--ghost" id="resetPv">${I.reset}استعادة النص الافتراضي (${L === "ar" ? "العربي" : "English"})</button></div>`;
@@ -202,11 +266,11 @@ export function renderContentTab() {
       $("#resetPv").onclick = () => { pv[L] = structuredClone(PRIVACY_DEFAULTS[L]); changed(); draw(); };
     };
     draw(); return;
-  } else if (contentTab === "careers") {
+  } else if (tab === "careers") {
     const draw = () => {
       quietly(() => { settings.careers ??= { jobs: [] }; settings.careers.jobs ||= []; });
       const jobs = settings.careers.jobs;
-      body.innerHTML = `<p class="muted" style="margin-top:0">الشواغر التي تظهر في صفحة «الوظائف». الطلبات تصلك في صفحة الرسائل ← طلبات التوظيف.</p>
+      body.innerHTML = seg() + `<p class="muted" style="margin-top:0">الشواغر التي تظهر في صفحة «الوظائف». الطلبات تصلك في «الوارد».</p>${heads("careers")}
         <div class="card" style="padding:14px 16px;margin-bottom:14px;background:var(--brand-50);border-color:transparent"><b style="display:block;margin-bottom:8px">عندما لا توجد وظيفة معروضة</b>
           <div class="grid2">${input("content.ar.careers_empty", "النص الذي يظهر (عربي)", true)}${input("content.en.careers_empty", "Text shown (English)", true, 'dir="ltr"')}</div>
           <p class="muted" style="margin:6px 0 0;font-size:13px">يظهر تلقائياً إذا لم تضف وظيفة أو أطفأت «معروضة» في كل الوظائف، ومعه زر «أرسل سيرتك الذاتية».</p></div>
@@ -218,10 +282,11 @@ export function renderContentTab() {
         <button class="b b--sm" id="addJob" style="margin-top:12px">${I.plus}إضافة وظيفة</button>`;
       bindPathInputs(body);
       $$("[data-del]", body).forEach((b) => (b.onclick = () => { jobs.splice(+b.dataset.del, 1); changed(); draw(); }));
+      bindLangSeg();
       $("#addJob").onclick = () => { jobs.push({ title_ar: "", title_en: "", type_ar: "", type_en: "", location_ar: "", location_en: "", desc_ar: "", desc_en: "", open: true }); changed(); draw(); };
     };
     draw(); return;
-  } else if (contentTab === "calc") {
+  } else if (tab === "calc") {
     const c = settings.calculator;
     const draw = () => {
       const row = (kind, x, i) => `<div class="stats-rep__row wide" style="grid-template-columns:${kind === "types" ? "78px " : ""}1.5fr 1.5fr 74px 74px 34px;gap:6px">
@@ -231,7 +296,7 @@ export function renderContentTab() {
         <input class="fi" data-kind="${kind}" data-i="${i}" data-k="min" type="number" value="${esc(x.min)}" placeholder="من" dir="ltr">
         <input class="fi" data-kind="${kind}" data-i="${i}" data-k="max" type="number" value="${esc(x.max)}" placeholder="إلى" dir="ltr">
         <button class="b b--icon b--ghost b--danger" data-kind="${kind}" data-del="${i}">${I.trash}</button></div>`;
-      body.innerHTML = `<p class="muted" style="margin-top:0">⚠️ الأسعار هنا تقديرية تظهر للزوار — راجعها وضع أسعار شركتك قبل النشر على الموقع الرئيسي. كل سعر هو نطاق (من — إلى).</p>
+      body.innerHTML = seg() + `${heads("calc")}<p class="muted" style="margin-top:14px">⚠️ الأسعار هنا تقديرية تظهر للزوار — راجعها وضع أسعار شركتك قبل النشر على الموقع الرئيسي. كل سعر هو نطاق (من — إلى).</p>
         <div class="grid2"><label class="f"><span>رمز العملة</span><input class="fi" data-root="currency" value="${esc(c.currency)}" dir="ltr"></label>
         <label class="f"><span>معامل التنفيذ المستعجل (مثلاً 1.3 = +30%)</span><input class="fi" data-root="rush" type="number" step="0.05" value="${esc(c.rush)}" dir="ltr"></label></div>
         <div class="sec-title">أنواع المشاريع (السعر الأساسي)</div><div class="stats-rep">${c.types.map((x, i) => row("types", x, i)).join("")}</div>
@@ -248,22 +313,27 @@ export function renderContentTab() {
         };
       });
       $$("[data-del]", body).forEach((b) => (b.onclick = () => { c[b.dataset.kind].splice(+b.dataset.del, 1); changed(); draw(); }));
+      bindLangSeg(); bindPathInputs($(".ct-head", body) || body);
       $$("[data-add]", body).forEach((b) => (b.onclick = () => { c[b.dataset.add].push(b.dataset.add === "types" ? { icon: "web", label_ar: "", label_en: "", min: 0, max: 0 } : { label_ar: "", label_en: "", min: 0, max: 0 }); changed(); draw(); }));
     };
     draw(); return;
-  } else if (contentTab === "nav") {
+  } else if (tab === "nav") {
     // where each site link shows, and in which order
-    const NAMES = { home: "الرئيسية", services: "الخدمات (صفحة)", industries: "حلول حسب مجالك", projects: "أعمالنا (صفحة)", pricing: "الأسعار (صفحة)", calc: "احسب تكلفة مشروعك",
+    const NAMES = { home: "الرئيسية", services: "الخدمات (صفحة)", projects: "أعمالنا (صفحة)", pricing: "الأسعار (صفحة)",
       about: "من نحن", partners: "شركاؤنا", careers: "الوظائف", contact: "تواصل معنا", faq: "الأسئلة الشائعة", blog: "المقالات", privacy: "سياسة الخصوصية" };
+    // the name shown on the site for each link (empty = the default name)
+    const UIKEY = (k) => (k === "privacy" ? "privacy" : `nav_${k}`);
+    quietly(() => { settings.ui ??= { ar: {}, en: {} }; settings.ui[L] ??= {}; });
+    const names = settings.ui[L];
     const AT = [["both", "القائمة والأسفل"], ["menu", "القائمة فقط"], ["footer", "الأسفل فقط"], ["hidden", "مخفي"]];
     const draw = () => {
       const items = window.WIXA.navPlan(settings);
       const n = (w) => items.filter((x) => x.at === "both" || x.at === w).length;
-      body.innerHTML = `<p class="muted" style="margin-top:0"><b>القائمة</b> = الشريط العلوي على الكمبيوتر وقائمة ☰ على الجوال والتابلت. <b>الأسفل</b> = روابط أسفل كل صفحة. رتّب الروابط بالأسهم. زر «ابدأ مشروعك» ثابت دائماً.</p>
+      body.innerHTML = seg() + `<p class="muted" style="margin-top:0"><b>القائمة</b> = الشريط العلوي على الكمبيوتر وقائمة ☰ على الجوال والتابلت. <b>الأسفل</b> = روابط أسفل كل صفحة. رتّب الروابط بالأسهم. زر «ابدأ مشروعك» ثابت دائماً.</p>
         <p class="muted" style="font-size:13px">في القائمة الآن <b>${n("menu")}</b> روابط${n("menu") > 7 ? ` — <span style="color:#B45309">نقترح 7 أو أقل حتى تبقى القائمة قصيرة وتتسع في الشريط العلوي</span>` : ""} · في الأسفل <b>${n("footer")}</b>.</p>
         <div class="navrows">${items.map((x, i) => `<div class="navrow" data-i="${i}">
           <div class="navrow__move"><button type="button" class="b b--sm" data-up="${i}" ${i ? "" : "disabled"} aria-label="أعلى">↑</button><button type="button" class="b b--sm" data-down="${i}" ${i < items.length - 1 ? "" : "disabled"} aria-label="أسفل">↓</button></div>
-          <b>${NAMES[x.k] || x.k}</b>
+          <label class="navrow__name"><small class="muted">${NAMES[x.k] || x.k}</small><input data-name="${UIKEY(x.k)}" value="${esc(names[UIKEY(x.k)] || "")}" placeholder="${esc(UI_DEFAULTS[L][UIKEY(x.k)] || NAMES[x.k] || "")}" dir="${dir}" aria-label="اسم الرابط"></label>
           <select data-at="${i}">${AT.map(([v, l]) => `<option value="${v}" ${v === x.at ? "selected" : ""}>${l}</option>`).join("")}</select>
           <select data-g="${i}" title="مجموعته في أسفل الصفحة" ${x.at === "both" || x.at === "footer" ? "" : "disabled"}>${FOOTER_GROUPS.map((g) => `<option value="${g.k}" ${g.k === groupOf(x) ? "selected" : ""}>أسفل: ${g.name_ar}</option>`).join("")}</select></div>`).join("")}</div>
         <button type="button" class="b" id="navReset" style="margin-top:12px">↺ الترتيب المقترح</button>`;
@@ -273,23 +343,15 @@ export function renderContentTab() {
       body.querySelectorAll("[data-up]").forEach((el) => (el.onclick = () => { const l = window.WIXA.navPlan(settings), i = +el.dataset.up; [l[i - 1], l[i]] = [l[i], l[i - 1]]; set(l); }));
       body.querySelectorAll("[data-down]").forEach((el) => (el.onclick = () => { const l = window.WIXA.navPlan(settings), i = +el.dataset.down; [l[i + 1], l[i]] = [l[i], l[i + 1]]; set(l); }));
       $("#navReset").onclick = () => set(structuredClone(window.WIXA.DEFAULTS.nav.items));
+      bindLangSeg();
+      body.querySelectorAll("[data-name]").forEach((el) => (el.oninput = () => { const v = el.value; if (v.trim()) names[el.dataset.name] = v; else delete names[el.dataset.name]; changed(); }));
     };
     draw();
-  } else if (contentTab === "sections") {
-    const names = { about: "من نحن", industries: "حلول حسب مجالك", guarantees: "الضمانات", pricing: "الباقات والأسعار", story: "القصة (المميزات)", projects: "الإنجازات (المشاريع)", services: "الخدمات", process: "كيف نعمل", stats: "الأرقام", testimonials: "آراء العملاء", calculator: "حاسبة التكلفة", partners: "الشركاء", careers: "الوظائف (انضم إلى فريقنا)", faq: "الأسئلة الشائعة", contact: "التواصل" };
-    body.innerHTML = `<p class="muted" style="margin-top:0">إخفاء القسم هنا يخفيه من <b>كل الصفحات</b>. لإظهاره في صفحة دون أخرى، أو لتغيير ترتيب الأقسام، استعمل «ترتيب الأقسام». (قسما الشركاء وآراء العملاء يختفيان تلقائياً إذا كانا فارغين.)</p><div class="stack">${Object.entries(names).map(([k, l]) => `<label class="switch"><input type="checkbox" data-path="sections.${k}" ${settings.sections[k] ? "checked" : ""}><i></i>${l}</label>`).join("")}</div>
-      <label class="f" style="margin-top:18px;max-width:360px"><span>لغة الموقع عند أول زيارة</span><select data-path="default_lang">
-        <option value="auto" ${(settings.default_lang || "auto") === "auto" ? "selected" : ""}>حسب لغة جهاز الزائر (عربي ← عربي، غيره ← إنجليزي)</option>
-        <option value="ar" ${settings.default_lang === "ar" ? "selected" : ""}>العربية دائماً</option>
-        <option value="en" ${settings.default_lang === "en" ? "selected" : ""}>الإنجليزية دائماً</option></select></label>
-      <label class="f" style="margin-top:18px;max-width:360px"><span>طريقة عرض الشركاء</span><select data-path="partners_style">
-        <option value="grid" ${settings.partners_style !== "marquee" ? "selected" : ""}>ثابتة — ٣ شعارات في السطر</option>
-        <option value="marquee" ${settings.partners_style === "marquee" ? "selected" : ""}>شريط متحرك مثل آراء العملاء</option></select></label>`;
-  } else if (contentTab === "brand") {
+  } else if (tab === "brand") {
     body.innerHTML = `<div class="stack"><div class="grid2">${input("brand.name_ar", "اسم الشركة بالعربي")}${input("brand.name_en", "اسم الشركة بالإنجليزي", false, 'dir="ltr"')}</div>
       <div class="f"><span>الشعار (اختياري — يُفضّل مربع PNG أو SVG)</span><div id="logoField"></div></div></div>`;
     $("#logoField").append(imageField(settings.brand.logo_url, "brand", (url) => { settings.brand.logo_url = url; changed(); }, true));
-  } else if (contentTab === "contact") {
+  } else if (tab === "contact") {
     body.innerHTML = `<div class="stack">
       <div class="grid2">${input("contact.email", "البريد الإلكتروني", false, 'dir="ltr" type="email"')}${input("contact.phone", "رقم الهاتف", false, 'dir="ltr" placeholder="+964 7xx xxx xxxx"')}</div>
       ${input("contact.whatsapp", "رقم واتساب (بالصيغة الدولية بدون + أو أصفار، مثل 9647701234567)", false, 'dir="ltr"')}
@@ -318,6 +380,10 @@ export function renderContentTab() {
       };
     };
     drawCs();
+    const bk = document.createElement("div"); bk.style.marginTop = "22px";
+    bk.innerHTML = '<div class="sec-title">حجز المواعيد</div><div></div>';
+    body.append(bk);
+    renderTab("booking", bk.lastElementChild);
     return;
   }
   bindPathInputs(body);
