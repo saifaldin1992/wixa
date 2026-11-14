@@ -46,6 +46,8 @@ export async function viewAccount(view) {
     + card(`<div class="card__head"><h3>تغيير كلمة المرور</h3></div>
       <form id="pwForm" class="stack"><label class="f"><span>كلمة المرور الجديدة</span><input name="p1" type="password" minlength="8" required autocomplete="new-password" dir="ltr"></label>
       <label class="f"><span>تأكيد كلمة المرور</span><input name="p2" type="password" minlength="8" required autocomplete="new-password" dir="ltr"></label>
+      <label class="f" id="pwCodeRow" hidden><span>رمز التأكيد الذي وصلك بالبريد</span><input name="code" inputmode="numeric" autocomplete="one-time-code" dir="ltr" maxlength="10"></label>
+      <p class="muted" id="pwHint" hidden style="margin:0;font-size:13px">للحماية، أرسلنا رمزاً إلى بريدك. اكتبه ثم اضغط «تحديث».</p>
       <button class="b b--primary" style="justify-self:start">${I.save}تحديث</button></form>`)
     + card(`<div class="card__head"><div><h3>نسخة احتياطية للمحتوى</h3><p>نزّل كل النصوص والمشاريع والخدمات والشركاء والآراء في ملف واحد. يُنصح بتنزيلها بعد كل تعديل كبير.</p></div>
       <button class="b b--primary" id="backupBtn">${I.upload}تنزيل</button></div>`);
@@ -53,12 +55,24 @@ export async function viewAccount(view) {
   view.innerHTML = `<div class="acct">${view.innerHTML}</div>`; // two columns on wide screens, one on phones
   $("#backupBtn").onclick = (e) => exportBackup(e.currentTarget);
   $("#logout").onclick = async () => { await sb.auth.signOut(); location.hash = ""; };
+  // Changing the password may need a code sent by email (Supabase «Secure password change»: asked when the last
+  // sign-in is not recent). First try without it; if Supabase asks, send the code and show its box.
   $("#pwForm").onsubmit = async (e) => {
-    e.preventDefault(); const f = e.target;
+    e.preventDefault(); const f = e.target, btn = f.querySelector("button");
     if (f.p1.value !== f.p2.value) return toast("كلمتا المرور غير متطابقتين", "err");
-    const { error } = await sb.auth.updateUser({ password: f.p1.value });
-    if (error) return toast(/different from the old/i.test(error.message) ? "اختر كلمة مرور مختلفة عن السابقة" : error.message, "err");
-    f.reset(); toast("تم تحديث كلمة المرور ✓");
+    const code = f.code.value.trim();
+    btn.disabled = true;
+    const { error } = await sb.auth.updateUser(code ? { password: f.p1.value, nonce: code } : { password: f.p1.value });
+    btn.disabled = false;
+    if (error && !code && /reauthenticat/i.test(`${error.code || ""} ${error.message}`)) {
+      const { error: sendErr } = await sb.auth.reauthenticate();
+      if (sendErr) return toast(/rate limit|seconds/i.test(sendErr.message) ? "محاولات كثيرة، انتظر قليلاً" : sendErr.message, "err");
+      $("#pwCodeRow").hidden = false; $("#pwHint").hidden = false; f.code.focus();
+      return toast("أرسلنا رمز التأكيد إلى بريدك");
+    }
+    if (error) return toast(/different from the old/i.test(error.message) ? "اختر كلمة مرور مختلفة عن السابقة"
+      : /nonce|otp|token|expired|invalid/i.test(error.message) && code ? "الرمز غير صحيح أو انتهت مدته" : error.message, "err");
+    f.reset(); $("#pwCodeRow").hidden = true; $("#pwHint").hidden = true; toast("تم تحديث كلمة المرور ✓");
   };
   $("#emailForm").onsubmit = async (e) => {
     e.preventDefault(); const f = e.target, email = f.email.value.trim();

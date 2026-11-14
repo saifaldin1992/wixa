@@ -1117,3 +1117,7 @@ html[data-theme="dark"] .msg.new .msg__who b::after { background: #7C3AED; }
 @media (max-width: 760px) { .navrow { grid-template-columns: auto minmax(0, 1fr); } .navrow select { grid-column: 1 / -1; } }
 .ly__hideall { font-size: 12px; min-height: 30px; padding: 0 8px; margin-inline-start: 6px; }
 .ct-head { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px dashed var(--line-2); }
+
+/* sign-in: the «not a robot» check sits under the fields, centred; usually invisible */
+.auth__captcha { display: flex; justify-content: center; min-height: 0; }
+.auth__captcha:empty { display: none; }

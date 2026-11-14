@@ -27,6 +27,37 @@ export async function verifyCode(code) {
 }
 export const codeField = `<label class="f"><span>رمز التحقق من تطبيق المصادقة</span><input name="code" inputmode="numeric" pattern="[0-9 ]{6,7}" maxlength="7" required autocomplete="one-time-code" dir="ltr" placeholder="000000"></label>`;
 
+// ---------------- «لست روبوتاً» (Cloudflare Turnstile) ----------------
+// Supabase checks this token on sign-in, the reset email and sign-up (Authentication → Attack protection). The
+// widget is mostly invisible; a box appears only when Cloudflare is unsure. If it can't load, the form still sends
+// (and Supabase says so when the check is switched on), so the dashboard is never locked by a script that failed.
+const CAPTCHA_KEY = "0x4AAAAAAGAmOwskehVpn4Oc"; // public site key of the «WIXA dashboard sign-in» widget (wixa.dev, staging.wixa.dev)
+let tsLoad = null, tsId = null;
+const loadTurnstile = () => tsLoad ||= new Promise((ok) => {
+  if (window.turnstile) return ok(true);
+  const sc = document.createElement("script");
+  sc.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"; sc.async = true;
+  sc.onload = () => ok(true); sc.onerror = () => { tsLoad = null; ok(false); };
+  document.head.append(sc);
+});
+async function mountCaptcha() {
+  const box = $("#authCaptcha"); if (!box || !(await loadTurnstile()) || !window.turnstile || !box.isConnected) return;
+  try {
+    tsId = window.turnstile.render(box, { sitekey: CAPTCHA_KEY, appearance: "interaction-only", theme: "auto", language: "ar" });
+  } catch { tsId = null; }
+}
+// a fresh token (each one works once); waits a few seconds for the check to finish, then sends without one
+async function captchaToken() {
+  if (tsId === null || !window.turnstile) return undefined;
+  for (let i = 0; i < 40; i++) {
+    const t = window.turnstile.getResponse(tsId);
+    if (t) return t;
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  return undefined;
+}
+const resetCaptcha = () => { try { if (tsId !== null) window.turnstile?.reset(tsId); } catch { /* gone */ } };
+
 export async function showAuth(mode = "login") {
   setUser(null);
   $("#app").hidden = true; $("#auth").hidden = false;
@@ -53,7 +84,9 @@ export async function showAuth(mode = "login") {
   $("#authInvite").onclick = () => showAuth("invite");
   $("#authTitle").textContent = M[0]; $("#authHint").textContent = M[1];
   $("#authSubmit").textContent = M[2]; sw.textContent = M[3];
-  $("#authFields").innerHTML = M[4];
+  $("#authFields").innerHTML = M[4] + (["login", "forgot", "invite"].includes(mode) ? '<div id="authCaptcha" class="auth__captcha"></div>' : "");
+  tsId = null;
+  if (["login", "forgot", "invite"].includes(mode)) mountCaptcha();
   authMsg("");
   setTimeout(() => $("#authFields input")?.focus(), 30);
   sw.onclick = async () => {
@@ -67,11 +100,11 @@ export async function showAuth(mode = "login") {
     $("#authSubmit").disabled = true; authMsg("لحظة…");
     try {
       if (mode === "login") {
-        const { data, error } = await sb.auth.signInWithPassword({ email: v("email").trim(), password: v("password") });
+        const { data, error } = await sb.auth.signInWithPassword({ email: v("email").trim(), password: v("password"), options: { captchaToken: await captchaToken() } });
         if (error) throw error;
         await afterSignIn(data.user);
       } else if (mode === "forgot") {
-        const { error } = await sb.auth.resetPasswordForEmail(v("email").trim(), { redirectTo: `${location.origin}/admin/` });
+        const { error } = await sb.auth.resetPasswordForEmail(v("email").trim(), { redirectTo: `${location.origin}/admin/`, captchaToken: await captchaToken() });
         if (error) throw error;
         authMsg("إذا كان البريد مسجّلاً فسيصلك رابط خلال دقائق. افتحه من نفس الجهاز.", "ok");
       } else if (mode === "reset") {
@@ -86,8 +119,8 @@ export async function showAuth(mode = "login") {
         if (v("p1") !== v("p2")) throw new Error("mismatch");
         const email = v("email").trim().toLowerCase(), code = v("code").trim().toUpperCase();
         try { localStorage.setItem("wixa-invite", JSON.stringify({ email, code })); } catch {}
-        let { data, error } = await sb.auth.signUp({ email, password: v("p1"), options: { emailRedirectTo: `${location.origin}/admin/?invite=${encodeURIComponent(code)}` } });
-        if (error && /already|registered|exists/i.test(error.message)) ({ data, error } = await sb.auth.signInWithPassword({ email, password: v("p1") }));
+        let { data, error } = await sb.auth.signUp({ email, password: v("p1"), options: { emailRedirectTo: `${location.origin}/admin/?invite=${encodeURIComponent(code)}`, captchaToken: await captchaToken() } });
+        if (error && /already|registered|exists/i.test(error.message)) { resetCaptcha(); ({ data, error } = await sb.auth.signInWithPassword({ email, password: v("p1"), options: { captchaToken: await captchaToken() } })); }
         if (error) throw error;
         if (!data.session) { authMsg("أرسلنا رابط تأكيد إلى بريدك. اضغطه، ثم ادخل هنا ببريدك وكلمة المرور، وسيُفعَّل حسابك تلقائياً.", "ok"); return; }
         await afterSignIn(data.user);
@@ -98,7 +131,8 @@ export async function showAuth(mode = "login") {
       }
     } catch (err) {
       const t = err.message || "";
-      authMsg(/Invalid login/i.test(t) ? "البريد أو كلمة المرور غير صحيحة."
+      authMsg(/captcha/i.test(t) ? "تعذّر التأكد أنك لست روبوتاً. انتظر لحظة ثم أعد المحاولة، أو حدّث الصفحة."
+        : /Invalid login/i.test(t) ? "البريد أو كلمة المرور غير صحيحة."
         : /not confirmed/i.test(t) ? "لم يتم تأكيد البريد بعد. افتح رسالة التأكيد في بريدك."
         : /signups not allowed|signup.*disabled/i.test(t) ? "إنشاء الحسابات موقوف في إعدادات الدخول. اطلب من المالك تفعيله (Supabase ← Authentication ← Sign In / Providers ← Allow new users to sign up)."
         : /bad code|invalid totp|code/i.test(t) ? "الرمز غير صحيح أو انتهت مدته. جرّب الرمز الحالي."
@@ -106,7 +140,7 @@ export async function showAuth(mode = "login") {
         : /rate limit|too many|seconds/i.test(t) ? "محاولات كثيرة. انتظر قليلاً ثم أعد المحاولة."
         : /same.*password|different from the old/i.test(t) ? "اختر كلمة مرور مختلفة عن السابقة."
         : t, "err");
-    } finally { $("#authSubmit").disabled = false; }
+    } finally { $("#authSubmit").disabled = false; resetCaptcha(); }
   };
 }
 
