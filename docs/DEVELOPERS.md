@@ -696,4 +696,7 @@ When the live chat is on (`settings.chat.on`), it is the way to talk to us every
   - Supabase verifies it (Authentication → Attack protection) on sign-in, the password-reset email and sign-up/invitations.
   - The widget is mostly invisible. If it can't load, the form still sends, so a failed script never locks anyone out by itself.
 - **Secure password change:** Supabase asks for re-authentication when the last sign-in isn't recent. «الحساب ← تغيير كلمة المرور» then sends a code by email (`reauthenticate()`) and resends the change with `nonce`.
-- **Rollout order for the last two:** code first, then the Supabase settings. Staging is done; live is turned on after the code is published.
+- **Rollout order for the last two:** code first, then the Supabase settings. Both are on staging and live (14 Nov).
+- **Email links (live):** password reset, email confirmation and email change link to
+  `{{ .SiteURL }}/admin/?type=…&token_hash={{ .TokenHash }}`. The dashboard spends the one-time code only when «متابعة» is pressed (`showLinkStep` in `auth.js`), so an email app that opens a link twice can't spend it first. Staging keeps Supabase's default emails, which can't be edited on the free plan.
+- **Password boxes:** every password box of the dashboard has an eye button to show or hide what was typed (`pw-eye.js`).
