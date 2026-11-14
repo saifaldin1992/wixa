@@ -721,3 +721,4 @@ When the live chat is on (`settings.chat.on`), it is the way to talk to us every
 ## Review links and the loading screen (Nov 2026)
 - Review links are `16 random hex + 8 hex HMAC` (`reviewSig` in `src/lib/core.js`). A link the private store has not yet received in a location (KV can take up to a minute) is still accepted, without the prefilled name; `review-used:<code>` stops a signed link from being used twice. Older 16-character links work as before.
 - The loading screen's text fades in with `animation-fill-mode: backwards` (opacity 1 by default), so it is never invisible on a browser where animations do not run.
+- Review form: the hidden anti-spam box and the star radio buttons are clipped 1px boxes. They used to take the form's `width:100%` while absolutely placed, and in Arabic they spread far to the left, so phones zoomed the whole page out.

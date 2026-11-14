@@ -265,7 +265,7 @@ export async function handleReview(request, env, ctx, url) {
       <label>${ar ? "منصبك أو اسم شركتك" : "Your role or company"}<input name="role" maxlength="120"></label>
       <fieldset><legend>${ar ? "تقييمك" : "Your rating"}</legend><div class="stars">${stars}</div></fieldset>
       <label>${ar ? "رأيك" : "Your review"} *<textarea name="quote" required maxlength="1500" rows="5"></textarea></label>
-      <button class="btn" type="submit">${ar ? "إرسال" : "Send"}</button>
+      <button class="btn btn--primary" type="submit">${ar ? "إرسال رأيي" : "Send my review"}</button>
     </form>`);
 }
 

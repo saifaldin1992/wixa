@@ -387,9 +387,9 @@ html[data-theme="dark"] .page{--p:var(--fg)}
 .page a:not(.btn):not(.post):not(.more__grid a):not(.nf__links a){color:var(--p);text-decoration:underline;text-underline-offset:3px}
 .page .rv{display:grid;gap:14px;margin-top:20px}.page .rv label{display:grid;gap:6px;font-weight:700;color:var(--t)}.page .rv input,.page .rv textarea{font:inherit;min-height:48px;padding:12px 14px;border-radius:var(--radius-sm,14px);border:1px solid var(--line-2);background:var(--s);color:var(--t);width:100%;box-sizing:border-box}
 .page .rv fieldset{border:0;padding:0;margin:0}.page .rv legend{font-weight:700;margin-bottom:6px;color:var(--t)}.page .stars{display:flex;flex-wrap:wrap;gap:6px}
-.page .star input{position:absolute;opacity:0}.page .star span{display:inline-block;padding:6px 12px;border-radius:99px;border:1px solid var(--l);background:var(--s);color:#D9A441;cursor:pointer}
+.page .star{position:relative}.page .rv .star input,.page .rv .hp{position:absolute;inset:0 auto auto 0;width:1px;height:1px;min-height:0;padding:0;margin:0;border:0;overflow:hidden;clip-path:inset(50%);opacity:0}.page .star span{display:inline-block;padding:6px 12px;border-radius:99px;border:1px solid var(--l);background:var(--s);color:#D9A441;cursor:pointer}
 .page .star input:checked+span{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 20%,transparent)}.page .rv .btn{justify-self:center;border:0;cursor:pointer}
-.page .hp{position:absolute;left:-9999px;opacity:0}
+.page .hp{position:absolute;width:1px;height:1px;padding:0;margin:0;border:0;overflow:hidden;clip-path:inset(50%);opacity:0;pointer-events:none} /* the hidden anti-spam box: never far off-screen (in Arabic, a box far to the left widened the page and phones zoomed out) */
 .page .btn--wa{background:#25D366;color:#fff}
 .page .art--magazine .art__cover{margin:0 0 24px}.page .art--magazine .art__cover img{aspect-ratio:16/8;object-fit:cover;border-radius:var(--radius,22px)}
 .page .art--magazine h1{font-size:clamp(1.9rem,4.4vw,2.6rem);text-align:start}.page .art--magazine .cat{margin-inline:0}.page .art--magazine>.lead{text-align:start;margin-inline:0;font-size:1.15rem;max-width:none}
