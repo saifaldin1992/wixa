@@ -27,6 +27,9 @@
     if (mb) mb.addEventListener("click", function () { menu(mb.getAttribute("aria-expanded") !== "true"); });
     if (sc) sc.addEventListener("click", function () { menu(false); });
     if (m) m.addEventListener("click", function (e) { if (e.target.closest("a")) menu(false); });
+    // the local bar of a service / project page appears once the page title is out of sight
+    var ln = document.querySelector(".localnav"), h1 = document.querySelector("main h1");
+    if (ln && h1 && "IntersectionObserver" in window) new IntersectionObserver(function (es) { ln.classList.toggle("is-on", !es[0].isIntersecting && es[0].boundingClientRect.top < 0); }).observe(h1);
     var b = document.querySelector("[data-theme-toggle]");
     if (b) b.addEventListener("click", function () {
       var n = r.getAttribute("data-theme") === "dark" ? "light" : "dark";

@@ -741,3 +741,8 @@ When the live chat is on (`settings.chat.on`), it is the way to talk to us every
 - **Icons:** one stroke weight, 1.75.
 - **Glass:** only the floating top bar (blur + saturation, light top edge); content stays solid; «Reduce transparency» makes it opaque.
 - **Increase contrast** (`prefers-contrast: more`): darker greys, real lines instead of hairlines, outlined tinted buttons.
+
+## Apple redesign — phase 3 (Nov 2026)
+- **Tiles:** services, projects, packages, reviews, contact ways, articles and «more» links are apple.com tiles — the soft grey surface (#1C1C1E on black), no border, no shadow, a 1–1.5% zoom on hover with a mouse (none with reduced motion). The old hover lifts, purple borders and the tilting service icon were removed. The featured package keeps its purple outline.
+- **Headings and hero:** semibold titles with slightly tighter letter spacing; the hero line under the title is muted at the lead size, max 34em wide.
+- **Local bar** on service and project pages (`simplePage` → `localNav`, shown by `/theme-pre.js` once the page title has scrolled away): the page's name and its one action («اطلب هذه الخدمة» / «اطلب مشروعاً مشابهاً») in a glass capsule under the top bar.

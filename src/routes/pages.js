@@ -341,6 +341,9 @@ export function simplePage(request, st, { lang, title, description, path, image,
   const shell = siteShell(st, lang, path), ui = shell.ui;
   // breadcrumbs on deeper pages: الرئيسية › <section page> › <this page>. crumbs = [[ui key or label, path], …] without home and this page
   const trail = crumbs ? [[ui.nav_home || (ar ? "الرئيسية" : "Home"), "/"], ...crumbs] : null;
+  // apple.com's local bar on a service or project page: the page's name and its one action, shown once the title has
+  // scrolled away (/theme-pre.js adds .is-on)
+  const localNav = crumbs && startLabel ? `<nav class="localnav" aria-label="${esc(title)}"><div class="localnav__in"><b>${esc(title)}</b><a class="btn btn--primary localnav__cta" data-start href="/order?lang=${lang}${orderQ}">${esc(startLabel)}</a></div></nav>` : "";
   const crumbHtml = trail ? `<nav class="crumbs" aria-label="${ar ? "مسار الصفحة" : "Breadcrumb"}"><ol>${trail.map(([l, h]) => `<li><a href="${h}?lang=${lang}">${esc(ui[l] || l)}</a></li>`).join("")}<li aria-current="page">${esc(title)}</li></ol></nav>` : "";
   if (trail) {
     const crumbLd = { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [...trail, [title, path]].map(([l, h], i) => ({ "@type": "ListItem", position: i + 1, name: ui[l] || l, item: `${origin}${h}?lang=${lang}` })) };
@@ -412,7 +415,7 @@ ${hosted ? `<link rel="stylesheet" href="${hosted}">` : `<link rel="stylesheet" 
 <link rel="stylesheet" href="${versioned("/build/site.css")}">
 ${shell.header}
 <div class="scrim" id="scrim"></div>
-<main class="page" id="content" tabindex="-1">${crumbHtml}${body}
+${localNav}<main class="page" id="content" tabindex="-1">${crumbHtml}${body}
 ${ending ? `<div class="actions"><a class="btn btn--primary" data-start href="/order?lang=${lang}${orderQ}">${esc(startLabel || ui.nav_start)}</a><a class="btn btn--ghost" href="/contact?lang=${lang}">${ui.nav_contact}</a></div>` : ""}</main>
 ${shell.footer}
 ${st.chat?.on || scripts.length ? `<script src="${versioned("/build/shared.js")}" defer></script>` : ""}${scripts.map((u) => `<script type="module" src="${versioned(u)}"></script>`).join("")}${st.chat?.on && !scripts.length ? `<script type="module" src="${versioned("/build/chat.js")}"></script>` : ""}

@@ -276,10 +276,8 @@ html[data-theme="dark"] .screen { border-color: rgba(255,255,255,.08); }
 .services__grid { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 .svc { position: relative; padding: 28px 24px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); overflow: hidden; transition: transform .6s var(--ease-out), box-shadow .6s, border-color .4s; }
 .svc::before { content: ""; position: absolute; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(var(--primary-rgb), .14), transparent 70%); left: var(--mx, 50%); top: var(--my, 0%); translate: -50% -50%; opacity: 0; transition: opacity .4s; pointer-events: none; }
-.svc:hover { transform: translateY(-6px); box-shadow: var(--shadow); border-color: rgba(var(--primary-rgb), .3); }
 .svc:hover::before { opacity: 1; }
 .svc__ico { width: 52px; height: 52px; border-radius: var(--r-md); display: grid; place-items: center; background: rgba(var(--fg-rgb), .1); color: var(--fg); margin-bottom: 22px; transition: transform .6s var(--ease-out), background .4s, color .4s; }
-.svc:hover .svc__ico { transform: rotate(-8deg) scale(1.08); background: var(--primary); color: var(--primary-ink); }
 .svc__ico svg { width: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .svc h3 { font-size: 1.15rem; margin-bottom: 8px; font-weight: 700; }
 .svc p { margin: 0; color: var(--muted); font-size: .93rem; }
@@ -391,7 +389,6 @@ html[dir="rtl"] .tst__track { animation-name: tstScrollRtl; }
 @keyframes tstScroll { to { transform: translateX(-50%); } }
 @keyframes tstScrollRtl { to { transform: translateX(50%); } }
 .tcard { width: 360px; flex: none; background: var(--surface); border: 1px solid var(--line); border-radius: calc(var(--radius) + 2px); padding: 26px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 16px; transition: transform .5s var(--ease-out), border-color .4s; }
-.tcard:hover { transform: translateY(-6px); border-color: rgba(var(--fg-rgb), .35); }
 .tcard__stars { color: #E2B04A; letter-spacing: 3px; font-size: 1rem; }
 .tcard__quote { margin: 0; font-size: 1rem; line-height: 1.8; flex: 1; position: relative; }
 .tcard__quote::before { content: "”"; position: absolute; inset-inline-end: -6px; top: -34px; font-size: 5rem; line-height: 1; color: rgba(var(--fg-rgb), .12); font-family: Georgia, serif; }
@@ -1284,7 +1281,6 @@ html[data-page="home"] .partners .head__sub { display: none; }
 /* ===== the contact page: every way to reach us ===== */
 .ways__grid { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 14px; }
 .way { display: flex; align-items: center; gap: 16px; padding: 22px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); color: inherit; text-decoration: none; font: inherit; text-align: start; cursor: pointer; width: 100%; min-height: 96px; transition: transform .4s var(--ease-out), box-shadow .4s, border-color .3s; touch-action: manipulation; }
-.way:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: rgba(var(--primary-rgb), .35); }
 .way__ico { width: 54px; height: 54px; flex-shrink: 0; border-radius: var(--r-md); display: grid; place-items: center; background: rgba(var(--primary-rgb), .1); color: var(--primary); }
 [data-theme="dark"] .way__ico { color: var(--accent, #C4B5FD); }
 .way__ico svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -1740,7 +1736,6 @@ html[data-theme="dark"] {
 }
 /* cards lift with a spring and the large shadow */
 .svc, .ind, .way, .tcard, .project, .post, .more__grid a { transition: transform .55s var(--spring), box-shadow .4s var(--ease-out), border-color .3s; }
-.svc:hover, .ind:hover, .way:hover { box-shadow: var(--shadow-lg); }
 .form, .calc__box, .ord__sum, .ord__form, .ord__done, .ord__pick { box-shadow: var(--shadow-lg); }
 /* a light press on everything you tap */
 .btn:active, .pill-btn:active, .theme-btn:active, .menu-btn:active, .track-btn:active, .footer__social a:active { transform: scale(.97); transition: transform .12s ease-out; }
@@ -2043,3 +2038,41 @@ html[data-theme="dark"] .header__bar { background: color-mix(in srgb, var(--appl
   html[data-theme="dark"] { --dk-muted: #C7C7CC; }
   .btn--ghost { box-shadow: inset 0 0 0 1.5px currentColor; }
 }
+
+/* ===== Apple redesign, phase 3 (Nov 2026): pages like apple.com ===== */
+/* tiles: services, projects, packages, reviews, contact ways, articles and «more» links are Apple tiles —
+   a soft grey surface (black page → #1C1C1E), no border, no shadow; on a computer they zoom very slightly */
+:is(.svc, .ind, .project, .pkg, .tcard, .way, .post, .page .more__grid a, .page .case div, .page .team__m) { border-color: transparent; box-shadow: none; background: var(--surface); }
+.pkg--featured { border: 2px solid var(--primary); }
+html[data-theme="dark"] .pkg--featured { border-color: var(--fg); }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  :is(.svc, .ind, .project, .pkg, .tcard, .way, .post, .page .more__grid a) { transition: transform .5s var(--ease-standard), background-color .3s; }
+  :is(.svc, .ind, .tcard, .way, .post, .page .more__grid a):hover { transform: scale(1.015); }
+  .project:hover, .pkg:hover { transform: scale(1.008); }
+}
+.svc:hover .svc__ico { transform: none; }
+/* service and project tiles on the home page: larger titles, more room, the icon above like apple.com's feature tiles */
+.svc h3 { font-size: var(--t-title-3); font-weight: var(--w-semibold); }
+.project__body h3, .project h3 { font-weight: var(--w-semibold); }
+/* section headings: Apple's centred headline + one muted line */
+.head__title { font-weight: var(--w-semibold); letter-spacing: -.01em; }
+.head__sub, .head p { color: var(--muted); }
+/* hero: a bigger, calmer headline and a single muted line under it */
+.hero__title { font-weight: var(--w-semibold); letter-spacing: -.015em; }
+.hero__sub { font-size: var(--fs-lead); color: var(--muted); max-width: 34em; }
+/* «لماذا ويكسا» and other panels: flat surfaces, a hairline only where two greys meet */
+.why__panel { border-color: transparent; }
+/* the local bar on service / project pages (apple.com's product bar): the page's name and its one action,
+   glass, sliding in under the top bar once the title has scrolled away */
+.localnav { position: fixed; z-index: 55; top: calc(var(--bar-end, 78px) + 6px); inset-inline: 12px; max-width: min(var(--read, 820px), calc(100% - 24px)); margin: 0 auto;
+  transform: translateY(-12px); opacity: 0; pointer-events: none; transition: transform var(--dur) var(--ease-standard), opacity var(--dur); }
+html.is-staging .localnav { top: calc(var(--bar-end, 78px) + 40px); }
+.localnav.is-on { transform: none; opacity: 1; pointer-events: auto; }
+.localnav__in { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: 52px; padding: 6px 6px 6px 6px; padding-inline-start: var(--sp-4);
+  border-radius: var(--r-pill); background: color-mix(in srgb, var(--surface) 78%, transparent); border: 1px solid rgba(255, 255, 255, .5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 6px 24px -12px rgba(0, 0, 0, .18); -webkit-backdrop-filter: blur(22px) saturate(1.8); backdrop-filter: blur(22px) saturate(1.8); }
+html[data-theme="dark"] .localnav__in { background: color-mix(in srgb, var(--apple-dk-1) 75%, transparent); border-color: rgba(255, 255, 255, .1); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08); }
+.localnav__in b { font-size: var(--t-subhead); font-weight: var(--w-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.localnav .localnav__cta { min-height: 40px; padding: 0 var(--sp-4); font-size: var(--t-subhead); flex: none; }
+@media (prefers-reduced-transparency: reduce) { .localnav__in, html[data-theme="dark"] .localnav__in { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+@media (prefers-reduced-motion: reduce) { .localnav { transition: none; } }
