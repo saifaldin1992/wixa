@@ -487,7 +487,8 @@ html[dir=rtl] .bar__top span:first-child { direction: rtl; }
 .auth__brand { display: flex; align-items: center; gap: 18px; direction: ltr; color: #5B21B6; }
 .auth__mark { width: 112px; height: 54px; display: block; } .auth__mark svg { width: 100%; height: 100%; display: block; }
 .auth__wm { width: 150px; height: 31px; display: block; color: #140F1F; } .auth__wm svg { width: 100%; height: 100%; display: block; }
-.auth__tag { margin: 12px 0 22px; color: #625C70; font-size: 15px; }
+.auth__tag { margin: 0 0 14px; color: #625C70; font-size: 15px; } /* above the logo */
+.auth__brand { margin-bottom: 22px; }
 .auth__card { width: 100%; background: #fff; border: 1px solid #ECE8F3; border-radius: 22px; padding: 24px 20px; box-shadow: 0 20px 50px -30px rgba(91,33,182,.35); }
 .auth__card h1 { font-size: 20px; margin: 0 0 4px; text-align: center; }
 .auth__hint { margin: 0 0 18px; color: #625C70; font-size: 14px; text-align: center; line-height: 1.7; }
