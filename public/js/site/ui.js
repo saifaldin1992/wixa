@@ -25,47 +25,16 @@ export function setupUI() {
   $$("a", menu).forEach((a) => a.addEventListener("click", () => toggle(false)));
 
   let last = 0;
-  const wa = $("#wa");
-  let waTimer;
   addEventListener("scroll", () => {
     const y = scrollY, down = y > last;
     header.classList.toggle("hide", down && y > 300 && !menu.classList.contains("open"));
-    // the floating WhatsApp button steps aside while reading, and comes back when scrolling stops or goes up
-    if (wa) {
-      wa.classList.toggle("wa--away", down && y > 200);
-      clearTimeout(waTimer); waTimer = setTimeout(() => wa.classList.remove("wa--away"), 900);
-    }
     last = y;
   }, { passive: true });
 
-  // phones: contact + WhatsApp bar once past the first screen, out of the way at the contact form and the footer
-  const mbar = $("#mbar");
-  let atContact = false;
-  const io = new IntersectionObserver((es) => { es.forEach((e) => { e.target.dataset.vis = e.isIntersecting ? "1" : ""; }); atContact = !!document.querySelector('#contact[data-vis="1"], .footer[data-vis="1"]'); syncBars(); }, { threshold: 0.15 });
-  ["#contact", ".footer"].forEach((s) => { const el = $(s); if (el) io.observe(el); });
-  function syncBars() {
-    const past = scrollY > innerHeight * 0.8;
-    mbar?.classList.toggle("show", past && !atContact);
-  }
-  addEventListener("scroll", syncBars, { passive: true }); syncBars();
+  // the round buttons at the bottom of the screen (chat, WhatsApp, contact) stay put: nothing at the bottom of the
+  // screen moves while the page scrolls (Nov 2026 — they used to slide away and back, which read as a jumping bar)
+  $("#mbar")?.classList.add("show");
 
-  // phones: the round chat/WhatsApp buttons never cover the hero's main buttons
-  const ctas = $(".hero__ctas");
-  const clearFabs = () => {
-    const r = ctas?.getBoundingClientRect();
-    document.documentElement.classList.toggle("fab-clear", !!r && innerWidth <= 760 && r.height > 0 && r.top < innerHeight && r.bottom > innerHeight - 90);
-  };
-  if (ctas) { addEventListener("scroll", clearFabs, { passive: true }); addEventListener("resize", clearFabs); setTimeout(clearFabs, 100); }
-  // phones: while the page is being scrolled down the round button steps aside so it never sits on the text being
-  // read; it comes back as soon as the visitor scrolls up or stops for a moment
-  let lastY = scrollY, idle = 0;
-  addEventListener("scroll", () => {
-    const y = scrollY, root = document.documentElement;
-    if (innerWidth <= 760 && y > lastY + 4 && y > 120) root.classList.add("fab-away");
-    else if (y < lastY - 4) root.classList.remove("fab-away");
-    lastY = y;
-    clearTimeout(idle); idle = setTimeout(() => root.classList.remove("fab-away"), 900);
-  }, { passive: true });
   $("#mbarContact")?.addEventListener("click", (e) => { e.preventDefault(); openContact(); });
 
   // FAQ: one tap opens or closes an answer

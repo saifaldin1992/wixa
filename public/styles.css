@@ -2239,3 +2239,13 @@ html.fab-away .chatw__btn { transform: none; opacity: 1; pointer-events: auto; }
   .footer__reach .footer__dot { display: none; }
   .footer__reach { gap: 0 14px; }
 }
+
+/* ===== nothing at the bottom of the screen moves (Nov 2026) =====
+   the round chat / WhatsApp / contact buttons stay where they are while scrolling (no sliding away and back) */
+.wa.wa--away, html.fab-away .wa, html.fab-clear .wa, html.fab-clear .chatw__btn, html.fab-away .chatw__btn { transform: none; opacity: 1; pointer-events: auto; visibility: visible; }
+@media (max-width: 760px) {
+  .mbar, .mbar.show { transform: none; opacity: 1; pointer-events: auto; visibility: visible; transition: none; }
+  html[lang] .mbar { left: 12px; bottom: calc(14px + env(safe-area-inset-bottom)); }
+  html[lang] .mbar__btn--main { width: 44px; height: 44px; }
+  html[lang] .mbar__btn--main svg { width: 20px; height: 20px; }
+}

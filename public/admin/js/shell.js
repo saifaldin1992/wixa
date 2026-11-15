@@ -240,6 +240,10 @@ export async function route() {
   paintTabbar();
   openSideGroupOf(current);
   const view = $("#view");
+  // the page keeps its height while it is redrawn (a period switch, a filter, a page change): a page that shrinks for a
+  // moment makes phone browsers (Samsung Internet, Safari) show or hide their own toolbars, and everything fixed to the
+  // bottom of the screen — the tab bar — jumps. The hold is let go once the new content is in.
+  view.style.minHeight = `${view.offsetHeight}px`;
   // the page changes with a short cross-fade (View Transitions), only for the switch itself — never while loading
   const swap = () => {
     $("#viewTitle").textContent = v.title; $("#viewSub").textContent = v.sub;
@@ -255,5 +259,5 @@ export async function route() {
   if (S) { hold = document.createElement("div"); hold.className = "skeleton view-hold"; hold.style.height = "120px"; view.before(hold); view.classList.add("is-building"); }
   try { await v.render(view); if (S && view.querySelector(".card")) sectionize(view, current, S.groups, S.rules, S.fallback); }
   catch (e) { console.error(e); view.innerHTML = `<div class="empty">حدث خطأ: ${esc(e.message)}</div>`; }
-  finally { hold?.remove(); view.classList.remove("is-building"); }
+  finally { hold?.remove(); view.classList.remove("is-building"); requestAnimationFrame(() => requestAnimationFrame(() => (view.style.minHeight = ""))); }
 }
