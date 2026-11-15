@@ -164,6 +164,15 @@ export async function handleHome(request, env, ctx, pageName = "home") {
     .on("head", { element: (el) => el.append(themeCss, { html: true }) })
     .on("#wixa-font", { element: (el) => { if (fontHref) el.setAttribute("href", fontHref); } })
     .on("#heroTitle", { element: (el) => el.setInnerContent(words(C.hero_title ?? hero.hero_title), { html: true }) })
+    // the hero shows the work itself (like apple.com shows its product): the first project with a screenshot
+    .on("#heroShow", { element: (el) => {
+      const pr = (parsed.projects || []).find((x) => x.image_url && x.slug);
+      if (!pr) return;
+      const name = (lang === "en" ? pr.title_en : pr.title_ar) || pr.title_ar || pr.title_en || "";
+      el.removeAttribute("hidden");
+      el.setAttribute("href", `/projects/${encodeURIComponent(pr.slug)}${lang === "en" ? "?lang=en" : ""}`);
+      el.setInnerContent(`<span class="hero__show-screen"><img src="${esc(pr.image_url)}" alt="${esc(name)}" width="1440" height="900" decoding="async"></span>${pr.mobile_image_url ? `<span class="hero__show-phone"><img src="${esc(pr.mobile_image_url)}" alt="" width="390" height="844" decoding="async"></span>` : ""}<span class="hero__show-cap">${esc(name)}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6l-6 6 6 6"/></svg></span>`, { html: true });
+    } })
     .on("[data-c]", { element: (el) => { const k = el.getAttribute("data-c"); if (el.getAttribute("id") !== "heroTitle" && k in C) el.setInnerContent(String(C[k] ?? "")); } })
     .on("[data-t]", { element: (el) => { const k = el.getAttribute("data-t"); if (k !== "brand" && typeof ui[k] === "string") el.setInnerContent(ui[k]); } })
     .on("[data-section], [data-sec]", { element: (el) => { if (hide.has(el.getAttribute("data-section") || el.getAttribute("data-sec"))) el.setAttribute("hidden", ""); } })

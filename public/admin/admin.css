@@ -1242,3 +1242,20 @@ html[data-theme="dark"] .switch i { background: rgba(120, 120, 128, .32); }
 }
 /* the auth screen, the loading screen and an open sheet hide the bar */
 body:has(#auth:not([hidden])) .tabbar, body:has(.modal:not([hidden])) .tabbar, body:has(.side.open) .tabbar { display: none; }
+
+/* ===== Apple closeness (Nov 2026): settings read like iOS Settings rows ===== */
+/* inside a card, one-line fields and switches become rows of the group: the label at the start, the value or the
+   switch at the end, a hairline between rows. Long fields (text areas) and anything with several parts stay stacked. */
+.card .f:has(> span + input:not([type=checkbox], [type=radio], [type=color], [type=range], [type=file]):last-child),
+.card .f:has(> span + select:last-child) {
+  grid-template-columns: minmax(110px, 36%) minmax(0, 1fr); align-items: center; gap: 12px; min-height: 52px; color: var(--text); font-size: 15px; font-weight: 500; }
+.card .f:has(> span + input:last-child) > input, .card .f:has(> span + select:last-child) > select { min-height: 40px; }
+.card .switch { display: flex; justify-content: space-between; min-height: 48px; font-size: 15px; font-weight: 500; }
+.card .switch i { order: 2; }
+/* hairlines between neighbouring rows, starting at the text like iOS */
+.card :is(.f, .switch) + :is(.f, .switch) { border-top: 1px solid var(--line); padding-top: 12px; }
+.card .stack > :is(.f, .switch) + :is(.f, .switch) { margin-top: -2px; }
+@media (max-width: 600px) {
+  /* phones: narrow rows keep the label above the field (as iOS does for long values), still divided by hairlines */
+  .card .f:has(> span + input:last-child), .card .f:has(> span + select:last-child) { grid-template-columns: minmax(0, 1fr); gap: 6px; min-height: 0; }
+}

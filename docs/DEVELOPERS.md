@@ -758,3 +758,9 @@ When the live chat is on (`settings.chat.on`), it is the way to talk to us every
 ## Apple redesign — phase 5 (Nov 2026): final check
 - The brand guide in the dashboard (`public/admin/js/views/brand.js`) shows the new values: Apple type scale (17 body, 28 → 40 section titles, smallest 12), the 8-point spacing, the six-step corner scale with the concentric rule, the button kinds (filled, tinted, link, grey), the near-invisible shadows, Liquid Glass on floating bars only, the device font on Apple devices, the longer logo line.
 - Contrast of every new colour pair checked: 26/26 meet WCAG AA (4.5:1), lowest 4.66 (secondary grey on the light grey tiles).
+
+## Apple closeness (Nov 2026)
+- **Shorter copy:** section subtitles, the process steps, guarantees and about points are one line per idea. Staging DB already has it; production gets the same keys when it is published (an UPDATE that merges into `site_settings.data.content.ar/en`).
+- **Hero showcase:** `#heroShow` in `public/index.html` is filled by the server (`handleHome` in `src/routes/pages.js`) with the first project that has a screenshot and a slug, plus its phone screenshot when there is one, linking to the project page. With no such project it stays hidden.
+- **Scroll motion:** blocks on inner pages and the cards on the home page rise and fade in as they scroll into view, and the hero screens grow into place. This is pure CSS (`animation-timeline: view()`), only with `prefers-reduced-motion: no-preference`; browsers without support show everything at once.
+- **Settings rows:** in dashboard cards, one-line fields and switches read like iOS Settings rows: the label at the start, the value or switch at the end, hairlines between rows. On phones the label sits above the field. Text areas and multi-part fields stay stacked (`public/admin/admin.css`, last block).

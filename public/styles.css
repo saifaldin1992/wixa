@@ -2076,3 +2076,31 @@ html[data-theme="dark"] .localnav__in { background: color-mix(in srgb, var(--app
 .localnav .localnav__cta { min-height: 40px; padding: 0 var(--sp-4); font-size: var(--t-subhead); flex: none; }
 @media (prefers-reduced-transparency: reduce) { .localnav__in, html[data-theme="dark"] .localnav__in { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; } }
 @media (prefers-reduced-motion: reduce) { .localnav { transition: none; } }
+
+/* ===== Apple closeness (Nov 2026): hero showcase and scroll motion ===== */
+/* the hero shows the work itself, as apple.com shows its product: the first project's screens under the buttons */
+.hero__show { position: relative; display: block; width: min(880px, 100%); margin: var(--sp-7) auto 0; color: inherit; text-decoration: none; }
+.hero__show[hidden] { display: none; }
+.hero__show-screen { display: block; border-radius: var(--r-lg); overflow: hidden; background: var(--surface); border: 1px solid var(--line); aspect-ratio: 16 / 10; }
+.hero__show-screen img, .hero__show-phone img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.hero__show-phone { position: absolute; inset-inline-end: -2%; bottom: -8%; width: 22%; aspect-ratio: 9 / 19.5; border-radius: 22% / 10%; overflow: hidden; border: 4px solid #1D1D1F; background: #1D1D1F; box-shadow: 0 20px 40px -20px rgba(0, 0, 0, .35); }
+.hero__show-cap { display: inline-flex; align-items: center; gap: 4px; margin-top: var(--sp-5); color: var(--primary); font-weight: var(--w-semibold); font-size: var(--t-callout); }
+html[data-theme="dark"] .hero__show-cap { color: var(--fg); }
+.hero__show-cap svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; }
+html[dir="ltr"] .hero__show-cap svg { transform: scaleX(-1); }
+@media (hover: hover) { .hero__show:hover .hero__show-cap { text-decoration: underline; text-underline-offset: 3px; } }
+@media (max-width: 760px) { .hero__show { margin-top: var(--sp-6); } .hero__show-phone { width: 26%; border-width: 3px; } }
+
+/* scroll motion (apple.com product pages): as a block scrolls in, it rises and fades in; the hero screens grow a
+   little into place. Only where the browser drives it by scrolling, never with reduced motion, and everything is
+   fully visible when it is not supported — nothing waits for a script. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .hero__show-screen { animation: showGrow linear both; animation-timeline: view(); animation-range: entry 0% cover 40%; }
+    .page > :is(h2, ul, section, .gallery, .stats, .case, .more, .pn), main > section :is(.svc, .project, .pkg, .tcard, .way) {
+      animation: scrollRise linear both; animation-timeline: view(); animation-range: entry 0% entry 60%; }
+  }
+}
+@keyframes showGrow { from { transform: scale(.92); opacity: .6; } to { transform: none; opacity: 1; } }
+@keyframes scrollRise { from { transform: translateY(28px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (max-width: 760px) { .hero__show-cap { margin-top: 56px; } } /* clear of the phone that hangs below the screen */
