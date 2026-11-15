@@ -62,13 +62,12 @@ export const VIEWS = {
 // The sidebar's main items (level 1) and their pages (level 2) live in index.html (#sideNav); inside a page, its
 // sections are the strips at the top (levels 3 and 4, SECTIONS below). These older group addresses (#settings,
 // #reports, #look, #reputation) open the group's first page this person may see.
-export const HUBS = {
+const HUBS = {
   settings: { title: "الإعدادات", items: [["account", "الحساب"], ["team", "الفريق"], ["notify", "الإشعارات والبريد"], ["integrations", "التكاملات"], ["protect", "الحماية"], ["backup", "النسخ الاحتياطي"], ["diagnose", "الفحص والتشخيص"], ["audit", "سجل التعديلات"], ["devguide", "دليل المطوّر"]] },
   reports: { title: "التقارير", items: [["sales", "المبيعات"], ["visits", "الزيارات والسلوك"]] },
   look: { title: "المظهر", items: [["appearance", "الألوان والخطوط"], ["brand", "دليل الهوية"]] },
   reputation: { title: "آراء العملاء والشركاء", items: [["testimonials", "آراء العملاء"], ["partners", "الشركاء"]] },
 };
-export const hubOf = (name) => Object.keys(HUBS).find((h) => HUBS[h].items.some(([k]) => k === name)) || null;
 
 // Every long page as sub-menus (the shared rule): branch row, then its sections; one section shows at a time.
 // [match, section]: "#id" a card id, ".class" a card class, otherwise the start of the card's title.
@@ -122,11 +121,11 @@ function openSideGroupOf(name) {
   if (sideMode() === "fold" && sec && !sec.classList.contains("is-open")) $$("#sideNav .side__sec").forEach((x) => x.classList.toggle("is-open", x === sec));
   paintSideGroups();
 }
-export function setupSideGroups() {
+function setupSideGroups() {
   $$("#sideNav .side__group").forEach((btn) => (btn.onclick = () => { if (sideMode() === "open") return; const sec = btn.closest(".side__sec"); sec.classList.toggle("is-open"); paintSideGroups(); }));
   paintSideGroups();
 }
-export const canSee = (name) => HUBS[name] ? HUBS[name].items.some(([k]) => canSee(k)) : !ROLE_VIEWS[role] || ROLE_VIEWS[role].includes(name);
+const canSee = (name) => HUBS[name] ? HUBS[name].items.some(([k]) => canSee(k)) : !ROLE_VIEWS[role] || ROLE_VIEWS[role].includes(name);
 function applyRoleNav() {
   $$("#sideNav a").forEach((a) => (a.hidden = !canSee(a.dataset.view)));
   // a main item disappears when none of its pages is available to this person

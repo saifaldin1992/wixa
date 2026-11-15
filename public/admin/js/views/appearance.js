@@ -4,7 +4,7 @@ import { bindPreview, changed, previewPane, settingsActions } from "../settings.
 import { route } from "../shell.js";
 
 // ---------------- view: appearance ----------------
-export const PRESETS = [
+const PRESETS = [
   { name: "ويكسا بنفسجي", theme: { primary: "#5B21B6", primaryInk: "#FFFFFF", accent: "#1FC8E3", bg: "#FFFFFF", surface: "#F5F5F7", text: "#1D1D1F", muted: "#6E6E73", dark: "#120A24" } },
   { name: "خمري تقني", theme: { primary: "#570622", primaryInk: "#FFFFFF", accent: "#1FC8E3", bg: "#F7F6F8", surface: "#FFFFFF", text: "#140C12", muted: "#665C64", dark: "#12070C" } },
   { name: "خمري ذهبي", theme: { primary: "#570622", primaryInk: "#FFFFFF", accent: "#D9A441", bg: "#FAF7F6", surface: "#FFFFFF", text: "#1A0E12", muted: "#6E5F64", dark: "#2A0711" } },
@@ -15,7 +15,7 @@ export const PRESETS = [
   { name: "ذهبي فاخر", theme: { primary: "#B08D57", primaryInk: "#0E0E0E", accent: "#E9D8B4", bg: "#F7F4EE", surface: "#FFFFFF", text: "#151310", muted: "#6F685D", dark: "#151310" } },
   { name: "ليلي", theme: { primary: "#4F8CFF", primaryInk: "#FFFFFF", accent: "#22D3EE", bg: "#0B1020", surface: "#121A30", text: "#E8ECF6", muted: "#93A0BC", dark: "#050814" } },
 ];
-export const COLOR_FIELDS = [
+const COLOR_FIELDS = [
   ["primary", "اللون الرئيسي", "الأزرار والعناوين المميزة"], ["primaryInk", "نص الأزرار", "لون الكتابة فوق اللون الرئيسي"],
   ["accent", "لون التمييز", "الأرقام والإشارات"], ["bg", "الخلفية", "خلفية الصفحة"],
   ["surface", "البطاقات", "خلفية البطاقات والنماذج"], ["text", "النص", "لون الكتابة الأساسي"],
@@ -80,8 +80,8 @@ export async function viewAppearance(view) {
     settings.theme = clone(DEFAULTS.theme); settings.font = clone(DEFAULTS.font); settings.animations = true; settings.look = DEFAULTS.look; route();
   };
 }
-export const loadedFonts = new Set();
-export function loadPreviewFont(name) {
+const loadedFonts = new Set();
+function loadPreviewFont(name) {
   if (loadedFonts.has(name)) return; loadedFonts.add(name);
   const l = document.createElement("link"); l.rel = "stylesheet";
   l.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(name).replace(/%20/g, "+")}:wght@700&display=swap&text=${encodeURIComponent("ويكسا Wixa")}`;

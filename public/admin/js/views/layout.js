@@ -13,7 +13,7 @@ const EDIT = {
   projects: ["view", "projects"], process: ["tab", "process"], stats: ["tab", "stats"], pricing: ["tab", "pricing"], calculator: ["tab", "calc"],
   testimonials: ["view", "testimonials"], careers: ["tab", "careers"], faq: ["tab", "faq"], ways: ["tab", "contact"], contact: ["tab", "cta"],
 };
-export let layoutPage = "home";
+let layoutPage = "home";
 let counts = null; // rows in the partners and testimonials tables (a section with nothing in it does not show)
 
 async function loadCounts() {

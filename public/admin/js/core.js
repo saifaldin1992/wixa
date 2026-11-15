@@ -72,13 +72,8 @@ export async function composeView(view, parts) {
 }
 // The sub-menu under the page title. Re-drawing it keeps each row where it was scrolled, and the chosen item always
 // stays in view (a long row no longer jumps back to its first item after a choice near its end).
-// A group of pages shown as one item in the sidebar (الإعدادات، التقارير…): its pages are a first row of tabs above
-// whatever sub-menu the page itself draws. The router sets it before drawing a page of the group (shell.js → HUBS).
-let hubRow = "";
-export const setHubRow = (html) => { hubRow = html || ""; };
 export function setSubnav(html = "") {
   const n = document.getElementById("subNav"); if (!n) return;
-  html = hubRow + html;
   const key = (s, i) => s.id || `${s.className}#${i}`;
   const was = Object.fromEntries([...n.querySelectorAll(".seg")].map((s, i) => [key(s, i), s.scrollLeft]));
   n.innerHTML = html; n.hidden = !html;
@@ -96,7 +91,7 @@ export function setSubnav(html = "") {
 // wait under «المزيد». The tab that is on always stays in sight. The tabs stay where they are (hidden), so each page's
 // own handlers keep working; «المزيد» is not a <button>, so a page binding "all buttons of its row" never takes it.
 let segRO = null;
-export function compactSeg(s) {
+function compactSeg(s) {
   const btns = [...s.children].filter((b) => b.tagName === "BUTTON");
   s.querySelector(".seg__more")?.remove();
   btns.forEach((b) => { if (b.dataset.segHid) { b.hidden = false; delete b.dataset.segHid; } });

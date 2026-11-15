@@ -4,7 +4,7 @@ import { imageField } from "../fields.js";
 import { quietly, saveSettings } from "../settings.js";
 
 // How an article page looks (settings.blog.theme for all, settings.blog.per[id] for one article; same keys in routes/pages.js)
-export const POST_THEMES = [
+const POST_THEMES = [
   ["classic", "كلاسيكي", "العنوان ثم الغلاف، وعمود قراءة متوسط"],
   ["magazine", "مجلة", "غلاف كبير أعلى الصفحة وعنوان عريض — للمقالات المصوّرة"],
   ["minimal", "بسيط", "بلا صورة غلاف، عمود ضيق مريح للقراءة الطويلة"],

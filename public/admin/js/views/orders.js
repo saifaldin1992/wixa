@@ -5,7 +5,7 @@ import { $, setSubnav, $$, I, adminApi, closeModal, esc, openModal, sb, toast } 
 import { route } from "../shell.js";
 import { openQuote } from "../quote.js";
 
-export const ORDER_STATUS = {
+const ORDER_STATUS = {
   new: ["جديد", ""], contacted: ["تواصلنا", "warn"], quoted: ["أُرسل العرض", "warn"],
   in_progress: ["قيد التنفيذ", "ok"], done: ["مكتمل", "ok"], cancelled: ["ملغي", "off"],
 };

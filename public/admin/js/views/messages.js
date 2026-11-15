@@ -3,7 +3,7 @@
    The old address #messages opens «الوارد» on the messages. */
 import { $, $$, I, adminApi, confirmBox, esc, sb, toast } from "../core.js";
 
-export const STATUS = { new: ["جديد", ""], working: ["قيد المتابعة", "warn"], won: ["تم الاتفاق", "ok"], lost: ["لم يتم", "off"] };
+const STATUS = { new: ["جديد", ""], working: ["قيد المتابعة", "warn"], won: ["تم الاتفاق", "ok"], lost: ["لم يتم", "off"] };
 export const isJob = (m) => (m.services?.[0] || "").startsWith("طلب توظيف");
 // "حجز موعد: الأحد 2026-11-09 الساعة 10:30" → { date, time }
 export const booking = (m) => { const x = (m.services?.[0] || "").match(/^حجز موعد:.*?(\d{4}-\d{2}-\d{2}).*?(\d{2}:\d{2})/); return x ? { date: x[1], time: x[2] } : null; };

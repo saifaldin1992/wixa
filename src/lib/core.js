@@ -50,7 +50,7 @@ export const deepMerge = (a, b) => {
 
 // Which language a visit opens in: ?lang= link → the visitor's saved choice (cookie) → dashboard setting →
 // the device language or the visitor's country. No header at all (most crawlers) → Arabic.
-export const ARAB_COUNTRIES = new Set(["IQ", "SA", "AE", "KW", "QA", "BH", "OM", "JO", "SY", "LB", "PS", "EG", "LY", "TN", "DZ", "MA", "SD", "YE", "MR"]);
+const ARAB_COUNTRIES = new Set(["IQ", "SA", "AE", "KW", "QA", "BH", "OM", "JO", "SY", "LB", "PS", "EG", "LY", "TN", "DZ", "MA", "SD", "YE", "MR"]);
 
 export function pickLang(request, setting) {
   const q = new URL(request.url).searchParams.get("lang");
@@ -105,7 +105,7 @@ export const fmtDate = (d, lang) => { try { return new Date(d).toLocaleDateStrin
 
 // ---------------------------------------------------------------- appointments
 // Opening hours come from the dashboard (settings.booking); booked times are kept in the private store.
-export const BAGHDAD_OFFSET = 3 * 3600e3; // Iraq: UTC+3, no daylight saving
+const BAGHDAD_OFFSET = 3 * 3600e3; // Iraq: UTC+3, no daylight saving
 export const baghdadNow = () => new Date(Date.now() + BAGHDAD_OFFSET); // read with getUTC* = Baghdad wall clock
 export const toMin = (hm) => { const [h, m] = String(hm || "").split(":").map(Number); return (h || 0) * 60 + (m || 0); };
 export const toHM = (n) => `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`;

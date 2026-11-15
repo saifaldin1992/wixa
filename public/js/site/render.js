@@ -21,7 +21,7 @@ function splitWords(el, text) {
 
 // "www.instagram/wixa.iq", "instagram.com/wixa.iq", "@wixa.iq" or a full link → https://www.instagram.com/wixa.iq
 const SOCIAL_HOST = { instagram: "www.instagram.com", x: "x.com", linkedin: "www.linkedin.com", facebook: "www.facebook.com" };
-export function socialUrl(kind, raw) {
+function socialUrl(kind, raw) {
   let v = String(raw || "").trim();
   if (!v) return "";
   if (/^https?:\/\/[^/]+\.[a-z]{2,}/i.test(v)) return safeUrl(v);

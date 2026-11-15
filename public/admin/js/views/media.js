@@ -12,7 +12,7 @@ const kb = (n) => (n >= 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)}MB` : `${M
 const urlOf = (path) => sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 
 // every file: the root holds folders (one per editor) and maybe loose files; each folder is listed on its own
-export async function listMedia() {
+async function listMedia() {
   const opts = { limit: 1000, sortBy: { column: "created_at", order: "desc" } };
   const { data: top, error } = await sb.storage.from(BUCKET).list("", opts);
   if (error) throw error;
@@ -33,7 +33,7 @@ async function usesOf(files) {
   return out;
 }
 
-export async function uploadFiles(fileList, folder = "library") {
+async function uploadFiles(fileList, folder = "library") {
   const done = [];
   for (let file of [...fileList]) {
     if (!/^image\/(png|jpeg|webp|gif)$/.test(file.type)) { toast(`«${file.name}»: صور PNG أو JPG أو WebP أو GIF فقط`, "err"); continue; }

@@ -20,8 +20,8 @@ export const LINK = (() => {
 // ---------------- auth ----------------
 // modes: login · forgot (send reset link) · reset (set a new password from the link) · mfa (6-digit code)
 export const authMsg = (text, type = "") => { const m = $("#authMsg"); m.className = `auth__msg ${type}`; m.textContent = text; };
-export const needsCode = async () => { const { data } = await sb.auth.mfa.getAuthenticatorAssuranceLevel(); return data?.nextLevel === "aal2" && data.currentLevel !== "aal2"; };
-export async function verifyCode(code) {
+const needsCode = async () => { const { data } = await sb.auth.mfa.getAuthenticatorAssuranceLevel(); return data?.nextLevel === "aal2" && data.currentLevel !== "aal2"; };
+async function verifyCode(code) {
   const { data } = await sb.auth.mfa.listFactors();
   const f = data?.totp?.find((x) => x.status === "verified");
   if (!f) throw new Error("no factor");

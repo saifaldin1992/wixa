@@ -26,7 +26,7 @@ export const turnstileToken = (sel) => { try { return widgets[sel] != null ? win
 export const resetTurnstile = (sel) => { try { if (widgets[sel] != null) window.turnstile.reset(widgets[sel]); } catch {} };
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-export const phoneOk = (v) => String(v || "").replace(/\D/g, "").length >= 7;
+const phoneOk = (v) => String(v || "").replace(/\D/g, "").length >= 7;
 
 // marks empty / wrong fields; returns the first problem's message or ""
 export function check(form, names) {
@@ -77,7 +77,7 @@ export function openContact(message = "") {
 }
 
 // ---------- job application window ----------
-export function openJob(index = -1) {
+function openJob(index = -1) {
   const ui = UI[lang], m = $("#jmodal"), sel = $("#jobSelect");
   const jobs = (state.settings.careers?.jobs || []).filter((j) => j.open !== false);
   sel.innerHTML = jobs.map((j, i) => `<option value="${esc(L(j, "title"))}" ${i === index ? "selected" : ""}>${esc(L(j, "title"))}</option>`).join("") + `<option value="" ${index < 0 ? "selected" : ""}>${esc(ui.j_general)}</option>`;

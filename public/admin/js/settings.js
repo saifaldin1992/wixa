@@ -32,7 +32,7 @@ export async function saveSettings() {
   publishNow();
   markDirty(); toast("تم الحفظ ونُشرت التغييرات على الموقع ✓");
 }
-export function markDirty() {
+function markDirty() {
   const d = $("#dirtyFlag"); if (d) d.hidden = !isDirty();
   const b = $("#saveBtn"); if (b) b.disabled = !isDirty();
   const r = $("#revertBtn"); if (r) r.disabled = !isDirty();
@@ -72,7 +72,7 @@ export function bindPreview() {
   frame.addEventListener("load", () => pushPreview(true));
 }
 // Render the real desktop (1280px) or phone (390px) layout and scale it down to fit the pane.
-export function fitPreview() {
+function fitPreview() {
   const st = $(".preview__stage"), fr = $("#pvFrame"); if (!st || !fr) return;
   const mob = $("#preview").classList.contains("mobile");
   // the computer layout on a narrow screen is small once scaled: the pane takes its height instead of a tall empty box
@@ -88,7 +88,7 @@ export function fitPreview() {
   fr.style.top = `${Math.max(0, (H - FH * s) / 2)}px`;
   if (!mob && st.clientWidth < 700 && FH * s < H - 1) { st.style.minHeight = "0"; st.style.height = `${Math.ceil(FH * s)}px`; fr.style.top = "0px"; }
 }
-export function onPreviewMsg(e) { if (e.origin === location.origin && e.data?.type === "wixa-preview-ready") pushPreview(true); }
+function onPreviewMsg(e) { if (e.origin === location.origin && e.data?.type === "wixa-preview-ready") pushPreview(true); }
 export function pushPreview(now) {
   clearTimeout(previewTimer);
   const send = () => $("#pvFrame")?.contentWindow?.postMessage({ type: "wixa-preview", payload: { settings, lang: previewLang, menu: previewMenu } }, location.origin);

@@ -5,7 +5,7 @@
 
 // Core Web Vitals from real visitors (75th percentile, the value Google uses).
 // Cloudflare reports times in microseconds; we return milliseconds.
-export function speedReport(v, load) {
+function speedReport(v, load) {
   if (!v?.count) return null;
   const q = v.quantiles || {}, n = v.sum || {};
   const share = (k) => { const g = n[`${k}Good`] || 0, m = n[`${k}NeedsImprovement`] || 0, p = n[`${k}Poor`] || 0, t = g + m + p; return t ? { good: g / t, mid: m / t, poor: p / t, samples: t } : null; };
@@ -20,7 +20,7 @@ export function speedReport(v, load) {
 }
 
 // one query to Cloudflare for the last `days` days
-export async function loadStats(env, days) {
+async function loadStats(env, days) {
   const day = (d) => d.toISOString().slice(0, 10);
   const today = new Date();
   const since = new Date(today.getTime() - (days - 1) * 864e5);

@@ -6,7 +6,7 @@ import { mailBox, sendOwnerMail } from "../services/mail.js";
 import { PUSH_HOSTS, pushTeam, vapidKeys, webPush } from "../services/push.js";
 export { pushTeam };
 
-export async function chatError(r) {
+async function chatError(r) {
   const t = await r.text().catch(() => "");
   if (/PGRST202|Could not find the function/.test(t)) return json({ error: "migration_missing" }, 503);
   if (/not found/.test(t)) return json({ error: "gone" }, 404);
@@ -62,7 +62,7 @@ export async function handleChat(request, env, ctx, action) {
   return r.ok ? json(await r.json(), 200, noStore) : chatError(r);
 }
 
-export async function notifyChat(env, request, m) {
+async function notifyChat(env, request, m) {
   const origin = new URL(request.url).origin;
   const jobs = [];
   if (m.push) jobs.push(pushTeam(env, "chat", String(m.name || "").trim().split(/\s+/)[0]));

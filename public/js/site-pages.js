@@ -63,7 +63,7 @@ export const PAGE_DEFAULTS = [
 ];
 
 // Addresses that belong to the site itself: a page added from the dashboard can never take them.
-export const RESERVED_PATHS = ["/", "/about", "/careers", "/order", "/track", "/contact", "/faq", "/privacy", "/blog", "/review",
+const RESERVED_PATHS = ["/", "/about", "/careers", "/order", "/track", "/contact", "/faq", "/privacy", "/blog", "/review",
   "/unsubscribe", "/pricing", "/team", "/status", "/health", "/sitemap.xml", "/robots.txt", "/admin", "/api", "/build", "/services",
   "/projects", "/fonts", "/img", "/icons", "/js", "/vendor", "/index.html", "/404.html"];
 export const PATH_RE = /^\/[a-z0-9](?:[a-z0-9-]{0,48}[a-z0-9])?$/;

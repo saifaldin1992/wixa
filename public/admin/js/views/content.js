@@ -14,9 +14,9 @@ import { bindPreview, changed, quietly, getPath, previewLang, previewPane, pushP
 
 // ---------------- view: content ----------------
 // contentIndex: the first screen is the list of everything editable (iOS Settings); a row opens its editor
-export let contentTab = "texts", contentLang = "ar", contentIndex = true;
+let contentTab = "texts", contentLang = "ar", contentIndex = true;
 let BRANCHES = [], LABELS = {};
-export const TEXT_FIELDS = [
+const TEXT_FIELDS = [
   ["القسم الرئيسي (أعلى الصفحة)", [["hero_badge", "الشارة الصغيرة"], ["hero_title", "العنوان الرئيسي"], ["hero_sub", "الوصف", true], ["hero_cta", "زر 1"], ["hero_cta2", "زر 2"]]],
 ];
 // each section's own title and description, shown at the top of that section's tab (one place per section)
@@ -81,7 +81,7 @@ export async function viewContent(view, keep = false) {
   renderContentTab();
 }
 
-export function langSeg() {
+function langSeg() {
   return `<div class="seg" id="ctLang" style="margin-bottom:14px"><button data-v="ar" class="${contentLang === "ar" ? "on" : ""}">العربية</button><button data-v="en" class="${contentLang === "en" ? "on" : ""}">English</button></div>`;
 }
 export function bindLangSeg() {
@@ -90,13 +90,13 @@ export function bindLangSeg() {
     $$("#pvLang button").forEach((x) => x.classList.toggle("on", x.dataset.v === previewLang)); pushPreview(true); renderContentTab();
   }));
 }
-export function bindPathInputs(root) {
+function bindPathInputs(root) {
   $$("[data-path]", root).forEach((el) => {
     const ev = el.type === "checkbox" ? "change" : "input";
     el.addEventListener(ev, () => { setPath(settings, el.dataset.path, el.type === "checkbox" ? el.checked : el.value); changed(); });
   });
 }
-export function renderContentTab() {
+function renderContentTab() {
   if (contentIndex) { setPreviewMenu(false); return drawIndex(); }
   // editing the menus: the preview turns to the phone with its ☰ menu open, to see the links as visitors do
   const menus = contentTab === "nav";

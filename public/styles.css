@@ -610,9 +610,8 @@ html[data-theme="dark"] .hero__title .word:last-child > span { background-image:
   .svc h3 { font-size: .9375rem; margin-bottom: 4px; line-height: 1.5; }
   .svc p { font-size: .8125rem; line-height: 1.65; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 }
-/* WhatsApp: smaller on phones, steps aside while scrolling down */
+/* WhatsApp: smaller on phones */
 .wa { transition: transform .45s var(--ease-out), opacity .3s; }
-.wa.wa--away { transform: translateY(140%); opacity: 0; pointer-events: none; }
 @media (max-width: 760px) { .wa { width: 48px; height: 48px; bottom: 16px; inset-inline-start: 14px; } .wa svg { width: 24px; } }
 /* calculator: price follows the visitor on phones */
 .calc__sticky { display: none; }
@@ -868,7 +867,6 @@ html[dir="ltr"] .svc__more svg { transform: scaleX(-1); }
 
 /* floating buttons stay tappable while fading; they stop taking taps only once fully off screen */
 .wa { visibility: visible; transition: transform .45s var(--ease-out), opacity .3s, visibility 0s; }
-.wa.wa--away { pointer-events: auto; visibility: hidden; transition: transform .45s var(--ease-out), opacity .3s, visibility 0s linear .45s; }
 @media (max-width: 760px) {
   .mbar { pointer-events: auto; visibility: hidden; transition: transform .45s var(--ease-out), opacity .3s, visibility 0s linear .45s; }
   .mbar.show { visibility: visible; transition: transform .45s var(--ease-out), opacity .3s, visibility 0s; }
@@ -1315,8 +1313,6 @@ html[data-page="contact"] .cta .form { margin-top: 0; }
   .svc .svc__chat { width: 40px; height: 40px; min-height: 40px; justify-content: center; border-radius: 50%; background: color-mix(in srgb, var(--primary) 10%, transparent); color: var(--fg); font-size: 0; flex-shrink: 0; }
   .svc .svc__chat svg { margin: 0; width: 19px; height: 19px; }
 }
-/* phones: the round buttons step aside while the hero's buttons are at the bottom of the screen */
-html.fab-clear .wa, html.fab-clear .chatw__btn { transform: translateY(140%); opacity: 0; pointer-events: none; }
 .chatw__btn { transition: transform .4s var(--ease-out), opacity .3s; }
 
 @media (max-width: 600px) { .svc h3 { font-size: 1rem; line-height: 1.45; } }
@@ -1348,8 +1344,6 @@ html.fab-clear .wa, html.fab-clear .chatw__btn { transform: translateY(140%); op
 
 .rq__copy { min-height: 40px; }
 @media (max-width: 560px) {
-  .rq.pmodal { padding: 0; place-items: end stretch; }
-
   .rq__nav .btn { flex: 1; min-width: 0; }
 }
 /* phone menu: "start your project" as a clear button at the top */
@@ -1904,9 +1898,6 @@ html[data-page="home"] .sec-more { display: flex; }
   .story-item p { font-size: 1rem; }
 }
 
-/* phones: the round chat button steps aside while the page scrolls down (back on scroll up or a short pause) */
-html.fab-away .wa, html.fab-away .chatw__btn { transform: translateY(140%); opacity: 0; pointer-events: none; }
-@media (prefers-reduced-motion: reduce) { html.fab-away .wa, html.fab-away .chatw__btn { transform: none; } }
 
 /* one content width and one set of corners: the numbers band lines up with the other sections (1176px on a wide
    screen, like every grid), and partner logo tiles use the small card corner (14px) */
@@ -1999,7 +1990,7 @@ html[data-theme="dark"] .partner { background: #DEDAE8; }
 .why .story-item, .why .story-item.in, .why .guarantees__grid, .why .guar { border-radius: max(var(--r-sm), calc(var(--radius-lg, 28px) - var(--why-pad))); }
 @media (max-width: 760px) { .why .guar { border-radius: 0; } }
 /* Apple's continuous ("squircle") corners on the remaining large surfaces, where the browser can draw them */
-@supports (corner-shape: squircle) { .pkg, .why__panel, .partner, .svc__ico, .stats__inner, .cta__box { corner-shape: squircle; } }
+@supports (corner-shape: squircle) { .pkg, .why__panel, .partner, .svc__ico, .stats__inner { corner-shape: squircle; } }
 /* titles: Apple's semibold and tighter lines; the smallest text never under 12 */
 h1, h2, h3, .head__title, .hero__title { line-height: var(--lh-title); }
 
@@ -2026,7 +2017,7 @@ html[data-theme="dark"] :is(.field, .portal__in, .chatw__start, .chatw__track, .
 :is(.field, .portal__in, .chatw__start, .chatw__track, .exitm__box, .page .rv) :is(input, textarea)::placeholder { color: var(--muted); opacity: .75; }
 .field.bad :is(input, textarea, select) { border-color: #E5484D; }
 /* icons: one line weight everywhere (1.75, matching the semibold text next to them) */
-:is(.svc__ico, .ind__ico, .way__ico, .ways__ico, .theme-btn, .chatw__btn, .track-btn, .footer__social a, .ctype i) svg { stroke-width: 1.75; }
+:is(.svc__ico, .ind__ico, .way__ico, .theme-btn, .chatw__btn, .track-btn, .footer__social a, .ctype i) svg { stroke-width: 1.75; }
 /* glass (Liquid Glass): only for what floats over the page — the top bar; a fine light edge on top, content stays solid */
 .header__bar { background: color-mix(in srgb, var(--surface) 72%, transparent); border: 1px solid rgba(255, 255, 255, .5);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 6px 24px -12px rgba(0, 0, 0, .18); -webkit-backdrop-filter: blur(22px) saturate(1.8); backdrop-filter: blur(22px) saturate(1.8); }
@@ -2232,7 +2223,6 @@ html[lang] .chatw__btn svg { width: 22px; height: 22px; }
   html[lang] .chatw__btn, html[lang][dir="rtl"] .chatw__btn { left: 12px; right: auto; width: 44px; height: 44px; border-radius: 50%; bottom: calc(14px + env(safe-area-inset-bottom)); }
   html[lang] .chatw__btn svg, html[lang][dir="rtl"] .chatw__btn svg { width: 20px; height: 20px; margin: 0; }
 }
-html.fab-away .chatw__btn { transform: none; opacity: 1; pointer-events: auto; }
 /* design check: on phones the showcase's caption keeps clear of the phone picture, and the contact line has no stray dots */
 @media (max-width: 760px) {
   .hero__show-cap { padding-inline-end: 30%; box-sizing: border-box; max-width: 100%; }
@@ -2242,7 +2232,6 @@ html.fab-away .chatw__btn { transform: none; opacity: 1; pointer-events: auto; }
 
 /* ===== nothing at the bottom of the screen moves (Nov 2026) =====
    the round chat / WhatsApp / contact buttons stay where they are while scrolling (no sliding away and back) */
-.wa.wa--away, html.fab-away .wa, html.fab-clear .wa, html.fab-clear .chatw__btn, html.fab-away .chatw__btn { transform: none; opacity: 1; pointer-events: auto; visibility: visible; }
 @media (max-width: 760px) {
   .mbar, .mbar.show { transform: none; opacity: 1; pointer-events: auto; visibility: visible; transition: none; }
   html[lang] .mbar { left: 12px; bottom: calc(14px + env(safe-area-inset-bottom)); }

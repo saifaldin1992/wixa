@@ -25,16 +25,16 @@ export const beacon = (env) => env.CF_BEACON_TOKEN
   : "";
 
 // Hero text used when the dashboard has not changed it (the HTML itself ships the Arabic version).
-export const HERO_DEFAULTS = {
+const HERO_DEFAULTS = {
   ar: { hero_badge: "الشريك التقني لمشاريعك", hero_title: "نبني المستقبل الرقمي", hero_sub: "ويكسا تصمم وتطور منصات وتطبيقات وأنظمة رقمية سريعة وآمنة تختصر الوقت على عملائك — من الفكرة حتى التشغيل." },
   en: { hero_badge: "Your technology partner", hero_title: "Building the digital future", hero_sub: "WIXA designs and builds fast, secure platforms, apps and digital systems that save your customers time — from idea to launch." },
 };
-export const SEO_DEFAULTS = {
+const SEO_DEFAULTS = {
   en: { title: "WIXA — Websites, apps & software development in Iraq", description: "WIXA designs and builds websites, digital platforms, mobile apps and custom business systems in Iraq — from idea to launch." },
 };
 
 // Questions & answers for search engines (only when the FAQ section is shown)
-export function faqLd(st, lang) {
+function faqLd(st, lang) {
   const list = (st.content?.[lang]?.faq || []).filter((x) => x?.q && x?.a);
   if (st.sections?.faq === false || !list.length) return "";
   const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: list.map((x) => ({ "@type": "Question", name: x.q, acceptedAnswer: { "@type": "Answer", text: x.a } })) };
@@ -45,7 +45,7 @@ export function faqLd(st, lang) {
 // /about, /pricing and /careers are the homepage's HTML showing only their own sections (html[data-page])
 // «الصفحة غير موجودة» (404) inside the site's own header and footer, in the brand colour and font, with links to the
 // main pages. pageNotFound() when the site settings are already loaded; handleNotFound() loads them first.
-export function pageNotFound(request, st) {
+function pageNotFound(request, st) {
   const lang = pickLang(request, st.default_lang), ar = lang === "ar", q = `?lang=${lang}`;
   const links = ar
     ? [["/order", "ابدأ مشروعك"], ["/services", "خدماتنا"], ["/projects", "أعمالنا"], ["/pricing", "الأسعار"], ["/faq", "الأسئلة الشائعة"], ["/contact", "تواصل معنا"]]
@@ -74,7 +74,7 @@ function snip(text, max) {
   return `${(sp > max * 0.6 ? cut.slice(0, sp) : cut).replace(/[\s،,.؛:–—-]+$/, "")}…`;
 }
 
-export const PAGE_TITLES = { services: { ar: "خدماتنا", en: "Services" }, projects: { ar: "أعمالنا", en: "Our work" }, pricing: { ar: "الأسعار", en: "Pricing" }, about: { ar: "من نحن", en: "About us" }, careers: { ar: "الوظائف", en: "Careers" }, contact: { ar: "تواصل معنا", en: "Contact us" }, order: { ar: "اطلب مشروعك", en: "Order your project" }, track: { ar: "تتبع طلبك", en: "Track your order" }, faq: { ar: "الأسئلة الشائعة", en: "Frequently asked questions" } };
+const PAGE_TITLES = { services: { ar: "خدماتنا", en: "Services" }, projects: { ar: "أعمالنا", en: "Our work" }, pricing: { ar: "الأسعار", en: "Pricing" }, about: { ar: "من نحن", en: "About us" }, careers: { ar: "الوظائف", en: "Careers" }, contact: { ar: "تواصل معنا", en: "Contact us" }, order: { ar: "اطلب مشروعك", en: "Order your project" }, track: { ar: "تتبع طلبك", en: "Track your order" }, faq: { ar: "الأسئلة الشائعة", en: "Frequently asked questions" } };
 export async function handleHome(request, env, ctx, pageName = "home") {
   const [page, raw, cfg, posts] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx), getConfig(env), getPosts(env).catch(() => null)]);
   const data = cfg.spam.turnstile ? raw : raw.replace(/"turnstile":"[^"]*"/, '"turnstile":""');
@@ -198,7 +198,7 @@ export async function handleHome(request, env, ctx, pageName = "home") {
 }
 
 // Project details text: blank-line separated blocks; a short first line becomes a heading, "•" lines a list (same as the site's window).
-export function detailsHtml(raw) {
+function detailsHtml(raw) {
   return String(raw || "").split(/\n\s*\n/).map((block) => {
     const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
     let html = "";
@@ -212,7 +212,7 @@ export function detailsHtml(raw) {
 
 // Company pages in the footer: pages added from the dashboard (group «قانوني» unless the page says otherwise) and our
 // team («الشركة») — each { g, html }.
-export function footerExtra(st, lang, path = "") {
+function footerExtra(st, lang, path = "") {
   const team = { ...TEAM_DEFAULTS, ...(st.team || {}) };
   const q = lang === "ar" ? "" : "?lang=en";
   const a = (href, label, i) => `<a href="${href}${q}"${path === href ? ' aria-current="page"' : ""} style="order:${100 + i}">${esc(label)}</a>`;
@@ -624,7 +624,7 @@ export async function handleServicePage(request, env, ctx, slug) {
 }
 
 // Article text: blank lines → paragraphs, "## " → heading, "- " / "• " → list, links become clickable, **bold**.
-export function articleHtml(raw) {
+function articleHtml(raw) {
   const inline = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
   return String(raw || "").split(/\n\s*\n/).map((block) => {
     const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);

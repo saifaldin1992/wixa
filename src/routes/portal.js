@@ -23,7 +23,7 @@ async function signToken(env, data) {
   const sig = await crypto.subtle.sign("HMAC", await portalKey(env), enc.encode(body));
   return `${body}.${b64u(new Uint8Array(sig))}`;
 }
-export async function readToken(env, token) {
+async function readToken(env, token) {
   const [body, sig] = String(token || "").split(".");
   if (!body || !sig || !env.PRIVATE) return null;
   try {

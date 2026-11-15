@@ -6,7 +6,7 @@ import { $, role, sb, toast, user } from "./core.js";
 let channel = null, beat = 0, countTimer = 0;
 const listeners = new Set();
 export const onChat = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
-export const canChat = () => role === "owner" || role === "support";
+const canChat = () => role === "owner" || role === "support";
 
 export async function refreshChatCount() {
   const { data, error } = await sb.from("chats").select("unread").gt("unread", 0);
@@ -49,10 +49,6 @@ export async function startChatLive() {
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { ping(); refreshChatCount(); } });
   // a tap on a chat notification opens the conversations page
   navigator.serviceWorker?.addEventListener("message", (e) => { if (e.data?.type === "open-chats") location.hash = "#chats"; else if (e.data?.type === "open-view" && /^[a-z]+$/.test(e.data.view || "")) location.hash = `#${e.data.view}`; });
-}
-export function stopChatLive() {
-  clearInterval(beat);
-  if (channel) { sb.removeChannel?.(channel); channel = null; }
 }
 
 // ---------- notifications on this device (Web Push) ----------

@@ -24,7 +24,7 @@ export async function loadFromSupabase(env) {
 
 // Stale-while-revalidate: a visit never waits for the database if any copy exists. Copies younger than
 // SITE_TTL are served as they are; older ones are served at once and refreshed in the background.
-export let refreshing = null;
+let refreshing = null;
 export async function getSiteData(env, ctx) {
   const now = Date.now();
   if (memo.text && now - memo.checked < 5000 && now - memo.at < SITE_TTL * 1000) return memo.text;
@@ -63,7 +63,7 @@ export async function getSiteData(env, ctx) {
 }
 
 // The last good content, kept in KV so any edge location can open the site at once; written only when it changed.
-export async function saveGlobalCopy(env, text) {
+async function saveGlobalCopy(env, text) {
   if (!env.PRIVATE) return;
   try { if ((await env.PRIVATE.get("site-data")) !== text) await env.PRIVATE.put("site-data", text); } catch (err) { console.error("site data copy", err); }
 }
@@ -108,7 +108,7 @@ export const CONFIG_DEFAULTS = {
     bypass: "",
   },
 };
-export const TAG_RULES = { ga4: /^G-[A-Z0-9]{4,15}$/, meta_pixel: /^\d{8,20}$/, clarity: /^[a-z0-9]{6,20}$/, tiktok: /^[A-Z0-9]{10,30}$/ };
+const TAG_RULES = { ga4: /^G-[A-Z0-9]{4,15}$/, meta_pixel: /^\d{8,20}$/, clarity: /^[a-z0-9]{6,20}$/, tiktok: /^[A-Z0-9]{10,30}$/ };
 export let cfgMemo = { at: 0, v: null };
 export async function getConfig(env) {
   if (cfgMemo.v && Date.now() - cfgMemo.at < 60_000) return cfgMemo.v;
@@ -160,7 +160,7 @@ export async function saveConfig(env, cfg) {
 }
 
 // Analytics and ad pixels switched on in the dashboard: the extra hosts the page may load from.
-export const TAG_HOSTS = {
+const TAG_HOSTS = {
   ga4: { script: "https://www.googletagmanager.com", connect: "https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com", img: "https://*.google-analytics.com https://www.googletagmanager.com" },
   meta_pixel: { script: "https://connect.facebook.net", connect: "https://www.facebook.com https://connect.facebook.net", img: "https://www.facebook.com" },
   clarity: { script: "https://www.clarity.ms https://*.clarity.ms", connect: "https://*.clarity.ms https://c.bing.com", img: "https://*.clarity.ms https://c.bing.com" },
@@ -196,7 +196,7 @@ main{max-width:520px}img{width:84px;height:84px;margin-bottom:18px}h1{font-size:
 
 // ---------------------------------------------------------------- simple pages (project pages, privacy policy)
 // Readable URLs for each project: from the English title (or the Arabic one), unique within the list.
-export function withSlugs(projects) {
+function withSlugs(projects) {
   const seen = new Set();
   return projects.map((p) => {
     let base = String(p.title_en || p.title_ar || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "").slice(0, 60) || String(p.id);

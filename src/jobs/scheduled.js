@@ -33,7 +33,7 @@ export async function runMonitor(env) {
 }
 
 // Visits in the last 7 days from Cloudflare Web Analytics (public pages only)
-export async function weeklyVisits(env, since) {
+async function weeklyVisits(env, since) {
   if (!env.CF_ANALYTICS_TOKEN || !env.CF_SITE_TAG) return null;
   const q = `query($acc: String!, $tag: String!, $hosts: [string!], $since: Date!) { viewer { accounts(filter: {accountTag: $acc}) {
     total: rumPageloadEventsAdaptiveGroups(limit: 1, filter: {siteTag: $tag, requestHost_in: $hosts, requestPath_notlike: "/admin%", date_geq: $since}) { count sum { visits } }

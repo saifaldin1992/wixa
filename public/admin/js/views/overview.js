@@ -87,7 +87,7 @@ async function funnelCard(view, s) {
     <div class="funnel">${rows.map(([k, v]) => `<div class="funnel__row"><span>${k}</span><div class="funnel__bar"><i style="width:${Math.round(((Number(v) || 0) / max) * 100)}%"></i></div><b>${fmt(v || 0)}</b></div>`).join("")}</div></div>`);
 }
 
-export function drawChart(el, rows) {
+function drawChart(el, rows) {
   const W = 760, H = 260, P = { t: 16, r: 12, b: 28, l: 40 };
   const max = Math.max(4, ...rows.map((r) => r.views));
   const step = Math.pow(10, Math.floor(Math.log10(max))); const top = Math.ceil(max / step) * step;
@@ -121,7 +121,7 @@ const VITALS = [
   { k: "inp", name: "سرعة الاستجابة (INP)", help: "الوقت بين ضغطة الزائر وردّ الصفحة", val: (s) => s.inp_ms, fmt: (v) => `${Math.round(v)} م.ث`, good: 200, poor: 500, share: (s) => s.inp },
   { k: "cls", name: "ثبات الصفحة (CLS)", help: "هل تتحرك العناصر أثناء التحميل", val: (s) => s.cls, fmt: (v) => v.toFixed(2), good: 0.1, poor: 0.25, share: (s) => s.cls_share },
 ];
-export function speedCard(s, source) {
+function speedCard(s, source) {
   if (source !== "cloudflare") return "";
   const head = `<div class="card__head"><div><h3>سرعة الموقع للزوار</h3><p>من أجهزة الزوار الحقيقيين عبر Cloudflare · القيمة التي يعتمدها Google (75٪ من الزيارات أفضل منها)</p></div></div>`;
   if (!s) return `<div class="card" style="margin-top:16px">${head}<p class="muted" style="margin:0">لا توجد بيانات كافية بعد. تظهر الأرقام بعد أول زيارات حقيقية.</p></div>`;

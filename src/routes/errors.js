@@ -8,8 +8,8 @@ import { audit } from "../services/audit.js";
 // The last 50 problems, kept in the private store: errors in visitors' browsers (sent by the page) and on the server.
 // Repeats of the same error are counted instead of stored again. Written at most every 30 s per instance.
 export let errBuf = { list: [], at: 0 };
-export const errKey = (e) => `${e.where}|${e.msg}|${e.src || ""}`.slice(0, 300);
-export async function flushErrors(env) {
+const errKey = (e) => `${e.where}|${e.msg}|${e.src || ""}`.slice(0, 300);
+async function flushErrors(env) {
   if (!env.PRIVATE || !errBuf.list.length) return;
   const add = errBuf.list; errBuf = { list: [], at: Date.now() };
   const cur = (await env.PRIVATE.get("errors", { type: "json" }).catch(() => null)) || [];

@@ -4,7 +4,7 @@ import { imageField } from "../fields.js";
 import { GRIP, moved, sortable } from "../sortable.js";
 
 // ---------------- generic lists: projects / services / partners ----------------
-export const ENTITIES = {
+const ENTITIES = {
   projects: {
     one: "مشروع", empty: "لا توجد مشاريع بعد. أضف أول مشروع لعرضه في قسم الإنجازات.",
     title: (r) => r.title_ar || r.title_en || "بدون عنوان", sub: (r) => r.category_ar || r.summary_ar || "",
@@ -87,7 +87,7 @@ export async function viewList(table) {
   }, ".item[data-id]");
 }
 
-export function editItem(table, row) {
+function editItem(table, row) {
   const E = ENTITIES[table];
   const rec = row ? clone(row) : clone(E.blank);
   const body = document.createElement("div"); body.className = "stack";

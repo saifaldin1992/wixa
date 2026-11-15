@@ -236,7 +236,7 @@ export async function handleAdminMsgMeta(request, env) {
 
 // POST /api/admin/order — an order the team adds by hand (a phone call, WhatsApp, a visit…). Same numbering and the
 // same Orders page as the site's orders; source «manual», the channel kept in visit_source. Nothing is sent to anyone.
-export const MANUAL_CHANNELS = new Set(["phone", "whatsapp", "visit", "social", "email", "other"]);
+const MANUAL_CHANNELS = new Set(["phone", "whatsapp", "visit", "social", "email", "other"]);
 export async function handleAdminOrder(request, env, ctx) {
   const s = await adminSession(request, env, ["owner", "support"]); // customer data: never the content editor
   if (s.error) return s.error;

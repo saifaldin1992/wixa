@@ -26,7 +26,7 @@ export const SECTION_PAGES = {
 };
 // Pages built by the server from their own content (articles, policies, status…). Pages added from the dashboard
 // (settings.pages) join these at run time (sitePages in site-pages.js).
-export const OWN_PAGES = {
+const OWN_PAGES = {
   blog: { path: "/blog", name_ar: "المقالات", name_en: "Articles" },
   privacy: { path: "/privacy", name_ar: "سياسة الخصوصية", name_en: "Privacy policy" },
   team: { path: "/team", name_ar: "فريقنا", name_en: "Our team" },
@@ -101,7 +101,7 @@ export function layoutFor(settings, page) {
 export const sectionShown = (settings, k, empty) => !(settings && settings.sections && settings.sections[k] === false) && !(empty && empty.has(k));
 
 // Menu links: what each one points at. A section link goes to the first page where that section is on.
-export const NAV_TARGETS = {
+const NAV_TARGETS = {
   home: { page: "home" }, about: { page: "about" }, careers: { page: "careers" }, contact: { page: "contact" }, faq: { page: "faq" },
   blog: { page: "blog" }, privacy: { page: "privacy" },
   services: { page: "services" }, industries: { page: "services", hash: "industries", part: "industries" }, projects: { page: "projects" },
@@ -142,7 +142,7 @@ export const FOOTER_GROUPS = [
   { k: "legal", name_ar: "قانوني", name_en: "Legal" },
 ];
 // apple.com's footer is the site map: «الخدمات» lists the services themselves, the company's pages go under «الشركة»
-export const LINK_GROUP = { services: "services", pricing: "services", projects: "company",
+const LINK_GROUP = { services: "services", pricing: "services", projects: "company",
   about: "company", careers: "company", blog: "company", partners: "company", home: "company",
   contact: "support", faq: "support", privacy: "legal" };
 const str = (v, n = 80) => (typeof v === "string" ? v.trim().slice(0, n) : "");

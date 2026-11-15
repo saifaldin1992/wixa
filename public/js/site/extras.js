@@ -73,7 +73,7 @@ async function loadSlots(date) {
   try { slots = (await (await fetch(`/api/slots?date=${date}`)).json()).slots || []; } catch {}
   box.innerHTML = slots.length ? slots.map((t) => `<button type="button" class="bk__slot" data-time="${t}" dir="ltr">${t}</button>`).join("") : `<p class="bk__hint">${esc(ui.bk_none)}</p>`;
 }
-export function openBooking() {
+function openBooking() {
   const m = $("#bkmodal"), ui = UI[lang];
   bk = { date: "", time: "" };
   $("#bkDays").innerHTML = bookingDays().map((d) => { const iso = d.toISOString().slice(0, 10); return `<button type="button" class="bk__day" data-date="${iso}">${esc(dayLabel(d))}</button>`; }).join("") || `<p class="bk__hint">${esc(ui.bk_none)}</p>`;

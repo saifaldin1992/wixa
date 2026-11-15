@@ -9,7 +9,7 @@ import { mailBox, notifyOwner, requestOffer, sendAutoReply, sendOwnerMail, sendR
 // POST /api/order — the one order page (/order): whatever the visitor picked (a package, a field, the estimator,
 // a project like one of ours, a service) + name and phone. Gets a number, the gifts/discount from the dashboard,
 // lands in the dashboard's Orders, alerts the team and emails the client a copy when they gave an email.
-export const ORDER_SOURCES = new Set(["package", "field", "calc", "similar", "service", "start"]);
+const ORDER_SOURCES = new Set(["package", "field", "calc", "similar", "service", "start"]);
 export async function handleOrder(request, env, ctx) {
   const ip = clientIp(request);
   if (!(await allowed(env.CONTACT_LIMITER, ip))) return json({ error: "rate_limited" }, 429);
@@ -169,7 +169,7 @@ export async function handleContact(request, env, ctx) {
   ctx.waitUntil(pushTeam(env, body.kind === "booking" ? "booking" : isJob ? "job" : reqNo ? "order" : "message", row.name.split(/\s+/)[0]).catch(() => {}));
   return json({ ok: true, ...(reqNo ? { number: reqNo } : {}) }, 201);
 }
-export async function countMessage(env, row, isJob) {
+async function countMessage(env, row, isJob) {
   if (!env.PRIVATE) return;
   const key = `count:${dayKey()}`;
   const c = (await env.PRIVATE.get(key, { type: "json" }).catch(() => null)) || { total: 0, jobs: 0, services: {} };
@@ -178,11 +178,11 @@ export async function countMessage(env, row, isJob) {
   else { const s = row.services?.[0] || "استشارة عامة"; c.services[s] = (c.services[s] || 0) + 1; }
   await env.PRIVATE.put(key, JSON.stringify(c), { expirationTtl: 60 * 864e2 });
 }
-export function bookingRules(st) {
+function bookingRules(st) {
   const b = st.booking || {};
   return { on: b.on === true, days: Array.isArray(b.days) ? b.days.map(Number) : [0, 1, 2, 3, 4], from: b.from || "10:00", to: b.to || "16:00", slot: Math.min(240, Math.max(15, Number(b.slot) || 30)), ahead: Math.min(60, Math.max(1, Number(b.days_ahead) || 14)) };
 }
-export function slotsFor(rules, date) {
+function slotsFor(rules, date) {
   const now = baghdadNow(), today = now.toISOString().slice(0, 10);
   const d = new Date(`${date}T00:00:00Z`);
   if (Number.isNaN(d.getTime()) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return [];
@@ -204,7 +204,7 @@ export async function handleSlots(request, env, ctx, url) {
   const taken = env.PRIVATE ? ((await env.PRIVATE.get(`book:${date}`, { type: "json" }).catch(() => null)) || []) : [];
   return json({ slots: all.filter((t) => !taken.includes(t)) }, 200, { "cache-control": "no-store" });
 }
-export async function reserveSlot(env, ctx, date, time) {
+async function reserveSlot(env, ctx, date, time) {
   let st = {};
   try { st = JSON.parse(await getSiteData(env, ctx)).settings || {}; } catch {}
   const rules = bookingRules(st);
@@ -272,12 +272,12 @@ export async function handleReview(request, env, ctx, url) {
 // ---------------------------------------------------------------- visitor actions (calculator, WhatsApp, forms…)
 // Counted per day in the private store. Each visit sends one small batch; counts are merged in memory and saved
 // at most every 30 s per instance, so busy days stay far below the store's write limits.
-export const EVENTS = ["calc_used", "calc_quote", "calc_wa", "calc_pdf", "wa_click", "form_open", "form_sent", "booking_open", "booking_sent", "job_open", "faq_open", "start_click", "more_services", "more_projects", "more_calc"];
+const EVENTS = ["calc_used", "calc_quote", "calc_wa", "calc_pdf", "wa_click", "form_open", "form_sent", "booking_open", "booking_sent", "job_open", "faq_open", "start_click", "more_services", "more_projects", "more_calc"];
 export let evBuf = { day: "", counts: {}, at: 0 };
 // The counts go to the database as one atomic "add n" per event (public.events_add), so two server instances
 // flushing at the same moment never overwrite each other. Only if the database can't be reached are they kept in KV
 // (the old way; the funnel adds both, and days before the switch are still read from KV).
-export async function flushEvents(env) {
+async function flushEvents(env) {
   if (!Object.keys(evBuf.counts).length) return;
   const { day, counts } = evBuf;
   evBuf = { day: dayKey(), counts: {}, at: Date.now() };

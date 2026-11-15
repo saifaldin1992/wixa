@@ -464,15 +464,13 @@ html[dir=rtl] .bar__top span:first-child { direction: rtl; }
 
 /* developer guide */
 .devguide { display: grid; grid-template-columns: 220px 1fr; gap: 16px; align-items: start; max-width: 1150px; }
-.dg-toc { position: sticky; top: 12px; display: grid; gap: 2px; padding: 12px; max-height: calc(100vh - 140px); overflow: auto; }
-.dg-toc a { font-size: 13px; padding: 6px 8px; border-radius: var(--r-xs); color: var(--text); text-decoration: none; } .dg-toc a:hover { background: color-mix(in srgb, var(--brand) 8%, transparent); }
 .dg-body { line-height: 1.9; font-size: 14.5px; min-width: 0; }
 .dg-body h2 { margin: 0 0 6px; font-size: 22px; } .dg-body h3 { margin: 26px 0 8px; font-size: 18px; scroll-margin-top: 16px; } .dg-body h4 { margin: 18px 0 6px; font-size: 15px; }
 .dg-body table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 8px 0; } .dg-body th, .dg-body td { border-bottom: 1px solid var(--line); padding: 7px 9px; text-align: start; vertical-align: top; } .dg-body th { color: var(--muted); }
 .dg-body pre { background: #140F1F; color: #EDE9F7; padding: 14px; border-radius: var(--r-sm); overflow: auto; font-size: 12.5px; line-height: 1.6; text-align: left; }
 .dg-body code { font-size: .92em; } .dg-body :not(pre) > code { background: color-mix(in srgb, var(--muted) 12%, transparent); padding: 1px 6px; border-radius: var(--r-xs); }
 .dg-body hr { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
-@media (max-width: 900px) { .devguide { grid-template-columns: 1fr; } .dg-toc { position: static; max-height: none; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } }
+@media (max-width: 900px) { .devguide { grid-template-columns: 1fr; } }
 
 /* ---------- sign-in (one centred column, WIXA identity) ---------- */
 .auth { min-height: 100vh; min-height: 100svh; display: grid; place-items: center; padding: 32px 16px; background: radial-gradient(70% 45% at 50% 0%, #EFE7FC, transparent 70%), #FFFFFF; grid-template-columns: 1fr; }
@@ -639,7 +637,6 @@ html[dir="rtl"] .chat__back svg { transform: none; }
 /* account page: cards fill the width (two columns on tablets and computers) */
 .acct { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 16px; align-items: start; max-width: 1200px; }
 .acct .card { margin: 0; }
-.bg-shadows { display: flex; flex-wrap: wrap; gap: 18px; padding: 18px 4px 22px; } .bg-shadows span { display: grid; place-items: center; min-width: 150px; height: 84px; padding: 0 18px; border-radius: var(--r-md); background: #fff; color: #140F1F; font-weight: 600; font-size: 14px; }
 .giftrow { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: var(--r-sm); } .giftrow [data-del] { justify-self: start; }
 
 /* orders */
@@ -654,12 +651,6 @@ html[dir="rtl"] .chat__back svg { transform: none; }
 @media (max-width: 700px) { .ord-grid { grid-template-columns: 1fr; } }
 #of small { opacity: .7; margin-inline-start: 4px; }
 
-/* content → menus */
-.navrows { display: grid; gap: 6px; }
-.navrow { display: grid; grid-template-columns: auto 1fr minmax(150px, 190px); gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
-.navrow__move { display: flex; gap: 4px; } .navrow__move .b { min-width: 36px; padding: 0; justify-content: center; }
-.navrow select { min-height: 40px; }
-@media (max-width: 520px) { .navrow { grid-template-columns: auto 1fr; } .navrow select { grid-column: 1 / -1; } }
 
 /* phones: the page title's buttons (status tabs, export…) wrap under the title and the tabs scroll inside themselves,
    so they never stretch the page wider than the screen (it made the page drift sideways and show the side menu) */
@@ -1095,12 +1086,6 @@ html[data-theme="dark"] { --brand: #9B74F8; }
 html[data-theme="dark"] :is(.b--primary, .chip input:checked + span, .chat__item.on .chat__av, .cm--me p, .add-fab, .bg-subnav span.on, .side__nav a.on, .switch input:checked + i) { background: #7C3AED !important; border-color: #7C3AED; }
 html[data-theme="dark"] .msg.new .msg__who b::after { background: #7C3AED; }
 
-/* «القوائم»: each link with its name box, where it shows and its footer group */
-.navrow { grid-template-columns: auto minmax(0, 1fr) minmax(130px, 170px) minmax(120px, 150px); }
-.navrow__name { display: grid; gap: 2px; min-width: 0; }
-.navrow__name small { font-size: 12px; }
-.navrow__name input { min-height: 38px; padding: 0 10px; border: 1px solid var(--line-2); border-radius: var(--r-xs); background: var(--panel); color: var(--text); font: inherit; min-width: 0; }
-@media (max-width: 760px) { .navrow { grid-template-columns: auto minmax(0, 1fr); } .navrow select { grid-column: 1 / -1; } }
 .ly__hideall { font-size: 12px; min-height: 30px; padding: 0 8px; margin-inline-start: 6px; }
 .ct-head { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px dashed var(--line-2); }
 
