@@ -14,8 +14,8 @@ const quick = () => (settings.chat?.quick?.length ? settings.chat.quick : QUICK)
 const when = (t) => {
   const d = new Date(t), now = new Date();
   return d.toDateString() === now.toDateString()
-    ? d.toLocaleTimeString("ar-IQ", { hour: "numeric", minute: "2-digit" })
-    : d.toLocaleDateString("ar-IQ", { day: "numeric", month: "short" }) + " " + d.toLocaleTimeString("ar-IQ", { hour: "numeric", minute: "2-digit" });
+    ? d.toLocaleTimeString("ar-IQ-u-nu-latn", { hour: "numeric", minute: "2-digit" })
+    : d.toLocaleDateString("ar-IQ-u-nu-latn", { day: "numeric", month: "short" }) + " " + d.toLocaleTimeString("ar-IQ-u-nu-latn", { hour: "numeric", minute: "2-digit" });
 };
 const waNum = (p) => { let d = String(p || "").replace(/\D/g, ""); if (d.startsWith("00")) d = d.slice(2); else if (d.startsWith("0")) d = "964" + d.slice(1); return d; };
 const BACK = '<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>';

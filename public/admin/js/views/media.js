@@ -59,7 +59,7 @@ async function copyText(t) {
 
 const card = (f, uses, pick) => `<div class="media__item" data-path="${esc(f.path)}">
     <button type="button" class="media__thumb" ${pick ? "data-pick" : "data-open"} style="background-image:url('${esc(f.url)}')" aria-label="${pick ? "اختيار هذه الصورة" : "فتح الصورة"}"></button>
-    <div class="media__meta"><b title="${esc(f.path)}">${esc(FOLDER_AR[f.folder] || f.folder || "بدون مجلد")}</b><span>${kb(f.size)} · ${f.at ? new Date(f.at).toLocaleDateString("ar", { day: "numeric", month: "short" }) : ""}</span>
+    <div class="media__meta"><b title="${esc(f.path)}">${esc(FOLDER_AR[f.folder] || f.folder || "بدون مجلد")}</b><span>${kb(f.size)} · ${f.at ? new Date(f.at).toLocaleDateString("ar-IQ-u-nu-latn", { day: "numeric", month: "short" }) : ""}</span>
       ${uses ? (uses.length ? `<span class="tag on" title="${esc(uses.join("، "))}">مستخدمة: ${esc(uses.join("، "))}</span>` : '<span class="tag off">غير مستخدمة</span>') : ""}</div>
     ${pick ? "" : `<div class="media__acts"><button type="button" class="b b--sm b--ghost" data-copy>${I.copy || ""}نسخ الرابط</button><button type="button" class="b b--icon b--ghost b--danger" data-del aria-label="حذف">${I.trash || "×"}</button></div>`}
   </div>`;

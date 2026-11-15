@@ -62,7 +62,7 @@ export async function viewIntegrations(view) {
       <p>ملف فيه كل محتوى الموقع (الإعدادات والنصوص والمشاريع والخدمات والشركاء والآراء والمقالات والرسائل) يصل إلى بريد التنبيهات.</p></div></div>
       <div class="stack">
         <div class="seg seg--wide" id="bkFreq">${[["daily", "يومية"], ["weekly", "أسبوعية (الأحد)"], ["monthly", "شهرية (يوم 1)"], ["off", "متوقفة"]].map(([k, l]) => `<button type="button" data-v="${k}" class="${(cfg.backup?.freq || "weekly") === k ? "on" : ""}">${l}</button>`).join("")}</div>
-        <p class="muted" style="margin:0;font-size:12px">تُرسل الساعة 6:23 صباحاً بتوقيت بغداد. ${cfg.backup_last ? `آخر نسخة: ${new Date(cfg.backup_last.at).toLocaleString("ar", { dateStyle: "medium", timeStyle: "short" })} (${Math.round((cfg.backup_last.size || 0) / 1024)} KB)` : "لم تُرسل أي نسخة بعد."}</p>
+        <p class="muted" style="margin:0;font-size:12px">تُرسل الساعة 6:23 صباحاً بتوقيت بغداد. ${cfg.backup_last ? `آخر نسخة: ${new Date(cfg.backup_last.at).toLocaleString("ar-IQ-u-nu-latn", { dateStyle: "medium", timeStyle: "short" })} (${Math.round((cfg.backup_last.size || 0) / 1024)} KB)` : "لم تُرسل أي نسخة بعد."}</p>
         <div class="row-btns">${save()}<button class="b" data-test="backup">${I.mail}أرسل نسخة الآن</button><button class="b" type="button" id="restoreBtn">${I.upload}استرجاع من نسخة احتياطية</button></div>
       </div></div>
 

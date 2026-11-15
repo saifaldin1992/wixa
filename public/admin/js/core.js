@@ -82,6 +82,8 @@ export function setSubnav(html = "") {
   const key = (s, i) => s.id || `${s.className}#${i}`;
   const was = Object.fromEntries([...n.querySelectorAll(".seg")].map((s, i) => [key(s, i), s.scrollLeft]));
   n.innerHTML = html; n.hidden = !html;
+  n.querySelectorAll(".seg").forEach(compactSeg);
+  if (!n.dataset.compact) { n.dataset.compact = 1; n.addEventListener("click", (e) => { if (e.target.closest(".seg button")) setTimeout(() => n.querySelectorAll(".seg").forEach(compactSeg)); }); }
   [...n.querySelectorAll(".seg")].forEach((s, i) => {
     if (key(s, i) in was) s.scrollLeft = was[key(s, i)];
     const on = s.querySelector("button.on");
@@ -89,6 +91,45 @@ export function setSubnav(html = "") {
     const sr = s.getBoundingClientRect(), r = on.getBoundingClientRect();
     if (r.left < sr.left || r.right > sr.right) s.scrollLeft += (r.left + r.width / 2) - (sr.left + sr.width / 2);
   });
+}
+// A row of tabs shows five at most, as iOS segmented controls do: the first ones and the one that is on; the others
+// wait under «المزيد». The tabs stay where they are (hidden), so each page's own handlers keep working; «المزيد» is
+// not a <button>, so a page binding "all buttons of its row" never takes it for a tab.
+const SEG_MAX = 5;
+export function compactSeg(s) {
+  const btns = [...s.children].filter((b) => b.tagName === "BUTTON");
+  s.querySelector(".seg__more")?.remove();
+  btns.forEach((b) => { if (b.dataset.segHid) { b.hidden = false; delete b.dataset.segHid; } });
+  if (btns.length <= SEG_MAX) return;
+  const on = btns.findIndex((b) => b.classList.contains("on"));
+  const keep = new Set([0, 1, 2, 3]);
+  if (on > 3) { keep.delete(3); keep.add(on); }
+  const rest = btns.filter((b, i) => !keep.has(i) && !b.hidden);
+  rest.forEach((b) => { b.hidden = true; b.dataset.segHid = 1; });
+  const more = document.createElement("span");
+  more.className = "seg__more"; more.tabIndex = 0; more.setAttribute("role", "button"); more.setAttribute("aria-haspopup", "menu"); more.setAttribute("aria-expanded", "false");
+  more.innerHTML = `المزيد<small>${rest.length}</small><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>`;
+  const open = (e) => { e.preventDefault(); e.stopPropagation(); segMenu(more, rest, s); };
+  more.addEventListener("click", open);
+  more.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") open(e); });
+  s.append(more);
+}
+function segMenu(anchor, items, seg) {
+  document.querySelector(".segpop")?.remove();
+  const pop = document.createElement("div");
+  pop.className = "segpop"; pop.setAttribute("role", "menu");
+  pop.innerHTML = items.map((b, i) => `<button type="button" role="menuitem" data-i="${i}">${b.innerHTML}</button>`).join("");
+  document.body.append(pop);
+  const r = anchor.getBoundingClientRect();
+  const left = Math.min(Math.max(8, document.dir === "rtl" ? r.right - pop.offsetWidth : r.left), innerWidth - pop.offsetWidth - 8);
+  pop.style.top = `${r.bottom + 6 + scrollY}px`; pop.style.left = `${left}px`;
+  anchor.setAttribute("aria-expanded", "true");
+  const close = () => { pop.remove(); anchor.setAttribute("aria-expanded", "false"); document.removeEventListener("pointerdown", away, true); document.removeEventListener("keydown", esc_); };
+  const away = (e) => { if (!pop.contains(e.target) && e.target !== anchor) close(); };
+  const esc_ = (e) => { if (e.key === "Escape") { close(); anchor.focus(); } };
+  document.addEventListener("pointerdown", away, true); document.addEventListener("keydown", esc_);
+  pop.addEventListener("click", (e) => { const it = e.target.closest("[data-i]"); if (!it) return; close(); items[+it.dataset.i].click(); setTimeout(() => compactSeg(seg)); });
+  pop.querySelector("button")?.focus();
 }
 export const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));

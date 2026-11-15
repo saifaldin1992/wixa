@@ -53,7 +53,7 @@ export async function viewCampaigns(view) {
         <div style="display:flex;flex-wrap:wrap;gap:8px"><button class="b" type="button" id="campTest">${I.mail}إرسال تجربة لبريدي</button><button class="b b--primary" type="submit" ${info.audience ? "" : "disabled"}>إرسال إلى ${info.audience} شخص</button></div>
         <p class="muted" style="margin:0;font-size:12.5px">خطة Resend المجانية تسمح بـ 100 رسالة يومياً و3000 شهرياً. للأعداد الأكبر رقِّ الخطة من resend.com.</p>
       </form>
-      ${info.log.length ? `<h4 style="margin:18px 0 8px">الحملات السابقة</h4><div class="members">${info.log.map((c) => `<div class="member"><div class="member__info"><b>${esc(c.subject)}</b><span class="muted">${new Date(c.at).toLocaleString("ar-IQ", { dateStyle: "medium", timeStyle: "short" })} · أُرسلت إلى ${c.sent}${c.failed ? ` · فشل ${c.failed}` : ""}</span></div></div>`).join("")}</div>` : ""}`}
+      ${info.log.length ? `<h4 style="margin:18px 0 8px">الحملات السابقة</h4><div class="members">${info.log.map((c) => `<div class="member"><div class="member__info"><b>${esc(c.subject)}</b><span class="muted">${new Date(c.at).toLocaleString("ar-IQ-u-nu-latn", { dateStyle: "medium", timeStyle: "short" })} · أُرسلت إلى ${c.sent}${c.failed ? ` · فشل ${c.failed}` : ""}</span></div></div>`).join("")}</div>` : ""}`}
     </div></div>`;
 
   $("#promoForm").onsubmit = async (e) => {

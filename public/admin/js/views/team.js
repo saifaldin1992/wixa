@@ -7,7 +7,7 @@ const ROLE_DESC = {
   editor: "صفحات الموقع والمشاريع والخدمات والشركاء والآراء والمقالات والمظهر والبحث. لا يرى الرسائل ولا الإعدادات.",
   support: "الرسائل والمحادثات المباشرة والزبائن وطلبات التوظيف والمواعيد فقط: يرد ويتابع ويلغي المواعيد. لا يغيّر شيئاً في الموقع.",
 };
-const when = (t) => (t ? new Date(t).toLocaleString("ar-IQ", { dateStyle: "medium", timeStyle: "short" }) : "لم يدخل بعد");
+const when = (t) => (t ? new Date(t).toLocaleString("ar-IQ-u-nu-latn", { dateStyle: "medium", timeStyle: "short" }) : "لم يدخل بعد");
 
 export async function viewTeam(view) {
   $("#topActions").innerHTML = "";

@@ -50,7 +50,7 @@ export function openQuote({ name = "", phone = "", chatId = null, onSent } = {})
       h1{margin:0;color:#5B21B6;font-size:26px}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{text-align:start;padding:12px;border-bottom:1px solid #E9E3F3;vertical-align:top}th{width:32%;color:#5E5670;font-weight:normal}
       .price{background:#F3EEFB;border-radius:14px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;margin:20px 0}.price b{font-size:24px;color:#5B21B6}footer{margin-top:40px;color:#8A8296;font-size:13px;border-top:1px solid #E9E3F3;padding-top:12px}
       @media print{body{padding:0}}</style></head><body>
-      <header><div><h1>${esc(s.brand?.name_ar || "ويكسا")}</h1><span>عرض سعر</span></div><div style="text-align:end">${new Date().toLocaleDateString("ar-IQ", { dateStyle: "long" })}<br>إلى: <b>${esc(name)}</b></div></header>
+      <header><div><h1>${esc(s.brand?.name_ar || "ويكسا")}</h1><span>عرض سعر</span></div><div style="text-align:end">${new Date().toLocaleDateString("ar-IQ-u-nu-latn", { dateStyle: "long" })}<br>إلى: <b>${esc(name)}</b></div></header>
       <table><tr><th>نوع المشروع</th><td>${esc(q.type)}</td></tr>${q.features.length ? `<tr><th>الميزات</th><td>${q.features.map(esc).join("<br>")}</td></tr>` : ""}
       ${q.rush ? "<tr><th>التنفيذ</th><td>مستعجل</td></tr>" : ""}${q.time ? `<tr><th>مدة التنفيذ</th><td>${esc(q.time)}</td></tr>` : ""}</table>
       <div class="price"><span>السعر</span><b dir="ltr">${esc(q.price)}</b></div>${q.note ? `<p>${esc(q.note)}</p>` : ""}

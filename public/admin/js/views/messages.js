@@ -11,7 +11,7 @@ export const booking = (m) => { const x = (m.services?.[0] || "").match(/^حجز
 // The message's full card (closed: name and first line; open: the message, contact details, status, note, actions).
 export function messageCard(m, meta, templates) {
   const s = meta[m.id]?.status || "new", [label, cls] = STATUS[s];
-  const when = (d) => new Date(d).toLocaleString("ar", { dateStyle: "medium", timeStyle: "short" });
+  const when = (d) => new Date(d).toLocaleString("ar-IQ-u-nu-latn", { dateStyle: "medium", timeStyle: "short" });
   const linkify = (t) => esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
   return `<div class="msg ${m.handled ? "" : "new"}" data-id="${m.id}">
     <div class="msg__head"><div class="msg__avatar">${esc((m.name || "?").trim()[0])}</div>

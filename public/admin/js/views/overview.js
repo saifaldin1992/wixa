@@ -37,7 +37,7 @@ export async function viewOverview(view) {
 }
 
 function paintOverview(view, s) {
-  const kpi = (label, val, foot, ic) => `<div class="kpi"><div class="kpi__label"><i>${ic}</i>${label}</div><div class="kpi__value">${fmt(val)}</div><div class="kpi__foot">${foot}</div></div>`;
+  const kpi = (label, val, foot, ic, href) => `<${href ? `a href="${href}"` : "div"} class="kpi${href ? " kpi--link" : ""}"><div class="kpi__label"><i>${ic}</i>${label}</div><div class="kpi__value">${fmt(val)}</div><div class="kpi__foot">${foot}</div></${href ? "a" : "div"}>`;
   const flag = (cc) => (/^[A-Z]{2}$/.test(cc) ? String.fromCodePoint(...[...cc].map((c) => 127397 + c.charCodeAt(0))) + " " : "🌐 ");
   const DEV = { mobile: "جوال", desktop: "كمبيوتر", tablet: "تابلت" };
   const bars = (rows, label = (r) => r.label) => {
@@ -50,7 +50,7 @@ function paintOverview(view, s) {
       ${kpi("زيارات اليوم", s.today_visitors, `${fmt(s.today_views)} مشاهدة صفحة اليوم`, I.users)}
       ${kpi(`الزيارات (${period} يوم)`, s.visitors, s.source === "cloudflare" ? "عبر Cloudflare Web Analytics" : "زائر فريد يومياً", I.users)}
       ${kpi(`المشاهدات (${period} يوم)`, s.views, `${fmt(s.views_90d)} خلال 90 يوماً`, I.views)}
-      ${kpi("رسائل جديدة", s.messages_new, `<a href="#inbox" style="color:var(--brand)">افتح الوارد ←</a>`, I.mail)}
+      ${kpi("رسائل جديدة", s.messages_new, `<span style="color:var(--brand)">افتح الوارد ←</span>`, I.mail, "#inbox")}
     </div>
     <div class="two">
       <div class="card"><div class="card__head"><div><h3>الزيارات اليومية</h3><p>آخر ${period} يوم</p></div><div class="legend"><span><i></i>مشاهدات</span><span><i class="u"></i>زيارات</span></div></div><div id="chart"></div></div>
@@ -98,7 +98,7 @@ export function drawChart(el, rows) {
   const area = rows.length ? `${smooth(pts("views"))} L${x(rows.length - 1)},${H - P.b} L${x(0)},${H - P.b} Z` : "";
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((k) => Math.round(top * k));
   const every = Math.ceil(rows.length / 8);
-  const day = (d) => new Date(d).toLocaleDateString("ar", { day: "numeric", month: "short" });
+  const day = (d) => new Date(d).toLocaleDateString("ar-IQ-u-nu-latn", { day: "numeric", month: "short" });
   el.innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="direction:ltr">
     <defs><linearGradient id="gArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#5B21B6" stop-opacity=".2"/><stop offset="1" stop-color="#5B21B6" stop-opacity="0"/></linearGradient></defs>
     <g class="grid">${ticks.map((t) => `<line x1="${P.l}" x2="${W - P.r}" y1="${y(t)}" y2="${y(t)}"/>`).join("")}</g>

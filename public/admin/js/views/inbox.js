@@ -12,8 +12,8 @@ export const setInboxFilter = (f) => { filter = f; };
 const when = (t) => {
   const d = new Date(t), now = new Date();
   return d.toDateString() === now.toDateString()
-    ? d.toLocaleTimeString("ar-IQ", { hour: "numeric", minute: "2-digit" })
-    : d.toLocaleDateString("ar-IQ", { day: "numeric", month: "short" });
+    ? d.toLocaleTimeString("ar-IQ-u-nu-latn", { hour: "numeric", minute: "2-digit" })
+    : d.toLocaleDateString("ar-IQ-u-nu-latn", { day: "numeric", month: "short" });
 };
 // kinds: [label, colour class, page for those that open elsewhere]
 const KIND = {

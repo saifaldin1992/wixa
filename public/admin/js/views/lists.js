@@ -1,6 +1,7 @@
 /* Projects, services, partners and testimonials editors */
 import { $, $$, adminApi, cache, clone, closeModal, confirmBox, esc, I, ICONS, openModal, publishNow, sb, toast } from "../core.js";
 import { imageField } from "../fields.js";
+import { GRIP, moved, sortable } from "../sortable.js";
 
 // ---------------- generic lists: projects / services / partners ----------------
 export const ENTITIES = {
@@ -59,42 +60,31 @@ export async function viewList(table) {
     $("#addFirst").onclick = () => editItem(table, null); return;
   }
   view.innerHTML = `<div class="toolbar"><div class="search">${I.search}<input id="q" placeholder="بحث…"></div><button type="button" class="add-fab" id="addBtn" aria-label="إضافة ${E.one}" title="إضافة ${E.one}">${I.plus}</button></div>
-    <p class="muted toolbar__hint">${data.length} عنصر · رتّب بالأسهم</p>
+    <p class="muted toolbar__hint">${data.length} عنصر · اسحب ≡ للترتيب، واضغط على العنصر لفتحه</p>
     <div class="items" id="items">${data.map((r, i) => {
       const th = E.thumb?.(r);
       return `<div class="item" data-id="${r.id}" data-q="${esc((E.title(r) + " " + (r.title_en || r.name || "")).toLowerCase())}">
-        <div class="order"><button data-mv="-1" data-i="${i}" title="أعلى" ${i === 0 ? "disabled" : ""}>${I.up}</button><button data-mv="1" data-i="${i}" title="أسفل" ${i === data.length - 1 ? "disabled" : ""}>${I.down}</button></div>
-        <div class="item__thumb ${E.contain ? "contain" : ""}" style="${th ? `background-image:url('${esc(th)}')` : ""}">${th ? "" : E.icon ? ICONS[E.icon(r)] || ICONS.code : I.img}</div>
-        <div class="item__main"><b>${esc(E.title(r))}</b><span>${esc(E.sub(r))}</span></div>
-        <div class="item__actions"><span class="tag ${r.published ? "" : "off"}">${r.published ? "منشور" : "مخفي"}</span>
-          <button class="b b--icon b--ghost" data-pub="${r.id}" title="${r.published ? "إخفاء" : "نشر"}">${I.eye}</button>
-          <button class="b b--icon b--ghost" data-edit="${r.id}" title="تعديل">${I.edit}</button>
-          <button class="b b--icon b--ghost b--danger" data-del="${r.id}" title="حذف">${I.trash}</button></div></div>`;
+        <button type="button" class="ios-row__grip item__grip" data-grip="${i}" aria-label="اسحب لتغيير ترتيب «${esc(E.title(r))}» (أو استخدم الأسهم)">${GRIP}</button>
+        <div class="item__thumb ${E.contain ? "contain" : ""}" style="${th ? `background-image:url('${esc(th)}')` : ""}" aria-hidden="true">${th ? "" : E.icon ? ICONS[E.icon(r)] || ICONS.code : I.img}</div>
+        <button type="button" class="item__open" data-edit="${r.id}"><span class="item__main"><b>${esc(E.title(r))}</b><span>${esc(E.sub(r))}</span></span>
+          <span class="tag ${r.published ? "" : "off"}">${r.published ? "منشور" : "مخفي"}</span><svg class="ios-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6l-6 6 6 6"/></svg></button></div>`;
     }).join("")}</div>`;
   $("#addBtn").onclick = () => editItem(table, null);
   $("#q").oninput = (e) => { const q = e.target.value.trim().toLowerCase(); $$(".item").forEach((it) => (it.hidden = q && !it.dataset.q.includes(q))); };
   $$("[data-edit]").forEach((b) => (b.onclick = () => editItem(table, data.find((r) => r.id === b.dataset.edit))));
-  $$("[data-pub]").forEach((b) => (b.onclick = async () => {
-    const r = data.find((x) => x.id === b.dataset.pub);
-    const { error } = await sb.from(table).update({ published: !r.published }).eq("id", r.id);
-    if (error) return toast(error.message, "err");
-    publishNow(); toast(r.published ? "تم الإخفاء" : "تم النشر ✓"); viewList(table);
-  }));
-  $$("[data-del]").forEach((b) => (b.onclick = async () => {
-    const r = data.find((x) => x.id === b.dataset.del);
-    if (!(await confirmBox(`حذف ${E.one}`, `هل تريد حذف "${E.title(r)}" نهائياً؟`, "حذف"))) return;
-    const { error } = await sb.from(table).delete().eq("id", r.id);
-    if (error) return toast(error.message, "err");
-    publishNow(); toast("تم الحذف"); viewList(table);
-  }));
-  $$("[data-mv]").forEach((b) => (b.onclick = async () => {
-    const i = +b.dataset.i, j = i + +b.dataset.mv;
-    const arr = [...data]; [arr[i], arr[j]] = [arr[j], arr[i]];
+  // a tap anywhere on the row (but the handle) opens it, as in iOS lists
+  $$(".item[data-id]").forEach((it) => it.addEventListener("click", (e) => { if (!e.target.closest("[data-grip], [data-edit]")) it.querySelector("[data-edit]")?.click(); }));
+  // drag ≡ (or ↑ ↓ on it) to change the order; only the rows on screen move (a search hides the others)
+  sortable($("#items"), async (from, to, keys) => {
+    const shown = $$(".item[data-id]").filter((x) => !x.hidden).map((x) => x.dataset.id);
+    const ids = data.map((r) => r.id), a = ids.indexOf(shown[from]), b = ids.indexOf(shown[to]);
+    const arr = moved(data, a, b);
     const updates = arr.map((r, k) => ({ id: r.id, sort: k })).filter((u, k) => data.findIndex((r) => r.id === u.id) !== k || data[k].sort !== k);
     const results = await Promise.all(updates.map((u) => sb.from(table).update({ sort: u.sort }).eq("id", u.id)));
     const err = results.find((r) => r.error); if (err) toast(err.error.message, "err"); else publishNow();
-    viewList(table);
-  }));
+    await viewList(table);
+    if (keys) $(`#items [data-grip="${b}"]`)?.focus();
+  }, ".item[data-id]");
 }
 
 export function editItem(table, row) {
@@ -162,8 +152,17 @@ export function editItem(table, row) {
     }
   }
   const foot = document.createElement("div"); foot.style.cssText = "display:flex;gap:8px";
-  foot.innerHTML = `<button class="b" data-close>إلغاء</button><button class="b b--primary" data-save>${I.save}${row ? "حفظ التعديلات" : `إضافة ${E.one}`}</button>`;
+  foot.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;width:100%";
+  foot.innerHTML = `<button class="b" data-close>إلغاء</button><button class="b b--primary" data-save>${I.save}${row ? "حفظ التعديلات" : `إضافة ${E.one}`}</button>${row ? `<button class="b b--ghost b--danger" data-del style="margin-inline-start:auto">${I.trash}حذف ${E.one}</button>` : ""}`;
   openModal(row ? `تعديل ${E.one}` : `إضافة ${E.one}`, body, foot);
+  const del = $("[data-del]", foot);
+  if (del) del.onclick = async () => {
+    closeModal();
+    if (!(await confirmBox(`حذف ${E.one}`, `هل تريد حذف "${E.title(row)}" نهائياً؟`, "حذف"))) return;
+    const { error } = await sb.from(table).delete().eq("id", row.id);
+    if (error) return toast(error.message, "err");
+    publishNow(); toast("تم الحذف"); viewList(table);
+  };
   $("[data-save]", foot).onclick = async (e) => {
     const name = E.title(rec);
     if (!name || name === "بدون عنوان") return toast("يرجى كتابة الاسم/العنوان أولاً", "err");

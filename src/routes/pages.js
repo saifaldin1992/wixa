@@ -74,7 +74,7 @@ function snip(text, max) {
   return `${(sp > max * 0.6 ? cut.slice(0, sp) : cut).replace(/[\s،,.؛:–—-]+$/, "")}…`;
 }
 
-export const PAGE_TITLES = { services: { ar: "خدماتنا", en: "Our services" }, projects: { ar: "نماذج من عملنا", en: "Our work" }, pricing: { ar: "الباقات والأسعار", en: "Packages & pricing" }, about: { ar: "من نحن", en: "About us" }, careers: { ar: "الوظائف", en: "Careers" }, contact: { ar: "تواصل معنا", en: "Contact us" }, order: { ar: "اطلب مشروعك", en: "Order your project" }, track: { ar: "تتبع طلبك", en: "Track your order" }, faq: { ar: "الأسئلة الشائعة", en: "Frequently asked questions" } };
+export const PAGE_TITLES = { services: { ar: "خدماتنا", en: "Services" }, projects: { ar: "أعمالنا", en: "Our work" }, pricing: { ar: "الأسعار", en: "Pricing" }, about: { ar: "من نحن", en: "About us" }, careers: { ar: "الوظائف", en: "Careers" }, contact: { ar: "تواصل معنا", en: "Contact us" }, order: { ar: "اطلب مشروعك", en: "Order your project" }, track: { ar: "تتبع طلبك", en: "Track your order" }, faq: { ar: "الأسئلة الشائعة", en: "Frequently asked questions" } };
 export async function handleHome(request, env, ctx, pageName = "home") {
   const [page, raw, cfg, posts] = await Promise.all([env.ASSETS.fetch(new Request(new URL("/", request.url), request)), getSiteData(env, ctx), getConfig(env), getPosts(env).catch(() => null)]);
   const data = cfg.spam.turnstile ? raw : raw.replace(/"turnstile":"[^"]*"/, '"turnstile":""');

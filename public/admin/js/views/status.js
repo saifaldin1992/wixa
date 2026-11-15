@@ -23,7 +23,7 @@ export async function viewStatus(view) {
   const okN = d.items.filter((c) => c.state === "ok").length;
   view.innerHTML = `
     <div class="card conn-sum"><div><h3>${okN} من ${d.items.length} خدمات تعمل بشكل سليم</h3>
-      <p class="muted">آخر فحص: ${new Date(d.checked_at).toLocaleString("ar-IQ")} · النسخة: <b>${d.env === "staging" ? "التجريبية" : "الرئيسية"}</b></p></div>
+      <p class="muted">آخر فحص: ${new Date(d.checked_at).toLocaleString("ar-IQ-u-nu-latn")} · النسخة: <b>${d.env === "staging" ? "التجريبية" : "الرئيسية"}</b></p></div>
       <button class="b" id="recheck">إعادة الفحص</button></div>
     <div class="conns">${d.items.map(card).join("")}</div>
     <div class="card"><div class="card__head"><div><h3>كيف تعمل معاً</h3></div></div>

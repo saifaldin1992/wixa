@@ -1292,3 +1292,42 @@ html[data-theme="dark"] .ios-warn { color: #FBBF24; }
 .seg--full { display: flex; width: 100%; }
 .seg--full button { flex: 1; min-width: 0; white-space: nowrap; }
 @media (max-width: 520px) { .seg--full { flex-wrap: wrap; } .seg--full button { flex: 1 1 45%; } }
+
+/* ===== Apple review (Nov 2026) ===== */
+/* tab rows: five at most, the rest under «المزيد» (core.js → compactSeg) */
+.seg__more { display: inline-flex; align-items: center; gap: 4px; padding: 0 12px; min-height: 36px; border-radius: calc(var(--r-sm) - 3px); color: var(--muted); font-size: 14px; font-weight: 500; cursor: pointer; white-space: nowrap; user-select: none; }
+.seg__more small { font-size: 11px; font-weight: 700; padding: 0 6px; border-radius: var(--r-pill); background: rgba(118, 118, 128, .14); }
+.seg__more svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.seg__more:hover, .seg__more[aria-expanded="true"] { color: var(--text); }
+.segpop { position: absolute; z-index: 90; min-width: 200px; max-width: calc(100vw - 16px); padding: 6px; display: grid; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: 0 20px 44px -16px rgba(0, 0, 0, .35); animation: popIn .18s ease both; }
+@keyframes popIn { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+.segpop button { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: var(--r-sm); text-align: start; font: inherit; font-size: 15px; color: var(--text); background: none; }
+.segpop button:hover, .segpop button:focus-visible { background: rgba(118, 118, 128, .1); }
+.segpop button.on { font-weight: 600; }
+/* «صفحات الموقع»: the list screen and the way back to it */
+.ct-back { display: inline-flex; align-items: center; gap: 2px; padding-inline: 8px 12px; color: var(--brand); flex: none; }
+.ct-back svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+html[dir="ltr"] .ct-back svg { transform: scaleX(-1); }
+.ct-here { align-self: center; font-size: 15px; }
+.ios-row__main--solo { grid-template-rows: auto; padding-inline-start: 16px; min-height: 52px; }
+.ios-list .ios-row:has(> .ios-row__main--solo) + .ios-row::before { inset-inline-start: 16px; }
+
+/* lists (services, projects, testimonials, partners): iOS rows — ≡ to drag, a tap opens the item, delete is inside */
+#items > .item { grid-template-columns: auto auto minmax(0, 1fr); gap: 12px; padding-block: 8px; padding-inline-start: 0; cursor: pointer; }
+.item__grip { width: 44px; min-height: 52px; }
+.item__open { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; min-height: 52px; padding: 0; background: none; border: 0; color: inherit; font: inherit; text-align: start; cursor: pointer; min-width: 0; }
+.item__open .item__main { display: grid; gap: 2px; min-width: 0; }
+.item__open .item__main > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item.is-drag { z-index: 2; background: var(--panel); box-shadow: 0 12px 28px -12px rgba(0, 0, 0, .35); border-radius: var(--r-sm); }
+#items > .item.is-drag::before, #items > .item.is-drag + .item::before { opacity: 0; }
+@media (max-width: 640px) { #items > .item { grid-template-columns: auto auto minmax(0, 1fr); } .item__thumb { width: 52px; height: 40px; } .item__open .tag { display: none; } }
+
+/* «اليوم في خدمة الزبائن»: neutral cards; what needs you shows as a red number and a small dot (iOS), not a red card */
+.today__item.hot { background: var(--bg); border-color: var(--line); }
+.today__item.hot b { color: var(--danger); display: inline-flex; align-items: center; gap: 8px; }
+.today__item.hot b::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); }
+.today__item { min-height: 44px; transition: background .15s; }
+@media (hover: hover) { .today__item:hover { background: rgba(118, 118, 128, .08); } }
+.kpi--link { text-decoration: none; color: inherit; cursor: pointer; transition: background .15s; }
+@media (hover: hover) { .kpi--link:hover { background: color-mix(in srgb, var(--panel) 94%, #767680); } }
+.cust__side small { font-size: 12px; }

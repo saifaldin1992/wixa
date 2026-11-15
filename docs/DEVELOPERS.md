@@ -773,3 +773,20 @@ When the live chat is on (`settings.chat.on`), it is the way to talk to us every
 - **Service pages:** the local bar carries the page's parts (نظرة عامة · التفاصيل · من أعمالنا · خدمات أخرى), the one being read marked.
 - **Dashboard → القوائم** (`public/admin/js/views/menus.js`, also in the sidebar as `#menus`): iOS rows (name, place · group, «مخفي تلقائياً» with the reason), drag the handle or ↑↓ to reorder, tap to edit in a sheet; «إضافة رابط» (a service by id, an added page by path, or an https:// or /path address → `settings.nav.items` entries `{ k: "x-…", kind, ref | url, label_ar, label_en, at, g }`); «ابدأ مشروعك» name and destination (`settings.nav.cta = { to: order | contact | calc | whatsapp | url, url }` → `ctaTarget()`; a non-order destination is marked `data-free` so the order script leaves it alone); footer groups renamed / added / reordered (`settings.footer_groups`, «قانوني» always last → `footerGroups()`). The preview turns to the phone with its menu open while this tab is on screen, and added links show in it before saving.
 - Shared rules live in `public/js/site-structure.js`: `footerGroups`, `groupOf(x, settings)`, `customLink`, `ctaTarget`.
+
+## Apple review batch (Nov 2026)
+**Site**
+- Type: every plain `font-size` in `styles.css` is on one scale (12 · 13 · 14 · 15 · 16 · 17 · 20 · 24 · 28 · 34 · 40 px); weights 400 / 500 / 600 / 700 only (800 is gone). Corners: `--radius-sm` = `--r-sm` (12), `--radius-lg` = the owner's radius (28 by default).
+- Tap targets ≥ 44px: carousel dots (8px dot, 44px touch area), «اسألنا», «عرض التفاصيل», the local bar's button, footer links on phones.
+- Page and section titles are the menu's names: «أعمالنا», «الأسعار» (EN «Services», «Pricing»). Staging DB updated; production gets `titles.sql` (only where the old default wording was kept) when published.
+- On their own pages (/services, /projects, /pricing) lists are whole, one card under another (two columns on tablets); the swiping rows stay on the home page. The home page shows three packages and «كل الباقات».
+- Calmer decoration: no halo on the «كيف نعمل» steps, no glow on the figures tile.
+- Chat button: always whole (no edge tab, no sliding away while scrolling), 44px on phones, 48px on computers.
+- Header on narrow phones (≤ 380px): the round buttons keep 44px; the logo shrinks (≤ 330px: the mark only).
+
+**Dashboard**
+- Tab rows show five at most; the rest wait under «المزيد» (a menu). Done once for every page in `core.js → setSubnav/compactSeg`; the hidden tabs stay in place so each page's handlers keep working.
+- Lists (services, projects, testimonials, partners): ≡ to drag (shared `public/admin/js/sortable.js`, also used by «القوائم»), a tap on the row opens the item, delete is inside the item's sheet.
+- «صفحات الموقع» opens on a grouped list of everything editable (iOS Settings); a row opens its editor with «‹ كل الأقسام» and that group's tabs.
+- «اليوم في خدمة الزبائن»: neutral cards, red number + dot when something waits. The «رسائل جديدة» card is one link.
+- Dates use Western digits like the rest of the dashboard (`ar-IQ-u-nu-latn`).

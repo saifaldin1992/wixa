@@ -30,7 +30,7 @@ export async function viewOrders(view) {
   const q = search.trim().toLowerCase();
   const list = rows.filter((o) => (filter === "open" ? !["done", "cancelled"].includes(o.status) : filter === "all" || o.status === filter))
     .filter((o) => !q || `${o.number} ${o.name} ${o.phone} ${o.email} ${o.item}`.toLowerCase().includes(q));
-  const when = (d) => new Date(d).toLocaleString("ar", { dateStyle: "medium", timeStyle: "short" });
+  const when = (d) => new Date(d).toLocaleString("ar-IQ-u-nu-latn", { dateStyle: "medium", timeStyle: "short" });
   // updates the customer sees in the client portal (/portal), per order
   const ups = {};
   if (list.length) {

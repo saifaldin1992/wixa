@@ -34,7 +34,7 @@ async function runChecks() {
   const worst = n.fail ? "fail" : n.warn ? "warn" : "ok";
   const head = { ok: "كل شيء يعمل بشكل سليم", warn: "يعمل، مع تنبيهات تستحق النظر", fail: "يوجد عطل يحتاج إصلاحاً" }[worst];
   $("#diagSum").innerHTML = `<div class="diag-big ${worst}"><span>${ICON[worst]}</span><div><h3>${head}</h3>
-    <p>${n.ok} سليم · ${n.warn} تنبيه · ${n.fail} عطل — ${d.env === "staging" ? "النسخة التجريبية" : "الموقع الرئيسي"} · ${new Date(d.checked_at).toLocaleString("ar-IQ", { timeStyle: "short", dateStyle: "medium" })}</p></div></div>`;
+    <p>${n.ok} سليم · ${n.warn} تنبيه · ${n.fail} عطل — ${d.env === "staging" ? "النسخة التجريبية" : "الموقع الرئيسي"} · ${new Date(d.checked_at).toLocaleString("ar-IQ-u-nu-latn", { timeStyle: "short", dateStyle: "medium" })}</p></div></div>`;
   const groups = [...new Set(d.results.map((r) => r.group))];
   $("#diagGroups").innerHTML = groups.map((g) => {
     const items = d.results.filter((r) => r.group === g);
@@ -53,7 +53,7 @@ async function loadErrors() {
   let list = [];
   try { list = await adminApi("errors"); } catch { $("#errList").innerHTML = '<p class="muted">تعذّر تحميل السجل.</p>'; return; }
   if (!list.length) { $("#errList").innerHTML = '<p class="muted" style="margin:0">لا أخطاء مسجّلة ✓</p>'; return; }
-  const when = (t) => new Date(t).toLocaleString("ar-IQ", { dateStyle: "medium", timeStyle: "short" });
+  const when = (t) => new Date(t).toLocaleString("ar-IQ-u-nu-latn", { dateStyle: "medium", timeStyle: "short" });
   $("#errList").innerHTML = `<div class="errs">${list.map((e) => `<div class="err ${e.where === "server" ? "fail" : "warn"}">
     <div class="err__top"><b>${esc(WHERE[e.where] || e.where)}</b><span>${e.count > 1 ? `تكرر ${e.count} مرات · ` : ""}آخرها ${when(e.last)}</span></div>
     <code dir="ltr">${esc(e.msg)}</code>

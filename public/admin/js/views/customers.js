@@ -5,7 +5,7 @@
 import { $, setSubnav, $$, I, closeModal, esc, openModal, sb, toast } from "../core.js";
 
 let seg = "all", q = "", mode = "list";
-const day = (t) => new Date(t).toLocaleDateString("ar-IQ", { day: "numeric", month: "short", year: "numeric" });
+const day = (t) => new Date(t).toLocaleDateString("ar-IQ-u-nu-latn", { day: "numeric", month: "short", year: "numeric" });
 // one key per person: Iraqi numbers in any form (07…, +9647…, 009647…) become 9647…
 export const normPhone = (p) => {
   let d = String(p || "").replace(/\D/g, "");

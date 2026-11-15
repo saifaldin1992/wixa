@@ -15,7 +15,7 @@ export function restoreDialog() {
     let data;
     try { data = JSON.parse(await file.text()); } catch { return toast("الملف ليس نسخة احتياطية صالحة", "err"); }
     if (!data || typeof data !== "object" || !data.settings || !TABLES.some(([t]) => Array.isArray(data[t]))) return toast("الملف لا يحتوي محتوى موقع ويكسا", "err");
-    const date = data.exported_at ? new Date(data.exported_at).toLocaleString("ar-IQ", { dateStyle: "long", timeStyle: "short" }) : "غير معروف";
+    const date = data.exported_at ? new Date(data.exported_at).toLocaleString("ar-IQ-u-nu-latn", { dateStyle: "long", timeStyle: "short" }) : "غير معروف";
     const body = `<p style="margin:0 0 10px">نسخة بتاريخ: <b>${esc(date)}</b></p>
       <ul style="margin:0 0 10px;padding-inline-start:20px;line-height:2">${TABLES.map(([t, n]) => `<li>${n}: ${Array.isArray(data[t]) ? data[t].length : "—"}</li>`).join("")}${RECORDS.filter(([t]) => Array.isArray(data[t])).map(([t, n]) => `<li>${n}: ${data[t].length} <span class="muted">(يُضاف الناقص فقط)</span></li>`).join("")}<li>الإعدادات والنصوص والألوان</li></ul>
       <p class="muted" style="margin:0;font-size:13px">سيصبح محتوى الموقع مطابقاً لهذه النسخة. تُنزَّل أولاً نسخة من المحتوى الحالي لتستطيع التراجع. الرسائل لا تُحذف.</p>`;

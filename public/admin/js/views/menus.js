@@ -12,6 +12,7 @@ import { UI_DEFAULTS } from "../../../js/ui-strings.js";
 import { FOOTER_GROUPS, customLink, footerGroups, groupOf, navLink } from "../../../js/site-structure.js";
 import { sitePages } from "../../../js/site-pages.js";
 import { changed, quietly } from "../settings.js";
+import { GRIP, moved, sortable } from "../sortable.js";
 
 const NAMES = { home: "الرئيسية", services: "الخدمات", projects: "أعمالنا", pricing: "الأسعار", about: "من نحن", partners: "شركاؤنا",
   careers: "الوظائف", contact: "تواصل معنا", faq: "الأسئلة الشائعة", blog: "المقالات", privacy: "سياسة الخصوصية" };
@@ -20,7 +21,6 @@ const AT_SHORT = [["both", "القائمة والأسفل"], ["menu", "القا�
 const KINDS = [["service", "خدمة"], ["page", "صفحة مضافة"], ["url", "رابط آخر"]];
 const CTA = [["order", "صفحة الطلب"], ["contact", "صفحة تواصل معنا"], ["calc", "حاسبة التكلفة"], ["whatsapp", "واتساب"], ["url", "رابط آخر"]];
 const UIKEY = (k) => (k === "privacy" ? "privacy" : `nav_${k}`);
-const GRIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14M5 12h14M5 16h14"/></svg>';
 const CHEV = '<svg class="ios-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6l-6 6 6 6"/></svg>';
 const newId = (p) => `${p}${Math.random().toString(36).slice(2, 9)}`;
 
@@ -57,42 +57,6 @@ function autoHidden(x) {
 const groupName = (k) => footerGroups(settings).find((g) => g.k === k)?.name_ar || k;
 const kindName = (x) => (x.kind ? KINDS.find(([k]) => k === x.kind)[1] : "");
 
-// ---------------------------------------------------------------- drag to reorder (touch, mouse and keyboard)
-function sortable(list, onMove) {
-  $$("[data-grip]", list).forEach((g) => {
-    g.addEventListener("keydown", (e) => {
-      const i = +g.dataset.grip, d = e.key === "ArrowUp" ? -1 : e.key === "ArrowDown" ? 1 : 0;
-      if (!d) return;
-      e.preventDefault();
-      const n = list.querySelectorAll("[data-grip]").length;
-      if (i + d >= 0 && i + d < n) onMove(i, i + d, true);
-    });
-    g.addEventListener("pointerdown", (e) => {
-      if (e.button) return;
-      e.preventDefault();
-      const rows = [...list.querySelectorAll(".ios-row[data-i]")], row = g.closest(".ios-row"), from = rows.indexOf(row);
-      const boxes = rows.map((r) => r.getBoundingClientRect()), h = boxes[from].height, y0 = e.clientY;
-      let to = from;
-      g.setPointerCapture(e.pointerId); row.classList.add("is-drag");
-      const move = (ev) => {
-        const dy = Math.max(boxes[0].top - boxes[from].top, Math.min(boxes[rows.length - 1].bottom - boxes[from].bottom, ev.clientY - y0));
-        row.style.transform = `translateY(${dy}px)`;
-        const mid = boxes[from].top + h / 2 + dy;
-        to = 0; boxes.forEach((b, i) => { if (i !== from && b.top + b.height / 2 < mid) to++; });
-        rows.forEach((r, i) => { if (i === from) return; const s = from < to && i > from && i <= to ? -h : from > to && i < from && i >= to ? h : 0; r.style.transform = s ? `translateY(${s}px)` : ""; });
-      };
-      const up = () => {
-        g.removeEventListener("pointermove", move);
-        rows.forEach((r) => (r.style.transform = "")); row.classList.remove("is-drag");
-        if (to !== from) onMove(from, to);
-      };
-      g.addEventListener("pointermove", move);
-      g.addEventListener("pointerup", up, { once: true });
-      g.addEventListener("pointercancel", up, { once: true });
-    });
-  });
-}
-const moved = (arr, from, to) => { const a = [...arr]; const [x] = a.splice(from, 1); a.splice(to, 0, x); return a; };
 const segHtml = (id, opts, val) => `<div class="seg seg--full" id="${id}">${opts.map(([v, l]) => `<button type="button" data-v="${v}" class="${v === val ? "on" : ""}">${l}</button>`).join("")}</div>`;
 const bindSeg = (root, id, onPick) => root.querySelectorAll(`#${id} button`).forEach((b) => (b.onclick = () => { root.querySelectorAll(`#${id} button`).forEach((x) => x.classList.toggle("on", x === b)); onPick(b.dataset.v); }));
 

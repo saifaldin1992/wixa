@@ -13,7 +13,9 @@ import { renderMenus } from "./menus.js";
 import { bindPreview, changed, quietly, getPath, previewLang, previewPane, pushPreview, setPath, setPreviewLang, setPreviewMenu, settingsActions } from "../settings.js";
 
 // ---------------- view: content ----------------
-export let contentTab = "texts", contentLang = "ar";
+// contentIndex: the first screen is the list of everything editable (iOS Settings); a row opens its editor
+export let contentTab = "texts", contentLang = "ar", contentIndex = true;
+let BRANCHES = [], LABELS = {};
 export const TEXT_FIELDS = [
   ["القسم الرئيسي (أعلى الصفحة)", [["hero_badge", "الشارة الصغيرة"], ["hero_title", "العنوان الرئيسي"], ["hero_sub", "الوصف", true], ["hero_cta", "زر 1"], ["hero_cta2", "زر 2"]]],
 ];
@@ -42,7 +44,10 @@ const TEXT_TABS = {
 // old tab names (saved links, buttons elsewhere in the dashboard) open their new place
 const OLD_TABS = { story: "why", guarantees: "why", sections: "layout", privacy: "legal", booking: "contact", status: "links" };
 
-export async function viewContent(view) {
+export async function viewContent(view, keep = false) {
+  // opened from the sidebar: start on the list (an editor opened from elsewhere sets contentIndex itself)
+  if (!keep && !viewContent.deep) contentIndex = true;
+  viewContent.deep = false;
   settingsActions();
   if (OLD_TABS[contentTab]) contentTab = OLD_TABS[contentTab];
   // every tab sits under the site page it shows on; each setting has one place only
@@ -55,17 +60,20 @@ export async function viewContent(view) {
     ["more", "من نحن والمزيد", ["about", "faq", "careers"]], ["pages", "الصفحات", ["links", "legal", "custom", "team"]], ["layout", "ترتيب الأقسام", ["layout"]],
     ["menus", "القوائم والأزرار", ["nav", "ui"]], ["company", "بيانات الشركة", ["brand", "contact", "lang"]]];
   const label = Object.fromEntries(tabs);
+  BRANCHES = BR; LABELS = label;
+  // the list screen has no tabs; an editor has «‹ كل الأقسام» and its own group's tabs
   const drawTabs = () => {
+    if (contentIndex) return setSubnav("");
     const br = BR.find(([, , ks]) => ks.includes(contentTab)) || BR[0];
-    setSubnav(`<div class="seg" id="ctBranch">${BR.map(([k, l, ks]) => `<button data-b="${k}" class="${br[0] === k ? "on" : ""}">${l}</button>`).join("")}</div>`
-      // a branch with one page needs no second row (its name is already in the first)
-      + (br[2].filter((k) => label[k]).length > 1 ? `<div class="seg" id="ctTabs">${br[2].filter((k) => label[k]).map((k) => `<button data-k="${k}" class="${k === contentTab ? "on" : ""}">${label[k]}</button>`).join("")}</div>` : ""));
-    $$("#ctBranch button").forEach((b) => (b.onclick = () => { contentTab = BR.find(([k]) => k === b.dataset.b)[2][0]; drawTabs(); renderContentTab(); }));
+    const ks = br[2].filter((k) => label[k]);
+    setSubnav(`<button type="button" class="b b--ghost ct-back" id="ctBack"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg>كل الأقسام</button>`
+      + (ks.length > 1 ? `<div class="seg" id="ctTabs">${ks.map((k) => `<button data-k="${k}" class="${k === contentTab ? "on" : ""}">${label[k]}</button>`).join("")}</div>` : `<b class="ct-here">${esc(br[1])}</b>`));
+    $("#ctBack").onclick = () => { contentIndex = true; drawTabs(); renderContentTab(); };
     $$("#ctTabs button").forEach((b) => (b.onclick = () => { contentTab = b.dataset.k; drawTabs(); renderContentTab(); }));
   };
   drawTabs();
   // «تعديل» in the links list opens that page's editor
-  if (!viewContent.listening) { viewContent.listening = true; document.addEventListener("wixa:content-tab", (e) => { contentTab = OLD_TABS[e.detail] || e.detail; if ($("#ctBody")) { $("#ctBranch") && viewContent.redraw?.(); renderContentTab(); } }); }
+  if (!viewContent.listening) { viewContent.listening = true; document.addEventListener("wixa:content-tab", (e) => { contentTab = OLD_TABS[e.detail] || e.detail; contentIndex = false; if ($("#ctBody")) { viewContent.redraw?.(); renderContentTab(); } }); }
   viewContent.redraw = drawTabs;
   view.innerHTML = `<div class="split"><div><div class="card">
       <div id="ctBody"></div></div></div>${previewPane()}</div>`;
@@ -89,6 +97,7 @@ export function bindPathInputs(root) {
   });
 }
 export function renderContentTab() {
+  if (contentIndex) { setPreviewMenu(false); return drawIndex(); }
   // editing the menus: the preview turns to the phone with its ☰ menu open, to see the links as visitors do
   const menus = contentTab === "nav";
   setPreviewMenu(menus);
@@ -97,7 +106,15 @@ export function renderContentTab() {
   renderTab(contentTab, $("#ctBody"));
 }
 // dashboard → «القوائم» (its own place in the sidebar): the same editor, opened straight on the menus
-export function viewMenus(view) { contentTab = "nav"; return viewContent(view); }
+export function viewMenus(view) { contentTab = "nav"; contentIndex = false; return viewContent(view, true); }
+// the list of everything editable on the site, grouped like iOS Settings; a row opens its editor
+function drawIndex() {
+  const body = $("#ctBody"); if (!body) return;
+  const CHEV = '<svg class="ios-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6l-6 6 6 6"/></svg>';
+  body.innerHTML = `<p class="muted" style="margin-top:0">اختر ما تريد تعديله. التغييرات تظهر في المعاينة فوراً، وتُنشر بزر «حفظ ونشر».</p>`
+    + BRANCHES.map(([, name, ks]) => `<div class="ios-head"><span>${esc(name)}</span></div><div class="ios-list">${ks.filter((k) => LABELS[k]).map((k) => `<div class="ios-row"><button type="button" class="ios-row__main ios-row__main--solo" data-open="${k}"><span class="ios-row__t">${esc(LABELS[k])}</span>${CHEV}</button></div>`).join("")}</div>`).join("");
+  $$("[data-open]", body).forEach((b) => (b.onclick = () => { contentTab = b.dataset.open; contentIndex = false; viewContent.redraw?.(); renderContentTab(); $("#ctBody")?.scrollIntoView?.({ block: "nearest" }); }));
+}
 // one tab into a box; a merged tab draws its parts into boxes of its own (opts.sub: no second language switch)
 function renderTab(tab, body, opts = {}) {
   const L = contentLang, dir = L === "ar" ? "rtl" : "ltr";

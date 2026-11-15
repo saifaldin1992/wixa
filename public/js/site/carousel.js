@@ -2,7 +2,7 @@
 const MQ = matchMedia("(max-width: 1080px)");
 const LISTS = ["#pricingGrid", "#projectsList", "#servicesGrid", "#industriesGrid"];
 // on their own pages (/services, /projects) the lists are shown whole, one card under another — no swiping
-const FLAT = { services: ["#servicesGrid", "#industriesGrid"], projects: ["#projectsList"] };
+const FLAT = { services: ["#servicesGrid", "#industriesGrid"], projects: ["#projectsList"], pricing: ["#pricingGrid"] };
 
 export function carousels() {
   for (const sel of LISTS) {

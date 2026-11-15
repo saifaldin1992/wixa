@@ -35,7 +35,7 @@ export async function viewPosts(view) {
     wire();
     return;
   }
-  const when = (d) => (d ? new Date(d).toLocaleDateString("ar", { dateStyle: "medium" }) : "");
+  const when = (d) => (d ? new Date(d).toLocaleDateString("ar-IQ-u-nu-latn", { dateStyle: "medium" }) : "");
   view.innerHTML = `${bar}
     <div class="items">${data.map((p) => `<div class="item">
       <div class="item__thumb" style="${p.cover_url ? `background-image:url('${esc(p.cover_url)}')` : ""}">${p.cover_url ? "" : I.edit}</div>

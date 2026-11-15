@@ -15,7 +15,7 @@ for (const [name, opts] of [["phone", devices["Galaxy S9+"]], ["computer", { vie
   const p = await ctx.newPage();
   const errors = []; p.on("pageerror", (e) => errors.push(e.message));
   await p.goto(`${BASE}/admin/#content`, { waitUntil: "load" }); await p.waitForTimeout(1200);
-  await p.click('#ctBranch button[data-b="layout"]'); await p.waitForTimeout(600);
+  await p.click('#ctBody [data-open="layout"]'); await p.waitForTimeout(600); // «صفحات الموقع» opens on its list; a row opens its editor
   const rows = await p.$$eval("#lyList .ly__row", (r) => r.map((x) => x.dataset.k));
   check(rows.join(" ") === DEFAULT_LAYOUTS.home.join(" "), `${name}: the home page's sections are listed in order`);
   // move «القصة» (2nd) down one place
