@@ -19,12 +19,10 @@
   --max: 1240px;
   --ease: cubic-bezier(.65, 0, .25, 1);
   --ease-out: cubic-bezier(.16, 1, .3, 1);
-  --shadow: 0 1px 2px rgba(var(--text-rgb), .04), 0 12px 40px -12px rgba(var(--text-rgb), .12);
 }
 html[data-theme="dark"] {
   --bg: var(--dk-bg); --surface: var(--dk-surface); --surface-rgb: var(--dk-surface-rgb); --text: var(--dk-text); --text-rgb: var(--dk-text-rgb);
   --muted: var(--dk-muted); --dark: var(--dk-dark); --dark-rgb: var(--dk-dark-rgb); --fg: var(--dk-fg); --fg-rgb: var(--dk-fg-rgb);
-  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 16px 40px -14px rgba(0,0,0,.6);
   color-scheme: dark;
 }
 html.theme-anim body { transition: background-color .4s var(--ease), color .4s var(--ease); }
@@ -105,13 +103,14 @@ html[dir="rtl"] .header__bar { padding: 10px 18px 10px 12px; }
 @media (min-width: 1240px) { .header__menu, .scrim { display: none; } }
 
 /* buttons */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 26px; border-radius: var(--r-pill); font-weight: 500; font-size: 1rem; position: relative; overflow: hidden; isolation: isolate; transition: transform .45s var(--ease-out), box-shadow .45s; will-change: transform; }
-.btn--primary { background: var(--primary); color: var(--primary-ink); box-shadow: 0 10px 30px -10px rgba(var(--primary-rgb), .7); }
-.btn--primary::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,.35) 50%, transparent 70%); transform: translateX(-120%); transition: transform .9s var(--ease); }
-.btn--primary:hover::after { transform: translateX(120%); }
-.btn--primary:hover { box-shadow: 0 16px 40px -10px rgba(var(--primary-rgb), .8); }
-.btn--ghost { border: 1px solid var(--line-2); background: var(--surface); }
-.btn--ghost:hover { border-color: var(--text); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2); border: 0; border-radius: var(--r-pill); font-weight: var(--w-semibold); position: relative; cursor: pointer; transition: background-color var(--dur-fast) ease, color var(--dur-fast) ease, transform .12s ease-out; }
+/* filled: the one main action of a block — the brand purple, flat (Apple uses no glow under buttons) */
+.btn--primary { background: var(--primary); color: var(--primary-ink); }
+@media (hover: hover) { .btn--primary:hover { background: color-mix(in srgb, var(--primary) 88%, #000); } }
+/* tinted (Apple's «tinted» button): the other actions — a light purple wash and purple text, no outline */
+.btn--ghost { background: color-mix(in srgb, var(--primary) 11%, transparent); color: var(--primary); }
+html[data-theme="dark"] .btn--ghost { background: color-mix(in srgb, var(--fg) 18%, transparent); color: var(--fg); }
+@media (hover: hover) { .btn--ghost:hover { background: color-mix(in srgb, var(--primary) 17%, transparent); } html[data-theme="dark"] .btn--ghost:hover { background: color-mix(in srgb, var(--fg) 26%, transparent); } }
 .arr { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform .45s var(--ease-out); }
 html[dir="ltr"] .arr { transform: scaleX(-1); }
 html[dir="rtl"] .btn:hover .arr { transform: translateX(-4px); }
@@ -768,7 +767,6 @@ html[data-theme="dark"] .pstep.on .pstep__num { box-shadow: 0 0 0 8px rgba(var(-
 /* ---------- WhatsApp buttons (form, calculator) ---------- */
 .btn--wa { background: #25D366; color: #fff; }
 .btn--wa svg { width: 20px; height: 20px; }
-.btn--wa:hover { box-shadow: 0 12px 26px -10px rgba(37,211,102,.7); }
 .form__btns, .calc__btns { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .calc__btns { margin-top: 4px; }
 .calc__result .btn--wa { background: #25D366; color: #fff; }
@@ -933,7 +931,6 @@ body { font-size: var(--fs-body); }
 .footer__credit, .form__status, .calc__note { font-size: var(--fs-small); }
 
 /* buttons: one height everywhere, comfortable to tap, never oversized */
-.btn, .calc__result .btn { min-height: var(--btn-h); padding: 0 var(--btn-px); font-size: var(--fs-btn); line-height: 1.2; gap: 8px; }
 .btn svg, .btn .arr { width: 18px; height: 18px; flex-shrink: 0; }
 .job .btn { padding: 0 var(--btn-px); }
 .icon-btn { width: var(--btn-h); height: var(--btn-h); }
@@ -1614,8 +1611,6 @@ html .partners__grid:not(.is-marquee) .partner:is(:hover, :focus-visible, :activ
 /* every "start your project" button (header, menu, hero, closing section): one solid purple, like every button —
    the wave gradient is kept for lines and small markers only (Apple: buttons are flat colour) */
 .header__nav .nav-cta, .head-start, .header__menu .menu-cta, .btn--primary[data-start] { background: var(--primary) !important; color: var(--primary-ink, #fff) !important; border-color: transparent; }
-.btn--primary[data-start] { box-shadow: 0 10px 30px -12px rgba(var(--primary-rgb), .55); }
-.btn--primary[data-start]:hover { box-shadow: 0 16px 40px -12px rgba(var(--primary-rgb), .6); }
 
 /* WhatsApp and live chat: one size, one level, mirrored corners; the chat button in the logo line's cyan */
 html[lang] .wa, html[lang] .chatw__btn { width: 56px; height: 56px; bottom: calc(20px + env(safe-area-inset-bottom)); }
@@ -1723,16 +1718,16 @@ html[data-page] main > section:not(.hero) { padding-top: 0; padding-bottom: var(
    Softer layered shadows, glass bars (blur + translucency) on every device, spring-like motion and a light press.
    The purple identity stays; only depth, materials and motion change. Rules in the brand guide (UI ← الظلال والمواد). */
 :root {
-  /* three soft layers: edge, contact, lift — never a hard dark shadow */
-  --shadow: 0 0 0 1px rgba(var(--text-rgb), .03), 0 1px 2px rgba(var(--text-rgb), .04), 0 10px 30px -10px rgba(var(--text-rgb), .10);
-  --shadow-lg: 0 0 0 1px rgba(var(--text-rgb), .03), 0 2px 6px rgba(var(--text-rgb), .04), 0 28px 64px -18px rgba(var(--text-rgb), .18);
+  /* Apple redesign phase 2: shadows barely there — a hairline edge and a faint lift; depth comes from surfaces */
+  --shadow: 0 0 0 1px rgba(0, 0, 0, .04), 0 2px 8px -2px rgba(0, 0, 0, .05);
+  --shadow-lg: 0 0 0 1px rgba(0, 0, 0, .04), 0 8px 28px -10px rgba(0, 0, 0, .10);
   --spring: cubic-bezier(.34, 1.36, .64, 1); /* a short overshoot, like a spring */
   --glass: rgba(var(--surface-rgb), .66);
 }
 /* dark mode: depth comes from a lighter surface and a fine light edge, not from black shadows */
 html[data-theme="dark"] {
-  --shadow: 0 0 0 1px rgba(255, 255, 255, .06), 0 12px 32px -14px rgba(0, 0, 0, .55);
-  --shadow-lg: 0 0 0 1px rgba(255, 255, 255, .07), 0 30px 70px -20px rgba(0, 0, 0, .65);
+  --shadow: 0 0 0 1px rgba(255, 255, 255, .07);   /* on black, a fine light edge is enough */
+  --shadow-lg: 0 0 0 1px rgba(255, 255, 255, .09);
   --glass: rgba(var(--surface-rgb), .62);
 }
 /* glass: the top bar and the phone menu, everywhere (a single element: cheap even on tablets) */
@@ -2012,3 +2007,39 @@ html[data-theme="dark"] .partner { background: #DEDAE8; }
 @supports (corner-shape: squircle) { .pkg, .why__panel, .partner, .svc__ico, .stats__inner, .cta__box { corner-shape: squircle; } }
 /* titles: Apple's semibold and tighter lines; the smallest text never under 12 */
 h1, h2, h3, .head__title, .hero__title { line-height: var(--lh-title); }
+
+/* ===== Apple redesign, phase 2 (Nov 2026): the parts you touch ===== */
+/* buttons: one height scale (48 phone · 50 computer, the tap rule is 44), semibold label, flat */
+.btn { min-height: var(--btn-h); padding: 0 var(--btn-px); font-size: var(--fs-btn); line-height: 1.2; }
+.btn svg, .btn .arr { width: 18px; height: 18px; stroke-width: 1.75; }
+/* the rest of the solid purple pills follow the same flat style */
+.track-btn, .nav-cta, .head-start, .menu-cta { box-shadow: none; }
+.pkg--featured { box-shadow: none; }
+@media (hover: hover) { .track-btn:hover, .nav-cta:hover, .head-start:hover { background: color-mix(in srgb, var(--primary) 88%, #000); } }
+/* text links: Apple's «Learn more ›» — purple text and a small chevron, no underline bar */
+.project__more, .svc__more { gap: 4px; padding: 6px 0; border-bottom: 0; font-weight: var(--w-semibold); color: var(--primary); }
+html[data-theme="dark"] :is(.project__more, .svc__more) { color: var(--fg); }
+.project__more svg, .svc__more svg { width: 15px; height: 15px; stroke-width: 2.25; transition: transform var(--dur-fast) ease; }
+@media (hover: hover) { .project__more:hover, .svc__more:hover { gap: 4px; text-decoration: underline; text-underline-offset: 3px; }
+  .project__more:hover svg, .svc__more:hover svg { transform: translateX(-3px); } html[dir="ltr"] :is(.project__more, .svc__more):hover svg { transform: scaleX(-1) translateX(-3px); } }
+/* fields: Apple's filled fields — a light grey fill, no heavy border, a purple ring when typing */
+:is(.field, .portal__in, .chatw__start, .chatw__track, .exitm__box, .page .rv) :is(input:not([type=checkbox], [type=radio], [type=hidden]), select, textarea) {
+  min-height: 48px; padding: 12px 14px; border-radius: var(--r-sm); border: 1px solid transparent; background: color-mix(in srgb, var(--text) 5%, var(--bg)); color: var(--text); font: inherit; font-size: max(16px, 1rem); }
+html[data-theme="dark"] :is(.field, .portal__in, .chatw__start, .chatw__track, .exitm__box, .page .rv) :is(input:not([type=checkbox], [type=radio], [type=hidden]), select, textarea) { background: var(--apple-dk-1); }
+:is(.field, .portal__in, .chatw__start, .chatw__track, .exitm__box, .page .rv) :is(input, select, textarea):focus { outline: none; border-color: var(--primary); background: var(--bg); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent); }
+html[data-theme="dark"] :is(.field, .portal__in, .chatw__start, .chatw__track, .exitm__box, .page .rv) :is(input, select, textarea):focus { border-color: var(--fg); background: var(--apple-dk-1); }
+:is(.field, .portal__in, .chatw__start, .chatw__track, .exitm__box, .page .rv) :is(input, textarea)::placeholder { color: var(--muted); opacity: .75; }
+.field.bad :is(input, textarea, select) { border-color: #E5484D; }
+/* icons: one line weight everywhere (1.75, matching the semibold text next to them) */
+:is(.svc__ico, .ind__ico, .way__ico, .ways__ico, .theme-btn, .chatw__btn, .track-btn, .footer__social a, .ctype i) svg { stroke-width: 1.75; }
+/* glass (Liquid Glass): only for what floats over the page — the top bar; a fine light edge on top, content stays solid */
+.header__bar { background: color-mix(in srgb, var(--surface) 72%, transparent); border: 1px solid rgba(255, 255, 255, .5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 6px 24px -12px rgba(0, 0, 0, .18); -webkit-backdrop-filter: blur(22px) saturate(1.8); backdrop-filter: blur(22px) saturate(1.8); }
+html[data-theme="dark"] .header__bar { background: color-mix(in srgb, var(--apple-dk-1) 70%, transparent); border-color: rgba(255, 255, 255, .1); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08); }
+@media (prefers-reduced-transparency: reduce) { .header__bar, html[data-theme="dark"] .header__bar { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+/* «Increase contrast»: greys turn darker, hairlines turn into real lines (Apple's accessibility setting) */
+@media (prefers-contrast: more) {
+  :root { --l-muted: #4A4A4F; --line: rgba(var(--text-rgb), .22); --line-2: rgba(var(--text-rgb), .35); }
+  html[data-theme="dark"] { --dk-muted: #C7C7CC; }
+  .btn--ghost { box-shadow: inset 0 0 0 1.5px currentColor; }
+}

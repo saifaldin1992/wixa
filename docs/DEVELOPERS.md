@@ -731,3 +731,13 @@ When the live chat is on (`settings.chat.on`), it is the way to talk to us every
 - **Corners:** concentric radii inside the «لماذا ويكسا» panel; squircle corners on more surfaces where supported. `tests/site-layout.mjs` checks corners against the token scale and accepts concentric inner radii.
 - **Decorations kept:** the wave lines between sections, the turning globe, the line round the hero logo (now a quarter of the outline) and a soft glow. **Removed:** custom cursor (and its dashboard switch), particles, scroll progress bar, «scroll» hint, logo tilt, logo float and shine sweep. All the logo's rules are one block in `styles.css`.
 - **Clean-up:** about 60 selectors no page used any more were removed (old order form `rq__*`, old tracking page `track__*`, `totop`, `pulse`, the removed decorations…), plus seven stacked overrides of the logo line. styles.css went from 2147 to about 1990 lines.
+
+## Apple redesign — phase 2 (Nov 2026)
+- **Buttons (site):** one `.btn` definition — flat capsule, semibold, 48px (phone) / 50px (computer). `.btn--primary` = filled purple, no glow or shine sweep; `.btn--ghost` = Apple's «tinted» button (11% purple wash, purple text, no outline). The header, menu and «تتبع طلبك» pills lost their glows too.
+- **Buttons (dashboard):** `.b` = Apple grey button (`rgba(118,118,128,.12)`, capsule, no border), `.b--primary` filled purple, `.b--danger` red tint, `.b--ghost` plain; 44px on phones.
+- **Links:** «اعرف المزيد» and «عرض التفاصيل» are Apple text links: purple semibold text with a chevron (no underline bar).
+- **Fields:** Apple filled fields on the site (contact, portal, chat, review, exit offer) and in the dashboard: grey fill, no border until focus, then a purple ring; 16px text so iPhones don't zoom.
+- **Shadows:** barely visible in light mode (hairline + faint lift), none in dark mode (a fine light edge instead).
+- **Icons:** one stroke weight, 1.75.
+- **Glass:** only the floating top bar (blur + saturation, light top edge); content stays solid; «Reduce transparency» makes it opaque.
+- **Increase contrast** (`prefers-contrast: more`): darker greys, real lines instead of hairlines, outlined tinted buttons.
