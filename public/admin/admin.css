@@ -1344,3 +1344,6 @@ html[dir="ltr"] .ct-back svg { transform: scaleX(-1); }
 .subnav .ct-back { justify-self: start; }
 /* the sidebar: «لوحة التحكم» above the logo */
 .side .logo small { grid-row: 1; }
+/* design check (Nov 2026): the chosen role's note stays readable on its tinted card; phone links are a full 44px target */
+.role:has(input:checked) small { color: color-mix(in srgb, var(--muted) 75%, var(--text)); }
+.msg__info a[href^="tel:"], .msg__info a[href^="mailto:"] { display: inline-flex; align-items: center; min-height: 44px; }

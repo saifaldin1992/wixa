@@ -2183,7 +2183,7 @@ html[data-theme="dark"] :is(.flyout__col a:hover, .flyout__col a[aria-current], 
 
 /* narrow phones (360px and below, many Samsung phones): the round buttons keep their size; the logo gets smaller instead */
 .header__bar > *:not(.brand), .header__end > *, #themeBtn, #langBtn, #menuBtn { flex-shrink: 0; }
-.brand { min-width: 0; }
+.brand { min-width: 0; min-height: 44px; }
 @media (max-width: 380px) {
   .header__bar { gap: 8px; padding-inline: 10px; }
   html[dir="rtl"] .header__bar { padding-inline: 10px; }
@@ -2233,3 +2233,9 @@ html[lang] .chatw__btn svg { width: 22px; height: 22px; }
   html[lang] .chatw__btn svg, html[lang][dir="rtl"] .chatw__btn svg { width: 20px; height: 20px; margin: 0; }
 }
 html.fab-away .chatw__btn { transform: none; opacity: 1; pointer-events: auto; }
+/* design check: on phones the showcase's caption keeps clear of the phone picture, and the contact line has no stray dots */
+@media (max-width: 760px) {
+  .hero__show-cap { padding-inline-end: 30%; box-sizing: border-box; max-width: 100%; }
+  .footer__reach .footer__dot { display: none; }
+  .footer__reach { gap: 0 14px; }
+}
