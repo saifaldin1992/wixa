@@ -2180,3 +2180,14 @@ html[data-theme="dark"] :is(.flyout__col a:hover, .flyout__col a[aria-current], 
 .localnav__links a.on { color: var(--text); font-weight: 600; }
 @media (max-width: 640px) { .localnav__links { display: none; } }
 .page [id] { scroll-margin-top: calc(var(--bar-end, 78px) + 84px); }
+
+/* narrow phones (360px and below, many Samsung phones): the round buttons keep their size; the logo gets smaller instead */
+.header__bar > *:not(.brand), .header__end > *, #themeBtn, #langBtn, #menuBtn { flex-shrink: 0; }
+.brand { min-width: 0; }
+@media (max-width: 380px) {
+  .header__bar { gap: 8px; padding-inline: 10px; }
+  html[dir="rtl"] .header__bar { padding-inline: 10px; }
+  .brand { --lh: 21px; }
+  .pill-btn.lang-btn { padding-inline: 10px; }
+}
+@media (max-width: 330px) { .brand__name { display: none; } }
