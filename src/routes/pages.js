@@ -16,7 +16,7 @@ import { UI_DEFAULTS } from "../../public/js/ui-strings.js";
 import { SOCIAL } from "../../public/js/social-icons.js";
 import { SECURITY_HEADERS, WIXA, esc, fmtDate, notFound, pickLang, safeHref, versionAssets, versioned } from "../lib/core.js";
 import { cspWithTags, getConfig, getPosts, getSiteData, hasBypass, maintenancePage, memo as siteMemo, postsSeen } from "../services/data.js";
-import { FOOTER_GROUPS, groupOf, navLink, sectionShown } from "../../public/js/site-structure.js";
+import { ctaTarget, customLink, footerGroups, groupOf, navLink, sectionShown } from "../../public/js/site-structure.js";
 import { arrangeSections } from "../lib/arrange.js";
 
 // Cloudflare Web Analytics: privacy-friendly, cookie-less visit counting that never touches our database.
@@ -48,8 +48,8 @@ export function faqLd(st, lang) {
 export function pageNotFound(request, st) {
   const lang = pickLang(request, st.default_lang), ar = lang === "ar", q = `?lang=${lang}`;
   const links = ar
-    ? [["/order", "ابدأ مشروعك"], ["/services", "خدماتنا"], ["/projects", "نماذج من عملنا"], ["/pricing", "الباقات والأسعار"], ["/faq", "الأسئلة الشائعة"], ["/contact", "تواصل معنا"]]
-    : [["/order", "Start your project"], ["/services", "Services"], ["/projects", "Our work"], ["/pricing", "Packages & pricing"], ["/faq", "FAQ"], ["/contact", "Contact us"]];
+    ? [["/order", "ابدأ مشروعك"], ["/services", "خدماتنا"], ["/projects", "أعمالنا"], ["/pricing", "الأسعار"], ["/faq", "الأسئلة الشائعة"], ["/contact", "تواصل معنا"]]
+    : [["/order", "Start your project"], ["/services", "Services"], ["/projects", "Our work"], ["/pricing", "Pricing"], ["/faq", "FAQ"], ["/contact", "Contact us"]];
   const body = `<div class="nf"><svg class="nf__logo" viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m" fill="currentColor"/></svg>
     <div class="nf__code" aria-hidden="true">404</div>
     <h1>${ar ? "الصفحة غير موجودة" : "Page not found"}</h1>
@@ -126,7 +126,7 @@ export async function handleHome(request, env, ctx, pageName = "home") {
   // one header and footer for every page (siteShell), and the sections in the order of this page's layout
   const empty = new Set([...hide].filter((k) => k === "partners" || k === "testimonials"));
   if (Array.isArray(posts) && !posts.length) empty.add("blog"); // no articles yet: no «المقالات» link
-  const shell = siteShell(st, lang, pagePath, { empty });
+  const shell = siteShell(st, lang, pagePath, { empty, services: (parsed.services || []).filter((x) => x && x.slug) });
   let html = await page.text();
   html = html.replace(/<header class="header" id="header">[\s\S]*?<\/header>/, () => shell.header)
     .replace(/<footer class="footer">[\s\S]*?<\/footer>/, () => shell.footer);
@@ -216,7 +216,8 @@ export function footerExtra(st, lang, path = "") {
   const team = { ...TEAM_DEFAULTS, ...(st.team || {}) };
   const q = lang === "ar" ? "" : "?lang=en";
   const a = (href, label, i) => `<a href="${href}${q}"${path === href ? ' aria-current="page"' : ""} style="order:${100 + i}">${esc(label)}</a>`;
-  const out = sitePages(st).filter((p) => p.published && p.footer).map((p, i) => ({ g: ["services", "company", "support", "legal"].includes(p.group) ? p.group : "legal", html: a(p.path, p[`title_${lang}`] || p.title_ar || p.title_en, i) }));
+  const gs = footerGroups(st).map((g) => g.k);
+  const out = sitePages(st).filter((p) => p.published && p.footer).map((p, i) => ({ g: gs.includes(p.group) ? p.group : "legal", html: a(p.path, p[`title_${lang}`] || p.title_ar || p.title_en, i) }));
   if (team.on && team.footer) out.push({ g: "company", html: a("/team", team[`title_${lang}`] || TEAM_DEFAULTS[`title_${lang}`], 50) });
   return out;
 }
@@ -235,34 +236,64 @@ const sectionsHtml = (list, email) => {
 // belong; where a link goes and whether it shows comes from the site structure (public/js/site-structure.js → navLink),
 // so a link follows its section when the section moves to another page and disappears when the section is off.
 // empty: sections with nothing to show (no partners yet) — their links are hidden too.
-export function siteShell(st, lang, path, { empty } = {}) {
+export function siteShell(st, lang, path, { empty, services } = {}) {
   const ar = lang === "ar", q = ar ? "" : "?lang=en", other = ar ? "en" : "ar";
   const ui = { ...UI_DEFAULTS[lang] };
   for (const [k, v] of Object.entries(st.ui?.[lang] || {})) if (typeof v === "string" && v.trim() && k in ui) ui[k] = v;
   const gone = empty || emptyNow();
   const c = WIXA.merge(WIXA.DEFAULTS, st).contact || {};
   const tkey = (k) => (k === "privacy" ? "privacy" : `nav_${k}`);
-  const withLang = (h) => { const [p, hash] = h.split("#"); return `${p}${q}${hash ? `#${hash}` : ""}`; };
+  const withLang = (h) => { if (!h.startsWith("/")) return h; const [p, hash] = h.split("#"); return `${p}${q}${hash ? `#${hash}` : ""}`; };
+  const svcs = services || servicesNow();
+  const known = { services: svcs, pages: sitePages(st) };
   const plan = WIXA.navPlan(st);
-  const link = (x, i, footer) => {
-    const t = navLink(st, x.k, gone);
+  const chev = '<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6l-6 6 6 6"/></svg>';
+  const current = (href) => (href === path ? ' aria-current="page"' : href !== "/" && href.startsWith("/") && !href.includes("#") && path.startsWith(href + "/") ? ' aria-current="true"' : "");
+  // the services are listed under «خدماتنا»: in the top bar's drop-down, the phone menu's second panel and the footer
+  const svcLinks = svcs.map((s) => [withLang(`/services/${encodeURIComponent(s.slug)}`), s[`title_${lang}`] || s.title_ar || s.title_en || "", `/services/${s.slug}`]).filter(([, t]) => t);
+  const svcShown = plan.some((x) => x.k === "services" && x.at !== "hidden" && x.at !== "footer") && navLink(st, "services", gone).shown && svcLinks.length > 0;
+  // one link of the menus: where = "menu" (top bar), "phone" (☰ menu) or "footer"
+  const link = (x, i, where) => {
+    const footer = where === "footer";
     const place = x.at === "both" || x.at === (footer ? "footer" : "menu");
-    return `<a href="${withLang(t.href)}"${footer ? ' data-where="footer"' : ""}${gone.has(x.k) ? " data-empty" : ""} data-nav="${x.k}" data-t="${tkey(x.k)}" style="order:${i}"${t.href === path ? ' aria-current="page"' : t.href !== "/" && !t.href.includes("#") && path.startsWith(t.href + "/") ? ' aria-current="true"' : ""}${place && t.shown ? "" : " hidden"}>${esc(ui[tkey(x.k)] || x.k)}</a>`;
+    if (x.kind) {
+      // a link the owner added (a service, an added page, a web address)
+      const t = customLink(x, known);
+      const href = withLang(t.href), ext = t.external ? ' target="_blank" rel="noopener"' : "";
+      return `<a href="${esc(href)}"${ext}${footer ? ' data-where="footer"' : ""} data-nav="${x.k}" data-custom${t.shown ? "" : " data-off"} style="order:${i}"${current(t.href)}${place && t.shown ? "" : " hidden"}>${esc(t.label(lang))}</a>`;
+    }
+    const t = navLink(st, x.k, gone);
+    const hidden = place && t.shown ? "" : " hidden";
+    // the phone menu: «خدماتنا ›» opens the list of services (as apple.com's menu on an iPhone)
+    if (where === "phone" && x.k === "services" && svcShown) return `<button type="button" class="mlink" data-nav="services" data-sub="menuSvc" aria-expanded="false" aria-controls="menuSvc" style="order:${i}"${hidden}><span data-t="nav_services">${esc(ui.nav_services)}</span>${chev}</button>`;
+    // the footer's «الخدمات» group lists the services themselves; the services page is then «كل الخدمات»
+    const label = footer && x.k === "services" && listSvc ? ui.more_services : ui[tkey(x.k)] || x.k;
+    const fly = where === "menu" && x.k === "services" && svcShown ? ' aria-haspopup="true" aria-expanded="false" aria-controls="svcFly"' : "";
+    return `<a href="${withLang(t.href)}"${footer ? ' data-where="footer"' : ""}${gone.has(x.k) ? " data-empty" : ""} data-nav="${x.k}"${footer && x.k === "services" && listSvc ? "" : ` data-t="${tkey(x.k)}"`}${fly} style="order:${i}"${current(t.href)}${hidden}>${esc(label)}</a>`;
   };
-  const menu = plan.map((x, i) => link(x, i, false)).join("");
-  // footer: the links in their groups (site-structure.js → FOOTER_GROUPS), each group titled; «قانوني» is one small line
+  const listSvc = st.nav?.footer_services !== false && svcLinks.length > 0;
+  const menu = plan.map((x, i) => link(x, i, "menu")).join("");
+  const phone = plan.map((x, i) => link(x, i, "phone")).join("");
+  // «ابدأ مشروعك»: the order page, or the place the owner chose (dashboard → القوائم)
+  const cta = ctaTarget(st, c.whatsapp);
+  const ctaHref = esc(cta.external ? cta.href : withLang(cta.href));
+  const ctaFree = cta.order ? "" : ` data-free${cta.external ? ' target="_blank" rel="noopener"' : ""}`;
+  // footer: the links in their groups (site-structure.js → footerGroups), each group titled; «قانوني» is one small line
   const extra = footerExtra(st, lang, path);
+  if (path !== "/portal") extra.push({ g: "support", html: `<a href="/portal${q}" style="order:200" data-t="track">${esc(ui.track)}</a>` });
   const groupHtml = (g) => {
-    const links = plan.map((x, i) => [x, i]).filter(([x]) => groupOf(x) === g.k).map(([x, i]) => link(x, i, true)).join("")
+    const own = g.k === "services" && listSvc ? svcLinks.map(([h, t, raw], j) => `<a href="${h}" style="order:${j - 100}"${current(raw)}>${esc(t)}</a>`).join("") : "";
+    const links = own + plan.map((x, i) => [x, i]).filter(([x]) => groupOf(x, st) === g.k).map(([x, i]) => link(x, i, "footer")).join("")
       + extra.filter((e) => e.g === g.k).map((e) => e.html).join("");
     const shown = /<a (?![^>]*\shidden)/.test(links);
     return { links, shown };
   };
-  const main = FOOTER_GROUPS.filter((g) => g.k !== "legal").map((g) => {
+  const groupsAll = footerGroups(st);
+  const main = groupsAll.filter((g) => g.k !== "legal").map((g) => {
     const { links, shown } = groupHtml(g);
-    return `<details class="fgroup" open${shown ? "" : " hidden"}><summary class="fgroup__title">${esc(g[`name_${lang}`] || g.name_ar)}</summary><nav class="footer__nav">${links}</nav></details>`;
+    return `<details class="fgroup" open${shown ? "" : " hidden"}><summary class="fgroup__title">${esc(g[`name_${lang}`] || g.name_ar)}</summary><nav class="footer__nav" data-g="${esc(g.k)}">${links}</nav></details>`;
   }).join("");
-  const legal = groupHtml(FOOTER_GROUPS.find((g) => g.k === "legal"));
+  const legal = groupHtml(groupsAll.find((g) => g.k === "legal"));
   const reach = [
     c.whatsapp && !st.chat?.on ? `<a href="https://wa.me/${esc(String(c.whatsapp).replace(/\D/g, ""))}" target="_blank" rel="noopener" dir="ltr">${esc(c.phone || `+${String(c.whatsapp).replace(/\D/g, "")}`)}</a>` : c.phone || c.whatsapp ? `<a href="tel:${esc(String(c.phone).replace(/[^\d+]/g, ""))}" dir="ltr">${esc(c.phone)}</a>` : "",
     c.email ? `<a href="mailto:${esc(c.email)}" dir="ltr">${esc(c.email)}</a>` : "",
@@ -270,7 +301,7 @@ export function siteShell(st, lang, path, { empty } = {}) {
   ].filter(Boolean);
   const groups = `<div class="footer__groups">${main}</div>
     ${reach.length ? `<p class="footer__reach"><span class="footer__reach-t" data-t="f_reach">${esc(ui.f_reach || "")}</span>${reach.join('<span class="footer__dot" aria-hidden="true">·</span>')}</p>` : ""}
-    <nav class="footer__nav footer__legal"${legal.shown ? "" : " hidden"}>${legal.links}</nav>`;
+    <nav class="footer__nav footer__legal" data-g="legal"${legal.shown ? "" : " hidden"}>${legal.links}</nav>`;
   const start = esc(ui.nav_start);
   const brandName = ar ? "ويكسا" : "WIXA";
   const mark = '<svg viewBox="0 0 2021 982" aria-hidden="true"><use href="/logo.svg#m"/></svg>';
@@ -280,6 +311,16 @@ export function siteShell(st, lang, path, { empty } = {}) {
   const socials = ["instagram", "x", "linkedin", "facebook"].map((k) => [k, social(k)]).filter(([, u]) => u).map(([k, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener" aria-label="${k}">${SOCIAL[k]}</a>`).join("")
     + (c.email ? `<a href="mailto:${esc(c.email)}" aria-label="email"><svg viewBox="0 0 24 24"><path d="M3 5h18v14H3z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 6l9 7 9-7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></a>` : "");
   const contactOff = !sectionShown(st, "contact", gone) ? " hidden" : "";
+  // computers: «خدماتنا» opens a drop-down with every service and a few quick links (apple.com's global nav)
+  const quick = [
+    navLink(st, "pricing", gone).shown && [withLang(navLink(st, "pricing", gone).href), ui.nav_pricing],
+    sectionShown(st, "calculator", gone) && [withLang(navLink(st, "calc", gone).href), ui.nav_calc],
+    [cta.external ? cta.href : withLang(cta.href), ui.nav_start, cta],
+  ].filter(Boolean);
+  const flyout = svcShown ? `<div class="flyout" id="svcFly" hidden><div class="flyout__in">
+      <div class="flyout__col flyout__col--main"><p class="flyout__h">${esc(ui.nav_services)}</p>${svcLinks.map(([h, t, raw]) => `<a href="${h}"${current(raw)}>${esc(t)}</a>`).join("")}<a class="flyout__all" href="${withLang("/services")}">${esc(ui.more_services)}${chev}</a></div>
+      <div class="flyout__col"><p class="flyout__h">${esc(ui.fly_quick)}</p>${quick.map(([h, t, cc]) => `<a href="${esc(h)}"${cc ? (cc.order ? " data-start" : ctaFree) : ""}>${esc(t)}</a>`).join("")}</div>
+    </div></div>` : "";
   // first stop for keyboard users: jump past the menu straight to the page's content (WCAG 2.4.1)
   const header = `<a class="skip" href="#content">${ar ? "تخطَّ إلى المحتوى" : "Skip to content"}</a><header class="header" id="header">
     <div class="header__bar">
@@ -287,28 +328,39 @@ export function siteShell(st, lang, path, { empty } = {}) {
         <span class="brand__mark" id="brandMark">${mark}</span>
         <span class="brand__name" data-t="brand">${word}</span>
       </a>
-      <nav class="header__nav" aria-label="main">${menu}<a href="/order${q}" class="nav-cta" data-t="nav_start" data-sec="contact"${contactOff}>${start}</a></nav>
+      <nav class="header__nav" aria-label="main">${menu}<a href="${ctaHref}" class="nav-cta" data-t="nav_start" data-sec="contact"${ctaFree}${contactOff}>${start}</a></nav>
       <div class="header__end">
         <button class="theme-btn" id="themeBtn" data-theme-toggle type="button" aria-label="${ar ? "الوضع الليلي / النهاري" : "Dark / light mode"}"><svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/></svg><svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
         <a class="pill-btn lang-btn" id="langBtn" href="${path}?lang=${other}" hreflang="${other}">${ar ? "EN" : "ع"}</a>
-        <a href="/order${q}" class="head-start" data-start data-t="nav_start">${start}</a>
+        <a href="${ctaHref}" class="head-start" data-start data-t="nav_start"${ctaFree}>${start}</a>
         <button class="menu-btn" id="menuBtn" type="button" aria-label="menu" aria-expanded="false"><span></span><span></span></button>
       </div>
     </div>
-    <div class="header__menu" id="menu"><a href="/order${q}" class="menu-cta" data-start data-t="nav_start">${start}</a>${menu}</div>
+    ${flyout}
+    <div class="header__menu" id="menu"><div class="mpanel" id="menuMain"><a href="${ctaHref}" class="menu-cta" data-start data-t="nav_start"${ctaFree}>${start}</a>${phone}</div>${svcShown ? `<div class="mpanel mpanel--sub" id="menuSvc" hidden><button type="button" class="mpanel__back" data-back>${chev}<span data-t="menu_back">${esc(ui.menu_back)}</span></button><p class="mpanel__h">${esc(ui.nav_services)}</p>${svcLinks.map(([h, t, raw]) => `<a href="${h}"${current(raw)}>${esc(t)}</a>`).join("")}<a class="mpanel__all" href="${withLang("/services")}">${esc(ui.more_services)}${chev}</a></div>` : ""}</div>
   </header>`;
   const footer = `<footer class="footer">
     <svg class="footer__wave footer__wave--brand" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="fwv" x1="0" x2="1"><stop offset="0" style="stop-color:var(--fg)"/><stop offset=".5" style="stop-color:var(--accent)"/><stop offset="1" style="stop-color:var(--fg)"/></linearGradient></defs><path pathLength="1" stroke="url(#fwv)" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
     <svg class="footer__wave" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M0 20 C 100 0, 200 0, 300 20 S 500 40, 600 20 S 800 0, 900 20 S 1100 40, 1200 20"/></svg>
 ${groups}
     <div class="footer__tools">
-      ${path === "/portal" ? "" : `<a href="/portal${q}" class="track-btn" data-track><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg><span data-t="track">${esc(ui.track)}</span></a>`}
       <div class="footer__social" id="social">${socials}</div>
     </div>
     <div class="footer__brand"><a href="${path === "/" ? "#top" : `/${q}`}" class="brand"><span class="brand__mark">${mark}</span><span class="brand__name" data-t="brand">${word}</span></a></div>
     <p class="footer__credit"><span data-c="footer_text">${esc(st.content?.[lang]?.footer_text || (ar ? "طُوّر بواسطة فريق ويكسا" : "Developed by the WIXA team"))}</span> · © <span id="year">${new Date().getFullYear()}</span></p>
   </footer>`;
   return { header, footer, ui };
+}
+// The published services from the shared copy of the site data ({ slug, title_ar, title_en }), read once per copy.
+let svcMemo = { text: undefined, list: [] };
+function servicesNow() {
+  const t = siteMemo.text;
+  if (t !== svcMemo.text) {
+    let list = [];
+    try { list = (JSON.parse(t).services || []).filter((x) => x && x.slug).map(({ id, slug, title_ar, title_en }) => ({ id, slug, title_ar, title_en })); } catch {}
+    svcMemo = { text: t, list };
+  }
+  return svcMemo.list;
 }
 // Sections with nothing to show right now (for pages built without the site data at hand): read from the shared copy.
 function emptyNow() {
@@ -338,7 +390,7 @@ const bootHtml = (lang) => { const ar = lang === "ar"; return `<div class="boot"
 
 // One page layout shared by service and project pages, articles, the privacy policy and the review form:
 // the site's own stylesheet, header, menu and footer, with the page's content in the middle.
-export function simplePage(request, st, { lang, title, description, path, image, body, jsonld, status = 200, orderQ = "", ending = true, crumbs = null, startLabel = "", scripts = [], noindex = false }) {
+export function simplePage(request, st, { lang, title, description, path, image, body, jsonld, status = 200, orderQ = "", ending = true, crumbs = null, startLabel = "", localLinks = [], scripts = [], noindex = false }) {
   const ar = lang === "ar";
   const origin = new URL(request.url).origin;
   const t = st.theme || {};
@@ -352,7 +404,7 @@ export function simplePage(request, st, { lang, title, description, path, image,
   const trail = crumbs ? [[ui.nav_home || (ar ? "الرئيسية" : "Home"), "/"], ...crumbs] : null;
   // apple.com's local bar on a service or project page: the page's name and its one action, shown once the title has
   // scrolled away (/theme-pre.js adds .is-on)
-  const localNav = crumbs && startLabel ? `<nav class="localnav" aria-label="${esc(title)}"><div class="localnav__in"><b>${esc(title)}</b><a class="btn btn--primary localnav__cta" data-start href="/order?lang=${lang}${orderQ}">${esc(startLabel)}</a></div></nav>` : "";
+  const localNav = crumbs && startLabel ? `<nav class="localnav" aria-label="${esc(title)}"><div class="localnav__in"><b>${esc(title)}</b>${localLinks.length ? `<span class="localnav__links">${localLinks.map(([l, h]) => `<a href="${h}">${esc(l)}</a>`).join("")}</span>` : ""}<a class="btn btn--primary localnav__cta" data-start href="/order?lang=${lang}${orderQ}">${esc(startLabel)}</a></div></nav>` : "";
   const crumbHtml = trail ? `<nav class="crumbs" aria-label="${ar ? "مسار الصفحة" : "Breadcrumb"}"><ol>${trail.map(([l, h]) => `<li><a href="${h}?lang=${lang}">${esc(ui[l] || l)}</a></li>`).join("")}<li aria-current="page">${esc(title)}</li></ol></nav>` : "";
   if (trail) {
     const crumbLd = { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [...trail, [title, path]].map(([l, h], i) => ({ "@type": "ListItem", position: i + 1, name: ui[l] || l, item: `${origin}${h}?lang=${lang}` })) };
@@ -367,6 +419,7 @@ export function simplePage(request, st, { lang, title, description, path, image,
 ${font === WIXA.BRAND_FONT ? '<link rel="preload" href="/fonts/noto-sans-arabic/noto-sans-arabic-arabic-600-normal.woff2" as="font" type="font/woff2" crossorigin>' : hosted ? "" : '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'}
 ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld).replace(/</g, "\\u003c")}</script>` : ""}
 <script src="/theme-pre.js"></script>
+<script src="/menus.js" defer></script>
 <style>${BOOT_CSS}</style>
 <style id="wixa-theme">:root{${Object.entries(WIXA.themeVars(WIXA.merge(WIXA.DEFAULTS, st), st.font?.family)).map(([k, v]) => `${k}:${String(v).replace(/[<>{};]/g, "")}`).join(";")}}</style>
 <style>
@@ -552,15 +605,19 @@ export async function handleServicePage(request, env, ctx, slug) {
   const ask = ar ? `مرحباً ويكسا، أريد الاستفسار عن: ${T(sv, "title")}` : `Hello WIXA, I'd like to ask about: ${T(sv, "title")}`;
   const projects = (d.projects || []).slice(0, 3);
   const others = (d.services || []).filter((x) => x !== sv);
+  const det = detailsHtml(T(sv, "details"));
   const body = `<h1>${esc(T(sv, "title"))}</h1>
     ${T(sv, "summary") ? `<p class="lead">${esc(T(sv, "summary"))}</p>` : ""}
-    ${detailsHtml(T(sv, "details"))}
+    ${det.replace("<h2>", '<h2 id="details">')}
     ${st.chat?.on ? `<p class="actions" style="margin-top:20px"><button type="button" class="btn btn--primary btn--chat" data-open-chat data-topic="svc" data-service="${esc(T(sv, "title"))}"><svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.6 7.1L4 20.5l1.4-4.8A8 8 0 1121 12z"/></svg>${ar ? "اسأل عن هذه الخدمة في المحادثة المباشرة" : "Ask about this service in live chat"}</button></p>`
       : wa ? `<p><a class="btn btn--wa" href="https://wa.me/${wa}?text=${encodeURIComponent(ask)}" target="_blank" rel="noopener">${ar ? "اسأل عن هذه الخدمة عبر واتساب" : "Ask about this service on WhatsApp"}</a></p>` : ""}
-    ${projects.length ? `<section class="more"><h2>${ar ? "من أعمالنا" : "From our work"}</h2><div class="more__grid">${projects.map((o) => `<a href="/projects/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(T(o, "category") || snip(T(o, "summary"), 70))}</span></a>`).join("")}</div></section>` : ""}
-    ${others.length ? `<section class="more"><h2>${ar ? "خدمات أخرى" : "Other services"}</h2><div class="more__grid">${others.map((o) => `<a href="/services/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(snip(T(o, "summary"), 90))}</span></a>`).join("")}</div></section>` : ""}`;
+    ${projects.length ? `<section class="more" id="work"><h2>${ar ? "من أعمالنا" : "From our work"}</h2><div class="more__grid">${projects.map((o) => `<a href="/projects/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(T(o, "category") || snip(T(o, "summary"), 70))}</span></a>`).join("")}</div></section>` : ""}
+    ${others.length ? `<section class="more" id="others"><h2>${ar ? "خدمات أخرى" : "Other services"}</h2><div class="more__grid">${others.map((o) => `<a href="/services/${encodeURIComponent(o.slug)}?lang=${lang}"><b>${esc(T(o, "title"))}</b><span>${esc(snip(T(o, "summary"), 90))}</span></a>`).join("")}</div></section>` : ""}`;
   const origin = new URL(request.url).origin;
-  return simplePage(request, st, { orderQ: `&svc=${encodeURIComponent(slug)}`, crumbs: [["nav_services", "/services"]], startLabel: ar ? "اطلب هذه الخدمة" : "Request this service",
+  // apple.com's local bar: the page's name, its parts, its one action
+  const localLinks = [[ar ? "نظرة عامة" : "Overview", "#content"], det.includes("<h2>") && [ar ? "التفاصيل" : "Details", "#details"],
+    projects.length && [ar ? "من أعمالنا" : "Our work", "#work"], others.length && [ar ? "خدمات أخرى" : "Other services", "#others"]].filter(Boolean);
+  return simplePage(request, st, { orderQ: `&svc=${encodeURIComponent(slug)}`, crumbs: [["nav_services", "/services"]], startLabel: ar ? "اطلب هذه الخدمة" : "Request this service", localLinks: localLinks.length > 1 ? localLinks : [],
     lang, title: T(sv, "title"), description: (T(sv, "summary") || T(sv, "details")).slice(0, 160), path: `/services/${encodeURIComponent(sv.slug)}`, body,
     jsonld: { "@context": "https://schema.org", "@type": "Service", name: T(sv, "title"), description: T(sv, "summary"), areaServed: "IQ", provider: { "@type": "Organization", name: "WIXA", url: origin } },
   });

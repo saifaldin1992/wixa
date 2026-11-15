@@ -133,15 +133,72 @@ export function navLink(settings, k, empty) {
 
 // The footer's link groups, in order. A menu link goes to the group given here unless the owner chose another one
 // (dashboard → القوائم; kept as `g` on the link in settings.nav). Pages added from the dashboard go to «قانوني» unless
-// they say otherwise (page.group); the team page goes to «الشركة» and the status page to «الدعم».
-// «قانوني» is shown as one small line under the other groups.
+// they say otherwise (page.group); the team page goes to «الشركة». The owner may rename these groups and add new ones
+// (settings.footer_groups); «قانوني» always exists and is shown as one small line under the other groups.
 export const FOOTER_GROUPS = [
   { k: "services", name_ar: "الخدمات", name_en: "Services" },
   { k: "company", name_ar: "الشركة", name_en: "Company" },
   { k: "support", name_ar: "الدعم", name_en: "Support" },
   { k: "legal", name_ar: "قانوني", name_en: "Legal" },
 ];
-export const LINK_GROUP = { services: "services", projects: "services", pricing: "services",
+// apple.com's footer is the site map: «الخدمات» lists the services themselves, the company's pages go under «الشركة»
+export const LINK_GROUP = { services: "services", pricing: "services", projects: "company",
   about: "company", careers: "company", blog: "company", partners: "company", home: "company",
   contact: "support", faq: "support", privacy: "legal" };
-export const groupOf = (x) => (FOOTER_GROUPS.some((g) => g.k === x.g) ? x.g : LINK_GROUP[x.k] || "company");
+const str = (v, n = 80) => (typeof v === "string" ? v.trim().slice(0, n) : "");
+// the groups as saved by the owner (names, order, added groups), always with «قانوني» last
+export function footerGroups(settings) {
+  const saved = settings && Array.isArray(settings.footer_groups) ? settings.footer_groups : null;
+  if (!saved) return FOOTER_GROUPS.map((g) => ({ ...g }));
+  const out = [], seen = new Set();
+  for (const g of saved) {
+    const k = str(g && g.k, 24);
+    if (!/^[a-z0-9-]+$/.test(k) || seen.has(k)) continue;
+    const def = FOOTER_GROUPS.find((d) => d.k === k) || {};
+    seen.add(k); out.push({ k, name_ar: str(g.name_ar) || def.name_ar || k, name_en: str(g.name_en) || def.name_en || str(g.name_ar) || k });
+  }
+  if (!seen.has("legal")) out.push({ ...FOOTER_GROUPS[3] });
+  return [...out.filter((g) => g.k !== "legal"), out.find((g) => g.k === "legal")];
+}
+export const groupOf = (x, settings) => {
+  const gs = footerGroups(settings);
+  if (gs.some((g) => g.k === x.g)) return x.g;
+  const d = LINK_GROUP[x.k] || (x.kind === "page" ? "legal" : "company");
+  return gs.some((g) => g.k === d) ? d : gs[0].k;
+};
+
+// Links the owner added (dashboard → القوائم → «إضافة رابط»): a service, a page added in the dashboard, or any web
+// address. Kept in settings.nav.items as { k: "x-…", kind, ref | url, label_ar, label_en, at, g }.
+// services: [{ slug, title_ar, title_en }] and pages: [{ path, title_ar, title_en, published }] as the caller has them.
+// → { href, label(lang), external, shown }
+export function customLink(x, { services = [], pages = [] } = {}) {
+  const none = { href: "/", label: () => "", external: false, shown: false };
+  if (!x || typeof x.k !== "string" || !x.k.startsWith("x-")) return none;
+  const own = (lang, fb) => str(x[`label_${lang}`]) || str(x.label_ar) || str(x.label_en) || fb(lang) || "";
+  if (x.kind === "service") {
+    const s = services.find((v) => v && (v.slug === x.ref || String(v.id) === String(x.ref)));
+    return s ? { href: `/services/${encodeURIComponent(s.slug)}`, label: (l) => own(l, (q) => s[`title_${q}`] || s.title_ar), external: false, shown: true } : none;
+  }
+  if (x.kind === "page") {
+    const p = pages.find((v) => v && v.path === x.ref);
+    return p ? { href: p.path, label: (l) => own(l, (q) => p[`title_${q}`] || p.title_ar), external: false, shown: p.published !== false } : none;
+  }
+  if (x.kind === "url") {
+    const u = str(x.url, 500);
+    const ok = /^https:\/\/[^\s/]+\.[^\s]+$/i.test(u) || /^\/[^\s/][^\s]*$/.test(u) || /^(mailto|tel):[^\s]+$/i.test(u);
+    return ok ? { href: u, label: (l) => own(l, () => u.replace(/^https:\/\//, "")), external: /^https:/i.test(u), shown: true } : none;
+  }
+  return none;
+}
+
+// Where «ابدأ مشروعك» (top bar, phone menu, local bars) takes the visitor: the order page unless the owner chose
+// another place (dashboard → القوائم). → { href (without ?lang for site pages), order: true when it is the order page }
+export function ctaTarget(settings, whatsapp) {
+  const c = (settings && settings.nav && settings.nav.cta) || {};
+  const wa = String(whatsapp || "").replace(/\D/g, "");
+  if (c.to === "contact") return { href: "/contact", order: false };
+  if (c.to === "calc") return { href: "/pricing#calculator", order: false };
+  if (c.to === "whatsapp" && wa) return { href: `https://wa.me/${wa}`, order: false, external: true };
+  if (c.to === "url") { const l = customLink({ k: "x-cta", kind: "url", url: c.url }); if (l.shown) return { href: l.href, order: false, external: l.external }; }
+  return { href: "/order", order: true };
+}

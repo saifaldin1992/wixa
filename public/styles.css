@@ -2104,3 +2104,79 @@ html[dir="ltr"] .hero__show-cap svg { transform: scaleX(-1); }
 @keyframes showGrow { from { transform: scale(.92); opacity: .6; } to { transform: none; opacity: 1; } }
 @keyframes scrollRise { from { transform: translateY(28px); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (max-width: 760px) { .hero__show-cap { margin-top: 56px; } } /* clear of the phone that hangs below the screen */
+
+/* ===== Menus, apple.com style (Nov 2026) ===== */
+/* the page you are on: its link in the text colour and a heavier weight (no accent colour) */
+.header__menu a[aria-current] { color: var(--text); font-weight: 700; }
+.chev { width: 1em; height: 1em; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+html[dir="ltr"] :is(.mlink, .mpanel__all, .flyout__all) .chev, html[dir="rtl"] .mpanel__back .chev { transform: scaleX(-1); }
+
+/* computers: «خدماتنا» drops a panel with every service and a few quick links */
+.flyout { position: absolute; inset-inline: 0; top: calc(100% + 8px); pointer-events: auto; }
+.flyout[hidden] { display: none; }
+.flyout__in { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--sp-7); padding: var(--sp-6) var(--sp-7) var(--sp-7);
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-xl); box-shadow: 0 24px 60px -28px rgba(0, 0, 0, .3); animation: flyIn .28s var(--ease-standard, ease) both; }
+@keyframes flyIn { from { opacity: 0; transform: translateY(-6px); } }
+.flyout__h { margin: 0 0 var(--sp-3); font-size: .75rem; font-weight: 600; color: var(--muted); }
+.flyout__col { display: grid; align-content: start; gap: 2px; }
+.flyout__col--main { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--sp-6); }
+.flyout__col--main .flyout__h, .flyout__col--main .flyout__all { grid-column: 1 / -1; }
+.flyout__col a { display: block; padding: 6px 0; color: var(--text); font-size: .9375rem; font-weight: 500; }
+.flyout__col--main a { font-size: 1.0625rem; font-weight: 600; }
+.flyout__col a:hover { color: var(--primary); }
+.flyout__col a[aria-current] { color: var(--primary); }
+.flyout .flyout__all { display: inline-flex; align-items: center; gap: 4px; margin-top: var(--sp-3); color: var(--primary); font-size: .9375rem; font-weight: 600; }
+html[data-theme="dark"] :is(.flyout__col a:hover, .flyout__col a[aria-current], .flyout .flyout__all) { color: var(--fg); }
+@media (max-width: 1239px) { .flyout { display: none !important; } }
+.header__nav a[aria-expanded="true"] { color: var(--text); background: rgba(var(--text-rgb), .05); }
+
+/* phones and tablets: the ☰ menu fills the screen, its links large and arriving one after another */
+@media (max-width: 1239px) {
+  .header__menu, html .header__menu { position: fixed; inset: 0; z-index: -1; height: 100dvh; max-height: none; margin: 0; display: block; overflow-y: auto;
+    padding: calc(var(--bar-end, 78px) + var(--sp-4)) max(var(--gutter, 20px), 28px) var(--sp-8); border: 0; border-radius: 0; box-shadow: none;
+    background: var(--bg) !important; -webkit-backdrop-filter: none; backdrop-filter: none; transform: none; opacity: 0; visibility: hidden; transition: opacity .3s ease, visibility .3s; }
+  .header__menu.open { opacity: 1; visibility: visible; }
+  .mpanel { display: flex; flex-direction: column; max-width: 560px; margin: 0 auto; }
+  .mpanel[hidden] { display: none; }
+  .header__menu .mpanel > :is(a, button, p) { opacity: 0; transform: translateY(-10px); transition: opacity .35s ease, transform .45s var(--ease-spring, ease); transition-delay: calc(var(--i, 0) * 28ms + 60ms); }
+  .header__menu.open .mpanel > :is(a, button, p) { opacity: 1; transform: none; }
+  .header__menu .mpanel > a:not(.menu-cta, .mpanel__all), .header__menu .mlink { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: 56px; padding: 6px 0; border-radius: 0;
+    font-size: 1.75rem; font-weight: 600; line-height: 1.25; color: var(--text); background: none; text-align: start; width: 100%; }
+  .header__menu .mpanel > a:hover, .header__menu .mlink:hover { background: none; }
+  @media (hover: hover) { .header__menu .mpanel > a:hover, .header__menu .mlink:hover { color: var(--primary); } html[data-theme="dark"] .header__menu .mpanel > a:hover, html[data-theme="dark"] .header__menu .mlink:hover { color: var(--fg); } }
+  .header__menu .mlink .chev { width: 22px; height: 22px; color: var(--muted); }
+  .header__menu .menu-cta { margin-bottom: var(--sp-5); }
+  .header__menu .mlink[hidden] { display: none !important; }
+  /* «خدماتنا ›»: the services in a second panel, with «رجوع» */
+  .mpanel--sub:not([hidden]) { animation: subIn .35s var(--ease-standard, ease) both; }
+  @keyframes subIn { from { opacity: 0; transform: translateX(calc(var(--dir, 1) * 24px)); } }
+  html[dir="rtl"] .mpanel--sub { --dir: -1; }
+  .header__menu .mpanel__back { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; min-height: 44px; padding: 0; color: var(--muted); font-size: 1rem; font-weight: 500; }
+  .header__menu .mpanel__h { margin: var(--sp-3) 0 var(--sp-2); font-size: .875rem; font-weight: 600; color: var(--muted); }
+  .header__menu .mpanel--sub > a:not(.mpanel__all) { font-size: 1.375rem; min-height: 52px; }
+  .header__menu .mpanel__all { display: inline-flex; align-items: center; gap: 4px; margin-top: var(--sp-4); min-height: 44px; color: var(--primary); font-size: 1.0625rem; font-weight: 600; }
+  html[data-theme="dark"] .header__menu .mpanel__all { color: var(--fg); }
+  .scrim.open { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .header__menu .mpanel > :is(a, button, p) { transform: none !important; transition: opacity .2s; transition-delay: 0s; }
+  .mpanel--sub:not([hidden]), .flyout__in { animation: none; }
+}
+
+/* footer as apple.com's: the site map in small grey type — the services by name, the order tracker as a plain link */
+.footer__groups { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); max-width: 880px; }
+.fgroup__title { font-size: .8125rem; }
+.fgroup .footer__nav a { font-size: .8125rem; color: var(--muted); }
+.fgroup .footer__nav a:hover { color: var(--text); }
+.fgroup .footer__nav a[aria-current] { color: var(--text); font-weight: 600; }
+@media (max-width: 760px) { .footer__groups { grid-template-columns: 1fr; } .fgroup__title { font-size: .9375rem; } .fgroup .footer__nav a { font-size: .875rem; } }
+.footer__tools { margin-top: var(--sp-6); }
+
+/* the local bar of a service page carries the page's parts, as apple.com's product bars do */
+.localnav__links { display: flex; gap: 2px; margin-inline-start: auto; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.localnav__links::-webkit-scrollbar { display: none; }
+.localnav__links a { padding: 6px 10px; border-radius: var(--r-pill); font-size: .8125rem; color: var(--muted); white-space: nowrap; }
+.localnav__links a:hover { color: var(--text); }
+.localnav__links a.on { color: var(--text); font-weight: 600; }
+@media (max-width: 640px) { .localnav__links { display: none; } }
+.page [id] { scroll-margin-top: calc(var(--bar-end, 78px) + 84px); }

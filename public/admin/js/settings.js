@@ -51,6 +51,8 @@ export function setPath(obj, path, val) { const ks = path.split("."); const last
 // ---------------- preview ----------------
 export let previewLang = "ar", previewTimer;
 export const setPreviewLang = (v) => { previewLang = v; };
+let previewMenu = false;
+export const setPreviewMenu = (v) => { previewMenu = !!v; };
 export function previewPane() {
   return `<div class="preview" id="preview">
     <div class="preview__bar"><b>معاينة مباشرة</b>
@@ -89,7 +91,7 @@ export function fitPreview() {
 export function onPreviewMsg(e) { if (e.origin === location.origin && e.data?.type === "wixa-preview-ready") pushPreview(true); }
 export function pushPreview(now) {
   clearTimeout(previewTimer);
-  const send = () => $("#pvFrame")?.contentWindow?.postMessage({ type: "wixa-preview", payload: { settings, lang: previewLang } }, location.origin);
+  const send = () => $("#pvFrame")?.contentWindow?.postMessage({ type: "wixa-preview", payload: { settings, lang: previewLang, menu: previewMenu } }, location.origin);
   now ? send() : (previewTimer = setTimeout(send, 120));
 }
 export function changed() { markDirty(); pushPreview(); }

@@ -67,7 +67,7 @@
     // where each site link shows: "both" (menu + footer) · "menu" · "footer" · "hidden"; the list order is the order shown
     // (2026-11 redesign: six links in the top bar, the rest in the footer's groups — see public/js/site-structure.js)
     nav: { items: [
-      { k: "home", at: "menu" }, { k: "services", at: "both" }, { k: "projects", at: "both" }, { k: "pricing", at: "both" }, { k: "about", at: "both" },
+      { k: "home", at: "hidden" }, { k: "services", at: "both" }, { k: "projects", at: "both" }, { k: "pricing", at: "both" }, { k: "about", at: "both" },
       { k: "blog", at: "both" }, { k: "contact", at: "both" },
       { k: "careers", at: "footer" }, { k: "faq", at: "footer" },
       { k: "privacy", at: "footer" }, { k: "partners", at: "hidden" },
@@ -326,15 +326,28 @@
   // so it takes the new menus; a list the owner did change is kept as it is
   // the default of Nov 2026 before «الرئيسية» joined the top menu
   const NAV_V2 = "services:both projects:both pricing:both about:both blog:both contact:both industries:footer calc:footer careers:footer faq:footer privacy:footer partners:hidden home:hidden";
+  // the default of Nov 2026 with «الرئيسية» in the top menu (apple.com has none: the logo is the way home)
+  const NAV_V3 = "home:menu services:both projects:both pricing:both about:both blog:both contact:both careers:footer faq:footer privacy:footer partners:hidden";
   const NAV_V1 = "home:footer services:both industries:both projects:both pricing:both careers:both contact:both blog:both about:footer partners:footer faq:footer privacy:footer calc:hidden";
   function navPlan(settings) {
     const def = DEFAULTS.nav.items;
     let saved = (settings && settings.nav && Array.isArray(settings.nav.items)) ? settings.nav.items : [];
     // a saved list identical to an older default (never changed by the owner) follows the newest default
     const plain = saved.map((x) => `${x && x.k}:${x && x.at}`).join(" ");
-    if (plain === NAV_V1 || plain === NAV_V2) saved = [];
+    if (plain === NAV_V1 || plain === NAV_V2 || plain === NAV_V3) saved = [];
     const known = new Set(def.map((x) => x.k)), seen = new Set(), out = [];
-    for (const x of saved) if (x && known.has(x.k) && !seen.has(x.k) && ["both", "menu", "footer", "hidden"].includes(x.at)) { seen.add(x.k); out.push(x.g ? { k: x.k, at: x.at, g: String(x.g) } : { k: x.k, at: x.at }); }
+    const s80 = (v, n) => (typeof v === "string" ? v.slice(0, n || 80) : "");
+    for (const x of saved) {
+      if (!x || seen.has(x.k) || !["both", "menu", "footer", "hidden"].includes(x.at)) continue;
+      // a link the owner added (dashboard → القوائم → «إضافة رابط»): a service, an added page or a web address
+      if (typeof x.k === "string" && /^x-[a-z0-9]{1,16}$/.test(x.k) && ["service", "page", "url"].includes(x.kind)) {
+        seen.add(x.k);
+        const c = { k: x.k, at: x.at, kind: x.kind, ref: s80(x.ref, 200), url: s80(x.url, 500), label_ar: s80(x.label_ar), label_en: s80(x.label_en) };
+        if (x.g) c.g = String(x.g);
+        out.push(c); continue;
+      }
+      if (known.has(x.k)) { seen.add(x.k); out.push(x.g ? { k: x.k, at: x.at, g: String(x.g) } : { k: x.k, at: x.at }); }
+    }
     for (const x of def) if (!seen.has(x.k)) out.push({ ...x });
     return out;
   }

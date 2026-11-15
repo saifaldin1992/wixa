@@ -15,7 +15,7 @@ import { viewOrders } from "./views/orders.js";
 import { isDirty } from "./settings.js";
 import { viewAccount } from "./views/account.js";
 import { viewAppearance } from "./views/appearance.js";
-import { viewContent } from "./views/content.js";
+import { viewContent, viewMenus } from "./views/content.js";
 import { viewIntegrations } from "./views/integrations.js";
 import { viewList } from "./views/lists.js";
 import { viewOverview } from "./views/overview.js";
@@ -33,6 +33,7 @@ export const VIEWS = {
   appearance: { title: "الألوان والخطوط", sub: "الألوان ونوع الخط وحجمه والحركة — مع معاينة مباشرة", render: viewAppearance },
   brand: { title: "دليل الهوية", sub: "الهوية البصرية ومكوّنات الواجهة والمعايير — خاص بك ولا يظهر في الموقع", render: viewBrand },
   content: { title: "صفحات الموقع", sub: "نصوص الموقع بالعربي والإنجليزي، الأرقام، الأقسام وبيانات التواصل", render: viewContent },
+  menus: { title: "القوائم", sub: "روابط الشريط العلوي وقائمة الجوال وأسفل الموقع، وزر «ابدأ مشروعك»", render: viewMenus },
   projects: { title: "المشاريع", sub: "أضف مشاريعك واعرضها في قسم الإنجازات", render: () => viewList("projects") },
   services: { title: "الخدمات", sub: "الخدمات التي تظهر في الموقع", render: () => viewList("services") },
   partners: { title: "الشركاء", sub: "شعارات العملاء والشركاء", render: () => viewList("partners") },
@@ -99,7 +100,7 @@ export let current = null;
 // which pages each role sees (the server and the database enforce the same rules)
 const ROLE_VIEWS = {
   owner: null, // everything
-  editor: ["overview", "content", "projects", "services", "partners", "testimonials", "posts", "media", "appearance", "brand", "seo", "devguide", "account"],
+  editor: ["overview", "content", "menus", "projects", "services", "partners", "testimonials", "posts", "media", "appearance", "brand", "seo", "devguide", "account"],
   support: ["overview", "inbox", "orders", "messages", "chats", "customers", "account"], // «messages» opens «الوارد»
 };
 // The sidebar: main items (level 1) open and close; the one holding the page being shown always opens.
@@ -230,7 +231,7 @@ export async function route() {
   if (HUBS[name]) { const first = HUBS[name].items.find(([k]) => canSee(k)); name = first ? first[0] : "overview"; history.replaceState(null, "", `#${name}`); }
   if (!canSee(name)) { name = "overview"; history.replaceState(null, "", "#overview"); }
   const v = VIEWS[name] || VIEWS.overview;
-  if (current && ["appearance", "content", "seo"].includes(current) && !["appearance", "content", "seo"].includes(name) && isDirty()) {
+  if (current && ["appearance", "content", "menus", "seo"].includes(current) && !["appearance", "content", "menus", "seo"].includes(name) && isDirty()) {
     if (!(await confirmBox("لديك تغييرات غير محفوظة", "هل تريد المغادرة دون حفظ؟", "مغادرة"))) { history.replaceState(null, "", `#${current}`); return; }
     setSettings(merge(DEFAULTS, JSON.parse(savedJSON)));
   }

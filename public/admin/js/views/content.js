@@ -9,8 +9,8 @@ import { imageField } from "../fields.js";
 import { openCustomPage, renderCustom, renderLinks, renderTeam } from "./sitepages.js";
 import { PAGE_DEFAULTS } from "../../../js/site-pages.js";
 import { renderLayout } from "./layout.js";
-import { FOOTER_GROUPS, groupOf } from "../../../js/site-structure.js";
-import { bindPreview, changed, quietly, getPath, previewLang, previewPane, pushPreview, setPath, setPreviewLang, settingsActions } from "../settings.js";
+import { renderMenus } from "./menus.js";
+import { bindPreview, changed, quietly, getPath, previewLang, previewPane, pushPreview, setPath, setPreviewLang, setPreviewMenu, settingsActions } from "../settings.js";
 
 // ---------------- view: content ----------------
 export let contentTab = "texts", contentLang = "ar";
@@ -88,7 +88,16 @@ export function bindPathInputs(root) {
     el.addEventListener(ev, () => { setPath(settings, el.dataset.path, el.type === "checkbox" ? el.checked : el.value); changed(); });
   });
 }
-export function renderContentTab() { renderTab(contentTab, $("#ctBody")); }
+export function renderContentTab() {
+  // editing the menus: the preview turns to the phone with its ☰ menu open, to see the links as visitors do
+  const menus = contentTab === "nav";
+  setPreviewMenu(menus);
+  if (menus && !$("#preview")?.classList.contains("mobile")) $('#pvDev button[data-v="mob"]')?.click();
+  pushPreview(true);
+  renderTab(contentTab, $("#ctBody"));
+}
+// dashboard → «القوائم» (its own place in the sidebar): the same editor, opened straight on the menus
+export function viewMenus(view) { contentTab = "nav"; return viewContent(view); }
 // one tab into a box; a merged tab draws its parts into boxes of its own (opts.sub: no second language switch)
 function renderTab(tab, body, opts = {}) {
   const L = contentLang, dir = L === "ar" ? "rtl" : "ltr";
@@ -318,35 +327,8 @@ function renderTab(tab, body, opts = {}) {
     };
     draw(); return;
   } else if (tab === "nav") {
-    // where each site link shows, and in which order
-    const NAMES = { home: "الرئيسية", services: "الخدمات (صفحة)", projects: "أعمالنا (صفحة)", pricing: "الأسعار (صفحة)",
-      about: "من نحن", partners: "شركاؤنا", careers: "الوظائف", contact: "تواصل معنا", faq: "الأسئلة الشائعة", blog: "المقالات", privacy: "سياسة الخصوصية" };
-    // the name shown on the site for each link (empty = the default name)
-    const UIKEY = (k) => (k === "privacy" ? "privacy" : `nav_${k}`);
-    quietly(() => { settings.ui ??= { ar: {}, en: {} }; settings.ui[L] ??= {}; });
-    const names = settings.ui[L];
-    const AT = [["both", "القائمة والأسفل"], ["menu", "القائمة فقط"], ["footer", "الأسفل فقط"], ["hidden", "مخفي"]];
-    const draw = () => {
-      const items = window.WIXA.navPlan(settings);
-      const n = (w) => items.filter((x) => x.at === "both" || x.at === w).length;
-      body.innerHTML = seg() + `<p class="muted" style="margin-top:0"><b>القائمة</b> = الشريط العلوي على الكمبيوتر وقائمة ☰ على الجوال والتابلت. <b>الأسفل</b> = روابط أسفل كل صفحة. رتّب الروابط بالأسهم. زر «ابدأ مشروعك» ثابت دائماً.</p>
-        <p class="muted" style="font-size:13px">في القائمة الآن <b>${n("menu")}</b> روابط${n("menu") > 7 ? ` — <span style="color:#B45309">نقترح 7 أو أقل حتى تبقى القائمة قصيرة وتتسع في الشريط العلوي</span>` : ""} · في الأسفل <b>${n("footer")}</b>.</p>
-        <div class="navrows">${items.map((x, i) => `<div class="navrow" data-i="${i}">
-          <div class="navrow__move"><button type="button" class="b b--sm" data-up="${i}" ${i ? "" : "disabled"} aria-label="أعلى">↑</button><button type="button" class="b b--sm" data-down="${i}" ${i < items.length - 1 ? "" : "disabled"} aria-label="أسفل">↓</button></div>
-          <label class="navrow__name"><small class="muted">${NAMES[x.k] || x.k}</small><input data-name="${UIKEY(x.k)}" value="${esc(names[UIKEY(x.k)] || "")}" placeholder="${esc(UI_DEFAULTS[L][UIKEY(x.k)] || NAMES[x.k] || "")}" dir="${dir}" aria-label="اسم الرابط"></label>
-          <select data-at="${i}">${AT.map(([v, l]) => `<option value="${v}" ${v === x.at ? "selected" : ""}>${l}</option>`).join("")}</select>
-          <select data-g="${i}" title="مجموعته في أسفل الصفحة" ${x.at === "both" || x.at === "footer" ? "" : "disabled"}>${FOOTER_GROUPS.map((g) => `<option value="${g.k}" ${g.k === groupOf(x) ? "selected" : ""}>أسفل: ${g.name_ar}</option>`).join("")}</select></div>`).join("")}</div>
-        <button type="button" class="b" id="navReset" style="margin-top:12px">↺ الترتيب المقترح</button>`;
-      const set = (list) => { settings.nav = { items: list }; changed(); draw(); };
-      body.querySelectorAll("[data-at]").forEach((el) => (el.onchange = () => { const l = window.WIXA.navPlan(settings); l[+el.dataset.at].at = el.value; set(l); }));
-      body.querySelectorAll("[data-g]").forEach((el) => (el.onchange = () => { const l = window.WIXA.navPlan(settings); l[+el.dataset.g].g = el.value; set(l); }));
-      body.querySelectorAll("[data-up]").forEach((el) => (el.onclick = () => { const l = window.WIXA.navPlan(settings), i = +el.dataset.up; [l[i - 1], l[i]] = [l[i], l[i - 1]]; set(l); }));
-      body.querySelectorAll("[data-down]").forEach((el) => (el.onclick = () => { const l = window.WIXA.navPlan(settings), i = +el.dataset.down; [l[i + 1], l[i]] = [l[i], l[i + 1]]; set(l); }));
-      $("#navReset").onclick = () => set(structuredClone(window.WIXA.DEFAULTS.nav.items));
-      bindLangSeg();
-      body.querySelectorAll("[data-name]").forEach((el) => (el.oninput = () => { const v = el.value; if (v.trim()) names[el.dataset.name] = v; else delete names[el.dataset.name]; changed(); }));
-    };
-    draw();
+    // the menus, as iOS Settings rows (views/menus.js)
+    return void renderMenus(body, {});
   } else if (tab === "brand") {
     body.innerHTML = `<div class="stack"><div class="grid2">${input("brand.name_ar", "اسم الشركة بالعربي")}${input("brand.name_en", "اسم الشركة بالإنجليزي", false, 'dir="ltr"')}</div>
       <div class="f"><span>الشعار (اختياري — يُفضّل مربع PNG أو SVG)</span><div id="logoField"></div></div></div>`;

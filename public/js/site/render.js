@@ -1,5 +1,6 @@
 /* Builds every section from the content */
-import { navLink, layoutFor } from "../site-structure.js";
+import { navLink, layoutFor, customLink, groupOf } from "../site-structure.js";
+import { sitePages } from "../site-pages.js";
 import { $, $$, esc, safeUrl, reducedOS, UI, ICONS, SOCIAL, STORY_ART, C, L, state, lang, anim, setAnim } from "./core.js";
 import { buildHeroLogo } from "./hero.js";
 import { applyDefaultMode } from "./theme.js";
@@ -66,10 +67,28 @@ export function render() {
   // site links: where each one shows (dashboard → content → menus), in which order, and whether its page or section
   // is on — the same rule the server used to build the page (public/js/site-structure.js → navLink)
   const empty = new Set(state.partners.length ? [] : ["partners"]);
-  window.WIXA.navPlan(s).forEach(({ k, at }, i) => $$(`[data-nav="${k}"]`).forEach((a) => {
+  // links the owner added (dashboard → القوائم): written by the server; made here too, so the preview shows them at once
+  const plan = window.WIXA.navPlan(s), known = { services: state.services || [], pages: sitePages(s) };
+  $$("[data-custom]").forEach((a) => { if (!plan.some((x) => x.k === a.dataset.nav)) a.remove(); });
+  plan.filter((x) => x.kind).forEach((x) => {
+    const t = customLink(x, known), href = t.href.startsWith("/") && lang === "en" ? `${t.href}${t.href.includes("?") ? "&" : "?"}lang=en` : t.href;
+    const g = groupOf(x, s);
+    $$(`.footer__nav [data-nav="${x.k}"]`).forEach((a) => { if (!a.closest(`[data-g="${g}"]`)) a.remove(); });
+    [[$(".header__nav"), false], [$("#menuMain"), false], [$(`.footer__nav[data-g="${g}"]`), true]].forEach(([box, footer]) => {
+      if (!box) return;
+      let a = box.querySelector(`[data-nav="${x.k}"]`);
+      if (!a) { a = document.createElement("a"); a.dataset.nav = x.k; a.setAttribute("data-custom", ""); if (footer) a.dataset.where = "footer"; box.append(a); }
+      a.href = href; a.textContent = t.label(lang);
+      if (t.external) { a.target = "_blank"; a.rel = "noopener"; } else { a.removeAttribute("target"); a.removeAttribute("rel"); }
+      a.toggleAttribute("data-off", !t.shown);
+    });
+  });
+  plan.forEach(({ k, at, kind }, i) => $$(`[data-nav="${k}"]`).forEach((a) => {
     a.style.order = i;
     const inFooter = !!a.closest(".footer__nav");
     const allowed = at === "both" || (at === "menu" && !inFooter) || (at === "footer" && inFooter);
+    // a link the owner added: the server already knows whether its service or page exists (data-off when not)
+    if (kind) { a.hidden = !allowed || a.hasAttribute("data-off"); return; }
     a.hidden = !(allowed && navLink(s, k, empty).shown) || a.hasAttribute("data-empty"); // data-empty: the server found nothing on that page yet (no articles)
   }));
   if (!(state.testimonials || []).length) $$('[data-section="testimonials"]').forEach((el) => (el.hidden = true));

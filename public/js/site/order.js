@@ -158,7 +158,7 @@ export function setupOrder() {
   // every "start your project" button opens the order page (packages first)
   document.addEventListener("click", (e) => {
     const a = e.target.closest("[data-start], .nav-cta");
-    if (!a) return;
+    if (!a || a.hasAttribute("data-free")) return; // «ابدأ مشروعك» set to go somewhere else (dashboard → القوائم)
     e.preventDefault(); goOrder(null);
   });
   if (document.documentElement.dataset.page === "order") paint();

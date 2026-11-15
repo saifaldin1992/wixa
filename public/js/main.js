@@ -40,7 +40,8 @@ if (PREVIEW) addEventListener("message", (e) => {
   if (d.settings) { state.settings = merge(DEFAULTS, d.settings); applyUiTexts(state.settings); }
   for (const k of ["projects", "services", "partners", "testimonials"]) if (d[k]) state[k] = d[k];
   if (d.lang) setLang(d.lang);
-  render(); $(".hero").classList.add("in", "in-hero"); document.documentElement.classList.add("site-ready");
+  render();
+  if (typeof d.menu === "boolean") { const b = $("#menuBtn"); if (b && (b.getAttribute("aria-expanded") === "true") !== d.menu) b.click(); } $(".hero").classList.add("in", "in-hero"); document.documentElement.classList.add("site-ready");
 });
 
 // ---------- boot ----------
