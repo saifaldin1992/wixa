@@ -754,3 +754,7 @@ When the live chat is on (`settings.chat.on`), it is the way to talk to us every
 - **Switches:** iOS size 51 × 31 with a 27 knob and a spring.
 - **Lists:** iOS «inset grouped» — rows in one rounded group with hairline dividers.
 - **Sheets:** a grabber on top of every sheet on phones.
+
+## Apple redesign — phase 5 (Nov 2026): final check
+- The brand guide in the dashboard (`public/admin/js/views/brand.js`) shows the new values: Apple type scale (17 body, 28 → 40 section titles, smallest 12), the 8-point spacing, the six-step corner scale with the concentric rule, the button kinds (filled, tinted, link, grey), the near-invisible shadows, Liquid Glass on floating bars only, the device font on Apple devices, the longer logo line.
+- Contrast of every new colour pair checked: 26/26 meet WCAG AA (4.5:1), lowest 4.66 (secondary grey on the light grey tiles).
