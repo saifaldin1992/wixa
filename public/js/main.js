@@ -4,12 +4,12 @@ import { load } from "./site/data.js";
 import { render } from "./site/render.js";
 import { setupUI } from "./site/ui.js";
 import { setupTheme } from "./site/theme.js";
-import { setupParticles, setupLogoTilt, fitHeroTop } from "./site/hero.js";
+import { fitHeroTop } from "./site/hero.js";
 import { setupCalc } from "./site/calculator.js";
 import { setupContact } from "./site/contact.js";
 import { setupProjectModal } from "./site/projects.js";
 import { setupBooking, setupTracking } from "./site/extras.js";
-import { setupProgress, setupCursor, setupMotion, pauseOffscreen } from "./site/effects.js";
+import { setupScrollWatch, setupMotion, pauseOffscreen } from "./site/effects.js";
 import { setupChat } from "./site/chat.js";
 import { visitSource } from "./site/source.js";
 import { setupPromo, setupExitOffer } from "./site/promo.js";
@@ -54,14 +54,11 @@ if (PREVIEW) addEventListener("message", (e) => {
   setupNavScroll();
   fitHeroTop();
   setupTheme();
-  setupParticles();
-  setupLogoTilt();
   setupCalc();
   setupProjectModal();
   setupBooking();
   setupTracking();
-  setupProgress();
-  setupCursor();
+  setupScrollWatch();
   try { setupChat(); } catch (e) { reportError(`chat: ${e.message}`, "chat.js", 0); } // the chat can never stop the site from opening
   try { setupPromo(); setupExitOffer(); } catch (e) { reportError(`promo: ${e.message}`, "promo.js", 0); }
   // reveal right away (the content is already in the page); scroll effects start once everything has loaded

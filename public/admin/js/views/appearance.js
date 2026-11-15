@@ -5,7 +5,7 @@ import { route } from "../shell.js";
 
 // ---------------- view: appearance ----------------
 export const PRESETS = [
-  { name: "ويكسا بنفسجي", theme: { primary: "#5B21B6", primaryInk: "#FFFFFF", accent: "#1FC8E3", bg: "#FFFFFF", surface: "#F5F5F7", text: "#140F1F", muted: "#625C70", dark: "#120A24" } },
+  { name: "ويكسا بنفسجي", theme: { primary: "#5B21B6", primaryInk: "#FFFFFF", accent: "#1FC8E3", bg: "#FFFFFF", surface: "#F5F5F7", text: "#1D1D1F", muted: "#6E6E73", dark: "#120A24" } },
   { name: "خمري تقني", theme: { primary: "#570622", primaryInk: "#FFFFFF", accent: "#1FC8E3", bg: "#F7F6F8", surface: "#FFFFFF", text: "#140C12", muted: "#665C64", dark: "#12070C" } },
   { name: "خمري ذهبي", theme: { primary: "#570622", primaryInk: "#FFFFFF", accent: "#D9A441", bg: "#FAF7F6", surface: "#FFFFFF", text: "#1A0E12", muted: "#6E5F64", dark: "#2A0711" } },
   { name: "أزرق", theme: { primary: "#1F5BFF", primaryInk: "#FFFFFF", accent: "#FFC83D", bg: "#F5F7FB", surface: "#FFFFFF", text: "#0B1220", muted: "#5E6878", dark: "#0B1220" } },
@@ -42,7 +42,6 @@ export async function viewAppearance(view) {
             <div class="seg" id="lookSeg">${[["flat", "مسطّح (الحالي)"], ["soft", "ناعم ثلاثي الأبعاد"]].map(([v, l]) => `<button type="button" data-v="${v}" class="${(settings.look || "flat") === v ? "on" : ""}">${l}</button>`).join("")}</div>
             <small style="color:var(--muted)">«ناعم ثلاثي الأبعاد»: خلفية رمادية متدرجة، بطاقات بحافة بيضاء وظل ناعم، وأزرار دائرية مجسّمة — بنفس ألوانك.</small></label>
           <label class="switch"><input type="checkbox" id="anim" ${settings.animations !== false ? "checked" : ""}><i></i>تفعيل الحركات والتأثيرات</label>
-          <label class="switch"><input type="checkbox" id="cursorOn" ${settings.cursor !== false ? "checked" : ""}><i></i>مؤشر الفأرة المخصص (على الكمبيوتر فقط)</label>
           <label class="f"><span>الوضع الافتراضي للزائر الجديد (يستطيع الزائر تغييره من زر 🌙)</span>
             <div class="seg" id="modeSeg">${[["auto", "حسب جهاز الزائر"], ["light", "فاتح"], ["dark", "ليلي"]].map(([v, l]) => `<button type="button" data-v="${v}" class="${(settings.mode || "auto") === v ? "on" : ""}">${l}</button>`).join("")}</div></label>
         </div></div>
@@ -74,7 +73,6 @@ export async function viewAppearance(view) {
   range("hw", (v) => (settings.font.headingWeight = v), (v) => v);
   range("radius", (v) => (settings.theme.radius = v), (v) => `${v}px`);
   $("#anim").onchange = (e) => { settings.animations = e.target.checked; changed(); };
-  $("#cursorOn").onchange = (e) => { settings.cursor = e.target.checked; changed(); };
   $$("#lookSeg button").forEach((b) => (b.onclick = () => { settings.look = b.dataset.v; $$("#lookSeg button").forEach((x) => x.classList.toggle("on", x === b)); changed(); }));
   $$("#modeSeg button").forEach((b) => (b.onclick = () => { settings.mode = b.dataset.v; $$("#modeSeg button").forEach((x) => x.classList.toggle("on", x === b)); changed(); }));
   $("#resetTheme").onclick = async () => {

@@ -69,7 +69,7 @@ export async function viewBrand(view) {
     ["color", "الأساسي — على خلفية فاتحة", t.primary, t.bg],
     ["dark", "على خلفية داكنة (الوضع الليلي)", dk.fg, dk.bg],
     ["white", "أبيض على لون الهوية", "#FFFFFF", t.primary],
-    ["black", "أحادي اللون (طباعة، أختام)", "#140F1F", "#FFFFFF"],
+    ["black", "أحادي اللون (طباعة، أختام)", "#1D1D1F", "#FFFFFF"],
   ];
   const colorGroups = [
     ["ألوان الهوية", [
@@ -332,7 +332,7 @@ export async function viewBrand(view) {
   // copy colour codes
   $$("[data-copy]", view).forEach((el) => (el.onclick = async () => { try { await navigator.clipboard.writeText(el.dataset.copy); toast(`نُسخ ${el.dataset.copy} ✓`); } catch { toast(el.dataset.copy); } }));
   // downloads
-  const colorOf = { color: t.primary, dark: dk.fg, white: "#FFFFFF", black: "#140F1F", text: t.text };
+  const colorOf = { color: t.primary, dark: dk.fg, white: "#FFFFFF", black: "#1D1D1F", text: t.text };
   $$("[data-dl]", view).forEach((b) => (b.onclick = async () => {
     const [kind, variant, fmt, width] = b.dataset.dl.split(":");
     const svg = svgArt(kind, colorOf[variant]);

@@ -1,0 +1,60 @@
+/* =====================================================================================================
+   WIXA design tokens — one source for the website (styles.css) and the dashboard (admin.css).
+   Apple redesign, phase 1 (Nov 2026): Apple's neutral greys and pure-black dark mode, the device's own system
+   font on Apple devices, Apple's type sizes, one corner-radius scale and an 8-point spacing grid.
+   The brand keeps two colours only: purple for everything you can press, cyan as a rare highlight
+   (both still set from the dashboard → الألوان والخطوط).
+   Imported at the top of both stylesheets; the build (scripts/build.mjs) inlines it.
+   ===================================================================================================== */
+:root {
+  /* ---- fonts: Apple devices show their own San Francisco / SF Arabic (no download); the others the hosted
+     Noto Sans Arabic. SF can't be served from a website (its licence covers Apple devices only). ---- */
+  --font-system: -apple-system, BlinkMacSystemFont, "Noto Sans Arabic", system-ui, sans-serif;
+
+  /* ---- type scale: Apple's iPhone sizes (Dynamic Type "Large"), in rem so a visitor's own text size still applies ---- */
+  --t-large-title: 2.125rem;  /* 34 */
+  --t-title-1: 1.75rem;       /* 28 */
+  --t-title-2: 1.375rem;      /* 22 */
+  --t-title-3: 1.25rem;       /* 20 */
+  --t-headline: 1.0625rem;    /* 17, semibold */
+  --t-body: 1.0625rem;        /* 17 */
+  --t-callout: 1rem;          /* 16 */
+  --t-subhead: .9375rem;      /* 15 */
+  --t-footnote: .8125rem;     /* 13 */
+  --t-caption: .75rem;        /* 12 — the smallest text (Arabic letters look smaller than Latin ones, so not 11) */
+  --lh-body: 1.65;            /* a little more than Apple's Latin text: Arabic letters reach higher and lower */
+  --lh-title: 1.25;
+  --w-regular: 400; --w-semibold: 600; --w-bold: 700;
+
+  /* ---- corners: one scale; a shape inside another uses the outer radius minus the gap between them (concentric) ---- */
+  --r-xs: 8px;    /* tags, small chips */
+  --r-sm: 12px;   /* fields, small buttons, icons */
+  --r-md: 16px;   /* small cards */
+  --r-lg: 22px;   /* cards */
+  --r-xl: 28px;   /* large panels (the site's main radius, set from the dashboard as --radius) */
+  --r-pill: 999px;/* buttons, bars, capsules */
+
+  /* ---- spacing: 8-point grid (4 only for fine adjustments) ---- */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px; --sp-9: 96px; --sp-10: 128px;
+  --tap-min: 44px; /* Apple: every control at least 44 × 44 */
+
+  /* ---- Apple neutrals ---- */
+  --apple-label: #1D1D1F;       /* text (apple.com) */
+  --apple-secondary: #6E6E73;   /* secondary text */
+  --apple-tertiary: #86868B;
+  --apple-fill: #F5F5F7;        /* light grey surface */
+  --apple-grouped: #F2F2F7;     /* grouped background (iOS Settings) */
+  --apple-separator: #D2D2D7;
+  --apple-separator-2: #E5E5EA;
+  --apple-dk-bg: #000000;       /* dark mode: pure black */
+  --apple-dk-1: #1C1C1E;        /* raised surface */
+  --apple-dk-2: #2C2C2E;        /* raised again (sheets on top of cards) */
+  --apple-dk-3: #3A3A3C;        /* separators, field borders */
+  --apple-dk-label: #F5F5F7;
+  --apple-dk-secondary: #98989D;
+
+  /* ---- motion ---- */
+  --ease-spring: cubic-bezier(.34, 1.36, .64, 1);
+  --ease-standard: cubic-bezier(.16, 1, .3, 1);
+  --dur-fast: .2s; --dur: .35s; --dur-slow: .5s;
+}

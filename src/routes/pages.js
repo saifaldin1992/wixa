@@ -316,8 +316,8 @@ function emptyNow() {
 // (the stylesheets come right after it in <body>, so the browser can show it while they load) and the site's
 // stylesheet hides it (.boot { display: none }) the moment it arrives — on a good connection it is never seen.
 // After 10 s /theme-pre.js adds «boot-slow»: «التحميل يتأخر» + «إعادة المحاولة».
-const BOOT_CSS = `.boot{position:fixed;inset:0;z-index:200;display:grid;place-content:center;justify-items:center;gap:14px;padding:16px;background:#FFFFFF;color:#140F1F;text-align:center;font:500 1rem/1.6 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
-html[data-theme="dark"] .boot{background:#130C1F;color:#F2F0F7}
+const BOOT_CSS = `.boot{position:fixed;inset:0;z-index:200;display:grid;place-content:center;justify-items:center;gap:14px;padding:16px;background:#FFFFFF;color:#1D1D1F;text-align:center;font:500 1rem/1.6 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
+html[data-theme="dark"] .boot{background:#000;color:#F5F5F7}
 .boot>*{animation:bootIn .3s ease .4s backwards}.boot__mark{width:84px;height:auto;color:#5B21B6;animation:bootIn .3s ease .4s backwards,bootPulse 1.4s ease-in-out .7s infinite}
 html[data-theme="dark"] .boot__mark{color:#A574F1}.boot p{margin:0}
 .boot__slow,.boot__btns{display:none}.boot-slow .boot__wait{display:none}.boot-slow .boot__slow{display:block}.boot-slow .boot__btns{display:flex}

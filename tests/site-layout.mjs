@@ -25,7 +25,8 @@ for (const [name, viewport] of SIZES) {
       const out = [];
       const page = document.body.getBoundingClientRect(), vw = document.documentElement.clientWidth, root = getComputedStyle(document.documentElement);
       const px = (v) => { const d = document.createElement("div"); d.style.width = v; document.body.append(d); const w = d.getBoundingClientRect().width; d.remove(); return w; };
-      const g = px("var(--gutter)"), R = px("var(--radius)"), radii = [px("var(--radius-sm)"), R, px("var(--radius-lg)")];
+      // corners: the token scale (/css/tokens.css) and the site's own radii (set from the dashboard)
+      const g = px("var(--gutter)"), R = px("var(--radius)"), radii = [...new Set(["--r-xs", "--r-sm", "--r-md", "--r-lg", "--r-xl", "--radius-sm", "--radius", "--radius-lg"].map((v) => px(`var(${v})`)).filter((x) => x > 0))];
       const widths = [px("var(--max)"), px("var(--read)"), px("var(--narrow)")].map((w) => Math.min(w, page.width) - 2 * g);
       const edge = (gap) => widths.some((W) => Math.abs(gap - (page.width - W) / 2) <= 3); // starts at the edge of a page width
       if (document.documentElement.scrollWidth > vw + 1) out.push(`page is ${document.documentElement.scrollWidth}px wide on a ${vw}px screen`);
@@ -45,7 +46,10 @@ for (const [name, viewport] of SIZES) {
       for (const e of boxes) {
         const r = parseFloat(getComputedStyle(e).borderTopLeftRadius), h = e.getBoundingClientRect().height;
         if (r >= Math.min(99, h / 2 - 1) || getComputedStyle(e).borderTopLeftRadius.includes("%")) continue; // pill / circle
-        if (!radii.some((x) => Math.abs(x - r) < 1)) out.push(`${name(e)} has ${r}px corners (allowed ${radii.map(Math.round).join("/")})`);
+        // concentric: a box inside a rounded box may take the outer radius minus the gap (never under --r-sm)
+        const outer = (() => { for (let a = e.parentElement; a; a = a.parentElement) { const ar = parseFloat(getComputedStyle(a).borderTopLeftRadius); if (ar >= 10) return ar; } return 0; })();
+        const concentric = outer > r && r >= px("var(--r-sm)") - 0.5;
+        if (!concentric && !radii.some((x) => Math.abs(x - r) < 1)) out.push(`${name(e)} has ${r}px corners (allowed ${radii.map(Math.round).join("/")})`);
       }
       // 3. rows of top-level boxes
       const top = boxes.filter((e) => !boxes.some((o) => o !== e && o.contains(e)) && !inScroller(e));

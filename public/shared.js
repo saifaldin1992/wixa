@@ -25,8 +25,8 @@
       accent: "#1FC8E3",
       bg: "#FFFFFF",
       surface: "#F5F5F7",
-      text: "#140F1F",
-      muted: "#625C70",
+      text: "#1D1D1F",   // Apple's text colour (apple.com)
+      muted: "#6E6E73",  // Apple's secondary grey
       dark: "#120A24",
       radius: 28,
     },
@@ -379,8 +379,17 @@
   }
 
   // Dark-mode colours derived from the brand colour (also shown in the dashboard's brand guide)
+  // Dark mode (Apple redesign): pure black, Apple's dark greys for raised surfaces, neutral text; the brand colour
+  // stays only where it already was — brightened for buttons and links (fg) and deep for the brand panels (dark).
   function darkPalette(t) {
-    return { bg: mix(t.primary, "#0B0A0E", 0.9), surface: mix(t.primary, "#16151B", 0.86), text: "#F2F0F7", muted: "#B2ACBF", dark: mix(t.primary, "#040309", 0.55), fg: vivid(t.primary) };
+    return { bg: "#000000", surface: "#1C1C1E", text: "#F5F5F7", muted: "#98989D", dark: mix(t.primary, "#040309", 0.55), fg: vivid(t.primary) };
+  }
+  // The saved theme of a site that never changed the old default greys (purple-tinted) follows Apple's neutral ones.
+  const OLD_GREYS = { text: { "#140F1F": "#1D1D1F" }, muted: { "#625C70": "#6E6E73" } };
+  function upgradeTheme(t) {
+    const out = { ...t };
+    for (const k of Object.keys(OLD_GREYS)) { const v = String(t[k] || "").toUpperCase(); if (OLD_GREYS[k][v]) out[k] = OLD_GREYS[k][v]; }
+    return out;
   }
 
   // Light tokens come from the dashboard; the dark palette is derived from the brand color.
@@ -392,7 +401,7 @@
   }
   // The CSS variables of the theme — also used by the server to paint the right colours on the first frame
   function themeVars(settings, fam) {
-    const t = settings.theme, f = settings.font;
+    const t = upgradeTheme(settings.theme), f = settings.font;
     if (!FONTS[fam]) fam = BRAND_FONT;
     const dk = darkPalette(t);
     const vars = {
@@ -403,9 +412,10 @@
       "--dk-bg": dk.bg, "--dk-surface": dk.surface, "--dk-surface-rgb": hexToRgb(dk.surface), "--dk-text": dk.text, "--dk-text-rgb": hexToRgb(dk.text),
       "--dk-muted": dk.muted, "--dk-dark": dk.dark, "--dk-dark-rgb": hexToRgb(dk.dark), "--dk-fg": dk.fg, "--dk-fg-rgb": hexToRgb(dk.fg),
       "--radius": `${Number(t.radius) || 0}px`,
-      "--font": `"${fam}", system-ui, sans-serif`,
+      // the brand font: Apple devices use their own San Francisco / SF Arabic first (see /css/tokens.css)
+      "--font": fam === BRAND_FONT ? `-apple-system, BlinkMacSystemFont, "${fam}", system-ui, sans-serif` : `"${fam}", system-ui, sans-serif`,
       "--scale": String(Math.min(1.4, Math.max(0.8, Number(f.scale) || 1))),
-      "--hw": String(f.headingWeight || 800),
+      "--hw": String(f.headingWeight || 600),
     };
     return vars;
   }

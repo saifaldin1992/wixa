@@ -1,30 +1,13 @@
-/* Scroll progress, custom cursor and GSAP scroll motion */
-import { $, $$, lang, anim, state } from "./core.js";
+/* Scroll watch (the «how we work» line fills as you scroll) and GSAP scroll motion.
+   The progress bar and the custom cursor were removed in the Apple redesign (Nov 2026). */
+import { $, $$, anim } from "./core.js";
 import { updateProcess } from "./sections.js";
 
-// ---------- scroll progress + custom cursor ----------
-export function setupProgress() {
-  const bar = $("#progressBar");
+export function setupScrollWatch() {
   let queued = false;
-  const upd = () => { queued = false; const h = document.documentElement.scrollHeight - innerHeight; bar.style.transform = `scaleX(${h > 0 ? Math.min(1, scrollY / h) : 0})`; updateProcess(); };
+  const upd = () => { queued = false; updateProcess(); };
   const onScroll = () => { if (!queued) { queued = true; requestAnimationFrame(upd); } };
   addEventListener("scroll", onScroll, { passive: true }); addEventListener("resize", onScroll); upd();
-}
-export function setupCursor() {
-  if (!anim || state.settings.cursor === false || !matchMedia("(hover: hover) and (pointer: fine)").matches) return;
-  document.documentElement.classList.add("has-cursor");
-  const cur = $(".cursor"), dot = $(".cursor__dot"), ring = $(".cursor__ring");
-  let x = -100, y = -100, rx = -100, ry = -100;
-  addEventListener("pointermove", (e) => { x = e.clientX; y = e.clientY; dot.style.transform = `translate(${x}px, ${y}px)`; }, { passive: true });
-  const loop = () => { rx += (x - rx) * 0.18; ry += (y - ry) * 0.18; ring.style.transform = `translate(${rx}px, ${ry}px)`; requestAnimationFrame(loop); };
-  loop();
-  document.addEventListener("pointerover", (e) => {
-    const view = e.target.closest(".project__media, [data-open]");
-    const hov = e.target.closest("a, button, .ctype, .cfeat, input, select, textarea");
-    cur.classList.toggle("view", !!view); cur.classList.toggle("hover", !view && !!hov);
-    ring.textContent = view ? (lang === "ar" ? "عرض" : "View") : "";
-  });
-  document.addEventListener("pointerleave", () => { x = y = -100; });
 }
 
 const loadScript = (src) => new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.append(s); });
