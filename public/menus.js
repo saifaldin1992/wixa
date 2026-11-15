@@ -79,7 +79,11 @@
       }
     });
     // each time the menu opens it starts on its first panel, the links arriving in order
-    if (btn) new MutationObserver(function () { if (btn.getAttribute("aria-expanded") === "true") show(main, false); else setTimeout(function () { if (btn.getAttribute("aria-expanded") !== "true") show(main, false); }, 320); })
+    // the menu starts right under the top bar, wherever the bar is (a staging notice or the offers bar above it move it down)
+    var bar = header.querySelector(".header__bar");
+    var place = function () { if (bar) menu.style.paddingTop = Math.round(bar.getBoundingClientRect().bottom + 16) + "px"; };
+    addEventListener("resize", function () { if (menu.classList.contains("open")) place(); });
+    if (btn) new MutationObserver(function () { if (btn.getAttribute("aria-expanded") === "true") { place(); show(main, false); } else setTimeout(function () { if (btn.getAttribute("aria-expanded") !== "true") show(main, false); }, 320); })
       .observe(btn, { attributes: true, attributeFilter: ["aria-expanded"] });
     stagger(main);
   });
