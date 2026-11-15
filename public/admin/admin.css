@@ -1331,3 +1331,16 @@ html[dir="ltr"] .ct-back svg { transform: scaleX(-1); }
 .kpi--link { text-decoration: none; color: inherit; cursor: pointer; transition: background .15s; }
 @media (hover: hover) { .kpi--link:hover { background: color-mix(in srgb, var(--panel) 94%, #767680); } }
 .cust__side small { font-size: 12px; }
+
+/* ===== tab rows fill their line (Nov 2026) ===== */
+/* every row of tabs under a page title spans the page's width, its tabs sharing it like an iOS segmented control;
+   what does not fit waits under «المزيد» (core.js → compactSeg measures with .seg--measure) */
+.subnav .seg { width: 100%; max-width: 100%; overflow: hidden; }
+.subnav .seg > button:not([hidden]), .subnav .seg > .seg__more { flex: 1 0 auto; justify-content: center; text-align: center; }
+.subnav .seg.seg--measure > button { flex: none !important; }
+.subnav .seg.seg--measure > .seg__more { display: none; }
+.subnav .seg > .seg__more { justify-content: center; }
+/* «‹ كل الأقسام» at the start of its own line (the right, in Arabic) */
+.subnav .ct-back { justify-self: start; }
+/* the sidebar: «لوحة التحكم» above the logo */
+.side .logo small { grid-row: 1; }

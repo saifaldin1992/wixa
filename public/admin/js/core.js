@@ -92,19 +92,38 @@ export function setSubnav(html = "") {
     if (r.left < sr.left || r.right > sr.right) s.scrollLeft += (r.left + r.width / 2) - (sr.left + sr.width / 2);
   });
 }
-// A row of tabs shows five at most, as iOS segmented controls do: the first ones and the one that is on; the others
-// wait under «المزيد». The tabs stay where they are (hidden), so each page's own handlers keep working; «المزيد» is
-// not a <button>, so a page binding "all buttons of its row" never takes it for a tab.
-const SEG_MAX = 5;
+// A row of tabs fills its line and shows as many tabs as fit — all of them on a wide screen; on a narrow one the rest
+// wait under «المزيد». The tab that is on always stays in sight. The tabs stay where they are (hidden), so each page's
+// own handlers keep working; «المزيد» is not a <button>, so a page binding "all buttons of its row" never takes it.
+let segRO = null;
 export function compactSeg(s) {
   const btns = [...s.children].filter((b) => b.tagName === "BUTTON");
   s.querySelector(".seg__more")?.remove();
   btns.forEach((b) => { if (b.dataset.segHid) { b.hidden = false; delete b.dataset.segHid; } });
-  if (btns.length <= SEG_MAX) return;
-  const on = btns.findIndex((b) => b.classList.contains("on"));
-  const keep = new Set([0, 1, 2, 3]);
-  if (on > 3) { keep.delete(3); keep.add(on); }
+  if (!s.isConnected || !s.clientWidth) return;
+  segRO ??= new ResizeObserver((es) => es.forEach((e) => { const w = Math.round(e.contentRect.width); if (e.target._segW !== w) { e.target._segW = w; compactSeg(e.target); } }));
+  if (!s._segWatched) { s._segWatched = 1; s._segW = Math.round(s.clientWidth); segRO.observe(s); }
+  // natural widths (the tabs stretch to fill the line, so measure them unstretched)
+  s.classList.add("seg--measure");
+  const cs = getComputedStyle(s), gap = parseFloat(cs.columnGap) || 0;
+  const room = s.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const widths = btns.map((b) => (b.hidden ? 0 : b.getBoundingClientRect().width));
+  const all = widths.reduce((t, w) => t + w + gap, -gap);
+  s.classList.remove("seg--measure");
+  if (all <= room + 0.5) return;
+  // «المزيد» itself, measured (with a two-digit count, the widest it gets)
+  const probe = document.createElement("span"); probe.className = "seg__more"; probe.style.cssText = "position:absolute;visibility:hidden;flex:none";
+  probe.innerHTML = `المزيد<small>00</small><svg viewBox="0 0 24 24"></svg>`; s.append(probe);
+  const MORE = probe.getBoundingClientRect().width + gap; probe.remove();
+  const on = Math.max(0, btns.findIndex((b) => b.classList.contains("on")));
+  let used = MORE + widths[on];
+  const keep = new Set([on]);
+  for (let i = 0; i < btns.length; i++) {
+    if (i === on || btns[i].hidden) continue;
+    if (used + gap + widths[i] <= room) { keep.add(i); used += gap + widths[i]; } else break;
+  }
   const rest = btns.filter((b, i) => !keep.has(i) && !b.hidden);
+  if (!rest.length) return;
   rest.forEach((b) => { b.hidden = true; b.dataset.segHid = 1; });
   const more = document.createElement("span");
   more.className = "seg__more"; more.tabIndex = 0; more.setAttribute("role", "button"); more.setAttribute("aria-haspopup", "menu"); more.setAttribute("aria-expanded", "false");
