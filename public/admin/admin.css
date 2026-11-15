@@ -84,7 +84,6 @@ h1, h2, h3 { margin: 0; line-height: 1.3; }
 input[type=range] { width: 100%; accent-color: var(--brand); }
 .seg { display: inline-flex; padding: 3px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-sm); gap: 2px; }
 .seg button { height: 32px; padding: 0 12px; border-radius: var(--r-xs); font-size: 13px; color: var(--muted); }
-.seg button.on { background: var(--panel); color: var(--text); box-shadow: var(--shadow); }
 
 /* auth */
 .auth { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
@@ -677,13 +676,9 @@ html[dir="rtl"] .chat__back svg { transform: none; }
   margin: 0 -2px; padding: 0 2px 2px; border-bottom: 1px solid var(--line); -webkit-mask-image: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 14px), transparent); mask-image: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 14px), transparent); }
 .subnav[hidden] { display: none; }
 .subnav::-webkit-scrollbar { display: none; }
-.subnav .seg { display: flex; flex: none; padding: 0; gap: 2px; border: 0; background: none; border-radius: 0; max-width: none; overflow: visible; flex-wrap: nowrap; width: auto; }
 .subnav .seg button { flex: none; position: relative; min-height: 44px; padding: 0 14px; border: 0; border-radius: 10px 10px 0 0; background: none; color: var(--muted); font: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer; box-shadow: none; }
 .subnav .seg button:hover { color: var(--text); background: color-mix(in srgb, var(--brand) 6%, transparent); }
-.subnav .seg button.on { color: var(--brand); background: none; box-shadow: none; }
-.subnav .seg button.on::after { content: ""; position: absolute; inset: auto 10px -3px; height: 3px; border-radius: 3px; background: var(--brand); }
 .subnav .seg button small { margin-inline-start: 6px; padding: 1px 7px; border-radius: var(--r-pill); background: var(--panel); border: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 700; }
-.subnav .seg button.on small { background: var(--brand); border-color: var(--brand); color: #fff; }
 .subnav__sep { flex: none; width: 1px; height: 22px; background: var(--line); margin: 0 6px; }
 .top__actions:empty { display: none; }
 @media (max-width: 960px) { .top__actions { flex: 1 1 100%; justify-content: flex-start; } }
@@ -758,10 +753,7 @@ body { font-size: 14.5px; }
 .seg button, .subnav .seg button { flex: none; min-height: 40px; padding: 0 14px; border: 0; border-radius: var(--r-xs); background: transparent; color: var(--muted);
   font: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; box-shadow: none; cursor: pointer; transition: background .2s, color .2s; }
 .seg button:hover, .subnav .seg button:hover { background: color-mix(in srgb, var(--brand) 8%, transparent); color: var(--text); }
-.seg button.on, .subnav .seg button.on { background: var(--brand); color: #fff; box-shadow: 0 6px 14px -8px var(--brand); }
-.subnav .seg button.on::after { display: none; }
 .seg button small, .subnav .seg button small { margin-inline-start: 6px; padding: 1px 7px; border-radius: var(--r-pill); background: var(--bg); border: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 700; }
-.seg button.on small, .subnav .seg button.on small { background: rgba(255,255,255,.22); border-color: transparent; color: #fff; }
 
 /* the page sub-menu: its own bar under the title; several groups stack one above the other; long bars slide sideways */
 .subnav { display: grid; gap: 8px; flex: 1 1 100%; order: 10; margin: 0; padding: 0; border-bottom: 0; overflow: visible; -webkit-mask-image: none; mask-image: none; }
@@ -1100,7 +1092,7 @@ html[dir="rtl"] .side__sec.closed .side__chev { transform: rotate(-90deg); }
 /* dark mode contrast (WCAG AA): violet text and links a touch lighter (5.3:1 on the panels); filled violet things with
    white text on a deeper violet (5.7:1) */
 html[data-theme="dark"] { --brand: #9B74F8; }
-html[data-theme="dark"] :is(.b--primary, .chip input:checked + span, .chat__item.on .chat__av, .cm--me p, .subnav .seg button.on small, .add-fab, .seg button.on, .subnav .seg button.on, .bg-subnav span.on) { background: #7C3AED !important; border-color: #7C3AED; }
+html[data-theme="dark"] :is(.b--primary, .chip input:checked + span, .chat__item.on .chat__av, .cm--me p, .add-fab, .bg-subnav span.on, .side__nav a.on, .switch input:checked + i) { background: #7C3AED !important; border-color: #7C3AED; }
 html[data-theme="dark"] .msg.new .msg__who b::after { background: #7C3AED; }
 
 /* «القوائم»: each link with its name box, where it shows and its footer group */
@@ -1177,3 +1169,76 @@ html[data-theme="dark"] .auth__fields .f input:not([type=checkbox]) { background
 html[data-theme="dark"] { --shadow: none; --shadow-lg: 0 0 0 1px rgba(255, 255, 255, .08); }
 .card, .kpi { border-color: transparent; }
 html[data-theme="dark"] :is(.card, .kpi) { border-color: transparent; }
+
+/* ===== Apple redesign, phase 4 (Nov 2026): the dashboard as an iPhone / iPad app ===== */
+/* sidebar (iPadOS): a grey sidebar beside white content, the chosen page as a filled purple row, section names in bold */
+.side { background: var(--bg); border-inline-end: 1px solid var(--line); }
+.side__nav a { min-height: 40px; padding: 8px 12px; border-radius: var(--r-sm); color: var(--text); font-weight: 500; }
+.side__nav a svg { color: var(--brand); }
+@media (hover: hover) { .side__nav a:hover { background: rgba(118, 118, 128, .12); color: var(--text); } }
+.side__nav a.on { background: var(--brand); color: #fff; }
+.side__nav a.on svg { color: #fff; }
+.side__nav a.on .count { background: #fff; color: var(--brand); }
+.side__sec .side__group { font-size: 13px; font-weight: 700; color: var(--text); opacity: 1; }
+.side__site { border-style: solid; border-color: transparent; background: rgba(118, 118, 128, .12); color: var(--text); border-radius: var(--r-pill); justify-content: center; }
+@media (hover: hover) { .side__site:hover { background: rgba(118, 118, 128, .2); color: var(--text); border-color: transparent; } }
+html[data-theme="dark"] .side { background: var(--apple-dk-bg); }
+@media (max-width: 960px) { .side { background: var(--panel); } html[data-theme="dark"] .side { background: var(--apple-dk-1); } }
+
+/* segmented controls (iOS): a grey track with a white thumb under the chosen option — purple stays for actions */
+.seg, .subnav .seg { background: rgba(118, 118, 128, .12); border: 0; border-radius: var(--r-sm); padding: 2px; gap: 2px; }
+.seg button, .subnav .seg button { min-height: 36px; border-radius: 9px; color: var(--text); font-weight: 500; }
+@media (hover: hover) { .seg button:hover, .subnav .seg button:hover { background: rgba(118, 118, 128, .12); color: var(--text); } }
+.seg button.on, .subnav .seg button.on { background: var(--panel); color: var(--text); font-weight: 600; box-shadow: 0 0 0 .5px rgba(0, 0, 0, .04), 0 3px 8px rgba(0, 0, 0, .12), 0 3px 1px rgba(0, 0, 0, .04); }
+.seg button.on small, .subnav .seg button.on small { background: var(--brand); border-color: transparent; color: #fff; }
+html[data-theme="dark"] :is(.seg, .subnav .seg) { background: rgba(118, 118, 128, .24); }
+html[data-theme="dark"] :is(.seg button.on, .subnav .seg button.on) { background: #636366; color: #fff; box-shadow: none; }
+html[data-theme="dark"] :is(.b--primary, .seg button.on, .subnav .seg button.on) { color: #fff; }
+
+/* switches (iOS): 51 × 31 with a 27 knob, the brand purple when on */
+.switch i { width: 51px; height: 31px; background: rgba(120, 120, 128, .16); }
+.switch i::after { top: 2px; right: 2px; width: 27px; height: 27px; box-shadow: 0 3px 8px rgba(0, 0, 0, .15), 0 3px 1px rgba(0, 0, 0, .06); transition: transform .3s var(--ease-spring); }
+.switch input:checked + i::after { transform: translateX(-20px); }
+html[dir="ltr"] .switch input:checked + i::after { transform: translateX(20px); }
+html[data-theme="dark"] .switch i { background: rgba(120, 120, 128, .32); }
+.switch input:checked + i, html[data-theme="dark"] .switch input:checked + i { background: var(--brand); }
+
+/* lists (iOS «inset grouped»): rows sit together in one rounded white group, divided by hairlines that start after the picture */
+.items { gap: 0; background: var(--panel); border-radius: var(--r-lg); overflow: hidden; }
+.items > .item { border: 0; border-radius: 0; background: transparent; position: relative; }
+.items > .item + .item::before { content: ""; position: absolute; top: 0; inset-inline: 16px 0; height: 1px; background: var(--line); }
+@media (hover: hover) { .items > .item:hover { background: rgba(118, 118, 128, .06); box-shadow: none; } }
+.items:empty { background: transparent; }
+/* settings groups: the title of a card reads like an iOS section title, the card is the group */
+.card__head h3 { font-size: 17px; font-weight: 600; }
+.card__head p { font-size: 13px; }
+
+/* sheets (iOS): a grabber on top of every sheet on phones */
+@media (max-width: 760px) {
+  .modal__box { position: relative; }
+  .modal__box::before { content: ""; position: absolute; top: 6px; left: 50%; translate: -50% 0; width: 36px; height: 5px; border-radius: var(--r-pill); background: rgba(118, 118, 128, .4); z-index: 2; }
+}
+
+/* tab bar (iPhone): floating glass capsule at the bottom with the four main places and «المزيد» */
+.tabbar { display: none; }
+@media (max-width: 760px) {
+  .tabbar { display: flex; position: fixed; z-index: 70; inset-inline: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); padding: 6px; gap: 2px; border-radius: var(--r-pill);
+    background: color-mix(in srgb, var(--panel) 78%, transparent); border: 1px solid rgba(255, 255, 255, .55);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), 0 10px 30px -10px rgba(0, 0, 0, .25); -webkit-backdrop-filter: blur(24px) saturate(1.8); backdrop-filter: blur(24px) saturate(1.8); }
+  html[data-theme="dark"] .tabbar { background: color-mix(in srgb, var(--apple-dk-1) 78%, transparent); border-color: rgba(255, 255, 255, .1); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 10px 30px -10px rgba(0, 0, 0, .6); }
+  .tabbar > a, .tabbar > button { position: relative; flex: 1 1 0; min-width: 0; min-height: 52px; display: grid; justify-items: center; align-content: center; gap: 2px; border-radius: var(--r-pill); color: var(--muted); font-size: 10.5px; font-weight: 600; text-decoration: none; }
+  .tabbar > a[hidden] { display: none; }
+  .tabbar svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+  .tabbar > button svg { fill: currentColor; stroke: none; }
+  .tabbar > a.on { color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, transparent); }
+  html[data-theme="dark"] .tabbar > a.on { color: #C4B5FD; background: rgba(255, 255, 255, .08); }
+  .tabbar span { line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .tabbar__count { position: absolute; top: 4px; inset-inline-start: calc(50% + 4px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: var(--r-pill); background: #FF3B30; color: #fff; font-size: 11px; font-style: normal; font-weight: 700; line-height: 18px; text-align: center; }
+  .tabbar__count[hidden] { display: none; }
+  /* the page leaves room for the bar; the menu button stays for the full list («المزيد» does the same) */
+  .main { padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
+  .toasts { bottom: calc(86px + env(safe-area-inset-bottom)); }
+  @media (prefers-reduced-transparency: reduce) { .tabbar, html[data-theme="dark"] .tabbar { background: var(--panel); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+}
+/* the auth screen, the loading screen and an open sheet hide the bar */
+body:has(#auth:not([hidden])) .tabbar, body:has(.modal:not([hidden])) .tabbar, body:has(.side.open) .tabbar { display: none; }

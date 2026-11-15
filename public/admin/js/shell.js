@@ -133,12 +133,44 @@ function applyRoleNav() {
   const tag = $(".side .logo small"); if (tag) tag.textContent = role === "owner" ? "لوحة التحكم" : ROLE_AR[role];
 }
 
+// Phones: iOS's tab bar — the four places used most, and «المزيد» for the full menu. It is built from the sidebar's own
+// links (same icons, same roles: a page hidden for this person's role is hidden here too) and copies their counters.
+const TABS = [["overview", "الرئيسية"], ["inbox", "الوارد", "msgCount"], ["orders", "الطلبات", "ordCount"], ["chats", "المحادثات", "chatCount"]];
+function buildTabbar(openSide) {
+  if ($("#tabbar")) return;
+  const MORE = '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>';
+  const nav = document.createElement("nav");
+  nav.className = "tabbar"; nav.id = "tabbar"; nav.setAttribute("aria-label", "التنقل السريع");
+  nav.innerHTML = TABS.map(([v, label, count]) => {
+    const icon = $(`#sideNav a[data-view="${v}"] svg`)?.outerHTML || "";
+    return `<a href="#${v}" data-tab="${v}">${icon}<span>${label}</span>${count ? `<i class="tabbar__count" data-of="${count}" hidden></i>` : ""}</a>`;
+  }).join("") + `<button type="button" data-tab="more">${MORE}<span>المزيد</span></button>`;
+  document.body.append(nav);
+  nav.querySelector('[data-tab="more"]').onclick = openSide;
+  // the counters follow the sidebar's
+  nav.querySelectorAll("[data-of]").forEach((badge) => {
+    const src = document.getElementById(badge.dataset.of); if (!src) return;
+    const copy = () => { badge.hidden = src.hidden || !src.textContent.trim(); badge.textContent = src.textContent; };
+    copy(); new MutationObserver(copy).observe(src, { attributes: true, childList: true, characterData: true, subtree: true });
+  });
+}
+function paintTabbar() {
+  $$("#tabbar a").forEach((a) => {
+    const side = $(`#sideNav a[data-view="${a.dataset.tab}"]`);
+    a.hidden = !side || side.hidden;
+    a.classList.toggle("on", a.dataset.tab === current);
+    if (a.dataset.tab === current) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+  });
+}
+
 export function setupShell() {
   if (setupShell.done) return; setupShell.done = true;
   addEventListener("hashchange", route);
   const side = $("#side"), scrim = $("#scrim");
   const close = () => { side.classList.remove("open"); scrim.classList.remove("open"); };
-  $("#menuBtn").onclick = () => { side.classList.add("open"); scrim.classList.add("open"); };
+  const openSide = () => { side.classList.add("open"); scrim.classList.add("open"); };
+  $("#menuBtn").onclick = openSide;
+  buildTabbar(openSide);
   scrim.onclick = close;
   $$("#sideNav a").forEach((a) => a.addEventListener("click", close));
   // light / dark / follow the device (public/admin/theme.js applies it before the page paints)
@@ -204,6 +236,7 @@ export async function route() {
   }
   current = VIEWS[name] ? name : "overview";
   $$("#sideNav a").forEach((a) => a.classList.toggle("on", a.dataset.view === current));
+  paintTabbar();
   openSideGroupOf(current);
   const view = $("#view");
   // the page changes with a short cross-fade (View Transitions), only for the switch itself — never while loading

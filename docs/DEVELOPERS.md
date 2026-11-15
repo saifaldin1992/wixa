@@ -746,3 +746,11 @@ When the live chat is on (`settings.chat.on`), it is the way to talk to us every
 - **Tiles:** services, projects, packages, reviews, contact ways, articles and «more» links are apple.com tiles — the soft grey surface (#1C1C1E on black), no border, no shadow, a 1–1.5% zoom on hover with a mouse (none with reduced motion). The old hover lifts, purple borders and the tilting service icon were removed. The featured package keeps its purple outline.
 - **Headings and hero:** semibold titles with slightly tighter letter spacing; the hero line under the title is muted at the lead size, max 34em wide.
 - **Local bar** on service and project pages (`simplePage` → `localNav`, shown by `/theme-pre.js` once the page title has scrolled away): the page's name and its one action («اطلب هذه الخدمة» / «اطلب مشروعاً مشابهاً») in a glass capsule under the top bar.
+
+## Apple redesign — phase 4 (Nov 2026): the dashboard as an iPhone / iPad app
+- **Tab bar (phones):** a floating glass capsule at the bottom (`buildTabbar` / `paintTabbar` in `public/admin/js/shell.js`) with الرئيسية · الوارد · الطلبات · المحادثات and «المزيد» (opens the full menu). Built from the sidebar links, so icons and role rules match, and the red counters copy the sidebar ones. Hidden while signing in, while a sheet is open or the menu is open.
+- **Sidebar (iPad / computer):** grey sidebar, purple icons, the chosen page as a filled purple row (deeper violet in dark mode), bold section names, «عرض الموقع» as a grey capsule.
+- **Segmented controls:** iOS style — grey track, white thumb (grey #636366 in dark mode); purple is kept for actions. Three older, overlapping segment styles were removed.
+- **Switches:** iOS size 51 × 31 with a 27 knob and a spring.
+- **Lists:** iOS «inset grouped» — rows in one rounded group with hairline dividers.
+- **Sheets:** a grabber on top of every sheet on phones.
