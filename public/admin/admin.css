@@ -1332,3 +1332,10 @@ html[dir="ltr"] .ct-back svg { transform: scaleX(-1); }
 /* design check (Nov 2026): the chosen role's note stays readable on its tinted card; phone links are a full 44px target */
 .role:has(input:checked) small { color: color-mix(in srgb, var(--muted) 75%, var(--text)); }
 .msg__info a[href^="tel:"], .msg__info a[href^="mailto:"] { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* phones and tablets: the sidebar is exactly the visible screen (Samsung Internet, Safari: «100vh» also counts the
+   area behind the browser's own bars, which pushed «عرض الموقع» under them), with room for the phone's home bar */
+@media (max-width: 960px) {
+  .side { height: auto; max-height: 100dvh; padding-bottom: calc(16px + env(safe-area-inset-bottom)); overscroll-behavior: contain; }
+}
+@supports not (height: 100dvh) { @media (max-width: 960px) { .side { max-height: none; } } }
