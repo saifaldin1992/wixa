@@ -16,7 +16,7 @@
     if (a) a.onclick = function () { location.reload(); };
   }, 10000);
   addEventListener("DOMContentLoaded", function () {
-    if (matchMedia("(max-width: 760px)").matches) document.querySelectorAll(".fgroup[open]").forEach(function (d) { d.open = false; });
+    if (matchMedia("(max-width: 760px)").matches && document.documentElement.getAttribute("data-footer") !== "simple") document.querySelectorAll(".fgroup[open]").forEach(function (d) { d.open = false; });
     var m = document.getElementById("menu"), mb = document.getElementById("menuBtn"), sc = document.getElementById("scrim");
     var menu = function (open) {
       if (!m || !mb) return; mb.setAttribute("aria-expanded", open); m.classList.toggle("open", open); if (sc) sc.classList.toggle("open", open); r.classList.toggle("menu-open", open);

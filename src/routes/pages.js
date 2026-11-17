@@ -137,7 +137,7 @@ export async function handleHome(request, env, ctx, pageName = "home") {
   const moreHref = (k) => { const h = navLink(st, k, empty).href; const [p0, hash] = h.split("#"); return `${p0}${q}${hash ? `#${hash}` : ""}`; };
   const res = versionAssets(new HTMLRewriter())
     .on("head", { element: (el) => el.append(`${headTags}<script id="wixa-data" type="application/json">${safe}</script>`, { html: true }) })
-    .on("html", { element: (el) => { el.setAttribute("lang", lang); el.setAttribute("dir", lang === "ar" ? "rtl" : "ltr"); el.setAttribute("data-page", pageName); el.setAttribute("data-look", full.look === "soft" ? "soft" : "flat"); } })
+    .on("html", { element: (el) => { el.setAttribute("lang", lang); el.setAttribute("dir", lang === "ar" ? "rtl" : "ltr"); el.setAttribute("data-page", pageName); for (const [k, v] of Object.entries(WIXA.frameAttrs(full))) el.setAttribute(`data-${k}`, v); } })
     // one main heading per page: «تواصل معنا» is the main heading only on /contact; elsewhere it is a section heading
     .on("h1.head__title", { element: (el) => { if (pageName !== "contact") el.tagName = "h2"; } })
     // the inner pages that are a section of the home page: that section's title becomes the page's main heading
@@ -410,7 +410,7 @@ export function simplePage(request, st, { lang, title, description, path, image,
     const crumbLd = { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [...trail, [title, path]].map(([l, h], i) => ({ "@type": "ListItem", position: i + 1, name: ui[l] || l, item: `${origin}${h}?lang=${lang}` })) };
     jsonld = jsonld ? [jsonld, crumbLd] : crumbLd;
   }
-  const html = `<!doctype html><html lang="${lang}" dir="${ar ? "rtl" : "ltr"}" data-mode="${st.mode === "light" || st.mode === "dark" ? st.mode : ""}" data-look="${st.look === "soft" ? "soft" : "flat"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  const html = `<!doctype html><html lang="${lang}" dir="${ar ? "rtl" : "ltr"}" data-mode="${st.mode === "light" || st.mode === "dark" ? st.mode : ""}" ${Object.entries(WIXA.frameAttrs(st)).map(([k, v]) => ` data-${k}="${v}"`).join("")}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)} — ${esc(brand)}</title><meta name="description" content="${esc(description)}">${noindex ? '<meta name="robots" content="noindex">' : ""}
 <link rel="canonical" href="${origin}${path}?lang=${lang}"><link rel="alternate" hreflang="ar" href="${origin}${path}?lang=ar"><link rel="alternate" hreflang="en" href="${origin}${path}?lang=en"><link rel="alternate" hreflang="x-default" href="${origin}${path}">
 <meta property="og:type" content="website"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${origin}${path}">

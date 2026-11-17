@@ -199,6 +199,13 @@ html[dir=rtl] .bar__top span:first-child { direction: rtl; }
 .font-opt b { display: block; font-size: 20px; font-weight: 700; line-height: 1.4; }
 .font-opt span { font-size: 12px; color: var(--muted); }
 .font-opt.on { border-color: var(--brand); background: var(--brand-50); box-shadow: 0 0 0 3px rgba(91,33,182,.12); }
+/* Appearance → the site's frame: each option a small sketch with its name */
+.frameopts { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin-top: 6px; }
+.fopt { display: grid; gap: 6px; justify-items: center; padding: 10px 8px; min-height: 44px; border: 1px solid var(--line-2); border-radius: var(--r-sm); font-size: 13px; text-align: center; transition: border-color .2s, background .2s; }
+.fopt svg { width: 100%; max-width: 120px; height: auto; display: block; }
+.fopt .pg { fill: var(--panel); stroke: var(--line-2); stroke-width: 1.5; } .fopt .ln { fill: var(--muted); opacity: .35; } .fopt .on { fill: var(--brand); opacity: .85; } .fopt .pg2 { fill: #fff; opacity: .85; } .fopt .dim { fill: var(--muted); opacity: .25; }
+.fopt.on { border-color: var(--brand); background: var(--brand-50); box-shadow: 0 0 0 3px rgba(91,33,182,.12); }
+.fopt:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .range-row { display: flex; align-items: center; gap: 12px; }
 .range-row output { min-width: 52px; text-align: center; font-weight: 600; font-size: 13px; background: var(--bg); padding: 4px 8px; border-radius: var(--r-xs); }
 

@@ -4,6 +4,11 @@
 
 ---
 
+## The site's frame in Appearance (Nov 2026)
+- **New card «القائمة وأسفل الصفحة»** in the dashboard's Appearance page: the top bar (floating · full width · logo in the middle), the phone menu (full screen · a panel that drops) and the footer (link groups · short · the big name). Each option is drawn as a small sketch; the live preview follows.
+- **Nothing changes until chosen:** the first option of each is the original look and has no CSS of its own. Checked with `tests/visual.mjs`: the 180 site pictures match the ones taken before the change.
+- **How it works:** `settings.header / mmenu / footer` → `WIXA.frameAttrs` → `html[data-header|data-mmenu|data-footer]`, written by the server on the first frame and by `applyTheme` in the preview. The phone panel overrides the top padding `menus.js` gives the full-screen menu; the short footer opens the link groups a phone closes on load.
+
 ## First paint, caching and the project request (Nov 2026)
 - **Server-rendered page:** `handleHome` fills every `[data-c]` / `[data-t]` text, the theme colours (`WIXA.themeVars`) and hidden sections in the HTML itself, using `public/shared.js` (loaded in the Worker through `src/window-shim.js`). There is no loading screen; the hero plays its entrance from CSS (`.hero.in-hero`).
 - **Site content copy in KV:** `site-data` in the PRIVATE namespace holds the last good content, so a cold edge location never waits for the database. Written only when the content changed.

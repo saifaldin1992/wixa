@@ -2238,3 +2238,70 @@ html[lang] .chatw__btn svg { width: 22px; height: 22px; }
   html[lang] .mbar__btn--main { width: 44px; height: 44px; }
   html[lang] .mbar__btn--main svg { width: 20px; height: 20px; }
 }
+
+/* ===== the site's frame, chosen in the dashboard (Appearance → «القائمة وأسفل الصفحة») =====
+   html[data-header] · html[data-mmenu] · html[data-footer]. The first choice of each (float · full · full) is the original
+   look and has no rules here, so a site that never chose anything looks exactly as before. */
+
+/* top bar «بعرض الشاشة»: on the top edge, full width, the content kept to the page's width */
+html[data-header="bar"] .header { top: 0; inset-inline: 0; max-width: none; }
+html.has-promo[data-header="bar"] .header { top: 40px; }
+html.is-staging[data-header="bar"] .header { top: 34px; }
+html[data-header="bar"] .header__bar, html[data-header="bar"][dir] .header__bar { border-radius: 0; border-width: 0 0 1px; border-color: var(--line); box-shadow: none;
+  padding-block: 10px; padding-inline: max(var(--gutter, 20px), calc((100% - var(--max)) / 2 + 12px)); }
+html[data-header="bar"] .flyout { top: 100%; }
+html[data-header="bar"] .flyout__in { max-width: var(--max); margin-inline: auto; border-top: 0; border-radius: 0 0 var(--r-xl) var(--r-xl); }
+html[data-header="bar"] { --bar-end: 66px; }
+
+/* top bar «الشعار في الوسط»: the logo in the middle; on computers the links on a second line under it */
+@media (min-width: 600px) {
+  html[data-header="center"] .header__bar { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; }
+  html[data-header="center"] .header__bar > .brand { grid-column: 2; grid-row: 1; justify-self: center; }
+  html[data-header="center"] .header__end { grid-column: 3; grid-row: 1; justify-self: end; margin: 0; }
+}
+@media (min-width: 1240px) {
+  html[data-header="center"] { --bar-end: 128px; }
+  html[data-header="center"] .header__bar, html[data-header="center"][dir] .header__bar { row-gap: 8px; border-radius: var(--r-xl); padding: 12px 18px 8px; }
+  html[data-header="center"] .header__bar > .brand { --lh: 30px; }
+  html[data-header="center"] .header__nav { grid-column: 1 / -1; grid-row: 2; justify-content: center; border-inline-start: 0; padding: 8px 0 0; border-top: 1px solid var(--line); }
+}
+
+/* phone and tablet menu «لوحة تنزل»: a panel under the bar instead of the whole screen; the page dims behind it */
+@media (max-width: 1239px) {
+  html[data-mmenu="sheet"] .header__menu { position: absolute; inset: calc(100% + 8px) 0 auto; z-index: auto; height: auto; max-height: calc(100dvh - var(--bar-end, 78px) - 24px);
+    padding: var(--sp-4) var(--sp-5) var(--sp-5); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-lg);
+    background: var(--surface) !important; transform: translateY(-8px); transition: opacity .25s ease, visibility .25s, transform .35s var(--ease-out); }
+  html[data-header="bar"][data-mmenu="sheet"] .header__menu { inset-inline: 12px; }
+  html[data-mmenu="sheet"] .header__menu.open { transform: none; }
+  html[data-mmenu="sheet"] .header__menu { padding-top: var(--sp-4) !important; } /* menus.js pads the full-screen menu down to the bar; the panel already sits under it */
+  html[data-mmenu="sheet"] .header__menu .mpanel > :is(a, .mlink):last-child { border-bottom: 0; }
+  html[data-mmenu="sheet"] .scrim.open { opacity: 1; }
+  html[data-mmenu="sheet"] .header__menu .mpanel > a:not(.menu-cta, .mpanel__all), html[data-mmenu="sheet"] .header__menu .mlink { min-height: 52px; font-size: 1.1875rem; border-bottom: 1px solid var(--line); }
+  html[data-mmenu="sheet"] .header__menu .menu-cta { margin-bottom: var(--sp-3); }
+  html[data-mmenu="sheet"] .header__menu .mpanel--sub > a:not(.mpanel__all) { min-height: 48px; font-size: 1.125rem; }
+}
+
+/* footer «مختصر»: the logo, the main links on one line (services as «كل الخدمات»), then the small print */
+html[data-footer="simple"] .footer { display: flex; flex-direction: column; align-items: center; }
+html[data-footer="simple"] .footer__brand { order: 1; margin-top: 0; }
+html[data-footer="simple"] .footer__groups { order: 2; display: flex; flex-wrap: wrap; justify-content: center; gap: 0 20px; max-width: 760px; margin-top: var(--sp-4); }
+html[data-footer="simple"] .fgroup, html[data-footer="simple"] .fgroup .footer__nav { display: contents; }
+html[data-footer="simple"] .fgroup[hidden], html[data-footer="simple"] .fgroup__title, html[data-footer="simple"] .footer__reach,
+html[data-footer="simple"] .footer__nav[data-g="services"] a:not([data-nav]) { display: none; }
+html[data-footer="simple"] .fgroup .footer__nav a { min-height: 44px; display: inline-flex; align-items: center; font-size: .875rem; }
+html[data-footer="simple"] .footer__legal { order: 3; }
+html[data-footer="simple"] .footer__tools { order: 4; margin-top: var(--sp-5); }
+html[data-footer="simple"] .footer__credit { order: 5; }
+
+/* footer «الاسم الكبير»: the full footer, then the name across the whole width at the very bottom */
+html[data-footer="big"] .footer { display: flex; flex-direction: column; }
+html[data-footer="big"] .footer__groups { order: 1; width: 100%; }
+html[data-footer="big"] .footer__reach { order: 2; }
+html[data-footer="big"] .footer__legal { order: 3; }
+html[data-footer="big"] .footer__tools { order: 4; }
+html[data-footer="big"] .footer__credit { order: 5; }
+html[data-footer="big"] .footer__brand { order: 6; margin-top: var(--sp-7); }
+html[data-footer="big"] .footer__brand .brand { width: 100%; justify-content: center; padding: 0; }
+html[data-footer="big"] .footer__brand .brand__mark { display: none; }
+html[data-footer="big"] .footer__brand .brand__name { width: 100%; justify-content: center; }
+html[data-footer="big"] .footer__brand .brand__name .wm { width: 100%; height: auto; max-width: 1100px; }

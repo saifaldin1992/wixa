@@ -41,6 +41,10 @@
     default_lang: "auto",
     partners_style: "marquee",
     look: "flat",   // "soft" = the «ناعم ثلاثي الأبعاد» look (Appearance)
+    // the shape of the site's frame (Appearance → «القائمة وأسفل الصفحة»); the first value of each is the original look
+    header: "float", // top bar: "float" a rounded bar floating under the top edge · "bar" full width on the top edge · "center" logo in the middle, links under it
+    mmenu: "full",   // phone and tablet menu: "full" fills the screen · "sheet" a panel that drops under the bar
+    footer: "full",  // footer: "full" the link groups · "simple" one short block · "big" the name across the whole width
     iraq_map_size: 100,
     // search engines & link previews (edited in the dashboard → البحث والمشاركة)
     seo: {
@@ -410,7 +414,17 @@
   function applyTheme(settings, root = document.documentElement) {
     const vars = themeVars(settings, loadFont(settings.font.family));
     for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v);
-    root.dataset.look = settings.look === "soft" ? "soft" : "flat";
+    for (const [k, v] of Object.entries(frameAttrs(settings))) root.dataset[k] = v;
+    // the short footer shows the groups' links on one line: a phone closes the groups on load, so open them again
+    if (root.dataset.footer === "simple" && root.querySelectorAll) root.querySelectorAll(".fgroup:not([open])").forEach((d) => { d.open = true; });
+  }
+  // The frame choices as html attributes (data-look, data-header, data-mmenu, data-footer); unknown values fall back to
+  // the original look. The server writes the same attributes on the first frame (src/routes/pages.js).
+  const FRAME = { look: ["flat", "soft"], header: ["float", "bar", "center"], mmenu: ["full", "sheet"], footer: ["full", "simple", "big"] };
+  function frameAttrs(settings) {
+    const out = {};
+    for (const [k, list] of Object.entries(FRAME)) out[k] = list.includes(settings?.[k]) ? settings[k] : list[0];
+    return out;
   }
   // The CSS variables of the theme — also used by the server to paint the right colours on the first frame
   function themeVars(settings, fam) {
@@ -468,5 +482,5 @@
   }
   if (typeof document !== "undefined") markEnv();
 
-  window.WIXA = { DEFAULTS, FONTS, HOSTED, BRAND_FONT, ICONS, merge, navPlan, applyTheme, themeVars, loadFont, markEnv, darkPalette, vivid, mix };
+  window.WIXA = { DEFAULTS, FONTS, HOSTED, BRAND_FONT, ICONS, merge, navPlan, applyTheme, frameAttrs, themeVars, loadFont, markEnv, darkPalette, vivid, mix };
 })();

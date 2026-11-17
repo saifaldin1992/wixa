@@ -15,6 +15,26 @@ const PRESETS = [
   { name: "ذهبي فاخر", theme: { primary: "#B08D57", primaryInk: "#0E0E0E", accent: "#E9D8B4", bg: "#F7F4EE", surface: "#FFFFFF", text: "#151310", muted: "#6F685D", dark: "#151310" } },
   { name: "ليلي", theme: { primary: "#4F8CFF", primaryInk: "#FFFFFF", accent: "#22D3EE", bg: "#0B1020", surface: "#121A30", text: "#E8ECF6", muted: "#93A0BC", dark: "#050814" } },
 ];
+// The site's frame (top bar, phone menu, footer): each option with a small sketch. The first of each is the original look.
+// The sketches: a page (rounded box) with the part that changes drawn in the brand colour.
+const P = (inner) => `<svg viewBox="0 0 120 76" aria-hidden="true"><rect x="1" y="1" width="118" height="74" rx="8" class="pg"/>${inner}</svg>`;
+const PH = (inner) => `<svg viewBox="0 0 120 76" aria-hidden="true"><rect x="40" y="2" width="40" height="72" rx="7" class="pg"/>${inner}</svg>`;
+const FRAME_OPTS = [
+  ["header", "القائمة العلوية", "شكل شريط القائمة في أعلى كل صفحات الموقع.", [
+    ["float", "عائمة (الحالية)", P('<rect x="10" y="7" width="100" height="12" rx="6" class="on"/><rect x="10" y="30" width="60" height="5" rx="2" class="ln"/><rect x="10" y="40" width="44" height="5" rx="2" class="ln"/>')],
+    ["bar", "بعرض الشاشة", P('<path d="M1 9a8 8 0 0 1 8-8h102a8 8 0 0 1 8 8v8H1z" class="on"/><rect x="10" y="30" width="60" height="5" rx="2" class="ln"/><rect x="10" y="40" width="44" height="5" rx="2" class="ln"/>')],
+    ["center", "الشعار في الوسط", P('<rect x="10" y="6" width="100" height="22" rx="7" class="on"/><rect x="50" y="9" width="20" height="6" rx="2" class="pg2"/><rect x="30" y="20" width="60" height="4" rx="2" class="pg2"/><rect x="10" y="40" width="60" height="5" rx="2" class="ln"/>')],
+  ]],
+  ["mmenu", "قائمة الجوال", "ما يفتحه زر ☰ على الجوال والجهاز اللوحي.", [
+    ["full", "تملأ الشاشة (الحالية)", PH('<rect x="43" y="5" width="34" height="66" rx="5" class="on"/><rect x="47" y="14" width="22" height="4" rx="2" class="pg2"/><rect x="47" y="24" width="18" height="4" rx="2" class="pg2"/><rect x="47" y="34" width="20" height="4" rx="2" class="pg2"/>')],
+    ["sheet", "لوحة تنزل", PH('<rect x="43" y="5" width="34" height="8" rx="4" class="ln"/><rect x="43" y="16" width="34" height="30" rx="5" class="on"/><rect x="47" y="22" width="22" height="3" rx="1.5" class="pg2"/><rect x="47" y="30" width="18" height="3" rx="1.5" class="pg2"/><rect x="47" y="38" width="20" height="3" rx="1.5" class="pg2"/><rect x="43" y="50" width="34" height="20" rx="4" class="dim"/>')],
+  ]],
+  ["footer", "أسفل الصفحة", "آخر جزء في كل صفحة: الروابط والتواصل والشعار.", [
+    ["full", "مجموعات الروابط (الحالي)", P('<rect x="10" y="10" width="70" height="5" rx="2" class="ln"/><rect x="18" y="44" width="22" height="4" rx="2" class="on"/><rect x="49" y="44" width="22" height="4" rx="2" class="on"/><rect x="80" y="44" width="22" height="4" rx="2" class="on"/><rect x="18" y="52" width="16" height="3" rx="1.5" class="ln"/><rect x="49" y="52" width="16" height="3" rx="1.5" class="ln"/><rect x="80" y="52" width="16" height="3" rx="1.5" class="ln"/><rect x="48" y="63" width="24" height="5" rx="2" class="ln"/>')],
+    ["simple", "مختصر", P('<rect x="10" y="10" width="70" height="5" rx="2" class="ln"/><rect x="50" y="46" width="20" height="5" rx="2" class="on"/><rect x="22" y="56" width="76" height="4" rx="2" class="on"/><rect x="40" y="64" width="40" height="3" rx="1.5" class="ln"/>')],
+    ["big", "الاسم الكبير", P('<rect x="10" y="10" width="70" height="5" rx="2" class="ln"/><rect x="18" y="36" width="22" height="3" rx="1.5" class="ln"/><rect x="49" y="36" width="22" height="3" rx="1.5" class="ln"/><rect x="80" y="36" width="22" height="3" rx="1.5" class="ln"/><rect x="10" y="50" width="100" height="18" rx="3" class="on"/>')],
+  ]],
+];
 const COLOR_FIELDS = [
   ["primary", "اللون الرئيسي", "الأزرار والعناوين المميزة"], ["primaryInk", "نص الأزرار", "لون الكتابة فوق اللون الرئيسي"],
   ["accent", "لون التمييز", "الأرقام والإشارات"], ["bg", "الخلفية", "خلفية الصفحة"],
@@ -45,6 +65,9 @@ export async function viewAppearance(view) {
           <label class="f"><span>الوضع الافتراضي للزائر الجديد (يستطيع الزائر تغييره من زر 🌙)</span>
             <div class="seg" id="modeSeg">${[["auto", "حسب جهاز الزائر"], ["light", "فاتح"], ["dark", "ليلي"]].map(([v, l]) => `<button type="button" data-v="${v}" class="${(settings.mode || "auto") === v ? "on" : ""}">${l}</button>`).join("")}</div></label>
         </div></div>
+      <div class="card"><div class="card__head"><div><h3>القائمة وأسفل الصفحة</h3><p>شكل إطار الموقع في كل الصفحات. المحتوى لا يتغير، والمعاينة بجانبك تتحدث فوراً.</p></div></div>
+        <div class="stack">${FRAME_OPTS.map(([k, title, hint, opts]) => `<div class="f"><span>${title}</span><small style="color:var(--muted)">${hint}</small>
+          <div class="frameopts" role="radiogroup" aria-label="${title}">${opts.map(([v, label, svg]) => `<button type="button" class="fopt${(settings[k] || opts[0][0]) === v ? " on" : ""}" role="radio" aria-checked="${(settings[k] || opts[0][0]) === v}" data-frame="${k}" data-v="${v}">${svg}<span>${label}</span></button>`).join("")}</div></div>`).join("")}</div></div>
       <div class="card"><div class="card__head"><div><h3>إعادة الضبط</h3><p>استرجاع الألوان والخط الافتراضية</p></div><button class="b b--danger b--sm" id="resetTheme">${I.reset}إعادة الافتراضي</button></div></div>
     </div>
     ${previewPane()}
@@ -74,10 +97,15 @@ export async function viewAppearance(view) {
   range("radius", (v) => (settings.theme.radius = v), (v) => `${v}px`);
   $("#anim").onchange = (e) => { settings.animations = e.target.checked; changed(); };
   $$("#lookSeg button").forEach((b) => (b.onclick = () => { settings.look = b.dataset.v; $$("#lookSeg button").forEach((x) => x.classList.toggle("on", x === b)); changed(); }));
+  $$("[data-frame]").forEach((b) => (b.onclick = () => {
+    const k = b.dataset.frame; settings[k] = b.dataset.v;
+    $$(`[data-frame="${k}"]`).forEach((x) => { x.classList.toggle("on", x === b); x.setAttribute("aria-checked", String(x === b)); });
+    changed();
+  }));
   $$("#modeSeg button").forEach((b) => (b.onclick = () => { settings.mode = b.dataset.v; $$("#modeSeg button").forEach((x) => x.classList.toggle("on", x === b)); changed(); }));
   $("#resetTheme").onclick = async () => {
-    if (!(await confirmBox("إعادة الافتراضي", "سيتم استرجاع الألوان والخط الافتراضية (لن يُحفظ حتى تضغط حفظ).", "استرجاع", false))) return;
-    settings.theme = clone(DEFAULTS.theme); settings.font = clone(DEFAULTS.font); settings.animations = true; settings.look = DEFAULTS.look; route();
+    if (!(await confirmBox("إعادة الافتراضي", "سيتم استرجاع الألوان والخط وشكل القائمة وأسفل الصفحة الافتراضية (لن يُحفظ حتى تضغط حفظ).", "استرجاع", false))) return;
+    settings.theme = clone(DEFAULTS.theme); settings.font = clone(DEFAULTS.font); settings.animations = true; settings.look = DEFAULTS.look; settings.header = DEFAULTS.header; settings.mmenu = DEFAULTS.mmenu; settings.footer = DEFAULTS.footer; route();
   };
 }
 const loadedFonts = new Set();
