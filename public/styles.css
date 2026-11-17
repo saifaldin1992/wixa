@@ -2292,16 +2292,3 @@ html[data-footer="simple"] .fgroup .footer__nav a { min-height: 44px; display: i
 html[data-footer="simple"] .footer__legal { order: 3; }
 html[data-footer="simple"] .footer__tools { order: 4; margin-top: var(--sp-5); }
 html[data-footer="simple"] .footer__credit { order: 5; }
-
-/* footer «الاسم الكبير»: the full footer, then the name across the whole width at the very bottom */
-html[data-footer="big"] .footer { display: flex; flex-direction: column; }
-html[data-footer="big"] .footer__groups { order: 1; width: 100%; }
-html[data-footer="big"] .footer__reach { order: 2; }
-html[data-footer="big"] .footer__legal { order: 3; }
-html[data-footer="big"] .footer__tools { order: 4; }
-html[data-footer="big"] .footer__credit { order: 5; }
-html[data-footer="big"] .footer__brand { order: 6; margin-top: var(--sp-7); }
-html[data-footer="big"] .footer__brand .brand { width: 100%; justify-content: center; padding: 0; }
-html[data-footer="big"] .footer__brand .brand__mark { display: none; }
-html[data-footer="big"] .footer__brand .brand__name { width: 100%; justify-content: center; }
-html[data-footer="big"] .footer__brand .brand__name .wm { width: 100%; height: auto; max-width: 1100px; }

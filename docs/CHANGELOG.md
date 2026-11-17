@@ -5,7 +5,7 @@
 ---
 
 ## The site's frame in Appearance (Nov 2026)
-- **New card «القائمة وأسفل الصفحة»** in the dashboard's Appearance page: the top bar (floating · full width · logo in the middle), the phone menu (full screen · a panel that drops) and the footer (link groups · short · the big name). Each option is drawn as a small sketch; the live preview follows.
+- **New card «القائمة وأسفل الصفحة»** in the dashboard's Appearance page: the top bar (floating · full width · logo in the middle), the phone menu (full screen · a panel that drops) and the footer (link groups · short). A third footer, the big name across the width, was tried and removed. Each option is drawn as a small sketch; the live preview follows.
 - **Nothing changes until chosen:** the first option of each is the original look and has no CSS of its own. Checked with `tests/visual.mjs`: the 180 site pictures match the ones taken before the change.
 - **How it works:** `settings.header / mmenu / footer` → `WIXA.frameAttrs` → `html[data-header|data-mmenu|data-footer]`, written by the server on the first frame and by `applyTheme` in the preview. The phone panel overrides the top padding `menus.js` gives the full-screen menu; the short footer opens the link groups a phone closes on load.
 

@@ -44,7 +44,7 @@
     // the shape of the site's frame (Appearance → «القائمة وأسفل الصفحة»); the first value of each is the original look
     header: "float", // top bar: "float" a rounded bar floating under the top edge · "bar" full width on the top edge · "center" logo in the middle, links under it
     mmenu: "full",   // phone and tablet menu: "full" fills the screen · "sheet" a panel that drops under the bar
-    footer: "full",  // footer: "full" the link groups · "simple" one short block · "big" the name across the whole width
+    footer: "full",  // footer: "full" the link groups · "simple" one short block
     iraq_map_size: 100,
     // search engines & link previews (edited in the dashboard → البحث والمشاركة)
     seo: {
@@ -420,7 +420,7 @@
   }
   // The frame choices as html attributes (data-look, data-header, data-mmenu, data-footer); unknown values fall back to
   // the original look. The server writes the same attributes on the first frame (src/routes/pages.js).
-  const FRAME = { look: ["flat", "soft"], header: ["float", "bar", "center"], mmenu: ["full", "sheet"], footer: ["full", "simple", "big"] };
+  const FRAME = { look: ["flat", "soft"], header: ["float", "bar", "center"], mmenu: ["full", "sheet"], footer: ["full", "simple"] };
   function frameAttrs(settings) {
     const out = {};
     for (const [k, list] of Object.entries(FRAME)) out[k] = list.includes(settings?.[k]) ? settings[k] : list[0];

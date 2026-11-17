@@ -32,7 +32,6 @@ const FRAME_OPTS = [
   ["footer", "أسفل الصفحة", "آخر جزء في كل صفحة: الروابط والتواصل والشعار.", [
     ["full", "مجموعات الروابط (الحالي)", P('<rect x="10" y="10" width="70" height="5" rx="2" class="ln"/><rect x="18" y="44" width="22" height="4" rx="2" class="on"/><rect x="49" y="44" width="22" height="4" rx="2" class="on"/><rect x="80" y="44" width="22" height="4" rx="2" class="on"/><rect x="18" y="52" width="16" height="3" rx="1.5" class="ln"/><rect x="49" y="52" width="16" height="3" rx="1.5" class="ln"/><rect x="80" y="52" width="16" height="3" rx="1.5" class="ln"/><rect x="48" y="63" width="24" height="5" rx="2" class="ln"/>')],
     ["simple", "مختصر", P('<rect x="10" y="10" width="70" height="5" rx="2" class="ln"/><rect x="50" y="46" width="20" height="5" rx="2" class="on"/><rect x="22" y="56" width="76" height="4" rx="2" class="on"/><rect x="40" y="64" width="40" height="3" rx="1.5" class="ln"/>')],
-    ["big", "الاسم الكبير", P('<rect x="10" y="10" width="70" height="5" rx="2" class="ln"/><rect x="18" y="36" width="22" height="3" rx="1.5" class="ln"/><rect x="49" y="36" width="22" height="3" rx="1.5" class="ln"/><rect x="80" y="36" width="22" height="3" rx="1.5" class="ln"/><rect x="10" y="50" width="100" height="18" rx="3" class="on"/>')],
   ]],
 ];
 const COLOR_FIELDS = [
@@ -67,7 +66,7 @@ export async function viewAppearance(view) {
         </div></div>
       <div class="card"><div class="card__head"><div><h3>القائمة وأسفل الصفحة</h3><p>شكل إطار الموقع في كل الصفحات. المحتوى لا يتغير، والمعاينة بجانبك تتحدث فوراً.</p></div></div>
         <div class="stack">${FRAME_OPTS.map(([k, title, hint, opts]) => `<div class="f"><span>${title}</span><small style="color:var(--muted)">${hint}</small>
-          <div class="frameopts" role="radiogroup" aria-label="${title}">${opts.map(([v, label, svg]) => `<button type="button" class="fopt${(settings[k] || opts[0][0]) === v ? " on" : ""}" role="radio" aria-checked="${(settings[k] || opts[0][0]) === v}" data-frame="${k}" data-v="${v}">${svg}<span>${label}</span></button>`).join("")}</div></div>`).join("")}</div></div>
+          <div class="frameopts" role="radiogroup" aria-label="${title}">${opts.map(([v, label, svg]) => `<button type="button" class="fopt${window.WIXA.frameAttrs(settings)[k] === v ? " on" : ""}" role="radio" aria-checked="${window.WIXA.frameAttrs(settings)[k] === v}" data-frame="${k}" data-v="${v}">${svg}<span>${label}</span></button>`).join("")}</div></div>`).join("")}</div></div>
       <div class="card"><div class="card__head"><div><h3>إعادة الضبط</h3><p>استرجاع الألوان والخط الافتراضية</p></div><button class="b b--danger b--sm" id="resetTheme">${I.reset}إعادة الافتراضي</button></div></div>
     </div>
     ${previewPane()}
